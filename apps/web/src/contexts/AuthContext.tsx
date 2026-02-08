@@ -1,10 +1,7 @@
-// apps/web/src/contexts/AuthContext.tsx
-'use client';
-
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { useRouter } from 'next/router';
 import { authApi } from '@/lib/api/auth';
-import { User, AuthTokens } from '@/types/auth';
+import { User } from '@/types/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -18,16 +15,21 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function hasWindow() {
+  return typeof window !== 'undefined';
+}
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
+  const checkAuth = useCallback(async () => {
+    if (!hasWindow()) {
+      setLoading(false);
+      return;
+    }
 
-  const checkAuth = async () => {
     try {
       const accessToken = localStorage.getItem('accessToken');
       if (accessToken) {
@@ -41,37 +43,53 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const login = async (email: string, password: string) => {
     const response = await authApi.login(email, password);
-    localStorage.setItem('accessToken', response.accessToken);
-    localStorage.setItem('refreshToken', response.refreshToken);
+
+    if (hasWindow()) {
+      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem('refreshToken', response.refreshToken);
+    }
+
     setUser(response.user);
-    router.push('/feed');
+    await router.push('/feed');
   };
 
   const signup = async (email: string, username: string, password: string, fullName?: string) => {
     const response = await authApi.signup(email, username, password, fullName);
-    localStorage.setItem('accessToken', response.accessToken);
-    localStorage.setItem('refreshToken', response.refreshToken);
+
+    if (hasWindow()) {
+      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem('refreshToken', response.refreshToken);
+    }
+
     setUser(response.user);
-    router.push('/feed');
+    await router.push('/feed');
   };
 
   const logout = async () => {
     try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (refreshToken) {
-        await authApi.logout(refreshToken);
+      if (hasWindow()) {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+          await authApi.logout(refreshToken);
+        }
       }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      if (hasWindow()) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      }
       setUser(null);
-      router.push('/login');
+      await router.push('/auth/login');
     }
   };
 
@@ -88,7 +106,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         signup,
         logout,
         updateUser,
-        isAuthenticated: !!user,
+        isAuthenticated: Boolean(user),
       }}
     >
       {children}
@@ -98,7 +116,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;

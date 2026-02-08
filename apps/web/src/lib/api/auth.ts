@@ -1,13 +1,14 @@
-// apps/web/src/lib/api/auth.ts
 import apiClient from './client';
 import { User, AuthResponse } from '@/types/auth';
+
+const API_PUBLIC_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003/api';
 
 export const authApi = {
   signup: async (
     email: string,
     username: string,
     password: string,
-    fullName?: string
+    fullName?: string,
   ): Promise<AuthResponse> => {
     const response = await apiClient.post('/auth/signup', {
       email,
@@ -24,7 +25,9 @@ export const authApi = {
   },
 
   googleLogin: (redirectUrl: string) => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google?redirect=${redirectUrl}`;
+    if (typeof window !== 'undefined') {
+      window.location.href = `${API_PUBLIC_URL}/auth/google?redirect=${encodeURIComponent(redirectUrl)}`;
+    }
   },
 
   logout: async (refreshToken: string): Promise<void> => {
@@ -44,10 +47,7 @@ export const authApi = {
     return response.data;
   },
 
-  changePassword: async (
-    currentPassword: string,
-    newPassword: string
-  ): Promise<{ message: string }> => {
+  changePassword: async (currentPassword: string, newPassword: string): Promise<{ message: string }> => {
     const response = await apiClient.patch('/auth/change-password', {
       currentPassword,
       newPassword,

@@ -1,12 +1,9 @@
-// apps/web/src/components/auth/ProtectedRoute.tsx
-'use client';
-
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { PropsWithChildren, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
+import { Card, PageState } from '@/components/ui';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
   requireAuth?: boolean;
   redirectTo?: string;
 }
@@ -15,34 +12,47 @@ export default function ProtectedRoute({
   children,
   requireAuth = true,
   redirectTo = '/auth/login',
-}: ProtectedRouteProps) {
+}: PropsWithChildren<ProtectedRouteProps>) {
   const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading) {
-      if (requireAuth && !user) {
-        router.push(redirectTo);
-      } else if (!requireAuth && user) {
-        router.push('/feed');
-      }
+    if (loading) {
+      return;
     }
-  }, [user, loading, requireAuth, router, redirectTo]);
+
+    if (requireAuth && !user) {
+      router.replace(redirectTo);
+      return;
+    }
+
+    if (!requireAuth && user) {
+      router.replace('/feed');
+    }
+  }, [loading, redirectTo, requireAuth, router, user]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E8998D]"></div>
-      </div>
+      <Card padding="lg" style={{ marginTop: '2rem' }}>
+        <PageState title="Loading session" description="Checking your account details." />
+      </Card>
     );
   }
 
   if (requireAuth && !user) {
-    return null;
+    return (
+      <Card padding="lg" style={{ marginTop: '2rem' }}>
+        <PageState title="Redirecting" description="You need to sign in to view this page." />
+      </Card>
+    );
   }
 
   if (!requireAuth && user) {
-    return null;
+    return (
+      <Card padding="lg" style={{ marginTop: '2rem' }}>
+        <PageState title="Redirecting" description="You are already signed in." />
+      </Card>
+    );
   }
 
   return <>{children}</>;

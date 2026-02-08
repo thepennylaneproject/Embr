@@ -1,24 +1,19 @@
-// apps/web/src/app/profile/edit/page.tsx
-'use client';
-
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import { usersApi } from '@/lib/api/users';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
+import { AppShell } from '@/components/layout/AppShell';
+import { Button, Card, Input, PageState, TextArea, useToast } from '@/components/ui';
 
 export default function EditProfilePage() {
   const { user, updateUser } = useAuth();
+  const { showToast } = useToast();
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    displayName: '',
-    bio: '',
-    website: '',
-    location: '',
-  });
-  const [loading, setLoading] = useState(false);
+
+  const [formData, setFormData] = useState({ displayName: '', bio: '', website: '', location: '' });
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     if (user?.profile) {
@@ -31,110 +26,84 @@ export default function EditProfilePage() {
     }
   }, [user]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError('');
-    setLoading(true);
+    setSaving(true);
 
     try {
       const updatedUser = await usersApi.updateProfile(formData);
       updateUser(updatedUser);
-      setSuccess(true);
-      setTimeout(() => router.push('/profile'), 2000);
+      showToast({
+        title: 'Profile saved',
+        description: 'Your profile details were updated.',
+        kind: 'info',
+      });
+      await router.push('/profile');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update profile');
+      const message = err.response?.data?.message || 'Failed to update profile.';
+      setError(message);
+      showToast({ title: 'Save failed', description: message, kind: 'error' });
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-2xl shadow-sm p-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-6">Edit Profile</h1>
+      <AppShell title="Edit Profile" subtitle="Update the information shown on your public profile." accent="warm2">
+        {!user ? (
+          <Card padding="lg">
+            <PageState title="Loading profile" description="Fetching your current profile values." />
+          </Card>
+        ) : (
+          <Card padding="lg" style={{ width: 'min(680px, 100%)' }}>
+            <form onSubmit={handleSubmit} noValidate style={{ display: 'grid', gap: '0.95rem' }}>
+              <Input
+                id="displayName"
+                label="Display name"
+                value={formData.displayName}
+                onChange={(event) => setFormData((prev) => ({ ...prev, displayName: event.target.value }))}
+              />
 
-            {success && (
-              <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-600 rounded-lg text-sm">
-                Profile updated successfully!
-              </div>
-            )}
+              <TextArea
+                id="bio"
+                label="Bio"
+                value={formData.bio}
+                maxLength={500}
+                hint={`${formData.bio.length}/500 characters`}
+                onChange={(event) => setFormData((prev) => ({ ...prev, bio: event.target.value }))}
+              />
 
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
+              <Input
+                id="website"
+                label="Website"
+                type="url"
+                value={formData.website}
+                onChange={(event) => setFormData((prev) => ({ ...prev, website: event.target.value }))}
+              />
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Display Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.displayName}
-                  onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E8998D] focus:border-transparent outline-none"
-                />
-              </div>
+              <Input
+                id="location"
+                label="Location"
+                value={formData.location}
+                onChange={(event) => setFormData((prev) => ({ ...prev, location: event.target.value }))}
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
-                <textarea
-                  value={formData.bio}
-                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  rows={4}
-                  maxLength={500}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E8998D] focus:border-transparent outline-none resize-none"
-                  placeholder="Tell us about yourself..."
-                />
-                <p className="mt-1 text-sm text-gray-500">{formData.bio.length}/500 characters</p>
-              </div>
+              {error ? <p className="ui-error-text">{error}</p> : null}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
-                <input
-                  type="url"
-                  value={formData.website}
-                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E8998D] focus:border-transparent outline-none"
-                  placeholder="https://your-website.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                <input
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E8998D] focus:border-transparent outline-none"
-                  placeholder="City, Country"
-                />
-              </div>
-
-              <div className="flex gap-4">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 bg-[#E8998D] text-white py-3 rounded-lg font-medium hover:bg-[#C9ADA7] disabled:opacity-50 disabled:cursor-not-allowed transition"
-                >
-                  {loading ? 'Saving...' : 'Save Changes'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => router.push('/profile')}
-                  className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-300 transition"
-                >
+              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <Button type="submit" disabled={saving}>
+                  {saving ? 'Saving...' : 'Save changes'}
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => router.push('/profile')}>
                   Cancel
-                </button>
+                </Button>
               </div>
             </form>
-          </div>
-        </div>
-      </div>
+          </Card>
+        )}
+      </AppShell>
     </ProtectedRoute>
   );
 }
