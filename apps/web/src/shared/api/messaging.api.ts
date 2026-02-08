@@ -26,13 +26,15 @@ import {
 
 export class MessagingAPIClient {
   private client: AxiosInstance;
+  private apiBaseURL: string;
 
   constructor(
     baseURL: string = process.env.NEXT_PUBLIC_API_URL ||
-      "http://localhost:3003",
+      "http://localhost:3003/api",
   ) {
+    this.apiBaseURL = baseURL;
     this.client = axios.create({
-      baseURL: `${baseURL}/messaging`,
+      baseURL: `${this.apiBaseURL}/messaging`,
       headers: {
         "Content-Type": "application/json",
       },
@@ -68,7 +70,7 @@ export class MessagingAPIClient {
 
             // Call your auth refresh endpoint
             const { data } = await axios.post(
-              `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
+              `${this.apiBaseURL}/auth/refresh`,
               { refreshToken },
             );
 

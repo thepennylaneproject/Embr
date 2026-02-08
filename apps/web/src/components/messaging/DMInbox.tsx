@@ -3,7 +3,7 @@
  * Main inbox view with conversation list and message thread
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useMessaging } from '@/hooks/useMessaging';
 import { ConversationList } from './ConversationList';
 import { MessageThread } from './MessageThread';
@@ -11,11 +11,13 @@ import { ConversationPreview, MessageType } from '@shared/types/messaging.types'
 
 interface DMInboxProps {
   className?: string;
+  initialConversationId?: string;
   onConversationSelect?: (conversationId: string) => void;
 }
 
 export const DMInbox: React.FC<DMInboxProps> = ({
   className = '',
+  initialConversationId,
   onConversationSelect,
 }) => {
   const {
@@ -26,6 +28,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({
     error,
     isConnected,
     fetchConversations,
+    fetchMessages,
     sendMessage,
     markAsRead,
     sendTypingIndicator,
@@ -66,7 +69,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleConversationSelect = (conversation: ConversationPreview) => {
+  const handleConversationSelect = useCallback(async (conversation: ConversationPreview) => {
     setSelectedConversation(conversation);
     onConversationSelect?.(conversation.id);
 
@@ -74,11 +77,24 @@ export const DMInbox: React.FC<DMInboxProps> = ({
     if (conversation.unreadCount > 0) {
       markAsRead({ conversationId: conversation.id });
     }
-  };
+
+    if (!messages[conversation.id]) {
+      await fetchMessages({ conversationId: conversation.id, page: 1, limit: 30 });
+    }
+  }, [fetchMessages, markAsRead, messages, onConversationSelect]);
 
   const handleBackToList = () => {
     setSelectedConversation(null);
   };
+
+  useEffect(() => {
+    if (!initialConversationId || conversations.length === 0) return;
+
+    const existing = conversations.find((conv) => conv.id === initialConversationId);
+    if (existing) {
+      handleConversationSelect(existing);
+    }
+  }, [initialConversationId, conversations, handleConversationSelect]);
 
   const handleSendMessage = async (content: string, mediaFile?: File) => {
     if (!selectedConversation) return;
