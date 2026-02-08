@@ -11,7 +11,7 @@ import { PostCard } from './PostCard';
 import { CommentSection } from './CommentSection';
 import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
 
 interface PostDetailPageProps {
   postId: string;
@@ -41,11 +41,12 @@ export const PostDetailPage: React.FC<PostDetailPageProps> = ({
   }, [postId, getPost]);
 
   const handleBack = () => {
-    if (window.history.length > 1) {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
       router.back();
-    } else {
-      router.push('/');
+      return;
     }
+
+    void router.push('/');
   };
 
   // Loading state

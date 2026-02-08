@@ -57,16 +57,16 @@ export interface Post {
 export interface CreatePostInput {
   type: PostType;
   content?: string;
+  mediaUrl?: string;
+  thumbnailUrl?: string;
   visibility?: PostVisibility;
   hashtags?: string[];
-  mentions?: string[];
 }
 
 export interface UpdatePostInput {
   content?: string;
   visibility?: PostVisibility;
   hashtags?: string[];
-  mentions?: string[];
 }
 
 // ============================================

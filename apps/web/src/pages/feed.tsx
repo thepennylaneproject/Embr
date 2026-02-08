@@ -1,74 +1,43 @@
-import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
-import { AppShell } from '@/components/layout/AppShell';
-import { Button, Card, PageState } from '@/components/ui';
-import { contentApi } from '@shared/api/content.api';
-import { getApiErrorMessage } from '@/lib/api/error';
-import { FeedType, Post } from '@shared/types/content.types';
+import { FeedTabs, PostCreator } from '@/components/content';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function FeedPage() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadFeed = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await contentApi.getFeed({ feedType: FeedType.FOR_YOU, page: 1, limit: 10 });
-      setPosts(response.data);
-    } catch (err: any) {
-      setError(getApiErrorMessage(err, 'Unable to load feed.'));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadFeed();
-  }, [loadFeed]);
+  const { user, loading } = useAuth();
 
   return (
     <ProtectedRoute>
-      <AppShell title="Feed" subtitle="Live content from your network." accent="warm1">
-        {loading ? (
-          <Card padding="lg">
-            <PageState title="Loading feed" description="Fetching the latest posts for you." />
-          </Card>
-        ) : null}
+      <main className="min-h-screen bg-gray-50">
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <header className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Feed</h1>
+              <p className="text-sm text-gray-500">
+                Stay up to date with what&apos;s new from creators.
+              </p>
+            </div>
+            {user && (
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+              >
+                <img
+                  src={user.profile?.avatarUrl || '/default-avatar.png'}
+                  alt={user.profile?.displayName || user.username}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                <span className="hidden sm:inline">@{user.username}</span>
+              </Link>
+            )}
+          </header>
 
-        {!loading && error ? (
-          <Card padding="lg">
-            <PageState title="Could not load feed" description={error} actionLabel="Retry" onAction={loadFeed} />
-          </Card>
-        ) : null}
-
-        {!loading && !error && posts.length === 0 ? (
-          <Card padding="lg">
-            <PageState title="No posts yet" description="Follow creators and come back to see your feed." />
-          </Card>
-        ) : null}
-
-        {!loading && !error && posts.length > 0 ? (
-          <section style={{ display: 'grid', gap: '0.9rem' }}>
-            {posts.map((post) => (
-              <Card key={post.id} padding="md">
-                <p style={{ margin: 0, fontWeight: 600 }}>
-                  {post.author.profile.displayName || post.author.username}
-                </p>
-                <p className="ui-help-text" style={{ marginTop: '0.2rem' }}>
-                  @{post.author.username}
-                </p>
-                <p style={{ marginBottom: '0.6rem' }}>{post.content || 'Media post'}</p>
-                <Button type="button" variant="ghost" disabled>
-                  Interactions in P1 ({`EMBR-FE-P1-001`})
-                </Button>
-              </Card>
-            ))}
+          <section aria-live="polite" aria-busy={loading}>
+            <PostCreator className="mb-6" />
+            <FeedTabs />
           </section>
-        ) : null}
-      </AppShell>
+        </div>
+      </main>
     </ProtectedRoute>
   );
 }

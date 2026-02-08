@@ -174,9 +174,12 @@ export const useFeed = (params?: UseFeedParams): UseFeedReturn => {
   const likePost = useCallback(
     async (postId: string) => {
       // Optimistic update
+      const currentPost = posts.find((p) => p.id === postId);
+      if (!currentPost) return;
+
       optimisticUpdatePost(postId, {
         isLiked: true,
-        likeCount: posts.find((p) => p.id === postId)!.likeCount + 1,
+        likeCount: currentPost.likeCount + 1,
       });
 
       try {
@@ -199,9 +202,12 @@ export const useFeed = (params?: UseFeedParams): UseFeedReturn => {
   const unlikePost = useCallback(
     async (postId: string) => {
       // Optimistic update
+      const currentPost = posts.find((p) => p.id === postId);
+      if (!currentPost) return;
+
       optimisticUpdatePost(postId, {
         isLiked: false,
-        likeCount: posts.find((p) => p.id === postId)!.likeCount - 1,
+        likeCount: currentPost.likeCount - 1,
       });
 
       try {

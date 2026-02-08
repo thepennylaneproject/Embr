@@ -25,7 +25,7 @@ class ContentApiClient {
 
   constructor(
     baseURL: string = process.env.NEXT_PUBLIC_API_URL ||
-      "http://localhost:3003",
+      "http://localhost:3003/api",
   ) {
     this.client = axios.create({
       baseURL,
@@ -45,23 +45,140 @@ class ContentApiClient {
     });
   }
 
+  private mapPostTypeToApi(type: Post["type"]): string {
+    switch (type) {
+      case "image":
+        return "IMAGE";
+      case "video":
+        return "VIDEO";
+      default:
+        return "TEXT";
+    }
+  }
+
+  private mapPostTypeFromApi(type?: string): Post["type"] {
+    switch ((type || "").toUpperCase()) {
+      case "IMAGE":
+        return "image";
+      case "VIDEO":
+        return "video";
+      default:
+        return "text";
+    }
+  }
+
+  private mapVisibilityToApi(visibility?: Post["visibility"]): string | undefined {
+    if (!visibility) return undefined;
+    switch (visibility) {
+      case "followers":
+        return "FOLLOWERS";
+      case "private":
+        return "PRIVATE";
+      default:
+        return "PUBLIC";
+    }
+  }
+
+  private mapVisibilityFromApi(visibility?: string): Post["visibility"] {
+    switch ((visibility || "").toUpperCase()) {
+      case "FOLLOWERS":
+        return "followers";
+      case "PRIVATE":
+        return "private";
+      default:
+        return "public";
+    }
+  }
+
+  private normalizePost(post: any): Post {
+    const author = post?.author ?? {};
+    const profile = author.profile ?? {};
+
+    return {
+      id: post.id,
+      authorId: post.authorId ?? author.id ?? "",
+      author: {
+        id: author.id ?? post.authorId ?? "",
+        username: author.username ?? "",
+        profile: {
+          displayName:
+            author.displayName ??
+            profile.displayName ??
+            author.username ??
+            "Unknown",
+          avatarUrl: author.avatarUrl ?? profile.avatarUrl,
+          bio: profile.bio,
+        },
+      },
+      type: this.mapPostTypeFromApi(post.type),
+      content: post.content ?? "",
+      mediaUrl: post.mediaUrl ?? undefined,
+      thumbnailUrl: post.thumbnailUrl ?? undefined,
+      muxAssetId: post.muxAssetId ?? undefined,
+      muxPlaybackId: post.muxPlaybackId ?? undefined,
+      visibility: this.mapVisibilityFromApi(post.visibility),
+      hashtags: Array.isArray(post.hashtags) ? post.hashtags : [],
+      mentions: Array.isArray(post.mentions) ? post.mentions : [],
+      viewCount: post.viewCount ?? 0,
+      likeCount: post.likeCount ?? 0,
+      commentCount: post.commentCount ?? 0,
+      shareCount: post.shareCount ?? 0,
+      duration: post.duration ?? undefined,
+      isProcessing: Boolean(post.isProcessing),
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+      isLiked: post.isLiked ?? false,
+      isBookmarked: post.isBookmarked ?? false,
+    };
+  }
+
+  private normalizeFeedResponse(response: FeedResponse): FeedResponse {
+    return {
+      ...response,
+      data: response.data.map((post) => this.normalizePost(post)),
+    };
+  }
+
+  private normalizeMediaResponse(media: any): MediaUploadResponse {
+    return {
+      mediaUrl: media?.mediaUrl ?? media?.fileUrl ?? "",
+      thumbnailUrl: media?.thumbnailUrl ?? undefined,
+      muxAssetId: media?.muxAssetId ?? undefined,
+      muxPlaybackId: media?.muxPlaybackId ?? undefined,
+      duration: media?.duration ?? undefined,
+    };
+  }
+
   // ============================================
   // POSTS
   // ============================================
 
   async createPost(data: CreatePostInput): Promise<Post> {
-    const response = await this.client.post("/posts", data);
-    return response.data;
+    const payload = {
+      content: data.content,
+      type: this.mapPostTypeToApi(data.type),
+      mediaUrl: data.mediaUrl,
+      thumbnailUrl: data.thumbnailUrl,
+      visibility: this.mapVisibilityToApi(data.visibility),
+      hashtags: data.hashtags,
+    };
+    const response = await this.client.post("/posts", payload);
+    return this.normalizePost(response.data);
   }
 
   async getPost(postId: string): Promise<Post> {
     const response = await this.client.get(`/posts/${postId}`);
-    return response.data;
+    return this.normalizePost(response.data);
   }
 
   async updatePost(postId: string, data: UpdatePostInput): Promise<Post> {
-    const response = await this.client.patch(`/posts/${postId}`, data);
-    return response.data;
+    const payload = {
+      content: data.content,
+      visibility: this.mapVisibilityToApi(data.visibility),
+      hashtags: data.hashtags,
+    };
+    const response = await this.client.patch(`/posts/${postId}`, payload);
+    return this.normalizePost(response.data);
   }
 
   async deletePost(postId: string): Promise<void> {
@@ -73,7 +190,10 @@ class ContentApiClient {
     params?: { page?: number; limit?: number },
   ): Promise<PaginatedResponse<Post>> {
     const response = await this.client.get(`/posts/user/${userId}`, { params });
-    return response.data;
+    return {
+      ...response.data,
+      data: response.data.data.map((post: Post) => this.normalizePost(post)),
+    };
   }
 
   // ============================================
@@ -82,31 +202,33 @@ class ContentApiClient {
 
   async getFeed(params?: FeedParams): Promise<FeedResponse> {
     const { feedType = FeedType.FOR_YOU, ...rest } = params || {};
-    const response = await this.client.get(`/feed/${feedType}`, {
+    const endpoint =
+      feedType === FeedType.FOLLOWING ? "/posts/following" : "/posts/feed";
+    const response = await this.client.get(endpoint, {
       params: rest,
     });
-    return response.data;
+    return this.normalizeFeedResponse(response.data);
   }
 
   async getForYouFeed(
     params?: Omit<FeedParams, "feedType">,
   ): Promise<FeedResponse> {
-    const response = await this.client.get("/feed/for-you", { params });
-    return response.data;
+    const response = await this.client.get("/posts/feed", { params });
+    return this.normalizeFeedResponse(response.data);
   }
 
   async getFollowingFeed(
     params?: Omit<FeedParams, "feedType">,
   ): Promise<FeedResponse> {
-    const response = await this.client.get("/feed/following", { params });
-    return response.data;
+    const response = await this.client.get("/posts/following", { params });
+    return this.normalizeFeedResponse(response.data);
   }
 
   async getTrendingFeed(
     params?: Omit<FeedParams, "feedType">,
   ): Promise<FeedResponse> {
-    const response = await this.client.get("/feed/trending", { params });
-    return response.data;
+    const response = await this.client.get("/posts/feed", { params });
+    return this.normalizeFeedResponse(response.data);
   }
 
   // ============================================
@@ -198,11 +320,13 @@ class ContentApiClient {
   async getPresignedUrl(
     fileName: string,
     fileType: string,
+    fileSize: number,
     contentType: "image" | "video",
   ): Promise<PresignedUrlResponse> {
-    const response = await this.client.post("/upload/presigned-url", {
+    const response = await this.client.post("/media/upload/initiate", {
       fileName,
       fileType,
+      fileSize,
       contentType,
     });
     return response.data;
@@ -233,14 +357,17 @@ class ContentApiClient {
   }
 
   async completeMediaUpload(
-    fileUrl: string,
+    fileKey: string,
+    fileName: string,
     contentType: "image" | "video",
   ): Promise<MediaUploadResponse> {
-    const response = await this.client.post("/upload/complete", {
-      fileUrl,
+    const response = await this.client.post("/media/upload/complete", {
+      fileKey,
+      fileName,
       contentType,
     });
-    return response.data;
+    const media = response.data?.media ?? response.data;
+    return this.normalizeMediaResponse(media);
   }
 
   async uploadMedia(
@@ -248,18 +375,29 @@ class ContentApiClient {
     contentType: "image" | "video",
     onProgress?: (progress: UploadProgress) => void,
   ): Promise<MediaUploadResponse> {
-    // Get presigned URL
-    const { uploadUrl, fileUrl } = await this.getPresignedUrl(
-      file.name,
-      file.type,
+    const initResponse = await this.client.post("/media/upload/initiate", {
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
       contentType,
-    );
+    });
 
-    // Upload to S3
+    const { uploadType } = initResponse.data;
+    if (uploadType !== "simple") {
+      throw new Error("Multipart or mux uploads are not supported in the web client yet.");
+    }
+
+    const { uploadUrl, fileKey } = initResponse.data;
     await this.uploadToS3(uploadUrl, file, onProgress);
 
-    // Complete and process
-    return await this.completeMediaUpload(fileUrl, contentType);
+    const completeResponse = await this.client.post("/media/upload/complete", {
+      fileKey,
+      fileName: file.name,
+      contentType,
+    });
+
+    const media = completeResponse.data?.media ?? completeResponse.data;
+    return this.normalizeMediaResponse(media);
   }
 
   // ============================================

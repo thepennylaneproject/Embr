@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
-import { X, Image, Video, Smile, Hash, AtSign, Loader2, Upload } from 'lucide-react';
+import { X, Image, Video, Loader2, Upload } from 'lucide-react';
 import { usePost } from '@/hooks/usePost';
 import { PostType, PostVisibility, CreatePostInput } from '@shared/types/content.types';
 
@@ -40,7 +40,6 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [hashtags, setHashtags] = useState<string[]>([]);
-  const [mentions, setMentions] = useState<string[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -100,10 +99,8 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
 
   const extractHashtagsAndMentions = useCallback((text: string) => {
     const hashtagMatches = text.match(/#\w+/g) || [];
-    const mentionMatches = text.match(/@\w+/g) || [];
     
     setHashtags(hashtagMatches.map(tag => tag.slice(1)));
-    setMentions(mentionMatches.map(mention => mention.slice(1)));
   }, []);
 
   const handleContentChange = useCallback(
@@ -126,7 +123,6 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
         content: content.trim(),
         visibility,
         hashtags,
-        mentions,
       };
 
       // Upload media if present
@@ -135,6 +131,8 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
         postData = {
           ...postData,
           type: mediaType === 'image' ? PostType.IMAGE : PostType.VIDEO,
+          mediaUrl: mediaResult.mediaUrl,
+          thumbnailUrl: mediaResult.thumbnailUrl,
         };
       }
 
@@ -144,19 +142,17 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
       setContent('');
       removeMedia();
       setHashtags([]);
-      setMentions([]);
       
       onPostCreated?.(post.id);
     } catch (err) {
       console.error('Failed to create post:', err);
     }
-  }, [content, mediaFile, mediaType, visibility, hashtags, mentions, uploadMedia, createPost, removeMedia, onPostCreated]);
+  }, [content, mediaFile, mediaType, visibility, hashtags, uploadMedia, createPost, removeMedia, onPostCreated]);
 
   const handleCancel = useCallback(() => {
     setContent('');
     removeMedia();
     setHashtags([]);
-    setMentions([]);
     reset();
     onCancel?.();
   }, [removeMedia, reset, onCancel]);
