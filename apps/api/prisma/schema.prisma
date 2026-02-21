@@ -87,6 +87,7 @@ model User {
   trackPlays    TrackPlay[]
   trackLikes    TrackLike[]
   trackComments TrackComment[]
+  videoUsages   VideoUsage[] // Tracks where creator used music from Music vertical
 
   @@index([email])
   @@index([role])
@@ -1169,6 +1170,14 @@ model Track {
   muxAssetId        String?
   muxPlaybackId     String?
 
+  // Music Video Support
+  hasVideo          Boolean   @default(false)
+  videoUrl          String?   // HLS stream or MP4 URL
+  videoDuration     Int?      // Video duration in seconds
+  videoThumbnailUrl String?   // Video cover image
+  muxVideoAssetId   String?   // Mux video asset ID for processing
+  muxVideoPlaybackId String?  // Mux playback ID for HLS delivery
+
   lyrics            String?   @db.Text
 
   // Pricing & Monetization
@@ -1176,11 +1185,18 @@ model Track {
   isPublished       Boolean   @default(false)
   visibility        String    @default("public") // public, private, followers
 
+  // Licensing & Rights Management
+  licensingModel    String    @default("restricted") // restricted, free, commercial, exclusive
+  allowRemix        Boolean   @default(true) // Can creators remix/sample this track?
+  allowMonetize     Boolean   @default(true) // Can track be used in monetized content?
+  attributionRequired Boolean @default(true) // Must creditor credit original artist?
+
   // Stats
   streams           BigInt    @default(0)
   downloads         Int       @default(0)
   likeCount         Int       @default(0)
   shares            Int       @default(0)
+  usedInCount       Int       @default(0) // How many creators used this track
 
   spotifyUri        String?
   createdAt         DateTime  @default(now())
@@ -1192,9 +1208,11 @@ model Track {
   likes             TrackLike[]
   comments          TrackComment[]
   tips              Tip[]      @relation("TrackTips")
+  usages            VideoUsage[] // Track where this music is used
 
   @@index([artistId])
   @@index([albumId])
+  @@index([licensingModel])
   @@index([createdAt])
   @@index([deletedAt])
 }
@@ -1287,5 +1305,61 @@ model TrackComment {
   @@index([trackId])
   @@index([userId])
   @@index([createdAt])
+}
+
+// ============================================
+// MUSIC LICENSING & CROSS-VERTICAL USAGE
+// ============================================
+
+// Tracks when music from the Music vertical is used in other content
+// across verticals (Feeds, Gigs, etc.)
+// Example: Creator uses Artist's "Summer Vibes" in their feed video
+// - trackId: "summer-vibes-track-id"
+// - contentType: "post"
+// - contentId: "feed-post-id"
+// - creatorId: "creator-who-used-music"
+// - revenue: calculated from tips/engagement on that post
+
+model VideoUsage {
+  id                String    @id @default(uuid())
+  trackId           String
+  track             Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  // Where the music was used
+  contentType       String    // "post", "gig_video", "reel", "video", etc.
+  contentId         String    // ID of the content using the music
+
+  // Who used it
+  creatorId         String
+  creator           User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  // Licensing details
+  licensingModel    String    // Copied from track at time of use
+  allowMonetize     Boolean   @default(true)
+  attributionUrl    String?   // Link to original artist
+
+  // Usage & Revenue Tracking
+  usageDate         DateTime  @default(now())
+  impressions       Int       @default(0) // Views of content using this music
+  engagements       Int       @default(0) // Likes, comments, shares
+
+  // Revenue split (calculated from monetization)
+  totalRevenue      Int       @default(0) // cents from this content
+  originalArtistShare Int    @default(0) // What original artist earned (cents)
+  creatorShare      Int       @default(0) // What content creator earned (cents)
+  platformShare     Int       @default(0) // Platform fee (cents)
+
+  // Attribution
+  isAttributed      Boolean   @default(true) // Was original artist credited?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([trackId])
+  @@index([contentId])
+  @@index([creatorId])
+  @@index([contentType])
+  @@index([usageDate])
+  @@index([totalRevenue])
 }
 
