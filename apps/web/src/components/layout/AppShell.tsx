@@ -9,6 +9,8 @@ const navItems = [
   { href: '/feed', label: 'Feed' },
   { href: '/messages', label: 'Messages' },
   { href: '/marketplace', label: 'Marketplace' },
+  { href: '/music', label: 'Music' },
+  { href: '/gigs', label: 'Gigs' },
   { href: '/wallet', label: 'Wallet' },
   { href: '/notifications', label: 'Notifications' },
   { href: '/profile', label: 'Profile' },
