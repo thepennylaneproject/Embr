@@ -26,8 +26,7 @@ class ContentApiClient {
   private client: AxiosInstance;
 
   constructor(
-    baseURL: string = process.env.NEXT_PUBLIC_API_URL ||
-      "http://localhost:3003/api",
+    baseURL: string = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3003"}/api`,
   ) {
     this.client = axios.create({
       baseURL,
@@ -204,9 +203,7 @@ class ContentApiClient {
 
   async getFeed(params?: FeedParams): Promise<FeedResponse> {
     const { feedType = FeedType.FOR_YOU, ...rest } = params || {};
-    const endpoint =
-      feedType === FeedType.FOLLOWING ? "/posts/following" : "/posts/feed";
-    const response = await this.client.get(endpoint, {
+    const response = await this.client.get(`/posts/feed`, {
       params: rest,
     });
     return this.normalizeFeedResponse(response.data);
@@ -216,21 +213,22 @@ class ContentApiClient {
     params?: Omit<FeedParams, "feedType">,
   ): Promise<FeedResponse> {
     const response = await this.client.get("/posts/feed", { params });
-    return this.normalizeFeedResponse(response.data);
+    return response.data;
   }
 
   async getFollowingFeed(
     params?: Omit<FeedParams, "feedType">,
   ): Promise<FeedResponse> {
     const response = await this.client.get("/posts/following", { params });
-    return this.normalizeFeedResponse(response.data);
+    return response.data;
   }
 
   async getTrendingFeed(
     params?: Omit<FeedParams, "feedType">,
   ): Promise<FeedResponse> {
+    // Backend serves trending via /posts/feed (sorted by engagement)
     const response = await this.client.get("/posts/feed", { params });
-    return this.normalizeFeedResponse(response.data);
+    return response.data;
   }
 
   // ============================================
