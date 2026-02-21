@@ -19,17 +19,19 @@ export default function ProtectedRoute({
   const router = useRouter();
 
   useEffect(() => {
-    if (loading) {
+    if (loading || !router.isReady) {
       return;
     }
 
     if (requireAuth && !user) {
-      router.replace(redirectTo);
-      return;
+      // Small delay so any in-flight navigation from AuthContext.login can settle first
+      const t = setTimeout(() => router.replace(redirectTo), 50);
+      return () => clearTimeout(t);
     }
 
-    if (!requireAuth && user && redirectAuthenticated) {
-      router.replace('/feed');
+    if (!requireAuth && user) {
+      const t = setTimeout(() => router.replace('/feed'), 50);
+      return () => clearTimeout(t);
     }
   }, [loading, redirectAuthenticated, redirectTo, requireAuth, router, user]);
 
