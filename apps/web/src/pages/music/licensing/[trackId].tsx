@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
-import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
+import { ProtectedPageShell } from '@/components/layout';
 import { MusicLicensingFlow } from '@/components/music/licensing/MusicLicensingFlow';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -34,23 +33,14 @@ export default function MusicLicensingPage() {
 
   if (loading || !trackId) {
     return (
-      <ProtectedRoute>
-        <main className="min-h-screen bg-embr-neutral-50">
-          <div className="max-w-2xl mx-auto px-4 py-8">
-            <div className="h-96 bg-embr-neutral-200 rounded-lg animate-pulse" />
-          </div>
-        </main>
-      </ProtectedRoute>
+      <ProtectedPageShell breadcrumbs={[{ label: 'Music', href: '/music' }, { label: 'Licensing' }]}>
+        <div style={{ height: '400px', backgroundColor: 'var(--embr-border)', borderRadius: 'var(--embr-radius-lg)', animation: 'pulse 2s infinite' }} />
+      </ProtectedPageShell>
     );
   }
 
   return (
-    <ProtectedRoute>
-      <main className="min-h-screen bg-embr-neutral-50">
-        <div className="max-w-2xl mx-auto px-4 py-8">
-          <Link href="/music" className="text-sm text-embr-accent-600 hover:text-embr-accent-700 mb-6 inline-block">
-            ← Back to music discovery
-          </Link>
+    <ProtectedPageShell breadcrumbs={[{ label: 'Music', href: '/music' }, { label: 'Licensing' }]}>
 
           {showContentTypeSelector ? (
             // Content Type Selector
@@ -119,8 +109,6 @@ export default function MusicLicensingPage() {
               />
             </div>
           )}
-        </div>
-      </main>
-    </ProtectedRoute>
+    </ProtectedPageShell>
   );
 }

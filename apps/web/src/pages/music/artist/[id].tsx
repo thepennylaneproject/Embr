@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
-import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
+import { ProtectedPageShell } from '@/components/layout';
 import { ArtistDashboard } from '@/components/music/artist/ArtistDashboard';
 
 export default function ArtistProfilePage() {
@@ -22,44 +21,26 @@ export default function ArtistProfilePage() {
 
   if (loading || !artistId) {
     return (
-      <ProtectedRoute>
-        <main className="min-h-screen bg-embr-neutral-50">
-          <div className="max-w-6xl mx-auto px-4 py-8">
-            <div className="h-96 bg-embr-neutral-200 rounded-lg animate-pulse" />
-          </div>
-        </main>
-      </ProtectedRoute>
+      <ProtectedPageShell breadcrumbs={[{ label: 'Music', href: '/music' }, { label: 'Artist' }]}>
+        <div style={{ height: '400px', backgroundColor: 'var(--embr-border)', borderRadius: 'var(--embr-radius-lg)', animation: 'pulse 2s infinite' }} />
+      </ProtectedPageShell>
     );
   }
 
   if (error) {
     return (
-      <ProtectedRoute>
-        <main className="min-h-screen bg-embr-neutral-50">
-          <div className="max-w-6xl mx-auto px-4 py-8">
-            <div className="bg-embr-primary-100/30 border border-embr-primary-300 rounded-lg p-6 text-embr-primary-700">
-              <p className="font-semibold mb-2">Error loading artist profile</p>
-              <p className="text-sm mb-4">{error}</p>
-              <Link href="/music" className="text-embr-primary-600 hover:underline text-sm font-semibold">
-                ← Back to music discovery
-              </Link>
-            </div>
-          </div>
-        </main>
-      </ProtectedRoute>
+      <ProtectedPageShell breadcrumbs={[{ label: 'Music', href: '/music' }, { label: 'Artist' }]}>
+        <div className="ui-card" data-padding="lg" style={{ borderColor: 'var(--embr-error)', borderWidth: '1px', backgroundColor: 'color-mix(in srgb, var(--embr-error) 12%, white)' }}>
+          <p style={{ fontWeight: '600', marginBottom: '0.5rem', color: 'var(--embr-error)' }}>Error loading artist profile</p>
+          <p style={{ fontSize: '0.9rem', marginBottom: '1rem', color: 'var(--embr-error)' }}>{error}</p>
+        </div>
+      </ProtectedPageShell>
     );
   }
 
   return (
-    <ProtectedRoute>
-      <main className="min-h-screen bg-embr-neutral-50">
-        <div className="max-w-6xl mx-auto px-4 py-8">
-          <Link href="/music" className="text-sm text-embr-accent-600 hover:text-embr-accent-700 mb-6 inline-block">
-            ← Back to music discovery
-          </Link>
-          <ArtistDashboard artistId={artistId} />
-        </div>
-      </main>
-    </ProtectedRoute>
+    <ProtectedPageShell breadcrumbs={[{ label: 'Music', href: '/music' }, { label: 'Artist' }]}>
+      <ArtistDashboard artistId={artistId} />
+    </ProtectedPageShell>
   );
 }
