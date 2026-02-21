@@ -6,6 +6,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { EmailModule } from './modules/email/email.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { UsersModule } from './modules/users/users.module';
 import { ContentModule } from './modules/content/content.module';
 import { MediaModule } from './modules/media/media.module';
@@ -18,24 +19,27 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env', '../../.env'],  // root .env works from both apps/api and monorepo root
+    }),
     
-    // Rate limiting - 100 requests per minute by default
+    // Rate limiting - relaxed for development
     ThrottlerModule.forRoot([
       {
         name: 'short',
         ttl: 1000,   // 1 second
-        limit: 3,    // 3 requests per second
+        limit: 60,   // 60 req/s — accommodates React Strict Mode double-invocations
       },
       {
-        name: 'medium', 
+        name: 'medium',
         ttl: 10000,  // 10 seconds
-        limit: 20,   // 20 requests per 10 seconds
+        limit: 300,  // 300 per 10 seconds
       },
       {
         name: 'long',
         ttl: 60000,  // 1 minute
-        limit: 100,  // 100 requests per minute
+        limit: 1000, // 1000 per minute
       },
     ]),
     
@@ -53,10 +57,15 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     NotificationsModule,
   ],
   providers: [
-    // Global rate limiting guard
+    // Global rate limiting guard (runs before auth)
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    // Global JWT auth guard — routes opt out with @Public()
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
     },
   ],
 })

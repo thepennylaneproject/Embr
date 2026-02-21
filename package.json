@@ -25,11 +25,12 @@
     "docker:prod": "docker compose -f docker/docker-compose.prod.yml up -d",
     "docker:prod:down": "docker compose -f docker/docker-compose.prod.yml down",
     "setup": "npm install && npm run docker:up && sleep 5 && npm run db:generate && npm run db:migrate:dev && npm run db:seed",
-    "dev:api": "npm --prefix apps/api run start:dev",
-    "dev:web": "npm --prefix apps/web run dev",
-    "dev": "sh -c \"npm run docker:up && npm run dev:api & npm run dev:web\"",
+    "dev:api": "cd apps/api && node_modules/.bin/nest start --watch",
+    "dev:web": "cd apps/web && node_modules/.bin/next dev -p 3004",
+    "dev": "npm run docker:up && npx concurrently --kill-others-on-fail --names \"api,web\" --prefix-colors \"blue,green\" \"npm run dev:api\" \"npm run dev:web\"",
     "build:api": "npm --prefix apps/api run build",
     "build:web": "npm --prefix apps/web run build",
+    "build": "npm run build:api && npm run build:web",
     "clean": "npm run docker:down && rm -rf node_modules package-lock.json",
     "backup": "chmod +x scripts/migrate.sh && ./scripts/migrate.sh backup",
     "migrate": "chmod +x scripts/migrate.sh && ./scripts/migrate.sh"
@@ -41,6 +42,7 @@
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/node": "^20.10.6",
+    "concurrently": "^9.2.1",
     "prisma": "^5.8.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
