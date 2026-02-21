@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { Button, Card, Input } from '@/components/ui';
 
 export default function SignupPage() {
+  const router = useRouter();
   const { signup } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -48,6 +50,7 @@ export default function SignupPage() {
 
     try {
       await signup(formData.email, formData.username, formData.password, formData.fullName || undefined);
+      await router.push('/feed');
     } catch (err: any) {
       setErrors({ general: getApiErrorMessage(err, 'Signup failed.') });
     } finally {
@@ -56,7 +59,7 @@ export default function SignupPage() {
   };
 
   return (
-    <ProtectedRoute requireAuth={false}>
+    <ProtectedRoute requireAuth={false} redirectAuthenticated={false}>
       <main className="embr-page" style={{ display: 'grid', placeItems: 'center', padding: '1rem' }}>
         <Card padding="lg" style={{ width: 'min(520px, 100%)' }}>
           <h1 className="ui-page-title" style={{ marginBottom: '0.3rem' }}>

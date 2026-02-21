@@ -6,12 +6,14 @@ import { Card, PageState } from '@/components/ui';
 interface ProtectedRouteProps {
   requireAuth?: boolean;
   redirectTo?: string;
+  redirectAuthenticated?: boolean;
 }
 
 export default function ProtectedRoute({
   children,
   requireAuth = true,
   redirectTo = '/auth/login',
+  redirectAuthenticated = true,
 }: PropsWithChildren<ProtectedRouteProps>) {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -26,10 +28,10 @@ export default function ProtectedRoute({
       return;
     }
 
-    if (!requireAuth && user) {
+    if (!requireAuth && user && redirectAuthenticated) {
       router.replace('/feed');
     }
-  }, [loading, redirectTo, requireAuth, router, user]);
+  }, [loading, redirectAuthenticated, redirectTo, requireAuth, router, user]);
 
   if (loading) {
     return (
@@ -47,7 +49,7 @@ export default function ProtectedRoute({
     );
   }
 
-  if (!requireAuth && user) {
+  if (!requireAuth && user && redirectAuthenticated) {
     return (
       <Card padding="lg" style={{ marginTop: '2rem' }}>
         <PageState title="Redirecting" description="You are already signed in." />
