@@ -1,0 +1,57 @@
+{
+  "name": "@embr/music-sdk",
+  "version": "1.0.0",
+  "description": "Official TypeScript SDK for EMBR Music API - Music discovery, licensing, and monetization",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "embr",
+    "music",
+    "api",
+    "sdk",
+    "typescript",
+    "licensing",
+    "monetization",
+    "revenue"
+  ],
+  "author": "EMBR",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/embr/music-sdk"
+  },
+  "homepage": "https://embr.dev",
+  "bugs": {
+    "url": "https://github.com/embr/music-sdk/issues"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

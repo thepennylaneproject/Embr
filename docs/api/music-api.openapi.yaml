@@ -1,0 +1,847 @@
+openapi: 3.0.0
+info:
+  title: EMBR Music API
+  description: |
+    The EMBR Music API enables creators to discover, license, and monetize music in their content.
+
+    ## Features
+    - **Artist Discovery** - Find and follow musicians
+    - **Track Search** - Discover music by genre, mood, and trending
+    - **Licensing** - Seamless music licensing with revenue sharing
+    - **Revenue Tracking** - Real-time earnings from music usage
+    - **Stream Analytics** - Detailed usage and engagement metrics
+
+    ## Authentication
+    All endpoints require Bearer token authentication. Include your API token in the Authorization header:
+    ```
+    Authorization: Bearer YOUR_API_TOKEN
+    ```
+
+  version: 1.0.0
+  contact:
+    name: EMBR Support
+    email: support@embr.dev
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.embr.dev/v1/music
+    description: Production server
+  - url: http://localhost:3000/api/v1/music
+    description: Local development server
+
+tags:
+  - name: Artists
+    description: Artist profile and discovery endpoints
+  - name: Tracks
+    description: Music track discovery and search
+  - name: Licensing
+    description: Music licensing and rights management
+  - name: Usage
+    description: Track usage and streaming analytics
+  - name: Revenue
+    description: Creator earnings and revenue reports
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from authentication endpoint
+
+  schemas:
+    Artist:
+      type: object
+      required:
+        - id
+        - stageName
+        - bio
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique artist identifier
+        stageName:
+          type: string
+          description: Artist's stage name
+        bio:
+          type: string
+          nullable: true
+          description: Artist biography
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: Artist profile picture URL
+        isVerified:
+          type: boolean
+          description: Whether artist is verified
+        followerCount:
+          type: integer
+          description: Number of followers
+        trackCount:
+          type: integer
+          description: Total number of published tracks
+        createdAt:
+          type: string
+          format: date-time
+
+    Track:
+      type: object
+      required:
+        - id
+        - title
+        - artistId
+        - licensingModel
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          description: Track title
+        artistId:
+          type: string
+          format: uuid
+        artist:
+          $ref: '#/components/schemas/Artist'
+        duration:
+          type: integer
+          description: Track duration in seconds
+        streams:
+          type: integer
+          description: Total streams
+        downloads:
+          type: integer
+          description: Total downloads
+        likeCount:
+          type: integer
+          description: Number of likes
+        usedInCount:
+          type: integer
+          description: Number of pieces of content using this track
+        licensingModel:
+          type: string
+          enum: ['free', 'commercial', 'exclusive', 'restricted']
+          description: |
+            Licensing model for the track
+            - free: Can be used without attribution
+            - commercial: Can be monetized
+            - exclusive: Single use license
+            - restricted: Not available for general use
+        videoThumbnailUrl:
+          type: string
+          format: uri
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    LicensingInfo:
+      type: object
+      required:
+        - trackId
+        - licensingModel
+        - allowed
+      properties:
+        trackId:
+          type: string
+          format: uuid
+        licensingModel:
+          type: string
+          enum: ['free', 'commercial', 'exclusive', 'restricted']
+        allowed:
+          type: boolean
+          description: Whether the user can use this track
+        reason:
+          type: string
+          nullable: true
+          description: Reason if track is not allowed
+        allowRemix:
+          type: boolean
+          description: Whether remixing is allowed
+        allowMonetize:
+          type: boolean
+          description: Whether monetization is allowed
+        attributionRequired:
+          type: boolean
+          description: Whether attribution must be provided
+        revenueShare:
+          type: object
+          properties:
+            artist:
+              type: number
+              description: Artist percentage (0-100)
+            creator:
+              type: number
+              description: Creator percentage (0-100)
+            platform:
+              type: number
+              description: Platform percentage (0-100)
+
+    VideoUsage:
+      type: object
+      required:
+        - id
+        - trackId
+        - contentId
+        - contentType
+      properties:
+        id:
+          type: string
+          format: uuid
+        trackId:
+          type: string
+          format: uuid
+        track:
+          $ref: '#/components/schemas/Track'
+        contentId:
+          type: string
+          description: ID of content using the track
+        contentType:
+          type: string
+          enum: ['video', 'audio', 'remix']
+        streams:
+          type: integer
+          description: Number of streams/views
+        downloads:
+          type: integer
+          description: Number of downloads
+        engagements:
+          type: integer
+          description: Likes, shares, comments
+        totalRevenue:
+          type: number
+          description: Total revenue in cents
+        creatorShare:
+          type: number
+          description: Creator's share in cents
+        artistShare:
+          type: number
+          description: Artist's share in cents
+        platformFee:
+          type: number
+          description: Platform fee in cents
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreatorRevenue:
+      type: object
+      required:
+        - period
+        - totalRevenue
+      properties:
+        period:
+          type: string
+          enum: ['daily', 'weekly', 'monthly']
+        totalRevenue:
+          type: number
+          description: Total revenue in cents
+        usages:
+          type: integer
+          description: Number of content pieces using music
+        topUsages:
+          type: array
+          items:
+            $ref: '#/components/schemas/VideoUsage'
+        paymentStatus:
+          type: string
+          enum: ['pending', 'processing', 'completed', 'failed']
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          nullable: true
+          description: Additional error details
+
+security:
+  - BearerAuth: []
+
+paths:
+  /artists:
+    get:
+      summary: Search artists
+      tags:
+        - Artists
+      parameters:
+        - name: q
+          in: query
+          description: Search query (name, genre, etc.)
+          schema:
+            type: string
+        - name: verified
+          in: query
+          description: Filter verified artists only
+          schema:
+            type: boolean
+        - name: sort
+          in: query
+          description: Sort field (followers, tracks, trending)
+          schema:
+            type: string
+            enum: ['followers', 'tracks', 'trending']
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of artists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Artist'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /artists/{artistId}:
+    get:
+      summary: Get artist profile
+      tags:
+        - Artists
+      parameters:
+        - name: artistId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Artist profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Artist'
+        '404':
+          description: Artist not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /artists/{artistId}/tracks:
+    get:
+      summary: Get artist's tracks
+      tags:
+        - Artists
+      parameters:
+        - name: artistId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: sort
+          in: query
+          description: Sort field (popular, recent, trending)
+          schema:
+            type: string
+            enum: ['popular', 'recent', 'trending']
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Artist's tracks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Track'
+
+  /artists/{artistId}/follow:
+    post:
+      summary: Follow an artist
+      tags:
+        - Artists
+      parameters:
+        - name: artistId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successfully followed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /artists/{artistId}/unfollow:
+    post:
+      summary: Unfollow an artist
+      tags:
+        - Artists
+      parameters:
+        - name: artistId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successfully unfollowed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /tracks:
+    get:
+      summary: Search tracks
+      tags:
+        - Tracks
+      parameters:
+        - name: q
+          in: query
+          description: Search query (title, artist, genre)
+          schema:
+            type: string
+        - name: genre
+          in: query
+          description: Filter by genre
+          schema:
+            type: string
+        - name: mood
+          in: query
+          description: Filter by mood (happy, sad, energetic, calm)
+          schema:
+            type: string
+        - name: licensing
+          in: query
+          description: Filter by licensing model
+          schema:
+            type: string
+            enum: ['free', 'commercial', 'exclusive']
+        - name: sort
+          in: query
+          description: Sort field (trending, popular, recent)
+          schema:
+            type: string
+            enum: ['trending', 'popular', 'recent']
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of tracks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Track'
+                  total:
+                    type: integer
+
+  /tracks/{trackId}:
+    get:
+      summary: Get track details
+      tags:
+        - Tracks
+      parameters:
+        - name: trackId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Track details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Track'
+        '404':
+          description: Track not found
+
+  /tracks/{trackId}/like:
+    post:
+      summary: Like a track
+      tags:
+        - Tracks
+      parameters:
+        - name: trackId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Track liked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  likeCount:
+                    type: integer
+
+  /tracks/{trackId}/unlike:
+    post:
+      summary: Unlike a track
+      tags:
+        - Tracks
+      parameters:
+        - name: trackId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Track unliked
+
+  /licensing/check:
+    post:
+      summary: Check licensing rights for a track
+      tags:
+        - Licensing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - trackId
+                - contentType
+              properties:
+                trackId:
+                  type: string
+                  format: uuid
+                  description: Track ID to check
+                contentType:
+                  type: string
+                  enum: ['video', 'audio', 'remix']
+                  description: Type of content using the track
+      responses:
+        '200':
+          description: Licensing information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LicensingInfo'
+        '400':
+          description: Invalid request
+        '404':
+          description: Track not found
+
+  /licensing/record:
+    post:
+      summary: Record music usage and create license agreement
+      tags:
+        - Licensing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - trackId
+                - contentId
+                - contentType
+              properties:
+                trackId:
+                  type: string
+                  format: uuid
+                contentId:
+                  type: string
+                  description: ID of the content using the music
+                contentType:
+                  type: string
+                  enum: ['video', 'audio', 'remix']
+                attribution:
+                  type: string
+                  nullable: true
+                  description: Attribution text if required
+      responses:
+        '201':
+          description: License recorded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/VideoUsage'
+                  licenseId:
+                    type: string
+                    format: uuid
+        '400':
+          description: License not available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /usage/record-stream:
+    post:
+      summary: Record a stream/view
+      tags:
+        - Usage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contentId
+                - trackId
+              properties:
+                contentId:
+                  type: string
+                trackId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Stream recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /usage/record-engagement:
+    post:
+      summary: Record engagement (like, share, comment)
+      tags:
+        - Usage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contentId
+                - trackId
+                - type
+              properties:
+                contentId:
+                  type: string
+                trackId:
+                  type: string
+                  format: uuid
+                type:
+                  type: string
+                  enum: ['like', 'share', 'comment']
+      responses:
+        '200':
+          description: Engagement recorded
+
+  /usage/content/{contentId}:
+    get:
+      summary: Get usage analytics for content
+      tags:
+        - Usage
+      parameters:
+        - name: contentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Usage analytics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VideoUsage'
+
+  /revenue/dashboard:
+    get:
+      summary: Get creator revenue dashboard
+      tags:
+        - Revenue
+      parameters:
+        - name: period
+          in: query
+          description: Revenue period
+          schema:
+            type: string
+            enum: ['daily', 'weekly', 'monthly']
+            default: 'monthly'
+      responses:
+        '200':
+          description: Revenue dashboard data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CreatorRevenue'
+
+  /revenue/payouts:
+    get:
+      summary: Get payout history
+      tags:
+        - Revenue
+      parameters:
+        - name: status
+          in: query
+          description: Filter by payout status
+          schema:
+            type: string
+            enum: ['pending', 'processing', 'completed', 'failed']
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Payout history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        amount:
+                          type: number
+                        status:
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+
+  /revenue/tracks:
+    get:
+      summary: Get revenue breakdown by track
+      tags:
+        - Revenue
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: ['daily', 'weekly', 'monthly']
+            default: 'monthly'
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: ['revenue', 'streams', 'engagements']
+            default: 'revenue'
+      responses:
+        '200':
+          description: Revenue by track
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        trackId:
+                          type: string
+                          format: uuid
+                        track:
+                          $ref: '#/components/schemas/Track'
+                        revenue:
+                          type: number
+                        streams:
+                          type: integer
+                        engagements:
+                          type: integer
