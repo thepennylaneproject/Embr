@@ -1,12 +1,14 @@
-import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
+import { ProtectedPageShell } from '@/components/layout';
 import { CreatorRevenueDashboard } from '@/components/music/dashboard/CreatorRevenueDashboard';
 
 export default function MusicDashboardPage() {
   return (
-    <ProtectedRoute>
-      <main className="min-h-screen bg-embr-neutral-50">
-        <CreatorRevenueDashboard />
-      </main>
-    </ProtectedRoute>
+    <ProtectedPageShell
+      title="Revenue Dashboard"
+      subtitle="Track music earnings and usage."
+      breadcrumbs={[{ label: 'Music', href: '/music' }, { label: 'Dashboard' }]}
+    >
+      <CreatorRevenueDashboard />
+    </ProtectedPageShell>
   );
 }

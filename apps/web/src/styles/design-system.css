@@ -317,21 +317,219 @@ select {
   color: var(--embr-muted-text);
 }
 
+/* Mobile menu button */
+.embr-menu-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  width: 2rem;
+  height: 2rem;
+}
+
+.embr-menu-toggle span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--embr-text);
+  border-radius: 1px;
+  transition: all 200ms ease;
+}
+
+/* User menu dropdown */
+.embr-user-menu {
+  position: relative;
+}
+
+.embr-user-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  border-radius: 999px;
+  transition: opacity 120ms ease;
+}
+
+.embr-user-button:hover {
+  opacity: 0.8;
+}
+
+.embr-user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  min-width: 200px;
+  background: color-mix(in srgb, var(--embr-bg) 92%, white);
+  border: 1px solid var(--embr-border);
+  border-radius: var(--embr-radius-md);
+  box-shadow: var(--embr-shadow);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.embr-dropdown-item {
+  padding: 0.7rem 1rem;
+  color: var(--embr-text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.embr-dropdown-link {
+  cursor: pointer;
+  transition: background-color 120ms ease;
+  text-decoration: none;
+}
+
+.embr-dropdown-link:hover {
+  background: color-mix(in srgb, var(--embr-accent) 12%, white);
+}
+
+.embr-dropdown-button {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0.7rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.embr-dropdown-button:hover {
+  background: color-mix(in srgb, var(--embr-error) 12%, white);
+}
+
+.embr-dropdown-danger {
+  color: var(--embr-error);
+}
+
+.embr-dropdown-divider {
+  margin: 0.4rem 0;
+  border: none;
+  border-top: 1px solid var(--embr-border);
+  opacity: 0.5;
+}
+
+.embr-user-name {
+  font-weight: 600;
+  color: var(--embr-text);
+}
+
+.embr-user-handle {
+  font-size: 0.86rem;
+  color: var(--embr-muted-text);
+}
+
+/* Breadcrumbs */
+.embr-breadcrumbs {
+  background: color-mix(in srgb, var(--embr-accent) 6%, white);
+  border-bottom: 1px solid var(--embr-border);
+  padding: 0.6rem 0;
+}
+
+.embr-breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.embr-breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.embr-breadcrumb-link {
+  color: var(--embr-accent);
+  text-decoration: none;
+  transition: opacity 120ms ease;
+}
+
+.embr-breadcrumb-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.embr-breadcrumb-current {
+  color: var(--embr-text);
+  font-weight: 500;
+}
+
+.embr-breadcrumb-separator {
+  color: var(--embr-muted-text);
+  opacity: 0.6;
+}
+
+.embr-brand-text {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .embr-header-row {
-    align-items: flex-start;
-    flex-direction: column;
-    justify-content: center;
-    padding: 0.9rem 0;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0.6rem 0;
+    flex-wrap: nowrap;
+  }
+
+  .embr-menu-toggle {
+    display: flex;
+  }
+
+  .embr-brand {
+    flex: 1;
+  }
+
+  .embr-brand-text {
+    display: inline;
   }
 
   .embr-main-nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
     width: 100%;
-    overflow-x: auto;
-    padding-bottom: 0.15rem;
+    flex-direction: column;
+    background: color-mix(in srgb, var(--embr-bg) 92%, white);
+    border-bottom: 1px solid var(--embr-border);
+    padding: 0.6rem 0;
+    gap: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 300ms ease;
+    z-index: 30;
+  }
+
+  .embr-main-nav[data-mobile-open='true'] {
+    max-height: 500px;
   }
 
   .embr-nav-link {
     white-space: nowrap;
+    border-radius: 0;
+    padding: 0.7rem 1rem;
+    width: 100%;
+  }
+
+  .embr-user-menu {
+    display: flex;
+    align-items: center;
+  }
+
+  .embr-user-dropdown {
+    position: fixed;
+    top: auto;
+    right: 0;
+    bottom: auto;
   }
 }
