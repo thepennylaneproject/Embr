@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { useRouter } from 'next/router';
 import { authApi } from '@/lib/api/auth';
 import { User } from '@/types/auth';
 
@@ -22,7 +21,6 @@ function hasWindow() {
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   const checkAuth = useCallback(async () => {
     if (!hasWindow()) {
@@ -58,7 +56,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     setUser(response.user);
-    await router.push('/feed');
   };
 
   const signup = async (email: string, username: string, password: string, fullName?: string) => {
@@ -70,7 +67,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     setUser(response.user);
-    await router.push('/feed');
   };
 
   const logout = async () => {
@@ -89,7 +85,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.removeItem('refreshToken');
       }
       setUser(null);
-      await router.push('/auth/login');
     }
   };
 
