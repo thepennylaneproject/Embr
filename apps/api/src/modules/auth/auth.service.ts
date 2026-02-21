@@ -242,12 +242,12 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_EXPIRATION') || '15m',
+      expiresIn: this.configService.get<string>('JWT_EXPIRES_IN') || '7d',
     });
 
     const refreshTokenValue = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION') || '7d',
+      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '30d',
     });
 
     // Store refresh token in database
@@ -514,6 +514,9 @@ export class AuthService {
   // =====================
 
   async getMe(userId: string): Promise<any> {
+    if (!userId) {
+      throw new UnauthorizedException('Invalid token payload');
+    }
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { profile: true, wallet: true },

@@ -1,3 +1,10 @@
+// Load environment variables FIRST — before any NestJS module initialization.
+// This ensures JWT_SECRET, DATABASE_URL etc. are in process.env when the
+// JwtModule / ConfigService are instantiated during the DI bootstrap phase.
+import * as dotenv from 'dotenv';
+dotenv.config();                          // apps/api/.env (if present)
+dotenv.config({ path: '../../.env', override: false }); // monorepo root .env
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
@@ -26,7 +33,12 @@ async function bootstrap() {
   
   // CORS configuration
   app.enableCors({
-    origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(',').filter(Boolean),
+    origin: (
+      process.env.ALLOWED_ORIGINS ||
+      'http://localhost:3000,http://localhost:3001,http://localhost:3004'
+    )
+      .split(',')
+      .filter(Boolean),
     credentials: true,
   });
   
@@ -37,5 +49,4 @@ async function bootstrap() {
 }
 
 bootstrap();
-
 

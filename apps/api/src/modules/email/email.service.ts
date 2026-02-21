@@ -123,7 +123,7 @@ export class EmailService {
    * Send password reset email
    */
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
-    const resetUrl = `${this.configService.get('APP_URL', 'http://localhost:3000')}/auth/reset-password?token=${resetToken}`;
+    const resetUrl = `${this.configService.get('APP_URL', 'http://localhost:3004')}/auth/reset-password?token=${resetToken}`;
     
     await this.sendEmail({
       to: email,
@@ -161,7 +161,7 @@ export class EmailService {
    * Send email verification
    */
   async sendVerificationEmail(email: string, verificationToken: string): Promise<void> {
-    const verifyUrl = `${this.configService.get('APP_URL', 'http://localhost:3000')}/auth/verify-email?token=${verificationToken}`;
+    const verifyUrl = `${this.configService.get('APP_URL', 'http://localhost:3004')}/auth/verify-email?token=${verificationToken}`;
     
     await this.sendEmail({
       to: email,
@@ -198,7 +198,7 @@ export class EmailService {
    * Send welcome email
    */
   async sendWelcomeEmail(email: string, username: string): Promise<void> {
-    const appUrl = this.configService.get('APP_URL', 'http://localhost:3000');
+    const appUrl = this.configService.get('APP_URL', 'http://localhost:3004');
     
     await this.sendEmail({
       to: email,
@@ -245,7 +245,7 @@ export class EmailService {
     applicantName: string,
     applicationId: string,
   ): Promise<void> {
-    const appUrl = this.configService.get('APP_URL', 'http://localhost:3000');
+    const appUrl = this.configService.get('APP_URL', 'http://localhost:3004');
     const reviewUrl = `${appUrl}/gigs/applications/${applicationId}`;
     
     await this.sendEmail({

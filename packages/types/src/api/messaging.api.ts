@@ -28,8 +28,7 @@ export class MessagingAPIClient {
   private client: AxiosInstance;
 
   constructor(
-    baseURL: string = process.env.NEXT_PUBLIC_API_URL ||
-      "http://localhost:3003",
+    baseURL: string = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3003"}/api`,
   ) {
     this.client = axios.create({
       baseURL: `${baseURL}/messaging`,

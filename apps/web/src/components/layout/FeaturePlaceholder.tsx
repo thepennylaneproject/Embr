@@ -17,10 +17,10 @@ export function FeaturePlaceholder({
   title,
   subtitle,
   issueId,
-  issuePath = '/Users/sarahsahl/Desktop/embr/.docs/frontend-roadmap.md',
+  issuePath = '.docs/frontend-roadmap.md',
   accent,
 }: FeaturePlaceholderProps) {
-  const [state, setState] = useState<PlaceholderState>('loading');
+  const [state, setState] = useState<PlaceholderState>('empty');
 
   const stateContent = {
     loading: {
