@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { Button, Card, Input } from '@/components/ui';
 
 export default function LoginPage() {
+  const router = useRouter();
   const { login } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -18,6 +20,7 @@ export default function LoginPage() {
 
     try {
       await login(formData.email, formData.password);
+      await router.push('/feed');
     } catch (err: any) {
       setError(getApiErrorMessage(err, 'Invalid credentials.'));
     } finally {
@@ -26,7 +29,7 @@ export default function LoginPage() {
   };
 
   return (
-    <ProtectedRoute requireAuth={false}>
+    <ProtectedRoute requireAuth={false} redirectAuthenticated={false}>
       <main className="embr-page" style={{ display: 'grid', placeItems: 'center', padding: '1rem' }}>
         <Card padding="lg" style={{ width: 'min(460px, 100%)' }}>
           <h1 className="ui-page-title" style={{ marginBottom: '0.3rem' }}>
