@@ -3,19 +3,19 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
-import { PrismaModule } from './modules/prisma/prisma.module';
-import { EmailModule } from './modules/email/email.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
-import { UsersModule } from './modules/users/users.module';
-import { ContentModule } from './modules/content/content.module';
-import { MediaModule } from './modules/media/media.module';
-import { MonetizationModule } from './modules/monetization/monetization.module';
-import { GigsModule } from './modules/gigs/gigs.module';
-import { SocialGraphModule } from './modules/social-graph/social-graph.module';
-import { MessagingModule } from './modules/messaging/messaging.module';
-import { SafetyModule } from './modules/safety/safety.module';
-import { NotificationsModule } from './modules/notifications/notifications.module';
+import { PrismaModule } from './core/database/prisma.module';
+import { EmailModule } from './core/email/email.module';
+import { AuthModule } from './core/auth/auth.module';
+import { JwtAuthGuard } from './core/auth/guards/jwt-auth.guard';
+import { UsersModule } from './core/users/users.module';
+import { ContentModule } from './verticals/feeds/content.module';
+import { MediaModule } from './core/media/media.module';
+import { MonetizationModule } from './core/monetization/monetization.module';
+import { GigsModule } from './verticals/gigs/gigs.module';
+import { SocialGraphModule } from './verticals/feeds/social-graph.module';
+import { MessagingModule } from './verticals/messaging/messaging.module';
+import { SafetyModule } from './core/safety/safety.module';
+import { NotificationsModule } from './core/notifications/notifications.module';
 
 @Module({
   imports: [
