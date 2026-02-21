@@ -16,6 +16,7 @@ import { SocialGraphModule } from './verticals/feeds/social-graph.module';
 import { MessagingModule } from './verticals/messaging/messaging.module';
 import { SafetyModule } from './core/safety/safety.module';
 import { NotificationsModule } from './core/notifications/notifications.module';
+import { MusicModule } from './music/music.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { NotificationsModule } from './core/notifications/notifications.module';
     MessagingModule,
     SafetyModule,
     NotificationsModule,
+    MusicModule,
   ],
   providers: [
     // Global rate limiting guard (runs before auth)
