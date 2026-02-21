@@ -4,8 +4,8 @@ import {
   CreateApplicationData,
   MilestoneProposal,
   Gig,
+  GigBudgetType,
 } from '../../shared/types/gig.types';
-import { GigBudgetType } from '@prisma/client';
 interface ApplicationFormProps {
   gig: Gig;
   onSuccess?: (applicationId: string) => void;
