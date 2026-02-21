@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "esnext",
+    "lib": ["ES2020", "dom", "dom.iterable"],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@embr/types": ["packages/types/src/index.ts"],
+      "@embr/types/*": ["packages/types/src/*"],
+      "@embr/utils": ["packages/utils/src/index.ts"],
+      "@embr/utils/*": ["packages/utils/src/*"],
+      "@embr/ui": ["packages/ui/src/index.ts"],
+      "@embr/ui/*": ["packages/ui/src/*"],
+      "@embr/config": ["packages/config/src/index.ts"],
+      "@embr/config/*": ["packages/config/src/*"]
+    }
+  },
+  "exclude": ["node_modules"]
+}
