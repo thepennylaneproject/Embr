@@ -82,6 +82,11 @@ model User {
   filterLogs    FilterLog[]
   transactionsRelated Transaction[] @relation("TransactionRelatedUser")
 
+  // Music Vertical (Phase 2)
+  artist        Artist?
+  trackPlays    TrackPlay[]
+  trackComments TrackComment[]
+
   @@index([email])
   @@index([role])
   @@index([deletedAt])
@@ -372,17 +377,19 @@ model Tip {
   recipient             Wallet    @relation("TipReceiver", fields: [recipientId], references: [userId], onDelete: Cascade)
   postId                String?
   post                  Post?     @relation(fields: [postId], references: [id], onDelete: SetNull)
-  
+  trackId               String?
+  track                 Track?    @relation("TrackTips", fields: [trackId], references: [id], onDelete: SetNull)
+
   amount                Int
   fee                   Int       @default(0)
   netAmount             Int       @default(0)
   message               String?
   status                TipStatus @default(PENDING)
   refundReason          String?
-  
+
   transactionId         String?   @unique
   transaction           Transaction? @relation(fields: [transactionId], references: [id])
-  
+
   stripePaymentIntentId String?
   createdAt             DateTime  @default(now())
   completedAt           DateTime?
@@ -1071,5 +1078,214 @@ model ContentRule {
   enabled       Boolean      @default(true)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+}
+
+// ============================================
+// MUSIC VERTICAL (Phase 2)
+// ============================================
+
+enum AudioQuality {
+  LOW       // 128kbps
+  STANDARD  // 320kbps
+  HIGH      // Lossless FLAC
+  HIRES     // Hi-Res
+}
+
+model Artist {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  stageName         String
+  bio               String?
+  genres            String[]  @default([])
+  avatarUrl         String?
+  bannerUrl         String?
+
+  spotifyId         String?
+  appleMusicalId    String?
+
+  isVerified        Boolean   @default(false)
+  monthlyListeners  Int       @default(0)
+  totalStreams      BigInt    @default(0)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  albums            Album[]
+  tracks            Track[]
+  playlists         MusicPlaylist[]
+  stats             ArtistStat[]
+  trackLikes        TrackLike[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Album {
+  id                String    @id @default(uuid())
+  artistId          String
+  artist            Artist    @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  title             String
+  description       String?
+  coverUrl          String?
+
+  releaseDate       DateTime
+  genre             String
+  totalDuration     Int       @default(0)
+
+  spotifyUri        String?
+
+  isPublished       Boolean   @default(false)
+  streams           BigInt    @default(0)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  tracks            Track[]
+
+  @@index([artistId])
+  @@index([releaseDate])
+  @@index([createdAt])
+}
+
+model Track {
+  id                String    @id @default(uuid())
+  artistId          String
+  artist            Artist    @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  albumId           String?
+  album             Album?    @relation(fields: [albumId], references: [id], onDelete: SetNull)
+
+  title             String
+  description       String?
+  duration          Int       // Seconds
+
+  // Audio files (support multiple qualities)
+  audioUrl          String    // HLS playlist or MP3
+  audioFormat       String    @default("mp3") // "mp3", "flac", "hires"
+
+  // Mux integration for streaming
+  muxAssetId        String?
+  muxPlaybackId     String?
+
+  lyrics            String?   @db.Text
+
+  // Pricing & Monetization
+  price             Float     @default(0) // 0 = free, otherwise in USD
+  isPublished       Boolean   @default(false)
+  visibility        String    @default("public") // public, private, followers
+
+  // Stats
+  streams           BigInt    @default(0)
+  downloads         Int       @default(0)
+  likes             Int       @default(0)
+  shares            Int       @default(0)
+
+  spotifyUri        String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime? // Soft delete
+
+  // Relations
+  plays             TrackPlay[]
+  likes             TrackLike[]
+  comments          TrackComment[]
+  tips              Tip[]      @relation("TrackTips")
+
+  @@index([artistId])
+  @@index([albumId])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+model TrackPlay {
+  id                String    @id @default(uuid())
+  trackId           String
+  track             Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  userId            String?
+  user              User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  durationPlayed    Int       // How many seconds played
+  quality           AudioQuality @default(STANDARD)
+
+  // Revenue tracking
+  royaltyAmount     Float     // Amount artist earned from this play
+
+  createdAt         DateTime  @default(now())
+
+  @@index([trackId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model TrackLike {
+  id                String    @id @default(uuid())
+  trackId           String
+  track             Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  userId            String
+  artist            Artist    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime  @default(now())
+
+  @@unique([trackId, userId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model MusicPlaylist {
+  id                String    @id @default(uuid())
+  creatorId         String
+  creator           Artist    @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  title             String
+  description       String?
+  coverUrl          String?
+
+  isPublished       Boolean   @default(false)
+  trackIds          String[]  @default([]) // Track IDs in order
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([creatorId])
+  @@index([createdAt])
+}
+
+model ArtistStat {
+  id                String    @id @default(uuid())
+  artistId          String
+  artist            Artist    @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  date              DateTime  @default(now())
+  streams           BigInt    @default(0)
+  revenue           Float     @default(0) // In USD
+  listeners         Int       @default(0)
+  newFollowers      Int       @default(0)
+
+  createdAt         DateTime  @default(now())
+
+  @@unique([artistId, date])
+  @@index([artistId])
+  @@index([date])
+}
+
+model TrackComment {
+  id                String    @id @default(uuid())
+  trackId           String
+  track             Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content           String    @db.Text
+  timestamp         Int?      // Timestamp in track (for inline comments)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime? // Soft delete
+
+  @@index([trackId])
+  @@index([userId])
+  @@index([createdAt])
 }
 

@@ -9,7 +9,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../core/database/prisma.service';
 import {
   MessageType as PrismaMessageType,
   MessageStatus as PrismaMessageStatus,
