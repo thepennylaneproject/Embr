@@ -85,6 +85,7 @@ model User {
   // Music Vertical (Phase 2)
   artist        Artist?
   trackPlays    TrackPlay[]
+  trackLikes    TrackLike[]
   trackComments TrackComment[]
 
   @@index([email])
@@ -1116,7 +1117,6 @@ model Artist {
   tracks            Track[]
   playlists         MusicPlaylist[]
   stats             ArtistStat[]
-  trackLikes        TrackLike[]
 
   @@index([userId])
   @@index([createdAt])
@@ -1179,7 +1179,7 @@ model Track {
   // Stats
   streams           BigInt    @default(0)
   downloads         Int       @default(0)
-  likes             Int       @default(0)
+  likeCount         Int       @default(0)
   shares            Int       @default(0)
 
   spotifyUri        String?
@@ -1224,7 +1224,7 @@ model TrackLike {
   trackId           String
   track             Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
   userId            String
-  artist            Artist    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt         DateTime  @default(now())
 
