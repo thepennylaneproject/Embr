@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
 import { BlockedMutedList } from '@/components/safety/blocking/BlockedMutedList';
 import { ReportModal } from '@/components/safety/reporting/ReportModal';
@@ -17,13 +17,6 @@ export default function SafetyPage() {
   const [muteDuration, setMuteDuration] = useState<number | ''>('');
 
   const isReportReady = reportEntityId.trim().length > 0;
-
-  const muteExpiresAt = useMemo(() => {
-    if (!muteDuration || Number.isNaN(Number(muteDuration))) return undefined;
-    const date = new Date();
-    date.setDate(date.getDate() + Number(muteDuration));
-    return date.toISOString();
-  }, [muteDuration]);
 
   return (
     <ProtectedRoute>
@@ -82,7 +75,7 @@ export default function SafetyPage() {
                   onClick={() =>
                     muteUser({
                       userId: muteTargetUserId,
-                      expiresAt: muteExpiresAt,
+                      duration: muteDuration ? Number(muteDuration) : undefined,
                     })
                   }
                   disabled={!muteTargetUserId || isSubmitting}

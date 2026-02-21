@@ -6,6 +6,8 @@
 import axios, { AxiosInstance, AxiosProgressEvent } from "axios";
 import {
   Post,
+  PostType,
+  PostVisibility,
   CreatePostInput,
   UpdatePostInput,
   Comment,
@@ -58,11 +60,11 @@ class ContentApiClient {
   private mapPostTypeFromApi(type?: string): Post["type"] {
     switch ((type || "").toUpperCase()) {
       case "IMAGE":
-        return "image";
+        return PostType.IMAGE;
       case "VIDEO":
-        return "video";
+        return PostType.VIDEO;
       default:
-        return "text";
+        return PostType.TEXT;
     }
   }
 
@@ -81,11 +83,11 @@ class ContentApiClient {
   private mapVisibilityFromApi(visibility?: string): Post["visibility"] {
     switch ((visibility || "").toUpperCase()) {
       case "FOLLOWERS":
-        return "followers";
+        return PostVisibility.FOLLOWERS;
       case "PRIVATE":
-        return "private";
+        return PostVisibility.PRIVATE;
       default:
-        return "public";
+        return PostVisibility.PUBLIC;
     }
   }
 
