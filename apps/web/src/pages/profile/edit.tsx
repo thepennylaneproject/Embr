@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import { usersApi } from '@/lib/api/users';
-import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
-import { AppShell } from '@/components/layout/AppShell';
+import { ProtectedPageShell } from '@/components/layout';
 import { Button, Card, Input, PageState, TextArea, useToast } from '@/components/ui';
 
 export default function EditProfilePage() {
@@ -50,8 +49,12 @@ export default function EditProfilePage() {
   };
 
   return (
-    <ProtectedRoute>
-      <AppShell title="Edit Profile" subtitle="Update the information shown on your public profile." accent="warm2">
+    <ProtectedPageShell
+      title="Edit Profile"
+      subtitle="Update the information shown on your public profile."
+      breadcrumbs={[{ label: 'Profile', href: '/profile' }, { label: 'Edit' }]}
+      accent="warm2"
+    >
         {!user ? (
           <Card padding="lg">
             <PageState title="Loading profile" description="Fetching your current profile values." />
@@ -103,7 +106,6 @@ export default function EditProfilePage() {
             </form>
           </Card>
         )}
-      </AppShell>
-    </ProtectedRoute>
+    </ProtectedPageShell>
   );
 }

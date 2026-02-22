@@ -50,7 +50,7 @@ export const MusicLicensingFlow: React.FC<MusicLicensingFlowProps> = ({
 
   if (licensingError) {
     return (
-      <div className="bg-red-900/20 border border-red-700 rounded-lg p-6 text-red-100">
+      <div className="bg-embr-primary-100/30 border border-embr-primary-300 rounded-lg p-6 text-embr-primary-700">
         <div className="flex items-start gap-3">
           <AlertCircle size={24} className="flex-shrink-0 mt-1" />
           <div>
@@ -66,13 +66,13 @@ export const MusicLicensingFlow: React.FC<MusicLicensingFlowProps> = ({
     <div className="w-full max-w-lg mx-auto">
       {/* Check Licensing Step */}
       {step === 'check' && (
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-6">
-          <h2 className="text-2xl font-bold">Check Licensing Rights</h2>
+        <div className="bg-embr-neutral-100 border border-embr-neutral-200 rounded-lg p-6 space-y-6">
+          <h2 className="text-2xl font-bold text-embr-accent-900">Check Licensing Rights</h2>
 
           {licensingLoading ? (
             <div className="flex justify-center py-12">
               <div className="animate-spin">
-                <div className="w-8 h-8 border-4 border-slate-700 border-t-purple-600 rounded-full" />
+                <div className="w-8 h-8 border-4 border-embr-neutral-300 border-t-embr-primary-400 rounded-full" />
               </div>
             </div>
           ) : (
@@ -80,54 +80,54 @@ export const MusicLicensingFlow: React.FC<MusicLicensingFlowProps> = ({
               <div className="space-y-4">
                 {/* Allowed Status */}
                 {licensing?.allowed ? (
-                  <div className="bg-green-900/20 border border-green-700 rounded-lg p-4 flex items-start gap-3">
-                    <CheckCircle size={24} className="text-green-400 flex-shrink-0 mt-1" />
+                  <div className="bg-embr-secondary-100 border border-embr-secondary-300 rounded-lg p-4 flex items-start gap-3">
+                    <CheckCircle size={24} className="text-embr-secondary-600 flex-shrink-0 mt-1" />
                     <div>
-                      <h3 className="font-bold text-green-100 mb-1">You Can Use This Track!</h3>
-                      <p className="text-green-200 text-sm">
+                      <h3 className="font-bold text-embr-secondary-700 mb-1">You Can Use This Track!</h3>
+                      <p className="text-embr-secondary-600 text-sm">
                         The artist has allowed this track to be used in {contentType} content.
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 flex items-start gap-3">
-                    <Lock size={24} className="text-red-400 flex-shrink-0 mt-1" />
+                  <div className="bg-embr-primary-100/30 border border-embr-primary-300 rounded-lg p-4 flex items-start gap-3">
+                    <Lock size={24} className="text-embr-primary-600 flex-shrink-0 mt-1" />
                     <div>
-                      <h3 className="font-bold text-red-100 mb-1">Track Not Available</h3>
-                      <p className="text-red-200 text-sm">{licensing?.reason || 'Unable to use this track'}</p>
+                      <h3 className="font-bold text-embr-primary-700 mb-1">Track Not Available</h3>
+                      <p className="text-embr-primary-600 text-sm">{licensing?.reason || 'Unable to use this track'}</p>
                     </div>
                   </div>
                 )}
               </div>
 
               {/* Licensing Details */}
-              <div className="bg-slate-900 rounded-lg p-4 space-y-3">
-                <h3 className="font-bold mb-3">Licensing Terms</h3>
+              <div className="bg-embr-neutral-200 rounded-lg p-4 space-y-3">
+                <h3 className="font-bold text-embr-accent-900 mb-3">Licensing Terms</h3>
 
-                <div className="flex justify-between items-center pb-3 border-b border-slate-700">
-                  <span className="text-slate-300">Licensing Model</span>
-                  <span className="font-bold text-purple-400 capitalize">
+                <div className="flex justify-between items-center pb-3 border-b border-embr-neutral-300">
+                  <span className="text-embr-accent-700">Licensing Model</span>
+                  <span className="font-bold text-embr-primary-500 capitalize">
                     {licensing?.licensingModel}
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center pb-3 border-b border-slate-700">
-                  <span className="text-slate-300">Can Remix?</span>
-                  <span className={licensing?.allowRemix ? 'text-green-400 font-bold' : 'text-red-400'}>
+                <div className="flex justify-between items-center pb-3 border-b border-embr-neutral-300">
+                  <span className="text-embr-accent-700">Can Remix?</span>
+                  <span className={licensing?.allowRemix ? 'text-embr-secondary-600 font-bold' : 'text-embr-primary-600'}>
                     {licensing?.allowRemix ? '✓ Yes' : '✗ No'}
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center pb-3 border-b border-slate-700">
-                  <span className="text-slate-300">Can Monetize?</span>
-                  <span className={licensing?.allowMonetize ? 'text-green-400 font-bold' : 'text-orange-400'}>
+                <div className="flex justify-between items-center pb-3 border-b border-embr-neutral-300">
+                  <span className="text-embr-accent-700">Can Monetize?</span>
+                  <span className={licensing?.allowMonetize ? 'text-embr-secondary-600 font-bold' : 'text-embr-primary-600'}>
                     {licensing?.allowMonetize ? '✓ Yes' : '⚠ No'}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-300">Attribution Required?</span>
-                  <span className="text-blue-400 font-bold">
+                  <span className="text-embr-accent-700">Attribution Required?</span>
+                  <span className="text-embr-accent-600 font-bold">
                     {licensing?.attributionRequired ? '✓ Yes' : '○ No'}
                   </span>
                 </div>
@@ -135,9 +135,9 @@ export const MusicLicensingFlow: React.FC<MusicLicensingFlowProps> = ({
 
               {/* Revenue Share Info */}
               {licensing?.allowMonetize && (
-                <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
-                  <h3 className="font-bold text-blue-100 mb-3">Revenue Share</h3>
-                  <div className="space-y-2 text-sm text-blue-200">
+                <div className="bg-embr-secondary-100 border border-embr-secondary-300 rounded-lg p-4">
+                  <h3 className="font-bold text-embr-secondary-700 mb-3">Revenue Share</h3>
+                  <div className="space-y-2 text-sm text-embr-secondary-600">
                     <div className="flex justify-between">
                       <span>Artist (Original)</span>
                       <span className="font-bold">50%</span>
@@ -156,11 +156,11 @@ export const MusicLicensingFlow: React.FC<MusicLicensingFlowProps> = ({
 
               {/* Attribution Notice */}
               {licensing?.attributionRequired && (
-                <div className="bg-amber-900/20 border border-amber-700 rounded-lg p-4 flex items-start gap-3">
-                  <AlertTriangle size={20} className="text-amber-400 flex-shrink-0 mt-1" />
+                <div className="bg-embr-primary-100/40 border border-embr-primary-300 rounded-lg p-4 flex items-start gap-3">
+                  <AlertTriangle size={20} className="text-embr-primary-600 flex-shrink-0 mt-1" />
                   <div>
-                    <h4 className="font-bold text-amber-100 mb-1">Attribution Required</h4>
-                    <p className="text-amber-200 text-sm">
+                    <h4 className="font-bold text-embr-primary-700 mb-1">Attribution Required</h4>
+                    <p className="text-embr-primary-600 text-sm">
                       You must credit the original artist in your {contentType}.
                     </p>
                   </div>
@@ -169,13 +169,13 @@ export const MusicLicensingFlow: React.FC<MusicLicensingFlowProps> = ({
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
-                <button className="flex-1 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-semibold transition">
+                <button className="flex-1 bg-embr-neutral-300 hover:bg-embr-neutral-400 text-embr-accent-900 px-4 py-2 rounded-lg font-semibold transition">
                   Cancel
                 </button>
                 <button
                   onClick={() => setStep('confirm')}
                   disabled={!licensing?.allowed || recordingLoading}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-lg font-semibold text-white transition"
+                  className="flex-1 bg-embr-primary-400 hover:bg-embr-primary-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-semibold transition"
                 >
                   {recordingLoading ? 'Processing...' : 'Continue'}
                 </button>
@@ -187,26 +187,26 @@ export const MusicLicensingFlow: React.FC<MusicLicensingFlowProps> = ({
 
       {/* Confirm Step */}
       {step === 'confirm' && (
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-6">
-          <h2 className="text-2xl font-bold">Confirm Usage</h2>
+        <div className="bg-embr-neutral-100 border border-embr-neutral-200 rounded-lg p-6 space-y-6">
+          <h2 className="text-2xl font-bold text-embr-accent-900">Confirm Usage</h2>
 
-          <div className="bg-slate-900 rounded-lg p-4 space-y-3">
-            <h3 className="font-bold mb-3">Usage Details</h3>
+          <div className="bg-embr-neutral-200 rounded-lg p-4 space-y-3">
+            <h3 className="font-bold text-embr-accent-900 mb-3">Usage Details</h3>
             <div className="space-y-2 text-sm">
               <div>
-                <span className="text-slate-400">Content Type:</span>
-                <span className="ml-2 font-bold capitalize">{contentType}</span>
+                <span className="text-embr-accent-600">Content Type:</span>
+                <span className="ml-2 font-bold text-embr-accent-900 capitalize">{contentType}</span>
               </div>
               <div>
-                <span className="text-slate-400">Content ID:</span>
-                <span className="ml-2 font-bold text-xs text-slate-300">{contentId.slice(0, 12)}...</span>
+                <span className="text-embr-accent-600">Content ID:</span>
+                <span className="ml-2 font-bold text-xs text-embr-accent-700">{contentId.slice(0, 12)}...</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-purple-900/20 border border-purple-700 rounded-lg p-4">
-            <h3 className="font-bold text-purple-100 mb-2">By clicking confirm, you agree to:</h3>
-            <ul className="text-sm text-purple-200 space-y-1 list-disc list-inside">
+          <div className="bg-embr-primary-100/30 border border-embr-primary-300 rounded-lg p-4">
+            <h3 className="font-bold text-embr-primary-700 mb-2">By clicking confirm, you agree to:</h3>
+            <ul className="text-sm text-embr-primary-600 space-y-1 list-disc list-inside">
               <li>Use this music only for the specified content type</li>
               <li>Provide proper attribution if required</li>
               <li>Comply with all licensing terms</li>
@@ -217,14 +217,14 @@ export const MusicLicensingFlow: React.FC<MusicLicensingFlowProps> = ({
           <div className="flex gap-3 pt-4">
             <button
               onClick={() => setStep('check')}
-              className="flex-1 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-semibold transition"
+              className="flex-1 bg-embr-neutral-300 hover:bg-embr-neutral-400 text-embr-accent-900 px-4 py-2 rounded-lg font-semibold transition"
             >
               Back
             </button>
             <button
               onClick={handleConfirm}
               disabled={recordingLoading}
-              className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-lg font-semibold text-white transition"
+              className="flex-1 bg-embr-primary-400 hover:bg-embr-primary-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-semibold transition"
             >
               {recordingLoading ? 'Recording...' : 'Confirm & Use Music'}
             </button>
@@ -234,23 +234,23 @@ export const MusicLicensingFlow: React.FC<MusicLicensingFlowProps> = ({
 
       {/* Success Step */}
       {step === 'success' && (
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-6">
+        <div className="bg-embr-neutral-100 border border-embr-neutral-200 rounded-lg p-6 space-y-6">
           <div className="flex justify-center mb-4">
-            <div className="bg-green-900/20 border border-green-700 rounded-full p-4">
-              <CheckCircle size={48} className="text-green-400" />
+            <div className="bg-embr-secondary-100 border border-embr-secondary-300 rounded-full p-4">
+              <CheckCircle size={48} className="text-embr-secondary-600" />
             </div>
           </div>
 
           <div className="text-center space-y-3">
-            <h2 className="text-2xl font-bold">Music License Approved!</h2>
-            <p className="text-slate-300">
+            <h2 className="text-2xl font-bold text-embr-accent-900">Music License Approved!</h2>
+            <p className="text-embr-accent-600">
               You can now use this track in your {contentType}. The artist has been notified.
             </p>
           </div>
 
-          <div className="bg-green-900/20 border border-green-700 rounded-lg p-4 space-y-2">
-            <h3 className="font-bold text-green-100">What Happens Next:</h3>
-            <ul className="text-sm text-green-200 space-y-1 list-disc list-inside">
+          <div className="bg-embr-secondary-100 border border-embr-secondary-300 rounded-lg p-4 space-y-2">
+            <h3 className="font-bold text-embr-secondary-700">What Happens Next:</h3>
+            <ul className="text-sm text-embr-secondary-600 space-y-1 list-disc list-inside">
               <li>The original artist sees your {contentType} in their analytics</li>
               <li>Revenue is calculated as your content gets views</li>
               <li>Both of you earn according to the revenue share</li>
@@ -258,7 +258,7 @@ export const MusicLicensingFlow: React.FC<MusicLicensingFlowProps> = ({
             </ul>
           </div>
 
-          <button className="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-semibold text-white transition">
+          <button className="w-full bg-embr-primary-400 hover:bg-embr-primary-500 text-white px-4 py-2 rounded-lg font-semibold transition">
             Done
           </button>
         </div>
@@ -266,21 +266,21 @@ export const MusicLicensingFlow: React.FC<MusicLicensingFlowProps> = ({
 
       {/* Error Step */}
       {step === 'error' && (
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-6">
+        <div className="bg-embr-neutral-100 border border-embr-neutral-200 rounded-lg p-6 space-y-6">
           <div className="flex justify-center mb-4">
-            <div className="bg-red-900/20 border border-red-700 rounded-full p-4">
-              <AlertCircle size={48} className="text-red-400" />
+            <div className="bg-embr-primary-100/30 border border-embr-primary-300 rounded-full p-4">
+              <AlertCircle size={48} className="text-embr-primary-600" />
             </div>
           </div>
 
           <div className="text-center space-y-3">
-            <h2 className="text-2xl font-bold">Unable to Use Track</h2>
-            <p className="text-red-200">{errorMessage}</p>
+            <h2 className="text-2xl font-bold text-embr-accent-900">Unable to Use Track</h2>
+            <p className="text-embr-primary-600">{errorMessage}</p>
           </div>
 
-          <div className="bg-red-900/20 border border-red-700 rounded-lg p-4">
-            <h3 className="font-bold text-red-100 mb-2">What You Can Do:</h3>
-            <ul className="text-sm text-red-200 space-y-1">
+          <div className="bg-embr-primary-100/30 border border-embr-primary-300 rounded-lg p-4">
+            <h3 className="font-bold text-embr-primary-700 mb-2">What You Can Do:</h3>
+            <ul className="text-sm text-embr-primary-600 space-y-1">
               <li>• Try a different track from this artist</li>
               <li>• Check the artist's profile for available tracks</li>
               <li>• Search for similar tracks from other artists</li>
@@ -291,11 +291,11 @@ export const MusicLicensingFlow: React.FC<MusicLicensingFlowProps> = ({
           <div className="flex gap-3">
             <button
               onClick={() => setStep('check')}
-              className="flex-1 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-semibold transition"
+              className="flex-1 bg-embr-neutral-300 hover:bg-embr-neutral-400 text-embr-accent-900 px-4 py-2 rounded-lg font-semibold transition"
             >
               Try Again
             </button>
-            <button className="flex-1 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-semibold text-white transition">
+            <button className="flex-1 bg-embr-primary-400 hover:bg-embr-primary-500 text-white px-4 py-2 rounded-lg font-semibold transition">
               Browse Tracks
             </button>
           </div>

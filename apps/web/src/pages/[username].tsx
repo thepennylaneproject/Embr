@@ -8,6 +8,8 @@ import { contentApi } from '@shared/api/content.api';
 import { Post } from '@shared/types/content.types';
 import { PostCard } from '@/components/content';
 import { FollowButton } from '@/components/social/FollowButton';
+import { AppShell } from '@/components/layout';
+import { Button } from '@/components/ui';
 
 export default function UserProfilePage() {
   const router = useRouter();
@@ -59,24 +61,22 @@ export default function UserProfilePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50">
-        <div className="max-w-3xl mx-auto px-4 py-8">
-          <p className="text-gray-600">Loading profile...</p>
-        </div>
-      </main>
+      <AppShell breadcrumbs={[{ label: 'User Profile' }]}>
+        <p style={{ color: 'var(--embr-muted-text)' }}>Loading profile...</p>
+      </AppShell>
     );
   }
 
   if (error || !profileUser) {
     return (
-      <main className="min-h-screen bg-gray-50">
-        <div className="max-w-3xl mx-auto px-4 py-8">
-          <p className="text-red-600">{error || 'User not found'}</p>
-          <Link href="/feed" className="text-[#E8998D] hover:underline">
+      <AppShell breadcrumbs={[{ label: 'User Profile' }]}>
+        <p style={{ color: 'var(--embr-error)' }}>{error || 'User not found'}</p>
+        <Link href="/feed">
+          <Button type="button" variant="secondary" style={{ marginTop: '0.5rem' }}>
             Back to feed
-          </Link>
-        </div>
-      </main>
+          </Button>
+        </Link>
+      </AppShell>
     );
   }
 
@@ -85,72 +85,78 @@ export default function UserProfilePage() {
   const isOwnProfile = currentUser?.id === profileUser.id;
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <header className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
-          <div className="flex items-center gap-4">
-            <img
-              src={avatarUrl}
-              alt={displayName}
-              className="w-20 h-20 rounded-full object-cover"
-            />
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900">{displayName}</h1>
-              <p className="text-gray-500">@{profileUser.username}</p>
-              {profileUser.profile?.bio && (
-                <p className="mt-2 text-gray-700">{profileUser.profile.bio}</p>
-              )}
-            </div>
-            {isOwnProfile ? (
-              <Link
-                href="/profile/edit"
-                className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Edit profile
-              </Link>
-            ) : (
-              <FollowButton
-                userId={profileUser.id}
-                initialIsFollowing={isFollowing}
-              />
+    <AppShell
+      title={displayName}
+      subtitle={`@${profileUser.username}`}
+      breadcrumbs={[{ label: displayName }]}
+    >
+      <div className="ui-card" data-padding="lg" style={{ marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+          <img
+            src={avatarUrl}
+            alt={displayName}
+            style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '999px',
+              objectFit: 'cover',
+              flexShrink: 0,
+            }}
+          />
+          <div style={{ flex: 1 }}>
+            {profileUser.profile?.bio && (
+              <p style={{ marginTop: '0.5rem', color: 'var(--embr-muted-text)' }}>
+                {profileUser.profile.bio}
+              </p>
             )}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginTop: '1rem' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: '600' }}>
+                  {profileUser.profile?.postCount ?? posts.length}
+                </div>
+                <div style={{ fontSize: '0.9rem', color: 'var(--embr-muted-text)' }}>Posts</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: '600' }}>
+                  {followerCount || profileUser.profile?.followerCount || 0}
+                </div>
+                <div style={{ fontSize: '0.9rem', color: 'var(--embr-muted-text)' }}>Followers</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: '600' }}>
+                  {followingCount || profileUser.profile?.followingCount || 0}
+                </div>
+                <div style={{ fontSize: '0.9rem', color: 'var(--embr-muted-text)' }}>Following</div>
+              </div>
+            </div>
           </div>
-
-          <div className="mt-6 grid grid-cols-3 gap-4 text-center">
-            <div>
-              <p className="text-xl font-semibold text-gray-900">
-                {profileUser.profile?.postCount ?? posts.length}
-              </p>
-              <p className="text-sm text-gray-500">Posts</p>
-            </div>
-            <div>
-              <p className="text-xl font-semibold text-gray-900">
-                {followerCount || profileUser.profile?.followerCount || 0}
-              </p>
-              <p className="text-sm text-gray-500">Followers</p>
-            </div>
-            <div>
-              <p className="text-xl font-semibold text-gray-900">
-                {followingCount || profileUser.profile?.followingCount || 0}
-              </p>
-              <p className="text-sm text-gray-500">Following</p>
-            </div>
-          </div>
-        </header>
-
-        <section>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent posts</h2>
-          {posts.length === 0 ? (
-            <p className="text-gray-500">No posts yet.</p>
+          {isOwnProfile ? (
+            <Link href="/profile/edit">
+              <Button type="button" variant="secondary">
+                Edit profile
+              </Button>
+            </Link>
           ) : (
-            <div className="space-y-4">
-              {posts.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))}
-            </div>
+            <FollowButton
+              userId={profileUser.id}
+              initialIsFollowing={isFollowing}
+            />
           )}
-        </section>
+        </div>
       </div>
-    </main>
+
+      <section>
+        <h2 style={{ marginBottom: '1rem', fontWeight: '600' }}>Recent Posts</h2>
+        {posts.length === 0 ? (
+          <p style={{ color: 'var(--embr-muted-text)' }}>No posts yet.</p>
+        ) : (
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            {posts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
+        )}
+      </section>
+    </AppShell>
   );
 }

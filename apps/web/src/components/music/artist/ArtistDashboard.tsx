@@ -34,20 +34,20 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artistId }) =>
           <img
             src={artist.profileImage}
             alt={artist.stageName}
-            className="w-24 h-24 rounded-full object-cover border-4 border-purple-600"
+            className="w-24 h-24 rounded-full object-cover border-4 border-embr-primary-400"
           />
         )}
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-4xl font-bold">{artist?.stageName}</h1>
+            <h1 className="text-4xl font-bold text-embr-accent-900">{artist?.stageName}</h1>
             {artist?.isVerified && (
-              <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+              <div className="bg-embr-secondary-400 text-white px-3 py-1 rounded-full text-sm font-semibold">
                 ✓ Verified
               </div>
             )}
           </div>
-          <p className="text-slate-400 mb-4">{artist?.bio}</p>
-          <button className="bg-purple-600 hover:bg-purple-700 px-6 py-2 rounded-lg font-semibold transition">
+          <p className="text-embr-accent-600 mb-4">{artist?.bio}</p>
+          <button className="bg-embr-primary-400 hover:bg-embr-primary-500 text-white px-6 py-2 rounded-lg font-semibold transition">
             <Upload size={16} className="inline mr-2" />
             Upload New Track
           </button>
@@ -56,53 +56,53 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artistId }) =>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-          <div className="text-slate-400 text-sm mb-2 flex items-center gap-2">
+        <div className="bg-embr-neutral-100 border border-embr-neutral-200 rounded-lg p-4 hover:border-embr-primary-300 transition">
+          <div className="text-embr-accent-600 text-sm mb-2 flex items-center gap-2">
             <Music size={16} />
             Tracks
           </div>
-          <div className="text-3xl font-bold">{stats?.totalTracks || 0}</div>
+          <div className="text-3xl font-bold text-embr-accent-900">{stats?.totalTracks || 0}</div>
         </div>
 
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-          <div className="text-slate-400 text-sm mb-2 flex items-center gap-2">
+        <div className="bg-embr-neutral-100 border border-embr-neutral-200 rounded-lg p-4 hover:border-embr-primary-300 transition">
+          <div className="text-embr-accent-600 text-sm mb-2 flex items-center gap-2">
             <TrendingUp size={16} />
             Streams
           </div>
-          <div className="text-3xl font-bold">
+          <div className="text-3xl font-bold text-embr-accent-900">
             {(Number(stats?.totalStreams || 0) / 1000000).toFixed(1)}M
           </div>
         </div>
 
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-          <div className="text-slate-400 text-sm mb-2 flex items-center gap-2">
+        <div className="bg-embr-neutral-100 border border-embr-neutral-200 rounded-lg p-4 hover:border-embr-primary-300 transition">
+          <div className="text-embr-accent-600 text-sm mb-2 flex items-center gap-2">
             <Users size={16} />
             Using Your Music
           </div>
-          <div className="text-3xl font-bold">{stats?.totalUsages || 0}</div>
+          <div className="text-3xl font-bold text-embr-accent-900">{stats?.totalUsages || 0}</div>
         </div>
 
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-          <div className="text-slate-400 text-sm mb-2 flex items-center gap-2">
+        <div className="bg-embr-neutral-100 border border-embr-neutral-200 rounded-lg p-4 hover:border-embr-primary-300 transition">
+          <div className="text-embr-accent-600 text-sm mb-2 flex items-center gap-2">
             <DollarSign size={16} />
             Monthly Revenue
           </div>
-          <div className="text-3xl font-bold">
+          <div className="text-3xl font-bold text-embr-primary-500">
             ${(revenue?.totalRevenue || 0) / 100}
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 border-b border-slate-700 mb-6">
+      <div className="flex gap-4 border-b border-embr-neutral-200 mb-6">
         {(['overview', 'tracks', 'analytics', 'revenue'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`pb-3 font-semibold transition border-b-2 ${
               activeTab === tab
-                ? 'border-purple-600 text-white'
-                : 'border-transparent text-slate-400 hover:text-white'
+                ? 'border-embr-primary-400 text-embr-accent-900'
+                : 'border-transparent text-embr-accent-500 hover:text-embr-accent-700'
             }`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}

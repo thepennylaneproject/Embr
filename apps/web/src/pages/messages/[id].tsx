@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
+import { ProtectedPageShell } from '@/components/layout';
 import { DMInbox } from '@/components/messaging/DMInbox';
 
 export default function MessagesThreadPage() {
@@ -7,20 +7,20 @@ export default function MessagesThreadPage() {
   const conversationId = typeof router.query.id === 'string' ? router.query.id : undefined;
 
   return (
-    <ProtectedRoute>
-      <main className="min-h-screen bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 py-6 h-[calc(100vh-48px)]">
-          <DMInbox
-            className="h-full border border-gray-200 rounded-2xl bg-white shadow-sm"
-            initialConversationId={conversationId}
-            onConversationSelect={(id) => {
-              if (id !== conversationId) {
-                void router.replace(`/messages/${id}`);
-              }
-            }}
-          />
-        </div>
-      </main>
-    </ProtectedRoute>
+    <ProtectedPageShell
+      title="Message"
+      breadcrumbs={[{ label: 'Messages', href: '/messages' }, { label: 'Thread' }]}
+    >
+      <DMInbox
+        className="border border-gray-200 rounded-2xl bg-white shadow-sm"
+        initialConversationId={conversationId}
+        onConversationSelect={(id) => {
+          if (id !== conversationId) {
+            void router.replace(`/messages/${id}`);
+          }
+        }}
+        style={{ minHeight: '600px' }}
+      />
+    </ProtectedPageShell>
   );
 }
