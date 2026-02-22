@@ -3,7 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../database/prisma.service';
 import { BlockUserDto, MuteUserDto, MuteKeywordDto } from '../dto/safety.dto';
 
 @Injectable()

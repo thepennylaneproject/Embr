@@ -27,7 +27,7 @@ import {
   MessageWithSender,
   TypingIndicator,
   ConversationWithDetails,
-} from '../../../shared/types/messaging.types';
+} from '../../../../shared/types/messaging.types';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
