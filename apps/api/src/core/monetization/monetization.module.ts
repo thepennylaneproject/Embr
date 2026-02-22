@@ -5,6 +5,7 @@ import { PayoutController } from './controllers/payout.controller';
 import { StripeConnectController } from './controllers/stripe-connect.controller';
 import { LicensingPaymentController } from './controllers/licensing-payment.controller';
 import { GigsPaymentController } from './controllers/gigs-payment.controller';
+import { MarketplacePaymentController } from './controllers/marketplace-payment.controller';
 import { StripeWebhookController } from './webhooks/stripe-webhook.controller';
 import { WalletService } from './services/wallet.service';
 import { TipService } from './services/tip.service';
@@ -12,6 +13,7 @@ import { PayoutService } from './services/payout.service';
 import { StripeConnectService } from './services/stripe-connect.service';
 import { LicensingPaymentService } from './services/licensing-payment.service';
 import { GigsPaymentService } from './services/gigs-payment.service';
+import { MarketplacePaymentService } from './services/marketplace-payment.service';
 import { TransactionService } from './services/transaction.service';
 
 @Module({
@@ -22,6 +24,7 @@ import { TransactionService } from './services/transaction.service';
     StripeConnectController,
     LicensingPaymentController,
     GigsPaymentController,
+    MarketplacePaymentController,
     StripeWebhookController,
   ],
   providers: [
@@ -31,6 +34,7 @@ import { TransactionService } from './services/transaction.service';
     StripeConnectService,
     LicensingPaymentService,
     GigsPaymentService,
+    MarketplacePaymentService,
     TransactionService,
   ],
   exports: [
@@ -40,6 +44,7 @@ import { TransactionService } from './services/transaction.service';
     StripeConnectService,
     LicensingPaymentService,
     GigsPaymentService,
+    MarketplacePaymentService,
     TransactionService,
   ],
 })

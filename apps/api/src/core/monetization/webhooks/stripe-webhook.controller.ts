@@ -14,6 +14,7 @@ import { PayoutService } from '../services/payout.service';
 import { StripeConnectService } from '../services/stripe-connect.service';
 import { LicensingPaymentService } from '../services/licensing-payment.service';
 import { GigsPaymentService } from '../services/gigs-payment.service';
+import { MarketplacePaymentService } from '../services/marketplace-payment.service';
 
 @Controller('webhooks/stripe')
 export class StripeWebhookController {
@@ -26,6 +27,7 @@ export class StripeWebhookController {
     private stripeConnectService: StripeConnectService,
     private licensingPaymentService: LicensingPaymentService,
     private gigsPaymentService: GigsPaymentService,
+    private marketplacePaymentService: MarketplacePaymentService,
   ) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
       apiVersion: '2023-10-16',
@@ -100,7 +102,7 @@ export class StripeWebhookController {
   }
 
   /**
-   * Handle successful payment intent (tip payment, music license, or gig booking)
+   * Handle successful payment intent
    */
   private async handlePaymentIntentSucceeded(
     paymentIntent: Stripe.PaymentIntent,
@@ -128,6 +130,19 @@ export class StripeWebhookController {
       } catch (error) {
         this.logger.error(
           `Failed to process gig booking payment ${paymentIntent.id}: ${error.message}`,
+        );
+      }
+      return;
+    }
+
+    // Handle marketplace order payment
+    if (type === 'marketplace_order') {
+      this.logger.log(`Payment succeeded for marketplace order: ${paymentIntent.id}`);
+      try {
+        await this.marketplacePaymentService.handlePaymentSuccess(paymentIntent);
+      } catch (error) {
+        this.logger.error(
+          `Failed to process marketplace order ${paymentIntent.id}: ${error.message}`,
         );
       }
       return;
@@ -164,6 +179,19 @@ export class StripeWebhookController {
       } catch (error) {
         this.logger.error(
           `Failed to handle gig booking payment failure ${paymentIntent.id}: ${error.message}`,
+        );
+      }
+      return;
+    }
+
+    // Handle failed marketplace order
+    if (type === 'marketplace_order') {
+      this.logger.error(`Payment failed for marketplace order: ${paymentIntent.id}`);
+      try {
+        await this.marketplacePaymentService.handlePaymentFailed(paymentIntent);
+      } catch (error) {
+        this.logger.error(
+          `Failed to handle marketplace payment failure ${paymentIntent.id}: ${error.message}`,
         );
       }
       return;
