@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../database/prisma.service';
 import { ContentFilterDto, CreateContentRuleDto, FilterAction } from '../dto/safety.dto';
 import { FilterAction as PrismaFilterAction } from '@prisma/client';
 

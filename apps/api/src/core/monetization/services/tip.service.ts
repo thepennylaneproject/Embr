@@ -5,7 +5,7 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../database/prisma.service';
 import { TransactionType as PrismaTransactionType } from '@prisma/client';
 import { WalletService } from './wallet.service';
 import { TransactionService } from './transaction.service';

@@ -1,7 +1,7 @@
 // apps/api/src/modules/users/users.service.ts
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { UpdateProfileDto, UpdateUserSettingsDto } from './dto';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../database/prisma.service';
 
 @Injectable()
 export class UsersService {

@@ -21,7 +21,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { MessagingService } from '../services/messaging.service';
-import { UploadService } from '../../upload/upload.service';
+import { UploadService } from '../../../../core/upload/upload.service';
 import {
   SendMessageDto,
   MarkAsReadDto,
@@ -36,7 +36,7 @@ import {
 import {
   MESSAGE_CONSTRAINTS,
   MessageType,
-} from '../../../shared/types/messaging.types';
+} from '../../../../shared/types/messaging.types';
 
 @ApiTags('Messaging')
 @Controller('messaging')

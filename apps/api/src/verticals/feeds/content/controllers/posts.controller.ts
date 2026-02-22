@@ -20,9 +20,9 @@ import {
 import { PostsService } from '../services/posts.service';
 import { LikesService } from '../services/likes.service';
 import { CreatePostDto, UpdatePostDto, PostType } from '../dto';
-import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
-import { GetUser } from '../../core/auth/decorators/get-user.decorator';
-import { Public } from '../../core/auth/decorators/public.decorator';
+import { JwtAuthGuard } from '../../../../core/auth/guards/jwt-auth.guard';
+import { GetUser } from '../../../../core/auth/decorators/get-user.decorator';
+import { Public } from '../../../../core/auth/decorators/public.decorator';
 
 
 @Controller('posts')

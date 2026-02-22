@@ -13,7 +13,7 @@ import { randomBytes } from 'crypto';
 
 import { EmailService } from '../email/email.service';
 import { SignUpDto, LoginDto } from './dto';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../database/prisma.service';
 
 interface TokenPayload {
   sub: string;
