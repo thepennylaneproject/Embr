@@ -94,25 +94,25 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
   const progressPercent = (currentTime / duration) * 100;
 
   return (
-    <div className="w-full bg-gradient-to-br from-slate-900 to-slate-800 rounded-lg p-6 text-white shadow-2xl">
+    <div className="w-full bg-gradient-to-br from-embr-neutral-50 to-embr-neutral-100 rounded-lg p-6 text-embr-accent-900 shadow-lg border border-embr-neutral-200">
       {/* Track Info */}
       <div className="flex gap-4 mb-6">
         {thumbnailUrl && (
           <img
             src={thumbnailUrl}
             alt={trackTitle}
-            className="w-24 h-24 rounded-lg object-cover shadow-lg"
+            className="w-24 h-24 rounded-lg object-cover shadow-md border border-embr-primary-200"
           />
         )}
         <div className="flex-1 flex flex-col justify-center">
-          <h3 className="text-lg font-bold truncate">{trackTitle}</h3>
-          <p className="text-sm text-slate-300 truncate">{artistName}</p>
+          <h3 className="text-lg font-bold truncate text-embr-accent-900">{trackTitle}</h3>
+          <p className="text-sm text-embr-accent-600 truncate">{artistName}</p>
           <div className="flex gap-2 mt-3">
-            <button className="text-xs bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded-full transition">
+            <button className="text-xs bg-embr-primary-400 hover:bg-embr-primary-500 text-white px-3 py-1 rounded-full transition">
               <Download size={14} className="inline mr-1" />
               Download
             </button>
-            <button className="text-xs bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-full transition">
+            <button className="text-xs bg-embr-secondary-400 hover:bg-embr-secondary-500 text-white px-3 py-1 rounded-full transition">
               <Share2 size={14} className="inline mr-1" />
               Share
             </button>
@@ -122,13 +122,13 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
       {/* Progress Bar */}
       <div className="mb-4">
-        <div className="w-full bg-slate-700 h-1 rounded-full overflow-hidden cursor-pointer">
+        <div className="w-full bg-embr-neutral-300 h-1 rounded-full overflow-hidden cursor-pointer">
           <div
-            className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all"
+            className="bg-gradient-to-r from-embr-primary-400 to-embr-primary-300 h-full transition-all"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
-        <div className="flex justify-between text-xs text-slate-300 mt-2">
+        <div className="flex justify-between text-xs text-embr-accent-600 mt-2">
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>
@@ -136,26 +136,26 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
       {/* Controls */}
       <div className="flex items-center justify-center gap-6 mb-6">
-        <button className="hover:text-purple-400 transition" title="Previous">
-          <SkipBack size={24} />
+        <button className="hover:text-embr-primary-400 transition" title="Previous">
+          <SkipBack size={24} className="text-embr-accent-700" />
         </button>
 
         <button
           onClick={handlePlayPause}
-          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 p-4 rounded-full transition transform hover:scale-110"
+          className="bg-gradient-to-br from-embr-primary-400 to-embr-primary-500 hover:from-embr-primary-500 hover:to-embr-primary-600 p-4 rounded-full transition transform hover:scale-110 shadow-lg"
           title={playing ? 'Pause' : 'Play'}
         >
           {playing ? <Pause size={32} fill="white" /> : <Play size={32} fill="white" />}
         </button>
 
-        <button className="hover:text-purple-400 transition" title="Next">
-          <SkipForward size={24} />
+        <button className="hover:text-embr-primary-400 transition" title="Next">
+          <SkipForward size={24} className="text-embr-accent-700" />
         </button>
       </div>
 
       {/* Volume Control */}
       <div className="flex items-center gap-3">
-        <button onClick={handleMuteToggle} className="hover:text-purple-400 transition">
+        <button onClick={handleMuteToggle} className="hover:text-embr-primary-400 transition text-embr-accent-700">
           {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
         </button>
         <input
@@ -165,9 +165,12 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
           step="0.01"
           value={isMuted ? 0 : volume}
           onChange={handleVolumeChange}
-          className="flex-1 h-1 bg-slate-700 rounded-full appearance-none cursor-pointer accent-purple-600"
+          className="flex-1 h-1 bg-embr-neutral-300 rounded-full appearance-none cursor-pointer"
+          style={{
+            background: `linear-gradient(to right, rgb(196, 151, 125) 0%, rgb(196, 151, 125) ${volume * 100}%, rgb(218, 206, 192) ${volume * 100}%, rgb(218, 206, 192) 100%)`
+          }}
         />
-        <span className="text-xs text-slate-300 w-8">{Math.round(volume * 100)}%</span>
+        <span className="text-xs text-embr-accent-600 w-8">{Math.round(volume * 100)}%</span>
       </div>
 
       {/* Hidden Audio Element */}

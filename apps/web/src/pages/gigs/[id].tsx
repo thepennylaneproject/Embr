@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
+import { ProtectedPageShell } from '@/components/layout';
 import { ApplicationForm } from '@/components/gigs/ApplicationForm';
 import { TipButton } from '@/components/monetization/TipButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGig } from '@/hooks/useGig';
 import { GigBudgetType, GigStatus } from '@shared/types/gig.types';
+import { Button } from '@/components/ui';
 
 export default function GigDetailPage() {
   const router = useRouter();
@@ -26,28 +27,22 @@ export default function GigDetailPage() {
 
   if (loading || !gigId) {
     return (
-      <ProtectedRoute>
-        <main className="min-h-screen bg-gray-50">
-          <div className="max-w-5xl mx-auto px-4 py-8">
-            <p className="text-gray-600">Loading gig...</p>
-          </div>
-        </main>
-      </ProtectedRoute>
+      <ProtectedPageShell breadcrumbs={[{ label: 'Gigs', href: '/gigs' }, { label: 'Gig' }]}>
+        <p style={{ color: 'var(--embr-muted-text)' }}>Loading gig...</p>
+      </ProtectedPageShell>
     );
   }
 
   if (error || !gig) {
     return (
-      <ProtectedRoute>
-        <main className="min-h-screen bg-gray-50">
-          <div className="max-w-5xl mx-auto px-4 py-8">
-            <p className="text-red-600">{error || 'Gig not found.'}</p>
-            <Link href="/gigs" className="text-[#E8998D] hover:underline">
-              Back to gigs
-            </Link>
-          </div>
-        </main>
-      </ProtectedRoute>
+      <ProtectedPageShell breadcrumbs={[{ label: 'Gigs', href: '/gigs' }, { label: 'Gig' }]}>
+        <p style={{ color: 'var(--embr-error)' }}>{error || 'Gig not found.'}</p>
+        <Link href="/gigs">
+          <Button type="button" variant="secondary" style={{ marginTop: '0.5rem' }}>
+            Back to gigs
+          </Button>
+        </Link>
+      </ProtectedPageShell>
     );
   }
 
@@ -61,14 +56,12 @@ export default function GigDetailPage() {
   const canApply = gig.status === GigStatus.OPEN && !isOwner;
 
   return (
-    <ProtectedRoute>
-      <main className="min-h-screen bg-gray-50">
-        <div className="max-w-5xl mx-auto px-4 py-8">
-          <Link href="/gigs" className="text-sm text-gray-500 hover:text-gray-700">
-            ← Back to gigs
-          </Link>
-
-          <div className="mt-4 bg-white rounded-2xl border border-gray-200 p-6">
+    <ProtectedPageShell
+      title={gig.title}
+      subtitle={`${gig.category.replace('_', ' ')} · ${budgetLabel}`}
+      breadcrumbs={[{ label: 'Gigs', href: '/gigs' }, { label: 'Gig' }]}
+    >
+      <div className="ui-card" data-padding="lg">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">{gig.title}</h1>
@@ -154,8 +147,7 @@ export default function GigDetailPage() {
               />
             </div>
           )}
-        </div>
-      </main>
-    </ProtectedRoute>
+      </div>
+    </ProtectedPageShell>
   );
 }

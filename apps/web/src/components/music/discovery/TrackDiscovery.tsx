@@ -34,19 +34,19 @@ export const TrackDiscovery: React.FC<TrackDiscoveryProps> = ({ onTrackSelect, o
     <div className="w-full max-w-6xl mx-auto p-6">
       {/* Search Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-embr-primary-400 via-embr-primary-300 to-embr-primary-200 bg-clip-text text-transparent">
           Discover Music
         </h1>
 
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute left-4 top-3 text-slate-400" size={20} />
+          <Search className="absolute left-4 top-3 text-embr-accent-400" size={20} />
           <input
             type="text"
             placeholder="Search tracks, artists, genres..."
             value={searchQuery}
             onChange={handleSearch}
-            className="w-full pl-12 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-slate-400 transition"
+            className="w-full pl-12 pr-4 py-3 bg-embr-neutral-100 border border-embr-neutral-300 rounded-lg focus:outline-none focus:border-embr-primary-400 text-embr-accent-900 placeholder-embr-accent-400 transition"
           />
         </div>
       </div>
@@ -55,21 +55,21 @@ export const TrackDiscovery: React.FC<TrackDiscoveryProps> = ({ onTrackSelect, o
       {loading && searchQuery && (
         <div className="text-center py-12">
           <div className="inline-block animate-spin">
-            <div className="w-8 h-8 border-4 border-slate-700 border-t-purple-600 rounded-full" />
+            <div className="w-8 h-8 border-4 border-embr-neutral-300 border-t-embr-primary-400 rounded-full" />
           </div>
-          <p className="text-slate-400 mt-4">Searching...</p>
+          <p className="text-embr-accent-500 mt-4">Searching...</p>
         </div>
       )}
 
       {!loading && searchQuery && results.length === 0 && (
-        <div className="text-center py-12 text-slate-400">
+        <div className="text-center py-12 text-embr-accent-500">
           <p className="text-lg">No tracks found</p>
           <p className="text-sm">Try searching with different keywords</p>
         </div>
       )}
 
       {!searchQuery && (
-        <div className="text-center py-12 text-slate-400">
+        <div className="text-center py-12 text-embr-accent-500">
           <p className="text-lg">Start searching to discover amazing music</p>
         </div>
       )}
@@ -82,10 +82,10 @@ export const TrackDiscovery: React.FC<TrackDiscoveryProps> = ({ onTrackSelect, o
           return (
             <div
               key={track.id}
-              className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden hover:border-purple-500 transition group"
+              className="bg-embr-neutral-100 border border-embr-neutral-200 rounded-lg overflow-hidden hover:border-embr-primary-300 transition group"
             >
               {/* Album Art */}
-              <div className="relative aspect-square bg-slate-900 overflow-hidden">
+              <div className="relative aspect-square bg-embr-neutral-300 overflow-hidden">
                 {track.videoThumbnailUrl && (
                   <img
                     src={track.videoThumbnailUrl}
@@ -93,10 +93,10 @@ export const TrackDiscovery: React.FC<TrackDiscoveryProps> = ({ onTrackSelect, o
                     className="w-full h-full object-cover group-hover:scale-110 transition"
                   />
                 )}
-                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition flex items-center justify-center">
+                <div className="absolute inset-0 bg-embr-accent-900/30 group-hover:bg-embr-accent-900/15 transition flex items-center justify-center">
                   <button
                     onClick={() => onTrackSelect?.(track.id)}
-                    className="bg-purple-600 hover:bg-purple-700 p-3 rounded-full transform scale-0 group-hover:scale-100 transition"
+                    className="bg-embr-primary-400 hover:bg-embr-primary-500 p-3 rounded-full transform scale-0 group-hover:scale-100 transition text-white"
                   >
                     <Play size={24} fill="white" />
                   </button>
@@ -109,51 +109,51 @@ export const TrackDiscovery: React.FC<TrackDiscoveryProps> = ({ onTrackSelect, o
                 </div>
 
                 {/* Used Count */}
-                <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+                <div className="absolute bottom-2 left-2 bg-embr-accent-900/70 text-embr-neutral-50 text-xs px-2 py-1 rounded-full">
                   Used {track.usedInCount} times
                 </div>
               </div>
 
               {/* Track Info */}
               <div className="p-4">
-                <h3 className="font-bold text-white truncate mb-1">{track.title}</h3>
-                <p className="text-sm text-slate-400 truncate mb-4">
+                <h3 className="font-bold text-embr-accent-900 truncate mb-1">{track.title}</h3>
+                <p className="text-sm text-embr-accent-600 truncate mb-4">
                   {track.artist?.stageName || 'Unknown Artist'}
                   {track.artist?.isVerified && <span className="ml-1">✓</span>}
                 </p>
 
                 {/* Stats */}
-                <div className="flex gap-4 text-xs text-slate-400 mb-4 border-t border-slate-700 pt-3">
+                <div className="flex gap-4 text-xs text-embr-accent-600 mb-4 border-t border-embr-neutral-200 pt-3">
                   <div>
-                    <div className="font-semibold text-white">{(track.streams / 1000000).toFixed(1)}M</div>
+                    <div className="font-semibold text-embr-accent-900">{(track.streams / 1000000).toFixed(1)}M</div>
                     <div>Streams</div>
                   </div>
                   <div>
-                    <div className="font-semibold text-white">{(track.downloads / 1000).toFixed(0)}K</div>
+                    <div className="font-semibold text-embr-accent-900">{(track.downloads / 1000).toFixed(0)}K</div>
                     <div>Downloads</div>
                   </div>
                   <div>
-                    <div className="font-semibold text-white">{(track.likeCount / 1000).toFixed(0)}K</div>
+                    <div className="font-semibold text-embr-accent-900">{(track.likeCount / 1000).toFixed(0)}K</div>
                     <div>Likes</div>
                   </div>
                 </div>
 
                 {/* Actions */}
                 <div className="flex gap-2">
-                  <button className="flex-1 bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2">
+                  <button className="flex-1 bg-embr-neutral-200 hover:bg-embr-neutral-300 text-embr-accent-900 px-3 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2">
                     <Heart size={16} />
                     Like
                   </button>
                   {track.licensingModel !== 'restricted' && (
                     <button
                       onClick={() => onUseTrack?.(track.id)}
-                      className="flex-1 bg-purple-600 hover:bg-purple-700 px-3 py-2 rounded-lg text-sm font-semibold text-white transition flex items-center justify-center gap-2"
+                      className="flex-1 bg-embr-primary-400 hover:bg-embr-primary-500 text-white px-3 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2"
                     >
                       <Unlock size={16} />
                       Use
                     </button>
                   )}
-                  <button className="flex-1 bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2">
+                  <button className="flex-1 bg-embr-neutral-200 hover:bg-embr-neutral-300 text-embr-accent-900 px-3 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2">
                     <Share2 size={16} />
                     Share
                   </button>
