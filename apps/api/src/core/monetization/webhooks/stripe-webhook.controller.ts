@@ -13,6 +13,7 @@ import { TipService } from '../services/tip.service';
 import { PayoutService } from '../services/payout.service';
 import { StripeConnectService } from '../services/stripe-connect.service';
 import { LicensingPaymentService } from '../services/licensing-payment.service';
+import { GigsPaymentService } from '../services/gigs-payment.service';
 
 @Controller('webhooks/stripe')
 export class StripeWebhookController {
@@ -24,6 +25,7 @@ export class StripeWebhookController {
     private payoutService: PayoutService,
     private stripeConnectService: StripeConnectService,
     private licensingPaymentService: LicensingPaymentService,
+    private gigsPaymentService: GigsPaymentService,
   ) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
       apiVersion: '2023-10-16',
@@ -98,7 +100,7 @@ export class StripeWebhookController {
   }
 
   /**
-   * Handle successful payment intent (tip payment or music license)
+   * Handle successful payment intent (tip payment, music license, or gig booking)
    */
   private async handlePaymentIntentSucceeded(
     paymentIntent: Stripe.PaymentIntent,
@@ -113,6 +115,19 @@ export class StripeWebhookController {
       } catch (error) {
         this.logger.error(
           `Failed to process music license payment ${paymentIntent.id}: ${error.message}`,
+        );
+      }
+      return;
+    }
+
+    // Handle gig booking payment (with escrow)
+    if (type === 'gig_booking') {
+      this.logger.log(`Payment succeeded for gig booking: ${paymentIntent.id}`);
+      try {
+        await this.gigsPaymentService.handlePaymentSuccess(paymentIntent);
+      } catch (error) {
+        this.logger.error(
+          `Failed to process gig booking payment ${paymentIntent.id}: ${error.message}`,
         );
       }
       return;
@@ -139,7 +154,20 @@ export class StripeWebhookController {
   private async handlePaymentIntentFailed(
     paymentIntent: Stripe.PaymentIntent,
   ): Promise<void> {
-    const tipId = paymentIntent.metadata?.tipId;
+    const { tipId, type } = paymentIntent.metadata || {};
+
+    // Handle failed gig booking
+    if (type === 'gig_booking') {
+      this.logger.error(`Payment failed for gig booking: ${paymentIntent.id}`);
+      try {
+        await this.gigsPaymentService.handlePaymentFailed(paymentIntent);
+      } catch (error) {
+        this.logger.error(
+          `Failed to handle gig booking payment failure ${paymentIntent.id}: ${error.message}`,
+        );
+      }
+      return;
+    }
 
     if (!tipId) {
       return;
