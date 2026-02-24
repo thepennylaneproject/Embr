@@ -1,0 +1,411 @@
+/**
+ * EMBR Design System
+ *
+ * Philosophy: Clarity over noise. Typography, whitespace, and hierarchy.
+ * No SaaS card hell. No social media engagement metrics.
+ */
+
+/* ─────────────────────────────────────────────────────────────
+   TYPOGRAPHY SYSTEM
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  /* Typography Scale */
+  --embr-h1: 48px;
+  --embr-h2: 32px;
+  --embr-h3: 24px;
+  --embr-body: 18px;
+  --embr-label: 14px;
+  --embr-small: 14px;
+
+  /* Font Weights */
+  --embr-weight-regular: 400;
+  --embr-weight-medium: 500;
+  --embr-weight-semibold: 600;
+  --embr-weight-bold: 700;
+
+  /* Line Heights */
+  --embr-line-normal: 1.6;
+  --embr-line-tight: 1.4;
+  --embr-line-loose: 1.8;
+
+  /* Colors */
+  --embr-black: #000000;
+  --embr-dark-gray: #333333;
+  --embr-medium-gray: #666666;
+  --embr-light-gray: #999999;
+  --embr-very-light: #f5f5f5;
+  --embr-white: #ffffff;
+
+  /* Accent Color (use sparingly) */
+  --embr-accent: #E8998D;
+
+  /* Status Colors (use only for status) */
+  --embr-success: #22c55e;
+  --embr-error: #ef4444;
+  --embr-warning: #f59e0b;
+
+  /* Spacing Scale */
+  --embr-space-2: 4px;
+  --embr-space-4: 8px;
+  --embr-space-6: 12px;
+  --embr-space-8: 16px;
+  --embr-space-12: 24px;
+  --embr-space-16: 32px;
+  --embr-space-20: 40px;
+  --embr-space-24: 48px;
+  --embr-space-32: 64px;
+
+  /* Borders */
+  --embr-border-light: 1px solid #e0e0e0;
+  --embr-border-dark: 1px solid #d0d0d0;
+
+  /* Border Radius (minimal, clean) */
+  --embr-radius-sm: 4px;
+  --embr-radius-md: 8px;
+  --embr-radius-lg: 12px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   RESET & BASE STYLES
+   ───────────────────────────────────────────────────────────── */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: var(--embr-body);
+  font-weight: var(--embr-weight-regular);
+  color: var(--embr-dark-gray);
+  background-color: var(--embr-white);
+  line-height: var(--embr-line-normal);
+  margin: 0;
+  padding: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   TYPOGRAPHY STYLES
+   ───────────────────────────────────────────────────────────── */
+
+h1 {
+  font-size: var(--embr-h1);
+  font-weight: var(--embr-weight-bold);
+  color: var(--embr-black);
+  line-height: var(--embr-line-tight);
+  margin: var(--embr-space-24) 0 var(--embr-space-12) 0;
+}
+
+h2 {
+  font-size: var(--embr-h2);
+  font-weight: var(--embr-weight-semibold);
+  color: var(--embr-black);
+  line-height: var(--embr-line-tight);
+  margin: var(--embr-space-20) 0 var(--embr-space-12) 0;
+}
+
+h3 {
+  font-size: var(--embr-h3);
+  font-weight: var(--embr-weight-semibold);
+  color: var(--embr-black);
+  line-height: var(--embr-line-tight);
+  margin: var(--embr-space-16) 0 var(--embr-space-8) 0;
+}
+
+p {
+  font-size: var(--embr-body);
+  color: var(--embr-dark-gray);
+  line-height: var(--embr-line-normal);
+  margin: 0 0 var(--embr-space-12) 0;
+}
+
+/* Labels (for form labels, captions) */
+label {
+  font-size: var(--embr-label);
+  font-weight: var(--embr-weight-medium);
+  color: var(--embr-medium-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Small text (metadata, timestamps, help) */
+.text-small, small {
+  font-size: var(--embr-small);
+  color: var(--embr-light-gray);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CONTAINER & LAYOUT
+   ───────────────────────────────────────────────────────────── */
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 var(--embr-space-8);
+}
+
+.container-full {
+  width: 100%;
+}
+
+/* Section spacing (whitespace between major sections) */
+.section {
+  margin-bottom: var(--embr-space-32);
+  padding-bottom: var(--embr-space-32);
+}
+
+.section-compact {
+  margin-bottom: var(--embr-space-16);
+  padding-bottom: var(--embr-space-16);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   BUTTONS
+   ───────────────────────────────────────────────────────────── */
+
+button, a.button {
+  font-family: inherit;
+  font-size: var(--embr-body);
+  font-weight: var(--embr-weight-medium);
+  border: none;
+  cursor: pointer;
+  padding: var(--embr-space-6) var(--embr-space-8);
+  border-radius: var(--embr-radius-md);
+  transition: all 200ms ease;
+  text-decoration: none;
+  display: inline-block;
+  min-height: 44px; /* touch target */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* PRIMARY: One per context, warm accent */
+button.primary, a.button.primary {
+  background-color: var(--embr-accent);
+  color: var(--embr-white);
+  padding: var(--embr-space-6) var(--embr-space-20);
+  font-weight: var(--embr-weight-semibold);
+}
+
+button.primary:hover:not(:disabled), a.button.primary:hover {
+  background-color: #d98a7f;
+  transform: none;
+}
+
+button.primary:active, a.button.primary:active {
+  opacity: 0.9;
+}
+
+button.primary:disabled {
+  background-color: var(--embr-very-light);
+  color: var(--embr-light-gray);
+  cursor: not-allowed;
+}
+
+/* SECONDARY: Gray, subtle */
+button.secondary, a.button.secondary {
+  background-color: transparent;
+  color: var(--embr-dark-gray);
+  border: var(--embr-border-light);
+  padding: var(--embr-space-6) var(--embr-space-20);
+}
+
+button.secondary:hover:not(:disabled), a.button.secondary:hover {
+  background-color: var(--embr-very-light);
+  border-color: var(--embr-border-dark);
+}
+
+button.secondary:disabled {
+  color: var(--embr-light-gray);
+  border-color: var(--embr-very-light);
+  cursor: not-allowed;
+}
+
+/* TERTIARY: Text only, minimal */
+button.tertiary, a.button.tertiary {
+  background-color: transparent;
+  color: var(--embr-medium-gray);
+  border: none;
+  padding: var(--embr-space-4) var(--embr-space-8);
+  font-size: 16px;
+}
+
+button.tertiary:hover:not(:disabled), a.button.tertiary:hover {
+  color: var(--embr-dark-gray);
+  text-decoration: underline;
+}
+
+button.tertiary:disabled {
+  color: var(--embr-light-gray);
+  cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   FORM ELEMENTS
+   ───────────────────────────────────────────────────────────── */
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: var(--embr-body);
+  padding: var(--embr-space-6) var(--embr-space-8);
+  border: var(--embr-border-light);
+  border-radius: var(--embr-radius-md);
+  background-color: var(--embr-white);
+  color: var(--embr-dark-gray);
+  transition: border-color 200ms ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--embr-accent);
+  box-shadow: none;
+}
+
+input:disabled, textarea:disabled, select:disabled {
+  background-color: var(--embr-very-light);
+  color: var(--embr-light-gray);
+  cursor: not-allowed;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 120px;
+  font-size: var(--embr-body);
+  line-height: var(--embr-line-normal);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   DIVIDERS & SEPARATORS
+   ───────────────────────────────────────────────────────────── */
+
+hr {
+  border: none;
+  border-top: var(--embr-border-light);
+  margin: var(--embr-space-24) 0;
+}
+
+/* Subtle divider (lighter) */
+.divider-light {
+  border-top: 1px solid #f0f0f0;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CARDS (Use sparingly, prefer whitespace)
+   ───────────────────────────────────────────────────────────── */
+
+.card {
+  background-color: var(--embr-white);
+  border: var(--embr-border-light);
+  border-radius: var(--embr-radius-lg);
+  padding: var(--embr-space-12);
+}
+
+.card-subtle {
+  background-color: var(--embr-very-light);
+  border: none;
+  border-radius: var(--embr-radius-lg);
+  padding: var(--embr-space-12);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ALERTS & STATUS
+   ───────────────────────────────────────────────────────────── */
+
+.alert {
+  padding: var(--embr-space-12);
+  border-radius: var(--embr-radius-md);
+  margin-bottom: var(--embr-space-12);
+}
+
+.alert-success {
+  background-color: #dcfce7;
+  color: #166534;
+  border-left: 4px solid var(--embr-success);
+}
+
+.alert-error {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-left: 4px solid var(--embr-error);
+}
+
+.alert-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+  border-left: 4px solid var(--embr-warning);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   UTILITIES
+   ───────────────────────────────────────────────────────────── */
+
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.text-muted { color: var(--embr-light-gray); }
+.text-secondary { color: var(--embr-medium-gray); }
+.text-bold { font-weight: var(--embr-weight-bold); }
+.text-accent { color: var(--embr-accent); }
+
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: var(--embr-space-4); }
+.mb-2 { margin-bottom: var(--embr-space-8); }
+.mb-3 { margin-bottom: var(--embr-space-12); }
+.mb-4 { margin-bottom: var(--embr-space-16); }
+.mb-6 { margin-bottom: var(--embr-space-24); }
+.mb-8 { margin-bottom: var(--embr-space-32); }
+
+.mt-0 { margin-top: 0; }
+.mt-1 { margin-top: var(--embr-space-4); }
+.mt-2 { margin-top: var(--embr-space-8); }
+.mt-3 { margin-top: var(--embr-space-12); }
+.mt-4 { margin-top: var(--embr-space-16); }
+.mt-6 { margin-top: var(--embr-space-24); }
+.mt-8 { margin-top: var(--embr-space-32); }
+
+.px-1 { padding: 0 var(--embr-space-4); }
+.px-2 { padding: 0 var(--embr-space-8); }
+.px-3 { padding: 0 var(--embr-space-12); }
+.px-4 { padding: 0 var(--embr-space-16); }
+
+.py-1 { padding: var(--embr-space-4) 0; }
+.py-2 { padding: var(--embr-space-8) 0; }
+.py-3 { padding: var(--embr-space-12) 0; }
+.py-4 { padding: var(--embr-space-16) 0; }
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.gap-1 { gap: var(--embr-space-4); }
+.gap-2 { gap: var(--embr-space-8); }
+.gap-3 { gap: var(--embr-space-12); }
+.gap-4 { gap: var(--embr-space-16); }
+
+/* ─────────────────────────────────────────────────────────────
+   RESPONSIVE
+   ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 32px;
+  }
+
+  h2 {
+    font-size: 24px;
+  }
+
+  body {
+    font-size: 16px;
+  }
+
+  .container {
+    padding: 0 var(--embr-space-8);
+  }
+}
