@@ -146,6 +146,10 @@ model RefreshToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
+  // Device tracking for session management
+  userAgent String?  // Browser/client info for device identification
+  ipAddress String?  // IP address of the request
+
   @@index([userId])
   @@index([token])
 }

@@ -231,7 +231,11 @@ export class AuthService {
   // TOKEN MANAGEMENT
   // =====================
 
-  private async generateTokens(user: any): Promise<{ accessToken: string; refreshToken: string }> {
+  private async generateTokens(
+    user: any,
+    userAgent?: string,
+    ipAddress?: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const payload: TokenPayload = {
       sub: user.id,
       email: user.email,
@@ -252,12 +256,14 @@ export class AuthService {
       expiresIn: refreshExpiresIn,
     });
 
-    // Store refresh token in database with matching expiry
+    // Store refresh token in database with matching expiry and device info
     await this.prisma.refreshToken.create({
       data: {
         userId: user.id,
         token: refreshTokenValue,
         expiresAt: new Date(Date.now() + refreshTokenExpiresMs),
+        userAgent: userAgent || null,
+        ipAddress: ipAddress || null,
       },
     });
 
@@ -592,6 +598,9 @@ export class AuthService {
       id: session.id,
       createdAt: session.createdAt,
       expiresAt: session.expiresAt,
+      // Device information for session management
+      userAgent: session.userAgent,
+      ipAddress: session.ipAddress,
     }));
   }
 
