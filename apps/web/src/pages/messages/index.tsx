@@ -8,7 +8,7 @@ export default function MessagesPage() {
       subtitle="Connect and chat with other creators."
       breadcrumbs={[{ label: 'Messages' }]}
     >
-      <DMInbox className="border border-gray-200 rounded-2xl bg-white shadow-sm" style={{ minHeight: '600px' }} />
+      <DMInbox className="min-h-[600px] border border-gray-200 rounded-2xl bg-white shadow-sm" />
     </ProtectedPageShell>
   );
 }
