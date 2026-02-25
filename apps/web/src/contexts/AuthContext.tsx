@@ -29,15 +29,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     try {
-      const accessToken = localStorage.getItem('accessToken');
-      if (accessToken) {
-        const userData = await authApi.getMe();
-        setUser(userData);
-      }
+      // Tokens are stored in httpOnly cookies, so we just check if user is authenticated
+      // by attempting to fetch user data. The API will use the cookies automatically.
+      const userData = await authApi.getMe();
+      setUser(userData);
     } catch (error) {
+      // User is not authenticated or session expired
       console.error('Auth check failed:', error);
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -49,41 +48,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     const response = await authApi.login(email, password);
-
-    if (hasWindow()) {
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
-    }
-
+    // Tokens are now in httpOnly cookies; no need to store in localStorage
+    // Response contains just the user data
     setUser(response.user);
   };
 
   const signup = async (email: string, username: string, password: string, fullName?: string) => {
-    const response = await authApi.signup(email, username, password, fullName);
-
-    if (hasWindow()) {
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
-    }
-
-    setUser(response.user);
+    await authApi.signup(email, username, password, fullName);
+    // After signup, user must verify email before getting access tokens
+    // Don't set user; let them navigate to verification page
+    // User will be logged in automatically after email verification
   };
 
   const logout = async () => {
     try {
-      if (hasWindow()) {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (refreshToken) {
-          await authApi.logout(refreshToken);
-        }
-      }
+      // Call logout API to invalidate the refresh token on server
+      // Refresh token is in httpOnly cookie; API will use it automatically
+      await authApi.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      if (hasWindow()) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-      }
+      // Tokens are in httpOnly cookies and will be cleared by API
+      // Clear user state locally
       setUser(null);
     }
   };

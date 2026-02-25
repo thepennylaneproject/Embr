@@ -7,6 +7,7 @@ import { PrismaModule } from './core/database/prisma.module';
 import { EmailModule } from './core/email/email.module';
 import { AuthModule } from './core/auth/auth.module';
 import { JwtAuthGuard } from './core/auth/guards/jwt-auth.guard';
+import { EmailVerifiedGuard } from './core/auth/guards/email-verified.guard';
 import { UsersModule } from './core/users/users.module';
 import { ContentModule } from './verticals/feeds/content/content.module';
 import { MediaModule } from './core/media/media.module';
@@ -68,6 +69,11 @@ import { MusicModule } from './music/music.module';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    // Email verification guard — routes opt out with @SkipEmailVerification()
+    {
+      provide: APP_GUARD,
+      useClass: EmailVerifiedGuard,
     },
   ],
 })

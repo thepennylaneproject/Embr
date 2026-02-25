@@ -12,6 +12,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET'),
       callbackURL: configService.get<string>('GOOGLE_CALLBACK_URL'),
       scope: ['email', 'profile'],
+      state: true, // Enable state parameter validation to prevent CSRF attacks
     });
   }
 
@@ -23,12 +24,17 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   ): Promise<any> {
     const { id, name, emails, photos } = profile;
 
+    // Validate required profile fields
+    if (!id || !emails?.[0]?.value) {
+      return done(new Error('Google profile is missing required fields (id or email)'), undefined);
+    }
+
     const user = {
       googleId: id,
       email: emails[0].value,
-      firstName: name.givenName,
-      lastName: name.familyName,
-      picture: photos[0].value,
+      firstName: name?.givenName || 'User',
+      lastName: name?.familyName || '',
+      picture: photos?.[0]?.value || null,
       accessToken,
     };
 
