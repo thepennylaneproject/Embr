@@ -147,7 +147,6 @@ export default function GigDetailPage() {
               />
             </div>
           )}
-      </div>
     </ProtectedPageShell>
   );
 }

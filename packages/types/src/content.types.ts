@@ -37,6 +37,7 @@ export interface Post {
   thumbnailUrl?: string;
   muxAssetId?: string;
   muxPlaybackId?: string;
+  musicTrackId?: string;
   visibility: PostVisibility;
   hashtags: string[];
   mentions: string[];

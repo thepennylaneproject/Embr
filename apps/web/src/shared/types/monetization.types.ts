@@ -109,6 +109,16 @@ export interface WalletStats {
   lifetimeBalance: number;
   numberOfTips: number;
   averageTipReceived: number;
+  gigsEarnings?: number;
+  numberOfGigs?: number;
+  tipsEarnings?: number;
+  musicEarnings?: number;
+  musicDownloads?: number;
+  subscriptionEarnings?: number;
+  activeSubscribers?: number;
+  marketplaceEarnings?: number;
+  salesCount?: number;
+  numberOfLicenses?: number;
   periodStart?: Date;
   periodEnd?: Date;
 }
