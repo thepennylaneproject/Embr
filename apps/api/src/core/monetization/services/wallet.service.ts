@@ -4,7 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../database/prisma.service';
 import { TransactionType as PrismaTransactionType } from '@prisma/client';
 import { TransactionService } from './transaction.service';
 import { WalletBalanceDto } from '../dto/wallet.dto';

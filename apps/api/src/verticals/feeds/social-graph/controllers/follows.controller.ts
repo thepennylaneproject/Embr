@@ -11,7 +11,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../../../core/auth/guards/jwt-auth.guard';
 import { FollowsService } from '../services/follows.service';
 import { 
   FollowUserDto, 

@@ -3,7 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { MessagingController } from './controllers/messaging.controller';
 import { MessagingService } from './services/messaging.service';
 import { MessagingGateway } from './gateways/messaging.gateway';
-import { UploadModule } from '../upload/upload.module';
+import { UploadModule } from '../../../core/upload/upload.module';
 
 @Module({
   imports: [

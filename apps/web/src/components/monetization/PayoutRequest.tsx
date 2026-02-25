@@ -185,7 +185,7 @@ export const PayoutRequest: React.FC = () => {
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#999' }}>
               <span>Minimum: $10</span>
-              <span>Maximum: ${balance?.available.toFixed(2) || '0.00'}</span>
+              <span>Maximum: ${balance?.available?.toFixed(2) || '0.00'}</span>
             </div>
           </div>
 
@@ -215,7 +215,7 @@ export const PayoutRequest: React.FC = () => {
             ))}
             <button
               type="button"
-              onClick={() => setAmount(balance?.available.toFixed(2) || '0')}
+              onClick={() => setAmount(balance?.available?.toFixed(2) || '0')}
               disabled={!balance || balance.available < 10}
               style={{
                 flex: 1,

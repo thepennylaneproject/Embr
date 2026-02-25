@@ -12,7 +12,7 @@ import { S3MultipartService } from './services/s3-multipart.service';
 import { MuxVideoService } from './services/mux-video.service';
 import { ThumbnailService } from './services/thumbnail.service';
 import { MediaService } from './services/media.service';
-import { PrismaModule } from '../prisma/prisma.module';
+import { PrismaModule } from '../database/prisma.module';
 
 @Module({
   imports: [

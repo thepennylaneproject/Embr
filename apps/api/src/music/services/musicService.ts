@@ -8,13 +8,13 @@ const prisma = new PrismaClient();
 // ============================================
 
 export const artistService = {
-  async createArtist(userId: string, stageName: string, bio: string, profileImage: string) {
+  async createArtist(userId: string, stageName: string, bio: string, avatarUrl: string) {
     return prisma.artist.create({
       data: {
         userId,
         stageName,
         bio,
-        profileImage,
+        avatarUrl,
         isVerified: false,
       },
     });
@@ -28,7 +28,6 @@ export const artistService = {
           select: {
             id: true,
             username: true,
-            profileImage: true,
           },
         },
       },
@@ -47,7 +46,6 @@ export const artistService = {
       where: { id: artistId },
       data: {
         isVerified: true,
-        verificationDate: new Date(),
       },
     });
   },
@@ -124,7 +122,7 @@ export const trackService = {
           select: {
             id: true,
             stageName: true,
-            profileImage: true,
+            avatarUrl: true,
             isVerified: true,
           },
         },
@@ -196,7 +194,7 @@ export const licensingService = {
     });
 
     if (!track || !track.isPublished) {
-      return { allowed: false, reason: 'Track not found or not published', licensingModel: LicensingModel.RESTRICTED };
+      return { allowed: false, reason: 'Track not found or not published', licensingModel: LicensingModel.RESTRICTED, allowRemix: false, allowMonetize: false, attributionRequired: true };
     }
 
     if (track.licensingModel === LicensingModel.RESTRICTED) {
@@ -234,7 +232,7 @@ export const licensingService = {
 
     return {
       allowed: true,
-      licensingModel: track.licensingModel,
+      licensingModel: track.licensingModel as LicensingModel,
       allowRemix: track.allowRemix,
       allowMonetize: track.allowMonetize,
       attributionRequired: track.attributionRequired,
@@ -262,7 +260,7 @@ export const licensingService = {
         contentType: data.contentType,
         contentId: data.contentId,
         creatorId: data.creatorId,
-        licensingModel: track.licensingModel,
+        licensingModel: track.licensingModel as LicensingModel,
         allowMonetize: track.allowMonetize,
         attributionUrl: `/music/artist/${track.artistId}`,
       },
@@ -287,7 +285,6 @@ export const licensingService = {
           select: {
             id: true,
             username: true,
-            profileImage: true,
           },
         },
       },

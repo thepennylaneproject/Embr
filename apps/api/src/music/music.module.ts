@@ -1,7 +1,6 @@
 import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { PrismaModule } from '../core/database/prisma.module';
 import { MediaModule } from '../core/media/media.module';
-import { MusicService } from './services/musicService';
 import musicRoutes from './routes';
 
 /**
@@ -27,8 +26,6 @@ import musicRoutes from './routes';
  */
 @Module({
   imports: [PrismaModule, MediaModule],
-  providers: [MusicService],
-  exports: [MusicService],
 })
 export class MusicModule {
   /**
