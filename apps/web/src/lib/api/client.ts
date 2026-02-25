@@ -27,14 +27,13 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Always send cookies with requests
 });
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = getStorageItem('accessToken');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    // Tokens are now sent via httpOnly cookies automatically
+    // withCredentials: true ensures cookies are included in every request
     return config;
   },
   (error) => Promise.reject(error),
@@ -49,25 +48,18 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = getStorageItem('refreshToken');
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
-        }
+        // Attempt to refresh tokens via API
+        // The API will set new httpOnly cookies in the response
+        const response = await axios.post(
+          `${API_URL}/auth/refresh`,
+          {}, // No need to send refreshToken in body - it's in cookies
+          { withCredentials: true }, // Ensure cookies are sent
+        );
 
-        const response = await axios.post(`${API_URL}/auth/refresh`, {
-          refreshToken,
-        });
-
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
-        setStorageItem('accessToken', accessToken);
-        setStorageItem('refreshToken', newRefreshToken);
-
-        if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        }
-
+        // Cookies are now set by the response; retry original request
         return apiClient(originalRequest);
       } catch (refreshError) {
+        // Clear any client-side storage and redirect to login
         clearAuthStorage();
         if (typeof window !== 'undefined') {
           window.location.href = '/auth/login';

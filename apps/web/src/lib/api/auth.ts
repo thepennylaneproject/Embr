@@ -26,12 +26,14 @@ export const authApi = {
 
   googleLogin: (redirectUrl: string) => {
     if (typeof window !== 'undefined') {
-      window.location.href = `${API_PUBLIC_URL}/auth/google?redirect=${encodeURIComponent(redirectUrl)}`;
+      // Redirect to Google OAuth - callback will set httpOnly cookies
+      window.location.href = `${API_PUBLIC_URL}/auth/google/callback`;
     }
   },
 
-  logout: async (refreshToken: string): Promise<void> => {
-    await apiClient.post('/auth/logout', { refreshToken });
+  logout: async (): Promise<void> => {
+    // Refresh token is in httpOnly cookie; API will use it automatically
+    await apiClient.post('/auth/logout', {});
   },
 
   forgotPassword: async (email: string): Promise<{ message: string }> => {
@@ -47,16 +49,18 @@ export const authApi = {
     return response.data;
   },
 
-  changePassword: async (currentPassword: string, newPassword: string): Promise<{ message: string }> => {
+  changePassword: async (currentPassword: string, newPassword: string): Promise<{ user: User; message: string; accessToken: string; refreshToken: string }> => {
     const response = await apiClient.patch('/auth/change-password', {
       currentPassword,
       newPassword,
     });
+    // API sets new httpOnly cookies after password change; response contains user and tokens
     return response.data;
   },
 
-  verifyEmail: async (token: string): Promise<{ message: string }> => {
+  verifyEmail: async (token: string): Promise<{ user: User; accessToken: string; refreshToken: string }> => {
     const response = await apiClient.post('/auth/verify-email', { token });
+    // API sets httpOnly cookies; response contains user and tokens for backward compatibility
     return response.data;
   },
 
