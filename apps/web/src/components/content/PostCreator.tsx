@@ -6,9 +6,10 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
-import { X, Image, Video, Loader2, Upload } from 'lucide-react';
+import { X, Image, Video, Loader2, Upload, Music } from 'lucide-react';
 import { usePost } from '@/hooks/usePost';
 import { PostType, PostVisibility, CreatePostInput } from '@shared/types/content.types';
+import { MusicSelectorModal } from '@/components/music/MusicSelectorModal';
 
 interface PostCreatorProps {
   onPostCreated?: (postId: string) => void;
@@ -40,6 +41,8 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [hashtags, setHashtags] = useState<string[]>([]);
+  const [selectedMusic, setSelectedMusic] = useState<any | null>(null);
+  const [showMusicModal, setShowMusicModal] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -136,23 +139,30 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
         };
       }
 
+      // Add music if selected
+      if (selectedMusic) {
+        postData.musicTrackId = selectedMusic.id;
+      }
+
       const post = await createPost(postData);
-      
+
       // Reset form
       setContent('');
       removeMedia();
       setHashtags([]);
-      
+      setSelectedMusic(null);
+
       onPostCreated?.(post.id);
     } catch (err) {
       console.error('Failed to create post:', err);
     }
-  }, [content, mediaFile, mediaType, visibility, hashtags, uploadMedia, createPost, removeMedia, onPostCreated]);
+  }, [content, mediaFile, mediaType, visibility, hashtags, selectedMusic, uploadMedia, createPost, removeMedia, onPostCreated]);
 
   const handleCancel = useCallback(() => {
     setContent('');
     removeMedia();
     setHashtags([]);
+    setSelectedMusic(null);
     reset();
     onCancel?.();
   }, [removeMedia, reset, onCancel]);
@@ -263,6 +273,24 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
         </div>
       )}
 
+      {/* Music Preview */}
+      {selectedMusic && (
+        <div className="mt-4 flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <Music size={20} className="text-amber-600" />
+          <div className="flex-1">
+            <div className="font-medium text-gray-900">{selectedMusic.title}</div>
+            <div className="text-sm text-gray-600">{selectedMusic.artistName}</div>
+          </div>
+          <button
+            onClick={() => setSelectedMusic(null)}
+            className="text-gray-400 hover:text-gray-600"
+            title="Remove music"
+          >
+            <X size={18} />
+          </button>
+        </div>
+      )}
+
       {/* Actions */}
       <div className="mt-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -283,6 +311,18 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
                 title="Add video"
               >
                 <Video size={20} />
+              </button>
+              <button
+                onClick={() => setShowMusicModal(true)}
+                className={`p-2 rounded-lg transition-colors ${
+                  selectedMusic
+                    ? 'bg-amber-100 text-amber-600'
+                    : 'hover:bg-gray-100 text-gray-600'
+                }`}
+                disabled={isCreating || isUploading}
+                title="Add music"
+              >
+                <Music size={20} />
               </button>
             </>
           )}
@@ -326,6 +366,14 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Music Selector Modal */}
+      <MusicSelectorModal
+        isOpen={showMusicModal}
+        onClose={() => setShowMusicModal(false)}
+        onSelect={setSelectedMusic}
+        selectedTrackId={selectedMusic?.id}
+      />
     </div>
   );
 };

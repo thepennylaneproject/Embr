@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Play } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Play, Music } from 'lucide-react';
 import { Post } from '@shared/types/content.types';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
@@ -161,6 +161,21 @@ export const PostCard: React.FC<PostCardProps> = ({
             </div>
           )}
         </Link>
+      )}
+
+      {/* Music */}
+      {post.musicTrackId && (
+        <div className="px-4 py-3 bg-amber-50 border-t border-amber-200 flex items-center gap-3">
+          <Music size={18} className="text-amber-600 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <Link
+              href={`/music/licensing/${post.musicTrackId}`}
+              className="text-sm font-medium text-gray-900 hover:text-amber-600 truncate block"
+            >
+              🎵 Music added to this post
+            </Link>
+          </div>
+        </div>
       )}
 
       {/* Stats */}
