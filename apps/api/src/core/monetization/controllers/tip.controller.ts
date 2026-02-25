@@ -11,11 +11,14 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { EmailVerifiedGuard } from '../../auth/guards/email-verified.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import { TipService } from '../services/tip.service';
 import { CreateTipDto, GetTipsQueryDto } from '../dto/tip.dto';
 
 @Controller('tips')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, EmailVerifiedGuard, RolesGuard)
 export class TipController {
   constructor(private tipService: TipService) {}
 
@@ -70,12 +73,12 @@ export class TipController {
    * Refund a tip
    */
   @Post(':id/refund')
+  @Roles('admin')
   @HttpCode(HttpStatus.OK)
   async refundTip(
     @Param('id') id: string,
     @Body('reason') reason: string,
   ) {
-    // TODO: Add admin guard
     return this.tipService.refundTip(id, reason);
   }
 

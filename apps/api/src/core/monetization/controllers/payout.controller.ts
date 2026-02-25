@@ -11,6 +11,9 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { EmailVerifiedGuard } from '../../auth/guards/email-verified.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import { PayoutService } from '../services/payout.service';
 import {
   CreatePayoutRequestDto,
@@ -19,7 +22,7 @@ import {
 } from '../dto/payout.dto';
 
 @Controller('payouts')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, EmailVerifiedGuard, RolesGuard)
 export class PayoutController {
   constructor(private payoutService: PayoutService) {}
 
@@ -59,8 +62,8 @@ export class PayoutController {
    * Get all pending payouts for admin review
    */
   @Get('pending')
+  @Roles('admin')
   async getPendingPayouts() {
-    // TODO: Add admin guard
     return this.payoutService.getPendingPayouts();
   }
 
@@ -69,13 +72,13 @@ export class PayoutController {
    * Approve or reject a payout request
    */
   @Post(':id/approve')
+  @Roles('admin')
   @HttpCode(HttpStatus.OK)
   async approvePayout(
     @Request() req,
     @Param('id') id: string,
     @Body() dto: Partial<ApprovePayoutDto>,
   ) {
-    // TODO: Add admin guard
     return this.payoutService.approvePayout(req.user.id, {
       payoutRequestId: id,
       ...dto,
@@ -87,13 +90,13 @@ export class PayoutController {
    * Reject a payout request
    */
   @Post(':id/reject')
+  @Roles('admin')
   @HttpCode(HttpStatus.OK)
   async rejectPayout(
     @Request() req,
     @Param('id') id: string,
     @Body('reason') reason?: string,
   ) {
-    // TODO: Add admin guard
     return this.payoutService.approvePayout(req.user.id, {
       payoutRequestId: id,
       approve: false,

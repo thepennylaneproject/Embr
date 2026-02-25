@@ -10,12 +10,15 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { EmailVerifiedGuard } from '../../auth/guards/email-verified.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import { WalletService } from '../services/wallet.service';
 import { TransactionService } from '../services/transaction.service';
 import { GetTransactionsQueryDto } from '../dto/wallet.dto';
 
 @Controller('wallet')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, EmailVerifiedGuard, RolesGuard)
 export class WalletController {
   constructor(
     private walletService: WalletService,
@@ -108,16 +111,16 @@ export class WalletController {
 
   /**
    * POST /wallet/add-funds (admin only)
-   * Add funds to a wallet for testing
+   * Add funds to a wallet for testing/refunds
    */
   @Post('add-funds')
+  @Roles('admin')
   @HttpCode(HttpStatus.OK)
   async addFunds(
     @Request() req,
     @Body('amount') amount: number,
     @Body('reason') reason: string,
   ) {
-    // TODO: Add admin guard
     return this.walletService.addFunds(req.user.id, amount, reason);
   }
 }
