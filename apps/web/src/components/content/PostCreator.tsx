@@ -1,12 +1,12 @@
 /**
  * PostCreator Component
  * Full-featured post creation with media upload, preview, and validation
+ * Design: Follow DESIGN_SYSTEM - clean, minimal, typography hierarchy
  */
 
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
-import { X, Image, Video, Loader2, Upload, Music } from 'lucide-react';
 import { usePost } from '@/hooks/usePost';
 import { PostType, PostVisibility, CreatePostInput } from '@shared/types/content.types';
 import { MusicSelectorModal } from '@/components/music/MusicSelectorModal';
@@ -51,7 +51,6 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
     setMediaFile(file);
     setMediaType(type);
 
-    // Create preview
     const reader = new FileReader();
     reader.onload = (e) => {
       setMediaPreview(e.target?.result as string);
@@ -102,7 +101,6 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
 
   const extractHashtagsAndMentions = useCallback((text: string) => {
     const hashtagMatches = text.match(/#\w+/g) || [];
-    
     setHashtags(hashtagMatches.map(tag => tag.slice(1)));
   }, []);
 
@@ -128,7 +126,6 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
         hashtags,
       };
 
-      // Upload media if present
       if (mediaFile && mediaType) {
         const mediaResult = await uploadMedia(mediaFile, mediaType);
         postData = {
@@ -139,14 +136,12 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
         };
       }
 
-      // Add music if selected
       if (selectedMusic) {
         postData.musicTrackId = selectedMusic.id;
       }
 
       const post = await createPost(postData);
 
-      // Reset form
       setContent('');
       removeMedia();
       setHashtags([]);
@@ -170,88 +165,139 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
   const isSubmitDisabled = (!content.trim() && !mediaFile) || isCreating || isUploading;
 
   return (
-    <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 p-6 ${className}`}>
-      {/* Content Input */}
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '8px',
+      border: '1px solid #e0e0e0',
+      padding: '24px',
+    }}>
+      {/* CONTENT INPUT */}
       <textarea
         value={content}
         onChange={handleContentChange}
         placeholder="What's on your mind?"
-        className="w-full min-h-[120px] text-gray-900 placeholder-gray-400 resize-none focus:outline-none text-lg"
         maxLength={500}
         disabled={isCreating || isUploading}
+        style={{
+          width: '100%',
+          minHeight: '120px',
+          fontSize: '16px',
+          color: '#000',
+          padding: 0,
+          border: 'none',
+          outline: 'none',
+          resize: 'none',
+          fontFamily: 'inherit',
+          backgroundColor: 'transparent',
+        }}
       />
 
-      {/* Character Count */}
-      <div className="flex justify-end mt-1">
-        <span
-          className={`text-sm ${
-            content.length > 450 ? 'text-red-500' : 'text-gray-400'
-          }`}
-        >
+      {/* CHARACTER COUNT */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px', marginBottom: '16px' }}>
+        <span style={{
+          fontSize: '12px',
+          color: content.length > 450 ? '#ef4444' : '#ccc',
+        }}>
           {content.length}/500
         </span>
       </div>
 
-      {/* Media Preview */}
+      {/* MEDIA PREVIEW */}
       {mediaPreview && (
-        <div className="mt-4 relative rounded-xl overflow-hidden bg-gray-50">
+        <div style={{
+          position: 'relative',
+          marginBottom: '16px',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          backgroundColor: '#f5f5f5',
+        }}>
           {mediaType === 'image' ? (
             <img
               src={mediaPreview}
               alt="Preview"
-              className="w-full max-h-96 object-contain"
+              style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }}
             />
           ) : (
             <video
               src={mediaPreview}
-              className="w-full max-h-96"
+              style={{ width: '100%', maxHeight: '400px' }}
               controls
             />
           )}
           <button
             onClick={removeMedia}
-            className="absolute top-3 right-3 bg-black/60 hover:bg-black/80 text-white rounded-full p-2 transition-colors"
             disabled={isUploading}
+            style={{
+              position: 'absolute',
+              top: '12px',
+              right: '12px',
+              width: '36px',
+              height: '36px',
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '50%',
+              cursor: isUploading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+            }}
           >
-            <X size={20} />
+            ✕
           </button>
         </div>
       )}
 
-      {/* Upload Progress */}
+      {/* UPLOAD PROGRESS */}
       {isUploading && uploadProgress && (
-        <div className="mt-4">
-          <div className="flex justify-between text-sm text-gray-600 mb-2">
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#666', marginBottom: '8px' }}>
             <span>Uploading...</span>
             <span>{uploadProgress.percentage}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div style={{ width: '100%', height: '4px', backgroundColor: '#e0e0e0', borderRadius: '2px', overflow: 'hidden' }}>
             <div
-              className="bg-[#E8998D] h-2 rounded-full transition-all duration-300"
-              style={{ width: `${uploadProgress.percentage}%` }}
+              style={{
+                height: '100%',
+                backgroundColor: '#E8998D',
+                width: `${uploadProgress.percentage}%`,
+                transition: 'width 300ms',
+              }}
             />
           </div>
         </div>
       )}
 
-      {/* Drag & Drop Zone */}
+      {/* DRAG & DROP ZONE */}
       {!mediaPreview && (
         <div
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
-          className={`mt-4 border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-            isDragging
-              ? 'border-[#E8998D] bg-[#E8998D]/5'
-              : 'border-gray-200 hover:border-gray-300'
-          }`}
+          style={{
+            marginBottom: '16px',
+            padding: '32px',
+            border: `2px dashed ${isDragging ? '#E8998D' : '#e0e0e0'}`,
+            backgroundColor: isDragging ? 'rgba(232, 153, 141, 0.05)' : 'transparent',
+            borderRadius: '8px',
+            textAlign: 'center',
+            cursor: 'pointer',
+            transition: 'all 200ms',
+          }}
         >
-          <Upload className="mx-auto text-gray-400 mb-2" size={32} />
-          <p className="text-gray-600">
+          <p style={{ fontSize: '16px', color: '#666', margin: '0 0 8px 0' }}>
             Drag and drop an image or video, or{' '}
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="text-[#E8998D] hover:underline font-medium"
+              style={{
+                color: '#E8998D',
+                backgroundColor: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 600,
+                textDecoration: 'underline',
+              }}
             >
               browse
             </button>
@@ -261,78 +307,140 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
             type="file"
             accept="image/*,video/*"
             onChange={handleFileInput}
-            className="hidden"
+            style={{ display: 'none' }}
           />
         </div>
       )}
 
-      {/* Error Message */}
+      {/* ERROR MESSAGE */}
       {error && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div style={{
+          padding: '12px 16px',
+          backgroundColor: '#fee2e2',
+          border: '1px solid #fecaca',
+          borderRadius: '6px',
+          fontSize: '14px',
+          color: '#991b1b',
+          marginBottom: '16px',
+        }}>
           {error}
         </div>
       )}
 
-      {/* Music Preview */}
+      {/* MUSIC PREVIEW */}
       {selectedMusic && (
-        <div className="mt-4 flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-          <Music size={20} className="text-amber-600" />
-          <div className="flex-1">
-            <div className="font-medium text-gray-900">{selectedMusic.title}</div>
-            <div className="text-sm text-gray-600">{selectedMusic.artistName}</div>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '12px',
+          backgroundColor: '#fef3c7',
+          border: '1px solid #fde68a',
+          borderRadius: '6px',
+          marginBottom: '16px',
+        }}>
+          <span style={{ fontSize: '20px' }}>🎵</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600, color: '#000', fontSize: '14px' }}>
+              {selectedMusic.title}
+            </div>
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              {selectedMusic.artistName}
+            </div>
           </div>
           <button
             onClick={() => setSelectedMusic(null)}
-            className="text-gray-400 hover:text-gray-600"
-            title="Remove music"
+            style={{
+              backgroundColor: 'transparent',
+              border: 'none',
+              color: '#ccc',
+              cursor: 'pointer',
+              fontSize: '18px',
+            }}
           >
-            <X size={18} />
+            ✕
           </button>
         </div>
       )}
 
-      {/* Actions */}
-      <div className="mt-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      {/* ACTIONS */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: '24px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {!mediaPreview && (
             <>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
                 disabled={isCreating || isUploading}
                 title="Add image"
+                style={{
+                  padding: '8px',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: isCreating || isUploading ? 'not-allowed' : 'pointer',
+                  color: '#666',
+                  fontSize: '18px',
+                  opacity: isCreating || isUploading ? 0.5 : 1,
+                }}
               >
-                <Image size={20} />
+                🖼️
               </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
                 disabled={isCreating || isUploading}
                 title="Add video"
+                style={{
+                  padding: '8px',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: isCreating || isUploading ? 'not-allowed' : 'pointer',
+                  color: '#666',
+                  fontSize: '18px',
+                  opacity: isCreating || isUploading ? 0.5 : 1,
+                }}
               >
-                <Video size={20} />
+                📹
               </button>
               <button
                 onClick={() => setShowMusicModal(true)}
-                className={`p-2 rounded-lg transition-colors ${
-                  selectedMusic
-                    ? 'bg-amber-100 text-amber-600'
-                    : 'hover:bg-gray-100 text-gray-600'
-                }`}
                 disabled={isCreating || isUploading}
                 title="Add music"
+                style={{
+                  padding: '8px',
+                  backgroundColor: selectedMusic ? '#fef3c7' : 'transparent',
+                  border: 'none',
+                  cursor: isCreating || isUploading ? 'not-allowed' : 'pointer',
+                  color: selectedMusic ? '#d97706' : '#666',
+                  fontSize: '18px',
+                  opacity: isCreating || isUploading ? 0.5 : 1,
+                  borderRadius: '4px',
+                }}
               >
-                <Music size={20} />
+                🎵
               </button>
             </>
           )}
 
-          {/* Visibility Selector */}
+          {/* VISIBILITY SELECTOR */}
           <select
             value={visibility}
             onChange={(e) => setVisibility(e.target.value as PostVisibility)}
-            className="ml-2 px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-[#E8998D]"
             disabled={isCreating || isUploading}
+            style={{
+              marginLeft: '12px',
+              padding: '6px 12px',
+              border: '1px solid #e0e0e0',
+              borderRadius: '4px',
+              fontSize: '14px',
+              color: '#333',
+              backgroundColor: 'white',
+              cursor: isCreating || isUploading ? 'not-allowed' : 'pointer',
+              opacity: isCreating || isUploading ? 0.5 : 1,
+            }}
           >
             <option value={PostVisibility.PUBLIC}>Public</option>
             <option value={PostVisibility.FOLLOWERS}>Followers</option>
@@ -340,12 +448,22 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
           </select>
         </div>
 
-        <div className="flex gap-2">
+        <div style={{ display: 'flex', gap: '8px' }}>
           {onCancel && (
             <button
               onClick={handleCancel}
-              className="px-6 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
               disabled={isCreating || isUploading}
+              style={{
+                padding: '10px 20px',
+                fontSize: '14px',
+                fontWeight: 600,
+                color: '#333',
+                backgroundColor: 'transparent',
+                border: '1px solid #e0e0e0',
+                borderRadius: '6px',
+                cursor: isCreating || isUploading ? 'not-allowed' : 'pointer',
+                opacity: isCreating || isUploading ? 0.5 : 1,
+              }}
             >
               Cancel
             </button>
@@ -353,21 +471,26 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
           <button
             onClick={handleSubmit}
             disabled={isSubmitDisabled}
-            className="px-6 py-2.5 bg-[#E8998D] hover:bg-[#d88a7e] disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+            style={{
+              padding: '10px 24px',
+              fontSize: '14px',
+              fontWeight: 600,
+              color: 'white',
+              backgroundColor: isSubmitDisabled ? '#ccc' : '#E8998D',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: isSubmitDisabled ? 'not-allowed' : 'pointer',
+            }}
           >
-            {isCreating || isUploading ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                {isUploading ? 'Uploading...' : 'Posting...'}
-              </>
-            ) : (
-              'Post'
-            )}
+            {isCreating || isUploading
+              ? isUploading ? '⟳ Uploading...' : '⟳ Posting...'
+              : 'Post'
+            }
           </button>
         </div>
       </div>
 
-      {/* Music Selector Modal */}
+      {/* MUSIC SELECTOR MODAL */}
       <MusicSelectorModal
         isOpen={showMusicModal}
         onClose={() => setShowMusicModal(false)}
