@@ -1,14 +1,33 @@
 import { useState } from 'react';
 import { ProtectedPageShell } from '@/components/layout';
-import { WalletOverview } from '@/components/monetization/WalletOverview';
+import { EarningsOverview } from '@/components/monetization/EarningsOverview';
 import { TransactionHistory } from '@/components/monetization/TransactionHistory';
 import { PayoutRequest } from '@/components/monetization/PayoutRequest';
-import { Button } from '@/components/ui';
 
 type EarningsView = 'summary' | 'transactions' | 'payout';
 
 export default function EarningsPage() {
   const [activeView, setActiveView] = useState<EarningsView>('summary');
+
+  const navStyle = {
+    display: 'flex',
+    gap: '8px',
+    marginBottom: '48px',
+    borderBottom: '1px solid #e0e0e0',
+  };
+
+  const navButtonStyle = (isActive: boolean) => ({
+    padding: '8px 0',
+    fontSize: '16px',
+    fontWeight: isActive ? 600 : 400,
+    color: isActive ? '#000' : '#999',
+    backgroundColor: 'transparent',
+    border: 'none',
+    borderBottom: isActive ? '2px solid #E8998D' : 'none',
+    cursor: 'pointer',
+    paddingBottom: '12px',
+    marginRight: '32px',
+  });
 
   return (
     <ProtectedPageShell
@@ -16,27 +35,20 @@ export default function EarningsPage() {
       subtitle="See where your money comes from. Transparent breakdown, zero hidden fees."
       breadcrumbs={[{ label: 'Earnings' }]}
     >
-      <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-        {(
-          [
-            { key: 'summary', label: 'Summary' },
-            { key: 'transactions', label: 'Transactions' },
-            { key: 'payout', label: 'Request Payout' },
-          ] as const
-        ).map((tab) => (
-          <Button
-            key={tab.key}
-            type="button"
-            variant={activeView === tab.key ? 'primary' : 'secondary'}
-            onClick={() => setActiveView(tab.key)}
-          >
-            {tab.label}
-          </Button>
-        ))}
+      <div style={navStyle}>
+        <button style={navButtonStyle(activeView === 'summary')} onClick={() => setActiveView('summary')}>
+          Summary
+        </button>
+        <button style={navButtonStyle(activeView === 'transactions')} onClick={() => setActiveView('transactions')}>
+          Transactions
+        </button>
+        <button style={navButtonStyle(activeView === 'payout')} onClick={() => setActiveView('payout')}>
+          Request Payout
+        </button>
       </div>
 
       {activeView === 'summary' && (
-        <WalletOverview
+        <EarningsOverview
           onViewTransactions={() => setActiveView('transactions')}
           onRequestPayout={() => setActiveView('payout')}
         />
