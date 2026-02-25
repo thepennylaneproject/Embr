@@ -50,13 +50,13 @@ export const WalletOverview: React.FC<WalletOverviewProps> = ({
         <h2 className="text-lg font-medium mb-1">Wallet Balance</h2>
         <div className="flex items-baseline gap-2">
           <span className="text-4xl font-bold">
-            ${balance?.available.toFixed(2) || '0.00'}
+            ${balance?.available?.toFixed(2) || '0.00'}
           </span>
           <span className="text-sm opacity-90">available</span>
         </div>
-        {balance && balance.pending > 0 && (
+        {balance && (balance.pending || 0) > 0 && (
           <p className="text-sm mt-2 opacity-90">
-            ${balance.pending.toFixed(2)} pending in payouts
+            ${balance.pending?.toFixed(2) || '0.00'} pending in payouts
           </p>
         )}
       </div>
@@ -66,7 +66,7 @@ export const WalletOverview: React.FC<WalletOverviewProps> = ({
         <div className="bg-white p-4 text-center">
           <p className="text-sm text-gray-600 mb-1">Total Earned</p>
           <p className="text-xl font-semibold text-gray-900">
-            ${stats?.totalEarned.toFixed(2) || '0.00'}
+            ${stats?.totalEarned?.toFixed(2) || '0.00'}
           </p>
         </div>
         <div className="bg-white p-4 text-center">
@@ -78,7 +78,7 @@ export const WalletOverview: React.FC<WalletOverviewProps> = ({
         <div className="bg-white p-4 text-center">
           <p className="text-sm text-gray-600 mb-1">Avg Tip</p>
           <p className="text-xl font-semibold text-gray-900">
-            ${stats?.averageTipReceived.toFixed(2) || '0.00'}
+            ${stats?.averageTipReceived?.toFixed(2) || '0.00'}
           </p>
         </div>
       </div>

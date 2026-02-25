@@ -139,7 +139,7 @@ export const PayoutRequest: React.FC = () => {
         <div className="mb-6 p-4 bg-gradient-to-br from-[#E8998D] to-[#C9ADA7] rounded-lg text-white">
           <p className="text-sm opacity-90 mb-1">Available Balance</p>
           <p className="text-3xl font-bold">
-            ${balance?.available.toFixed(2) || '0.00'}
+            ${balance?.available?.toFixed(2) || '0.00'}
           </p>
         </div>
 
@@ -168,7 +168,7 @@ export const PayoutRequest: React.FC = () => {
             </div>
             <div className="flex justify-between mt-2 text-sm text-gray-600">
               <span>Minimum: $10</span>
-              <span>Maximum: ${balance?.available.toFixed(2) || '0.00'}</span>
+              <span>Maximum: ${balance?.available?.toFixed(2) || '0.00'}</span>
             </div>
           </div>
 
@@ -188,7 +188,7 @@ export const PayoutRequest: React.FC = () => {
             ))}
             <button
               type="button"
-              onClick={() => setAmount(balance?.available.toFixed(2) || '0')}
+              onClick={() => setAmount(balance?.available?.toFixed(2) || '0')}
               disabled={!balance || balance.available < 10}
               className="flex-1 px-4 py-2 border border-[#E8998D] text-[#E8998D] rounded-lg text-sm font-medium
                        hover:bg-[#E8998D] hover:text-white transition-colors
