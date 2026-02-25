@@ -5,8 +5,8 @@ import {
   UseGuards, 
   Request,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../../../../core/auth/guards/jwt-auth.guard';
-import { OptionalJwtAuthGuard } from '../../../../core/auth/guards/optional-jwt-auth.guard';
+import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../../../core/auth/guards/optional-jwt-auth.guard';
 import { UserDiscoveryService } from '../services/user-discovery.service';
 import { 
   SearchUsersDto, 
