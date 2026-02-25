@@ -3,14 +3,16 @@ import { WalletController } from './controllers/wallet.controller';
 import { TipController } from './controllers/tip.controller';
 import { PayoutController } from './controllers/payout.controller';
 import { StripeConnectController } from './controllers/stripe-connect.controller';
-
 import { StripeWebhookController } from './webhooks/stripe-webhook.controller';
 import { WalletService } from './services/wallet.service';
 import { TipService } from './services/tip.service';
 import { PayoutService } from './services/payout.service';
 import { StripeConnectService } from './services/stripe-connect.service';
-
 import { TransactionService } from './services/transaction.service';
+
+// Note: Gigs, Licensing, and Marketplace payment services have been disabled (renamed to .disabled.ts)
+// as the Prisma schema doesn't yet include the required models (GigBooking, etc.).
+// These services are preserved for future implementation when the corresponding models are added.
 
 @Module({
   controllers: [
@@ -18,7 +20,6 @@ import { TransactionService } from './services/transaction.service';
     TipController,
     PayoutController,
     StripeConnectController,
-
     StripeWebhookController,
   ],
   providers: [
@@ -26,7 +27,6 @@ import { TransactionService } from './services/transaction.service';
     TipService,
     PayoutService,
     StripeConnectService,
-
     TransactionService,
   ],
   exports: [
@@ -34,7 +34,6 @@ import { TransactionService } from './services/transaction.service';
     TipService,
     PayoutService,
     StripeConnectService,
-
     TransactionService,
   ],
 })
