@@ -70,6 +70,7 @@ export class WalletService {
 
   /**
    * Get wallet balance with pending calculations
+   * All amounts in CENTS (integer, e.g., 500 = $5.00)
    */
   async getWalletBalance(userId: string): Promise<WalletBalanceDto> {
     const wallet = await this.getWallet(userId);
@@ -87,26 +88,27 @@ export class WalletService {
       },
     });
 
-    const pending = pendingPayouts._sum.amount || 0;
-    const available = Math.max(0, wallet.balance - pending);
+    const pendingCents = pendingPayouts._sum.amount || 0;
+    const availableCents = Math.max(0, wallet.balance - pendingCents);
 
     return {
-      available: parseFloat(available.toFixed(2)),
-      pending: parseFloat(pending.toFixed(2)),
-      total: parseFloat(wallet.balance.toFixed(2)),
+      availableCents, // Integer cents (no decimals!)
+      pendingCents,   // Integer cents
+      totalCents: wallet.balance, // Integer cents
       currency: wallet.currency,
     };
   }
 
   /**
    * Check if user has sufficient balance
+   * @param amountCents Amount to check in cents (integer)
    */
   async hasSufficientBalance(
     userId: string,
-    amount: number,
+    amountCents: number,
   ): Promise<boolean> {
     const balance = await this.getWalletBalance(userId);
-    return balance.available >= amount;
+    return balance.availableCents >= amountCents;
   }
 
   /**
@@ -192,13 +194,14 @@ export class WalletService {
 
   /**
    * Get wallet statistics
+   * All amounts in CENTS (integer)
    */
   async getWalletStats(userId: string): Promise<{
-    totalReceived: number;
-    totalSent: number;
-    totalPayouts: number;
+    totalReceivedCents: number;
+    totalSentCents: number;
+    totalPayoutsCents: number;
     numberOfTips: number;
-    averageTipReceived: number;
+    averageTipReceivedCents: number;
   }> {
     const [tipsReceived, tipsSent, payouts] = await Promise.all([
       this.prisma.tip.aggregate({
@@ -225,19 +228,19 @@ export class WalletService {
       }),
     ]);
 
-    const totalReceived = tipsReceived._sum.amount || 0;
-    const totalSent = tipsSent._sum.amount || 0;
-    const totalPayouts = payouts._sum.amount || 0;
+    const totalReceivedCents = tipsReceived._sum.amount || 0;
+    const totalSentCents = tipsSent._sum.amount || 0;
+    const totalPayoutsCents = payouts._sum.amount || 0;
     const numberOfTips = tipsReceived._count;
-    const averageTipReceived =
-      numberOfTips > 0 ? totalReceived / numberOfTips : 0;
+    const averageTipReceivedCents =
+      numberOfTips > 0 ? Math.round(totalReceivedCents / numberOfTips) : 0;
 
     return {
-      totalReceived: parseFloat(totalReceived.toFixed(2)),
-      totalSent: parseFloat(totalSent.toFixed(2)),
-      totalPayouts: parseFloat(totalPayouts.toFixed(2)),
+      totalReceivedCents,
+      totalSentCents,
+      totalPayoutsCents,
       numberOfTips,
-      averageTipReceived: parseFloat(averageTipReceived.toFixed(2)),
+      averageTipReceivedCents,
     };
   }
 
