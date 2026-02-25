@@ -5,16 +5,16 @@ import { TransactionHistory } from '@/components/monetization/TransactionHistory
 import { PayoutRequest } from '@/components/monetization/PayoutRequest';
 import { Button } from '@/components/ui';
 
-type WalletView = 'summary' | 'transactions' | 'payout';
+type EarningsView = 'summary' | 'transactions' | 'payout';
 
-export default function WalletPage() {
-  const [activeView, setActiveView] = useState<WalletView>('summary');
+export default function EarningsPage() {
+  const [activeView, setActiveView] = useState<EarningsView>('summary');
 
   return (
     <ProtectedPageShell
-      title="Wallet"
-      subtitle="Track your earnings, tips, and payouts."
-      breadcrumbs={[{ label: 'Wallet' }]}
+      title="Earnings"
+      subtitle="See where your money comes from. Transparent breakdown, zero hidden fees."
+      breadcrumbs={[{ label: 'Earnings' }]}
     >
       <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         {(
