@@ -9,7 +9,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../../../../core/database/prisma.service';
+import { PrismaService } from '../../../core/database/prisma.service';
 import { CreateCommentDto, UpdateCommentDto } from '../dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 

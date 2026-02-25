@@ -18,7 +18,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { CommentsService } from '../services/comments.service';
-import { JwtAuthGuard } from '../../../../core/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
 import { CreateCommentDto, UpdateCommentDto } from '../dto';
 import {
   ApiTags,

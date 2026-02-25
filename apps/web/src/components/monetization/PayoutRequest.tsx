@@ -1,3 +1,9 @@
+/**
+ * PayoutRequest Component
+ * Allows creators to withdraw earned money
+ * Design: Follow DESIGN_SYSTEM - clean, minimal, typography hierarchy
+ */
+
 import React, { useState, useEffect } from 'react';
 import { usePayouts } from '@/hooks/usePayouts';
 import { useWallet } from '@/hooks/useWallet';
@@ -54,7 +60,7 @@ export const PayoutRequest: React.FC = () => {
       setTimeout(() => {
         setShowSuccess(false);
         loadRecentPayouts();
-      }, 3004);
+      }, 3000);
     } catch (err) {
       console.error('Error creating payout request:', err);
     }
@@ -65,27 +71,6 @@ export const PayoutRequest: React.FC = () => {
     balance.available >= 10 &&
     stripeStatus?.payoutsEnabled;
 
-  const getStatusBadge = (status: string) => {
-    const statusStyles = {
-      PENDING: 'bg-yellow-100 text-yellow-800',
-      APPROVED: 'bg-blue-100 text-blue-800',
-      PROCESSING: 'bg-purple-100 text-purple-800',
-      COMPLETED: 'bg-green-100 text-green-800',
-      REJECTED: 'bg-red-100 text-red-800',
-      FAILED: 'bg-gray-100 text-gray-800',
-    };
-
-    return (
-      <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${
-          statusStyles[status as keyof typeof statusStyles] || 'bg-gray-100 text-gray-800'
-        }`}
-      >
-        {status}
-      </span>
-    );
-  };
-
   const formatDate = (date: string | Date) => {
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
@@ -94,94 +79,136 @@ export const PayoutRequest: React.FC = () => {
     }).format(new Date(date));
   };
 
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case 'COMPLETED': return '#22c55e';
+      case 'PROCESSING': return '#3b82f6';
+      case 'APPROVED': return '#3b82f6';
+      case 'PENDING': return '#f59e0b';
+      case 'REJECTED':
+      case 'FAILED': return '#ef4444';
+      default: return '#999';
+    }
+  };
+
+  // SUCCESS STATE
   if (showSuccess) {
     return (
-      <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-        <div className="text-6xl mb-4">🎉</div>
-        <h3 className="text-2xl font-bold text-gray-900 mb-2">
-          Payout Request Submitted!
+      <div style={{ padding: '48px 32px', textAlign: 'center' }}>
+        <p style={{ fontSize: '48px', margin: 0 }}>🎉</p>
+        <h3 style={{ fontSize: '24px', fontWeight: 700, color: '#000', margin: '16px 0 8px 0' }}>
+          Payout Submitted!
         </h3>
-        <p className="text-gray-600 mb-6">
-          Your payout request is being reviewed. You'll be notified once it's processed.
+        <p style={{ fontSize: '16px', color: '#666', margin: 0 }}>
+          Your request is being reviewed. You'll be notified when it's processed.
         </p>
       </div>
     );
   }
 
+  // STRIPE NOT CONNECTED
   if (!stripeStatus?.payoutsEnabled) {
     return (
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <div className="text-center py-8">
-          <div className="text-4xl mb-4">💳</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Payment Account Required
-          </h3>
-          <p className="text-gray-600 mb-6">
-            You need to set up your payment account before requesting payouts.
-          </p>
-          <button className="px-6 py-2 bg-[#E8998D] text-white rounded-lg font-medium hover:bg-[#d88578] transition-colors">
-            Set Up Payment Account
-          </button>
-        </div>
+      <div style={{ padding: '48px 32px', textAlign: 'center' }}>
+        <p style={{ fontSize: '48px', margin: 0 }}>💳</p>
+        <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#000', margin: '16px 0 8px 0' }}>
+          Set Up Payment Account
+        </h3>
+        <p style={{ fontSize: '16px', color: '#666', margin: '0 0 24px 0' }}>
+          You need to connect your bank account before requesting payouts.
+        </p>
+        <button
+          style={{
+            padding: '12px 32px',
+            fontSize: '16px',
+            fontWeight: 600,
+            backgroundColor: '#E8998D',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+          }}
+        >
+          Connect Bank Account
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Payout Request Form */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-6">
+    <div>
+      {/* REQUEST FORM */}
+      <div style={{ marginBottom: '64px' }}>
+        <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#000', marginBottom: '24px' }}>
           Request Payout
         </h3>
 
-        {/* Available Balance Display */}
-        <div className="mb-6 p-4 bg-gradient-to-br from-[#E8998D] to-[#C9ADA7] rounded-lg text-white">
-          <p className="text-sm opacity-90 mb-1">Available Balance</p>
-          <p className="text-3xl font-bold">
-            ${balance?.available?.toFixed(2) || '0.00'}
+        {/* AVAILABLE BALANCE */}
+        <div style={{
+          padding: '24px',
+          backgroundColor: '#fff9e6',
+          border: '2px solid #E8998D',
+          borderRadius: '8px',
+          marginBottom: '32px',
+        }}>
+          <p style={{ fontSize: '12px', color: '#999', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px 0' }}>
+            Available Balance
+          </p>
+          <p style={{ fontSize: '32px', fontWeight: 700, color: '#000', margin: 0 }}>
+            ${balance?.available.toFixed(2) || '0.00'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Amount Input */}
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '24px' }}>
+          {/* AMOUNT INPUT */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Payout Amount
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#333', marginBottom: '8px' }}>
+              Amount to Withdraw
             </label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">
-                $
-              </span>
-              <input
-                type="number"
-                step="1"
-                min="10"
-                max={balance?.available || 0}
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                className="w-full pl-10 pr-4 py-3 text-lg border border-gray-300 rounded-lg
-                         focus:ring-2 focus:ring-[#E8998D] focus:border-transparent"
-                required
-              />
-            </div>
-            <div className="flex justify-between mt-2 text-sm text-gray-600">
+            <input
+              type="number"
+              step="1"
+              min="10"
+              max={balance?.available || 0}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                fontSize: '16px',
+                border: '1px solid #e0e0e0',
+                borderRadius: '6px',
+                marginBottom: '8px',
+              }}
+              required
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#999' }}>
               <span>Minimum: $10</span>
               <span>Maximum: ${balance?.available?.toFixed(2) || '0.00'}</span>
             </div>
           </div>
 
-          {/* Quick Amount Buttons */}
-          <div className="flex gap-2">
+          {/* QUICK AMOUNT BUTTONS */}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {[25, 50, 100].map((quickAmount) => (
               <button
                 key={quickAmount}
                 type="button"
                 onClick={() => setAmount(quickAmount.toString())}
                 disabled={!balance || balance.available < quickAmount}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium
-                         hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  backgroundColor: 'white',
+                  color: '#333',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '4px',
+                  cursor: balance && balance.available >= quickAmount ? 'pointer' : 'not-allowed',
+                  opacity: balance && balance.available >= quickAmount ? 1 : 0.5,
+                }}
               >
                 ${quickAmount}
               </button>
@@ -190,117 +217,143 @@ export const PayoutRequest: React.FC = () => {
               type="button"
               onClick={() => setAmount(balance?.available?.toFixed(2) || '0')}
               disabled={!balance || balance.available < 10}
-              className="flex-1 px-4 py-2 border border-[#E8998D] text-[#E8998D] rounded-lg text-sm font-medium
-                       hover:bg-[#E8998D] hover:text-white transition-colors
-                       disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                flex: 1,
+                padding: '8px 12px',
+                fontSize: '14px',
+                fontWeight: 600,
+                backgroundColor: balance && balance.available >= 10 ? '#E8998D' : '#ccc',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: balance && balance.available >= 10 ? 'pointer' : 'not-allowed',
+                opacity: balance && balance.available >= 10 ? 1 : 0.7,
+              }}
             >
               Max
             </button>
           </div>
 
-          {/* Note Input */}
+          {/* NOTE */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#333', marginBottom: '8px' }}>
               Note (Optional)
             </label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Add a note for reference..."
-              rows={3}
               maxLength={200}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none
-                       focus:ring-2 focus:ring-[#E8998D] focus:border-transparent"
+              rows={3}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                fontSize: '14px',
+                border: '1px solid #e0e0e0',
+                borderRadius: '6px',
+                fontFamily: 'inherit',
+                resize: 'vertical',
+                marginBottom: '8px',
+              }}
             />
-            <p className="text-xs text-gray-500 mt-1 text-right">
+            <p style={{ fontSize: '12px', color: '#999', textAlign: 'right', margin: 0 }}>
               {note.length}/200
             </p>
           </div>
 
-          {/* Error Message */}
+          {/* ERROR */}
           {payoutError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{payoutError}</p>
+            <div style={{ padding: '12px 16px', backgroundColor: '#fee2e2', border: '1px solid #fecaca', borderRadius: '4px' }}>
+              <p style={{ fontSize: '14px', color: '#991b1b', margin: 0 }}>{payoutError}</p>
             </div>
           )}
 
-          {/* Submit Button */}
+          {/* SUBMIT */}
           <button
             type="submit"
             disabled={isCreating || !canRequestPayout}
-            className="w-full py-3 bg-[#E8998D] text-white rounded-lg font-semibold
-                     hover:bg-[#d88578] transition-colors disabled:opacity-50
-                     disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              fontWeight: 600,
+              backgroundColor: canRequestPayout ? '#E8998D' : '#ccc',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: canRequestPayout ? 'pointer' : 'not-allowed',
+            }}
           >
-            {isCreating ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Processing...</span>
-              </>
-            ) : (
-              <>
-                <span>Request Payout</span>
-              </>
-            )}
+            {isCreating ? 'Processing...' : `Withdraw $${amount || '0.00'}`}
           </button>
-        </form>
 
-        {/* Info */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-800">
-            💡 Payouts are typically processed within 2-5 business days after approval.
-            You'll receive a notification once your request is reviewed.
-          </p>
-        </div>
+          <div style={{ padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '6px' }}>
+            <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
+              <strong>Processing time:</strong> 2-5 business days after approval.
+            </p>
+          </div>
+        </form>
       </div>
 
-      {/* Recent Payouts */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Recent Payouts
+      {/* RECENT PAYOUTS */}
+      <section style={{ paddingTop: '64px', borderTop: '1px solid #e0e0e0' }}>
+        <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#000', marginBottom: '24px' }}>
+          Payout History
         </h3>
 
         {isLoadingPayouts ? (
-          <div className="space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg animate-pulse">
-                <div className="flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-                </div>
-                <div className="h-6 bg-gray-200 rounded w-20"></div>
-              </div>
-            ))}
+          <div style={{ textAlign: 'center', padding: '32px' }}>
+            <p style={{ fontSize: '14px', color: '#999' }}>Loading history...</p>
           </div>
         ) : recentPayouts.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-2">📋</div>
-            <p className="text-gray-600">No payout requests yet</p>
+          <div style={{ textAlign: 'center', padding: '32px' }}>
+            <p style={{ fontSize: '16px', color: '#999' }}>No payouts requested yet.</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div style={{ display: 'grid', gap: '12px' }}>
             {recentPayouts.map((payout) => (
               <div
                 key={payout.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '16px',
+                  backgroundColor: '#f5f5f5',
+                  borderRadius: '6px',
+                }}
               >
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-900">
+                <div>
+                  <p style={{ fontSize: '16px', fontWeight: 600, color: '#000', margin: '0 0 4px 0' }}>
                     ${payout.amount.toFixed(2)}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p style={{ fontSize: '14px', color: '#999', margin: 0 }}>
                     {formatDate(payout.createdAt)}
                   </p>
                   {payout.note && (
-                    <p className="text-xs text-gray-500 mt-1">{payout.note}</p>
+                    <p style={{ fontSize: '12px', color: '#ccc', margin: '4px 0 0 0' }}>
+                      {payout.note}
+                    </p>
                   )}
                 </div>
-                {getStatusBadge(payout.status)}
+                <div style={{
+                  padding: '4px 12px',
+                  backgroundColor: getStatusColor(payout.status),
+                  color: 'white',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  borderRadius: '4px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                }}>
+                  {payout.status}
+                </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 };
+
+export default PayoutRequest;

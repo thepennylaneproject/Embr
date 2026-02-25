@@ -4,8 +4,12 @@
  * Design: Follow DESIGN_SYSTEM - typography hierarchy, whitespace, clarity
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useWallet } from '@/hooks/useWallet';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { CreatorOnboarding } from '@/components/onboarding/CreatorOnboarding';
+import { AnalyticsEvent } from '@/lib/analytics';
 
 interface EarningsOverviewProps {
   onRequestPayout?: () => void;
@@ -16,7 +20,24 @@ export const EarningsOverview: React.FC<EarningsOverviewProps> = ({
   onRequestPayout,
   onViewTransactions,
 }) => {
+  const { user } = useAuth();
   const { balance, stats, isLoading, error, refetchBalance } = useWallet();
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [hasTrackedFirstEarning, setHasTrackedFirstEarning] = useState(false);
+  const analytics = useAnalytics();
+
+  // Show onboarding if user has never earned (totalEarned = 0)
+  const isNewCreator = !stats?.totalEarned || stats.totalEarned === 0;
+
+  // Track first earning event
+  useEffect(() => {
+    if (!hasTrackedFirstEarning && stats?.totalEarned && stats.totalEarned > 0) {
+      analytics.track(AnalyticsEvent.FIRST_EARNING, {
+        amount: stats.totalEarned,
+      });
+      setHasTrackedFirstEarning(true);
+    }
+  }, [stats?.totalEarned, hasTrackedFirstEarning, analytics]);
 
   if (isLoading) {
     return (
@@ -57,6 +78,14 @@ export const EarningsOverview: React.FC<EarningsOverviewProps> = ({
 
   return (
     <div>
+      {/* ONBOARDING - for new creators */}
+      {isNewCreator && !onboardingComplete && user && (
+        <CreatorOnboarding
+          userId={user.id}
+          onComplete={() => setOnboardingComplete(true)}
+        />
+      )}
+
       {/* MAIN EARNINGS NUMBER - BIG, CLEAR */}
       <div style={{ marginBottom: '64px' }}>
         <p style={{ fontSize: '14px', fontWeight: 500, color: '#999', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>

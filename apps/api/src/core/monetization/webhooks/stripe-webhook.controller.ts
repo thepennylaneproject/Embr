@@ -13,7 +13,6 @@ import { TipService } from '../services/tip.service';
 import { PayoutService } from '../services/payout.service';
 import { StripeConnectService } from '../services/stripe-connect.service';
 
-
 @Controller('webhooks/stripe')
 export class StripeWebhookController {
   private readonly logger = new Logger(StripeWebhookController.name);
@@ -102,11 +101,8 @@ export class StripeWebhookController {
   private async handlePaymentIntentSucceeded(
     paymentIntent: Stripe.PaymentIntent,
   ): Promise<void> {
-    const { tipId, type } = paymentIntent.metadata || {};
+    const { tipId } = paymentIntent.metadata || {};
 
-
-
-    // Handle tip payment
     if (!tipId) {
       this.logger.warn('Payment intent has no tipId in metadata');
       return;
@@ -127,9 +123,7 @@ export class StripeWebhookController {
   private async handlePaymentIntentFailed(
     paymentIntent: Stripe.PaymentIntent,
   ): Promise<void> {
-    const { tipId, type } = paymentIntent.metadata || {};
-
-
+    const { tipId } = paymentIntent.metadata || {};
 
     if (!tipId) {
       return;
