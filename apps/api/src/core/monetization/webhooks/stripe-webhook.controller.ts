@@ -12,6 +12,9 @@ import Stripe from 'stripe';
 import { TipService } from '../services/tip.service';
 import { PayoutService } from '../services/payout.service';
 import { StripeConnectService } from '../services/stripe-connect.service';
+import { LicensingPaymentService } from '../services/licensing-payment.service';
+import { GigsPaymentService } from '../services/gigs-payment.service';
+import { MarketplacePaymentService } from '../services/marketplace-payment.service';
 
 @Controller('webhooks/stripe')
 export class StripeWebhookController {
@@ -22,6 +25,9 @@ export class StripeWebhookController {
     private tipService: TipService,
     private payoutService: PayoutService,
     private stripeConnectService: StripeConnectService,
+    private licensingPaymentService: LicensingPaymentService,
+    private gigsPaymentService: GigsPaymentService,
+    private marketplacePaymentService: MarketplacePaymentService,
   ) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
       apiVersion: '2023-10-16',
@@ -96,13 +102,53 @@ export class StripeWebhookController {
   }
 
   /**
-   * Handle successful payment intent (tip payment)
+   * Handle successful payment intent
    */
   private async handlePaymentIntentSucceeded(
     paymentIntent: Stripe.PaymentIntent,
   ): Promise<void> {
-    const tipId = paymentIntent.metadata?.tipId;
+    const { tipId, type } = paymentIntent.metadata || {};
 
+    // Handle music license payment
+    if (type === 'music_license') {
+      this.logger.log(`Payment succeeded for music license: ${paymentIntent.id}`);
+      try {
+        await this.licensingPaymentService.handlePaymentSuccess(paymentIntent);
+      } catch (error) {
+        this.logger.error(
+          `Failed to process music license payment ${paymentIntent.id}: ${error.message}`,
+        );
+      }
+      return;
+    }
+
+    // Handle gig booking payment (with escrow)
+    if (type === 'gig_booking') {
+      this.logger.log(`Payment succeeded for gig booking: ${paymentIntent.id}`);
+      try {
+        await this.gigsPaymentService.handlePaymentSuccess(paymentIntent);
+      } catch (error) {
+        this.logger.error(
+          `Failed to process gig booking payment ${paymentIntent.id}: ${error.message}`,
+        );
+      }
+      return;
+    }
+
+    // Handle marketplace order payment
+    if (type === 'marketplace_order') {
+      this.logger.log(`Payment succeeded for marketplace order: ${paymentIntent.id}`);
+      try {
+        await this.marketplacePaymentService.handlePaymentSuccess(paymentIntent);
+      } catch (error) {
+        this.logger.error(
+          `Failed to process marketplace order ${paymentIntent.id}: ${error.message}`,
+        );
+      }
+      return;
+    }
+
+    // Handle tip payment
     if (!tipId) {
       this.logger.warn('Payment intent has no tipId in metadata');
       return;
@@ -123,7 +169,33 @@ export class StripeWebhookController {
   private async handlePaymentIntentFailed(
     paymentIntent: Stripe.PaymentIntent,
   ): Promise<void> {
-    const tipId = paymentIntent.metadata?.tipId;
+    const { tipId, type } = paymentIntent.metadata || {};
+
+    // Handle failed gig booking
+    if (type === 'gig_booking') {
+      this.logger.error(`Payment failed for gig booking: ${paymentIntent.id}`);
+      try {
+        await this.gigsPaymentService.handlePaymentFailed(paymentIntent);
+      } catch (error) {
+        this.logger.error(
+          `Failed to handle gig booking payment failure ${paymentIntent.id}: ${error.message}`,
+        );
+      }
+      return;
+    }
+
+    // Handle failed marketplace order
+    if (type === 'marketplace_order') {
+      this.logger.error(`Payment failed for marketplace order: ${paymentIntent.id}`);
+      try {
+        await this.marketplacePaymentService.handlePaymentFailed(paymentIntent);
+      } catch (error) {
+        this.logger.error(
+          `Failed to handle marketplace payment failure ${paymentIntent.id}: ${error.message}`,
+        );
+      }
+      return;
+    }
 
     if (!tipId) {
       return;

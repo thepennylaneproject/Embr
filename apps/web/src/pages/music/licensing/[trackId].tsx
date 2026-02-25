@@ -1,114 +1,419 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { ProtectedPageShell } from '@/components/layout';
-import { MusicLicensingFlow } from '@/components/music/licensing/MusicLicensingFlow';
-import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui';
+import { Music, CheckCircle, Lock, Share2 } from 'lucide-react';
+
+interface Track {
+  id: string;
+  title: string;
+  artistName: string;
+  price: number;
+  licensingModel: string;
+  allowMonetize: boolean;
+  attributionRequired: boolean;
+  audioUrl: string;
+  imageUrl?: string;
+  duration: number;
+}
+
+interface LicenseOption {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  allowed: boolean;
+}
 
 export default function MusicLicensingPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { trackId } = router.query;
+
+  const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
-  const [contentType, setContentType] = useState<'video' | 'audio' | 'remix'>('video');
-  const [showContentTypeSelector, setShowContentTypeSelector] = useState(true);
+  const [error, setError] = useState('');
+  const [step, setStep] = useState<'details' | 'payment' | 'success'>('details');
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
-  const trackId = useMemo(() => {
-    if (typeof router.query.trackId !== 'string') return '';
-    return router.query.trackId;
-  }, [router.query.trackId]);
-
+  // Fetch track details
   useEffect(() => {
-    if (trackId) {
-      setLoading(false);
-    }
+    if (!trackId) return;
+
+    const fetchTrack = async () => {
+      try {
+        const response = await fetch(`/api/music/tracks/${trackId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch track');
+
+        const data = await response.json();
+        setTrack(data);
+        setLoading(false);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load track');
+        setLoading(false);
+      }
+    };
+
+    fetchTrack();
   }, [trackId]);
 
-  const handleContentTypeSelect = useCallback((type: 'video' | 'audio' | 'remix') => {
-    setContentType(type);
-    setShowContentTypeSelector(false);
-  }, []);
+  const handleLicense = async () => {
+    if (!track) return;
 
-  const handleBack = useCallback(() => {
-    setShowContentTypeSelector(true);
-  }, []);
+    if (track.price === 0) {
+      // Free track - immediate access
+      setStep('success');
+      return;
+    }
 
-  if (loading || !trackId) {
+    setPaymentLoading(true);
+    setError('');
+
+    try {
+      // Create payment intent
+      const response = await fetch(
+        `/api/music/licensing/${track.id}/checkout`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({
+            creatorId: track.id,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Payment failed');
+      }
+
+      const { data } = await response.json();
+
+      // Store payment intent ID for webhook confirmation
+      sessionStorage.setItem('paymentIntentId', data.paymentIntentId);
+      sessionStorage.setItem('trackId', track.id);
+
+      // In a real implementation, you'd redirect to Stripe Checkout or use Elements
+      // For now, show success (in production, integrate Stripe.js)
+      setStep('success');
+    } catch (err: any) {
+      setError(err.message || 'Failed to process payment');
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  if (loading) {
     return (
-      <ProtectedPageShell breadcrumbs={[{ label: 'Music', href: '/music' }, { label: 'Licensing' }]}>
-        <div style={{ height: '400px', backgroundColor: 'var(--embr-border)', borderRadius: 'var(--embr-radius-lg)', animation: 'pulse 2s infinite' }} />
+      <ProtectedPageShell
+        title="License Music"
+        breadcrumbs={[
+          { label: 'Music', href: '/music' },
+          { label: 'License' },
+        ]}
+      >
+        <div style={{ textAlign: 'center', padding: '3rem' }}>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-500 mx-auto"></div>
+          <p style={{ marginTop: '1rem', color: 'var(--embr-muted-text)' }}>
+            Loading track...
+          </p>
+        </div>
       </ProtectedPageShell>
     );
   }
 
+  if (error && !track) {
+    return (
+      <ProtectedPageShell
+        title="License Music"
+        breadcrumbs={[
+          { label: 'Music', href: '/music' },
+          { label: 'License' },
+        ]}
+      >
+        <div className="ui-card" data-padding="lg">
+          <div style={{ color: 'var(--embr-error)', textAlign: 'center' }}>
+            <p>{error}</p>
+            <Link href="/music">
+              <Button style={{ marginTop: '1rem' }}>Back to Music</Button>
+            </Link>
+          </div>
+        </div>
+      </ProtectedPageShell>
+    );
+  }
+
+  if (!track) return null;
+
+  const licenseOptions: LicenseOption[] = [
+    {
+      id: 'use',
+      name: 'Personal Use',
+      description: 'Use this track in your personal projects',
+      icon: <Music size={24} />,
+      allowed: true,
+    },
+    {
+      id: 'monetize',
+      name: 'Monetized Content',
+      description: 'Use this track in content where you earn money',
+      icon: <CheckCircle size={24} />,
+      allowed: track.allowMonetize,
+    },
+    {
+      id: 'remix',
+      name: 'Remix & Modify',
+      description: 'Create remixes and derivative works',
+      icon: <Lock size={24} />,
+      allowed: false,
+    },
+    {
+      id: 'share',
+      name: 'Share with Attribution',
+      description: `Credit to: ${track.artistName}`,
+      icon: <Share2 size={24} />,
+      allowed: track.attributionRequired,
+    },
+  ];
+
   return (
-    <ProtectedPageShell breadcrumbs={[{ label: 'Music', href: '/music' }, { label: 'Licensing' }]}>
-
-          {showContentTypeSelector ? (
-            // Content Type Selector
-            <div className="bg-embr-neutral-100 border border-embr-neutral-200 rounded-lg p-8 space-y-6">
-              <div>
-                <h1 className="text-3xl font-bold text-embr-accent-900 mb-2">Use This Track</h1>
-                <p className="text-embr-accent-600">What type of content are you using this music in?</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Video Card */}
-                <button
-                  onClick={() => handleContentTypeSelect('video')}
-                  className="bg-embr-neutral-200 hover:bg-embr-neutral-300 border-2 border-embr-neutral-300 hover:border-embr-primary-400 rounded-lg p-6 text-center transition group"
+    <ProtectedPageShell
+      title="License Music"
+      breadcrumbs={[
+        { label: 'Music', href: '/music' },
+        { label: track.title },
+      ]}
+    >
+      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        {step === 'details' && (
+          <>
+            <div className="ui-card" data-padding="lg" style={{ marginBottom: '2rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '2rem' }}>
+                <div
+                  style={{
+                    width: '120px',
+                    height: '120px',
+                    borderRadius: 'var(--embr-radius-md)',
+                    backgroundColor: 'var(--embr-bg)',
+                    border: '2px solid var(--embr-border)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--embr-muted-text)',
+                  }}
                 >
-                  <div className="text-4xl mb-4">🎬</div>
-                  <h3 className="font-bold text-embr-accent-900 group-hover:text-embr-primary-600 transition">Video</h3>
-                  <p className="text-sm text-embr-accent-600 mt-2">TikTok, YouTube, Reels, etc.</p>
-                </button>
+                  <Music size={48} />
+                </div>
 
-                {/* Audio Card */}
-                <button
-                  onClick={() => handleContentTypeSelect('audio')}
-                  className="bg-embr-neutral-200 hover:bg-embr-neutral-300 border-2 border-embr-neutral-300 hover:border-embr-primary-400 rounded-lg p-6 text-center transition group"
-                >
-                  <div className="text-4xl mb-4">🎵</div>
-                  <h3 className="font-bold text-embr-accent-900 group-hover:text-embr-primary-600 transition">Audio</h3>
-                  <p className="text-sm text-embr-accent-600 mt-2">Podcast, Streaming, Audio</p>
-                </button>
+                <div>
+                  <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '1.5rem', fontWeight: '700' }}>
+                    {track.title}
+                  </h1>
+                  <p style={{ margin: '0 0 1rem 0', color: 'var(--embr-muted-text)' }}>
+                    By{' '}
+                    <Link href={`/music/artist/${track.artistName}`}>
+                      <span style={{ color: 'var(--embr-accent)', fontWeight: '600' }}>
+                        {track.artistName}
+                      </span>
+                    </Link>
+                  </p>
 
-                {/* Remix Card */}
-                <button
-                  onClick={() => handleContentTypeSelect('remix')}
-                  className="bg-embr-neutral-200 hover:bg-embr-neutral-300 border-2 border-embr-neutral-300 hover:border-embr-primary-400 rounded-lg p-6 text-center transition group"
-                >
-                  <div className="text-4xl mb-4">🔄</div>
-                  <h3 className="font-bold text-embr-accent-900 group-hover:text-embr-primary-600 transition">Remix</h3>
-                  <p className="text-sm text-embr-accent-600 mt-2">Sample, Remix, Cover</p>
-                </button>
+                  <div
+                    style={{
+                      fontSize: '1.3rem',
+                      fontWeight: '700',
+                      color: 'var(--embr-accent)',
+                      marginBottom: '1rem',
+                    }}
+                  >
+                    {track.price === 0 ? '🎁 FREE' : `$${track.price.toFixed(2)}`}
+                  </div>
+
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      padding: '0.5rem 1rem',
+                      borderRadius: 'var(--embr-radius-md)',
+                      backgroundColor: 'color-mix(in srgb, var(--embr-sun) 15%, white)',
+                      color: 'var(--embr-sun)',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      textTransform: 'capitalize',
+                    }}
+                  >
+                    {track.licensingModel} License
+                  </span>
+                </div>
               </div>
             </div>
-          ) : (
-            // Licensing Flow
-            <div className="space-y-6">
-              <button
-                onClick={handleBack}
-                className="text-sm text-embr-accent-600 hover:text-embr-accent-700 font-semibold flex items-center gap-2"
+
+            <div className="ui-card" data-padding="lg" style={{ marginBottom: '2rem' }}>
+              <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.1rem', fontWeight: '700' }}>
+                What You Can Do
+              </h2>
+
+              <div style={{ display: 'grid', gap: '1rem' }}>
+                {licenseOptions.map((option) => (
+                  <div
+                    key={option.id}
+                    style={{
+                      padding: '1rem',
+                      borderRadius: 'var(--embr-radius-md)',
+                      border: `1px solid var(--embr-border)`,
+                      backgroundColor: option.allowed
+                        ? 'color-mix(in srgb, var(--embr-accent) 8%, white)'
+                        : 'color-mix(in srgb, var(--embr-muted-text) 5%, white)',
+                      opacity: option.allowed ? 1 : 0.6,
+                      display: 'flex',
+                      gap: '1rem',
+                      alignItems: 'flex-start',
+                    }}
+                  >
+                    <div style={{ color: option.allowed ? 'var(--embr-accent)' : 'var(--embr-muted-text)' }}>
+                      {option.icon}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div
+                        style={{
+                          fontWeight: '600',
+                          color: option.allowed ? 'var(--embr-text)' : 'var(--embr-muted-text)',
+                        }}
+                      >
+                        {option.name}
+                        {!option.allowed && ' (Not allowed)'}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '0.9rem',
+                          color: 'var(--embr-muted-text)',
+                          marginTop: '0.25rem',
+                        }}
+                      >
+                        {option.description}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="ui-card" data-padding="lg" style={{ marginBottom: '2rem', backgroundColor: 'color-mix(in srgb, var(--embr-warm-2) 10%, white)' }}>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--embr-muted-text)' }}>
+                ✓ By licensing this track, you agree to the terms above. You'll receive instant access to use this music
+                {track.attributionRequired && (
+                  <>
+                    , and you agree to{' '}
+                    <strong>credit the original artist</strong>
+                  </>
+                )}
+                .
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <Button
+                onClick={handleLicense}
+                disabled={paymentLoading}
+                style={{ flex: 1, minWidth: '200px' }}
               >
-                ← Change content type
-              </button>
-
-              <div className="bg-embr-neutral-50 rounded-lg p-4 border border-embr-neutral-200">
-                <p className="text-sm text-embr-accent-600">
-                  <span className="font-semibold text-embr-accent-900">Content Type:</span> {contentType.charAt(0).toUpperCase() + contentType.slice(1)}
-                </p>
-              </div>
-
-              <MusicLicensingFlow
-                trackId={trackId}
-                contentType={contentType}
-                contentId={user?.id || ''}
-                onLicenseSuccess={() => {
-                  // Redirect to dashboard after successful licensing
-                  router.push('/music/dashboard');
-                }}
-              />
+                {paymentLoading ? 'Processing...' : `Get License${track.price > 0 ? ` - $${track.price.toFixed(2)}` : ''}`}
+              </Button>
+              <Link href="/music" style={{ flex: 1 }}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={paymentLoading}
+                  style={{ width: '100%' }}
+                >
+                  Browse More
+                </Button>
+              </Link>
             </div>
-          )}
+
+            {error && (
+              <div
+                style={{
+                  marginTop: '1rem',
+                  padding: '1rem',
+                  borderRadius: 'var(--embr-radius-md)',
+                  backgroundColor: 'color-mix(in srgb, var(--embr-error) 15%, white)',
+                  border: '1px solid var(--embr-error)',
+                  color: 'var(--embr-error)',
+                  fontSize: '0.9rem',
+                }}
+              >
+                {error}
+              </div>
+            )}
+          </>
+        )}
+
+        {step === 'success' && (
+          <div className="ui-card" data-padding="lg" style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem' }}>
+              License Purchased!
+            </h2>
+            <p style={{ color: 'var(--embr-muted-text)', marginBottom: '2rem' }}>
+              You can now use{' '}
+              <strong>{track.title}</strong> by <strong>{track.artistName}</strong> in
+              your content.
+            </p>
+
+            {track.attributionRequired && (
+              <div
+                style={{
+                  padding: '1rem',
+                  borderRadius: 'var(--embr-radius-md)',
+                  backgroundColor: 'color-mix(in srgb, var(--embr-sun) 12%, white)',
+                  border: '1px solid var(--embr-border)',
+                  marginBottom: '2rem',
+                  textAlign: 'left',
+                }}
+              >
+                <p style={{ margin: '0 0 0.5rem 0', fontWeight: '600' }}>
+                  📝 Remember to credit:
+                </p>
+                <code
+                  style={{
+                    display: 'block',
+                    padding: '0.5rem',
+                    backgroundColor: 'var(--embr-bg)',
+                    borderRadius: 'var(--embr-radius-sm)',
+                    fontSize: '0.85rem',
+                    wordBreak: 'break-all',
+                    color: 'var(--embr-accent)',
+                  }}
+                >
+                  "{track.title}" by {track.artistName}
+                </code>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <Link href="/music" style={{ flex: 1, minWidth: '150px' }}>
+                <Button style={{ width: '100%' }}>Back to Music</Button>
+              </Link>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => router.push('/feeds')}
+                style={{ flex: 1, minWidth: '150px' }}
+              >
+                Create Post
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     </ProtectedPageShell>
   );
 }
