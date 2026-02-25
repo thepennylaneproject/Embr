@@ -10,11 +10,10 @@ import type { CSSProperties } from 'react';
 const navItems = [
   { href: '/feed', label: 'Feed' },
   { href: '/create', label: 'Create' },
-  { href: '/messages', label: 'Messages' },
   { href: '/music', label: 'Music' },
   { href: '/gigs', label: 'Gigs' },
-  { href: '/wallet', label: 'Wallet' },
-  { href: '/notifications', label: 'Notifications' },
+  { href: '/earnings', label: 'Earnings' },
+  { href: '/messages', label: 'Messages' },
   { href: '/profile', label: 'Profile' },
 ];
 
