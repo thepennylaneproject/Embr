@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { EmailVerifiedGuard } from '../../auth/guards/email-verified.guard';
@@ -31,6 +32,7 @@ export class PayoutController {
    * Create a payout request
    */
   @Post('request')
+  @Throttle({ default: { limit: 5, ttl: 86400000 } }) // 5 per day
   @HttpCode(HttpStatus.CREATED)
   async createPayoutRequest(
     @Request() req,

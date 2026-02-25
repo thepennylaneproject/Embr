@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { EmailVerifiedGuard } from '../../auth/guards/email-verified.guard';
@@ -114,6 +115,7 @@ export class WalletController {
    * Add funds to a wallet for testing/refunds
    */
   @Post('add-funds')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @Roles('admin')
   @HttpCode(HttpStatus.OK)
   async addFunds(

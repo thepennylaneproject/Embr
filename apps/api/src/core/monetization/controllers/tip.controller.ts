@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { EmailVerifiedGuard } from '../../auth/guards/email-verified.guard';
@@ -27,6 +28,7 @@ export class TipController {
    * Create a tip
    */
   @Post()
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
   async createTip(@Request() req, @Body() dto: CreateTipDto) {
     return this.tipService.createTip(req.user.id, dto);
@@ -73,6 +75,7 @@ export class TipController {
    * Refund a tip
    */
   @Post(':id/refund')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @Roles('admin')
   @HttpCode(HttpStatus.OK)
   async refundTip(
