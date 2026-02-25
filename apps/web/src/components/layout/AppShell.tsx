@@ -17,7 +17,7 @@ const navItems = [
   { href: '/profile', label: 'Profile' },
 ];
 
-interface AppShellProps {
+export interface AppShellProps {
   title?: string;
   subtitle?: string;
   accent?: 'warm1' | 'warm2' | 'sun' | 'seaGlass';

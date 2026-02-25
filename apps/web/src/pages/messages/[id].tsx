@@ -12,14 +12,13 @@ export default function MessagesThreadPage() {
       breadcrumbs={[{ label: 'Messages', href: '/messages' }, { label: 'Thread' }]}
     >
       <DMInbox
-        className="border border-gray-200 rounded-2xl bg-white shadow-sm"
+        className="min-h-[600px] border border-gray-200 rounded-2xl bg-white shadow-sm"
         initialConversationId={conversationId}
         onConversationSelect={(id) => {
           if (id !== conversationId) {
             void router.replace(`/messages/${id}`);
           }
         }}
-        style={{ minHeight: '600px' }}
       />
     </ProtectedPageShell>
   );
