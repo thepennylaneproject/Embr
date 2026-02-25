@@ -29,20 +29,21 @@ export class TipService {
 
   /**
    * Create and process a tip
+   * @param amount Amount in CENTS (integer, e.g., 50 = $0.50)
    */
   async createTip(senderId: string, dto: CreateTipDto): Promise<any> {
-    const { recipientId, postId, amount, message, paymentMethodId } = dto;
+    const { recipientId, postId, amountCents, message, paymentMethodId } = dto;
 
-    // Validation
+    // Validation (amounts in cents)
     if (senderId === recipientId) {
       throw new BadRequestException('Cannot tip yourself');
     }
 
-    if (amount < 0.5) {
+    if (amountCents < 50) {  // $0.50 minimum
       throw new BadRequestException('Minimum tip amount is $0.50');
     }
 
-    if (amount > 1000) {
+    if (amountCents > 100000) {  // $1,000 maximum
       throw new BadRequestException('Maximum tip amount is $1,000');
     }
 
@@ -125,9 +126,9 @@ export class TipService {
     });
 
     try {
-      // Process payment through Stripe
+      // Process payment through Stripe (pass cents)
       const paymentIntent = await this.processStripePayment(
-        amount,
+        amountCents,
         senderId,
         paymentMethodId,
         {
@@ -169,9 +170,10 @@ export class TipService {
 
   /**
    * Process payment through Stripe
+   * @param amountCents Amount in cents (integer)
    */
   private async processStripePayment(
-    amount: number,
+    amountCents: number,
     userId: string,
     paymentMethodId?: string,
     metadata?: Record<string, any>,
@@ -183,9 +185,6 @@ export class TipService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
-    // Convert to cents for Stripe
-    const amountInCents = Math.round(amount * 100);
 
     let customerId = user.stripeCustomerId;
 
@@ -204,25 +203,32 @@ export class TipService {
       });
     }
 
-    // Create payment intent
-    const paymentIntent = await this.stripe.paymentIntents.create({
-      amount: amountInCents,
-      currency: 'usd',
-      customer: customerId,
-      payment_method: paymentMethodId,
-      confirm: !!paymentMethodId, // Auto-confirm if payment method provided
-      metadata: {
-        ...metadata,
-        userId,
+    // Create payment intent with idempotency key to prevent duplicate charges
+    const paymentIntent = await this.stripe.paymentIntents.create(
+      {
+        amount: amountCents,
+        currency: 'usd',
+        customer: customerId,
+        payment_method: paymentMethodId,
+        confirm: !!paymentMethodId,
+        metadata: {
+          ...metadata,
+          userId,
+        },
+        description: `Tip to creator`,
       },
-      description: `Tip to creator`,
-    });
+      {
+        // Idempotency key: ensures duplicate requests return same intent
+        idempotencyKey: `tip-${metadata?.tipId}-${userId}`,
+      },
+    );
 
     return paymentIntent;
   }
 
   /**
-   * Complete a tip transaction
+   * Complete a tip transaction with atomic operations
+   * All amounts in CENTS (integer)
    */
   async completeTip(tipId: string): Promise<any> {
     const tip = await this.prisma.tip.findUnique({
@@ -233,58 +239,75 @@ export class TipService {
       throw new NotFoundException('Tip not found');
     }
 
-    if (tip.status === 'COMPLETED') {
-      return tip; // Already completed
-    }
+    // Use Serializable isolation level to prevent race conditions
+    const completedTip = await this.prisma.$transaction(
+      async (tx) => {
+        // Check if still PROCESSING (prevents double-completion)
+        const currentTip = await tx.tip.findUnique({
+          where: { id: tipId },
+        });
 
-    // Calculate platform fee (5%)
-    const platformFee = tip.amount * 0.05;
-    const netAmount = tip.amount - platformFee;
+        if (currentTip?.status === 'COMPLETED') {
+          return currentTip; // Already completed, return as-is
+        }
 
-    await this.prisma.$transaction(async (tx) => {
-      // Update tip status
-      await tx.tip.update({
-        where: { id: tipId },
-        data: { status: 'COMPLETED', completedAt: new Date() },
-      });
+        if (currentTip?.status !== 'PROCESSING') {
+          throw new BadRequestException(`Cannot complete tip with status: ${currentTip?.status}`);
+        }
 
-      // Record transaction in ledger
-      await this.transactionService.recordTipTransaction(
-        tip.senderId,
-        tip.recipientId,
-        tip.amount,
-        tipId,
-      );
+        // Calculate platform fee in cents (5%, rounded)
+        const platformFeeCents = Math.round(tip.amount * 0.05);
+        const netAmountCents = tip.amount - platformFeeCents;
 
-      // Update wallet balance (add to recipient)
-      await tx.wallet.upsert({
-        where: { userId: tip.recipientId },
-        create: {
-          userId: tip.recipientId,
-          balance: netAmount,
-          currency: 'USD',
-        },
-        update: {
-          balance: {
-            increment: netAmount,
+        // Update tip status to COMPLETED
+        const updated = await tx.tip.update({
+          where: { id: tipId },
+          data: { status: 'COMPLETED', completedAt: new Date() },
+        });
+
+        // Record transaction in ledger
+        await this.transactionService.recordTipTransaction(
+          tip.senderId,
+          tip.recipientId,
+          tip.amount,
+          tipId,
+        );
+
+        // Update wallet balance (add net amount to recipient)
+        const wallet = await tx.wallet.upsert({
+          where: { userId: tip.recipientId },
+          create: {
+            userId: tip.recipientId,
+            balance: netAmountCents,
+            currency: 'USD',
           },
-        },
-      });
+          update: {
+            balance: {
+              increment: netAmountCents,
+            },
+          },
+        });
 
-      // Create notification for recipient
-      await tx.notification.create({
-        data: {
-          userId: tip.recipientId,
-          type: 'TIP_RECEIVED',
-          title: 'You received a tip!',
-          message: tip.message || `Someone tipped you $${tip.amount.toFixed(2)}`,
-          referenceId: tipId,
-          referenceType: 'TIP',
-        },
-      });
-    });
+        // Create notification for recipient
+        await tx.notification.create({
+          data: {
+            userId: tip.recipientId,
+            type: 'TIP_RECEIVED',
+            title: 'You received a tip!',
+            message: tip.message || `Someone tipped you $${(tip.amount / 100).toFixed(2)}`,
+            referenceId: tipId,
+            referenceType: 'TIP',
+          },
+        });
 
-    this.logger.log(`Tip completed: ${tipId}`);
+        return updated;
+      },
+      {
+        isolationLevel: 'Serializable', // Prevent race conditions
+      },
+    );
+
+    this.logger.log(`Tip completed atomically: ${tipId} (${tip.amount} cents)`);
 
     return this.prisma.tip.findUnique({
       where: { id: tipId },

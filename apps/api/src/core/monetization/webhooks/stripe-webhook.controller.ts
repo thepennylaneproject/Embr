@@ -12,6 +12,7 @@ import Stripe from 'stripe';
 import { TipService } from '../services/tip.service';
 import { PayoutService } from '../services/payout.service';
 import { StripeConnectService } from '../services/stripe-connect.service';
+import { PrismaService } from '../../database/prisma.service';
 
 @Controller('webhooks/stripe')
 export class StripeWebhookController {
@@ -22,6 +23,7 @@ export class StripeWebhookController {
     private tipService: TipService,
     private payoutService: PayoutService,
     private stripeConnectService: StripeConnectService,
+    private prisma: PrismaService,
   ) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
       apiVersion: '2023-10-16',
@@ -152,10 +154,46 @@ export class StripeWebhookController {
    * Handle failed payout
    */
   private async handlePayoutFailed(payout: Stripe.Payout): Promise<void> {
-    this.logger.error(`Payout failed: ${payout.id}`);
+    this.logger.error(`Payout failed: ${payout.id} - ${payout.failure_message}`);
 
-    // TODO: Update payout status to FAILED and notify user
-    // Could implement retry logic or refund to wallet
+    try {
+      // Find the payout record by Stripe payout ID
+      const payoutRecord = await this.prisma.payout.findFirst({
+        where: { stripePayoutId: payout.id },
+        include: { user: true },
+      });
+
+      if (!payoutRecord) {
+        this.logger.warn(`Payout record not found for Stripe payout ${payout.id}`);
+        return;
+      }
+
+      // Update payout status to FAILED with reason
+      await this.prisma.payout.update({
+        where: { id: payoutRecord.id },
+        data: {
+          status: 'FAILED',
+          failureReason: payout.failure_message || 'Stripe payout failed',
+          failedAt: new Date(),
+        },
+      });
+
+      // Notify user about failure
+      await this.prisma.notification.create({
+        data: {
+          userId: payoutRecord.userId,
+          type: 'PAYOUT_FAILED',
+          title: 'Payout failed',
+          message: `Your payout of $${(payoutRecord.amount / 100).toFixed(2)} failed: ${payout.failure_message || 'Unknown error'}`,
+          referenceId: payoutRecord.id,
+          referenceType: 'PAYOUT',
+        },
+      });
+
+      this.logger.log(`Payout marked as failed: ${payoutRecord.id}`);
+    } catch (error) {
+      this.logger.error(`Error handling payout failure for ${payout.id}: ${error.message}`);
+    }
   }
 
   /**

@@ -60,47 +60,64 @@ export class TransactionService {
 
   /**
    * Record a tip transaction
+   * All amounts in CENTS (integer)
    * Sender: negative amount
    * Recipient: positive amount (after platform fee)
    */
   async recordTipTransaction(
     senderId: string,
     recipientId: string,
-    amount: number,
+    amountCents: number, // Amount in cents, e.g., 500 = $5.00
     tipId: string,
   ): Promise<void> {
-    const platformFee = amount * 0.05;
-    const netAmount = amount - platformFee;
+    // Calculate 5% platform fee in cents (rounded to nearest cent)
+    const platformFeeCents = Math.round(amountCents * 0.05);
+    const netAmountCents = amountCents - platformFeeCents;
 
+    // Record sender's debit (negative)
     await this.recordTransaction({
       userId: senderId,
       type: PrismaTransactionType.TIP_SENT,
-      amount: -Math.abs(amount),
+      amount: -Math.abs(amountCents),
       description: 'Tip sent',
       referenceId: tipId,
       referenceType: 'TIP',
-      metadata: { grossAmount: amount, platformFee, netAmount },
+      metadata: {
+        grossAmountCents: amountCents,
+        platformFeeCents,
+        netAmountCents,
+      },
     });
 
+    // Record recipient's credit (positive, net of fees)
     await this.recordTransaction({
       userId: recipientId,
       type: PrismaTransactionType.TIP_RECEIVED,
-      amount: Math.abs(netAmount),
+      amount: Math.abs(netAmountCents),
       description: 'Tip received',
       referenceId: tipId,
       referenceType: 'TIP',
-      metadata: { grossAmount: amount, platformFee, netAmount },
+      metadata: {
+        grossAmountCents: amountCents,
+        platformFeeCents,
+        netAmountCents,
+      },
     });
 
-    if (platformFee > 0) {
+    // Record platform fee separately
+    if (platformFeeCents > 0) {
       await this.recordTransaction({
         userId: recipientId,
         type: PrismaTransactionType.PLATFORM_FEE,
-        amount: -Math.abs(platformFee),
+        amount: -Math.abs(platformFeeCents),
         description: 'Platform fee',
         referenceId: tipId,
         referenceType: 'FEE',
-        metadata: { grossAmount: amount, platformFee, netAmount },
+        metadata: {
+          grossAmountCents: amountCents,
+          platformFeeCents,
+          netAmountCents,
+        },
       });
     }
   }

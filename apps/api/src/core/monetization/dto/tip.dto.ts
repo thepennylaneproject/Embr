@@ -26,9 +26,9 @@ export class CreateTipDto {
   postId?: string;
 
   @IsNumber()
-  @Min(0.5) // Minimum 50 cents
-  @Max(1000) // Maximum $1000 per tip
-  amount: number;
+  @Min(50) // Minimum $0.50 (50 cents)
+  @Max(100000) // Maximum $1000 (100000 cents)
+  amountCents: number; // Amount in integer cents (e.g., 500 = $5.00)
 
   @IsEnum(TipAmountPreset)
   @IsOptional()
