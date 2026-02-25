@@ -14,6 +14,7 @@ import { randomBytes } from 'crypto';
 import { EmailService } from '../email/email.service';
 import { SignUpDto, LoginDto } from './dto';
 import { PrismaService } from '../database/prisma.service';
+import { hashPassword, verifyPassword } from '@embr/auth';
 
 interface TokenPayload {
   sub: string;
@@ -40,7 +41,7 @@ export class AuthService {
   // SIGNUP & LOGIN
   // =====================
 
-  async signUp(signUpDto: SignUpDto): Promise<TokenResponse> {
+  async signUp(signUpDto: SignUpDto): Promise<{ user: any; message: string }> {
     const { email, username, password, fullName } = signUpDto;
 
     // Check if user exists
@@ -55,8 +56,8 @@ export class AuthService {
       throw new ConflictException('Username already taken');
     }
 
-    // Hash password
-    const passwordHash = await bcrypt.hash(password, 12);
+    // Hash password using shared utility
+    const passwordHash = await hashPassword(password);
 
     // Create user with profile and wallet
     const user = await this.prisma.user.create({
@@ -91,13 +92,10 @@ export class AuthService {
     // Send verification email
     await this.sendVerificationEmail(user);
 
-    // Generate tokens
-    const { accessToken, refreshToken } = await this.generateTokens(user);
-
+    // Don't return tokens - user must verify email first
     return {
-      accessToken,
-      refreshToken,
       user: this.sanitizeUser(user),
+      message: 'Account created. Please check your email to verify your account.',
     };
   }
 
@@ -115,7 +113,7 @@ export class AuthService {
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    const isPasswordValid = await verifyPassword(password, user.passwordHash);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
@@ -245,17 +243,21 @@ export class AuthService {
       expiresIn: this.configService.get<string>('JWT_EXPIRES_IN') || '7d',
     });
 
+    // Calculate refresh token expiry from config (default 30 days)
+    const refreshExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '30d';
+    const refreshTokenExpiresMs = this.parseExpireTime(refreshExpiresIn);
+
     const refreshTokenValue = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '30d',
+      expiresIn: refreshExpiresIn,
     });
 
-    // Store refresh token in database
+    // Store refresh token in database with matching expiry
     await this.prisma.refreshToken.create({
       data: {
         userId: user.id,
         token: refreshTokenValue,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        expiresAt: new Date(Date.now() + refreshTokenExpiresMs),
       },
     });
 
@@ -263,6 +265,27 @@ export class AuthService {
       accessToken,
       refreshToken: refreshTokenValue,
     };
+  }
+
+  private parseExpireTime(expireTime: string): number {
+    const match = expireTime.match(/^(\d+)([smhd])$/);
+    if (!match) return 30 * 24 * 60 * 60 * 1000; // default 30 days
+
+    const [, value, unit] = match;
+    const num = parseInt(value, 10);
+
+    switch (unit) {
+      case 's':
+        return num * 1000;
+      case 'm':
+        return num * 60 * 1000;
+      case 'h':
+        return num * 60 * 60 * 1000;
+      case 'd':
+        return num * 24 * 60 * 60 * 1000;
+      default:
+        return 30 * 24 * 60 * 60 * 1000;
+    }
   }
 
   async refreshTokens(userId: string, refreshToken: string): Promise<TokenResponse> {
@@ -352,15 +375,19 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    // Find all non-expired, non-used tokens
+    // Find all non-expired, non-used tokens and verify each one
+    // Note: This still requires iterating through tokens due to bcrypt hashes,
+    // but we limit to recent tokens only for performance
     const storedTokens = await this.prisma.passwordResetToken.findMany({
       where: {
         isUsed: false,
         expiresAt: { gt: new Date() },
       },
+      orderBy: { createdAt: 'desc' },
+      take: 100, // Limit to recent 100 tokens
     });
 
-    // Find matching token
+    // Find matching token using constant-time comparison
     let matchedToken: (typeof storedTokens)[number] | null = null;
 
     for (const storedToken of storedTokens) {
@@ -386,7 +413,7 @@ export class AuthService {
 
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash: await bcrypt.hash(newPassword, 12) },
+      data: { passwordHash: await hashPassword(newPassword) },
     });
 
     // Mark token as used
@@ -403,15 +430,18 @@ export class AuthService {
     userId: string,
     currentPassword: string,
     newPassword: string,
-  ): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+  ): Promise<TokenResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { profile: true, wallet: true },
+    });
 
     if (!user || !user.passwordHash) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     // Verify current password
-    const isPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    const isPasswordValid = await verifyPassword(currentPassword, user.passwordHash);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
@@ -420,12 +450,19 @@ export class AuthService {
     // Update password
     await this.prisma.user.update({
       where: { id: userId },
-      data: { passwordHash: await bcrypt.hash(newPassword, 12) },
+      data: { passwordHash: await hashPassword(newPassword) },
     });
 
-    // Revoke all refresh tokens except current session
-    // (In production, you'd want to keep current session)
+    // Revoke all other refresh tokens for security
+    // Generate new tokens for current session to avoid logout
     await this.logoutAll(userId);
+    const { accessToken, refreshToken } = await this.generateTokens(user);
+
+    return {
+      accessToken,
+      refreshToken,
+      user: this.sanitizeUser(user),
+    };
   }
 
   // =====================
@@ -449,16 +486,18 @@ export class AuthService {
     await this.emailService.sendVerificationEmail(user.email, verificationToken);
   }
 
-  async verifyEmail(token: string): Promise<void> {
-    // Find all non-expired, non-used tokens
+  async verifyEmail(token: string): Promise<TokenResponse> {
+    // Find non-expired, non-used tokens (limit to recent for performance)
     const storedTokens = await this.prisma.emailVerificationToken.findMany({
       where: {
         isUsed: false,
         expiresAt: { gt: new Date() },
       },
+      orderBy: { createdAt: 'desc' },
+      take: 100, // Limit to recent 100 tokens
     });
 
-    // Find matching token
+    // Find matching token using constant-time comparison
     let matchedToken: (typeof storedTokens)[number] | null = null;
 
     for (const storedToken of storedTokens) {
@@ -476,6 +515,7 @@ export class AuthService {
     // Mark email as verified
     const user = await this.prisma.user.findUnique({
       where: { id: matchedToken.userId },
+      include: { profile: true, wallet: true },
     });
 
     if (!user) {
@@ -492,6 +532,15 @@ export class AuthService {
       where: { id: matchedToken.id },
       data: { isUsed: true },
     });
+
+    // Generate and return tokens for auto-login after verification
+    const { accessToken, refreshToken } = await this.generateTokens(user);
+
+    return {
+      accessToken,
+      refreshToken,
+      user: this.sanitizeUser(user),
+    };
   }
 
   async resendVerificationEmail(email: string): Promise<void> {

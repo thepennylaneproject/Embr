@@ -13,6 +13,7 @@ import {
   Patch,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 
 import { AuthService } from './auth.service';
@@ -62,8 +63,23 @@ export class AuthController {
       req.user,
     );
 
-    // Redirect to frontend with tokens
-    const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`;
+    // Set tokens as secure httpOnly cookies instead of URL params
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
+
+    // Redirect to frontend callback without tokens in URL
+    const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback`;
     return res.redirect(redirectUrl);
   }
 
@@ -87,6 +103,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 requests per minute
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
@@ -95,6 +112,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 requests per minute
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
@@ -106,27 +124,32 @@ export class AuthController {
   }
 
   @Patch('change-password')
+  @HttpCode(HttpStatus.OK)
   async changePassword(
     @GetUser('id') userId: string,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
-    await this.authService.changePassword(
+    const result = await this.authService.changePassword(
       userId,
       changePasswordDto.currentPassword,
       changePasswordDto.newPassword,
     );
-    return { message: 'Password successfully changed.' };
+    return {
+      ...result,
+      message: 'Password successfully changed.',
+    };
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 requests per minute
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
-    await this.authService.verifyEmail(verifyEmailDto.token);
-    return { message: 'Email successfully verified.' };
+    return this.authService.verifyEmail(verifyEmailDto.token);
   }
 
   @Public()
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 requests per minute
   @Post('resend-verification')
   @HttpCode(HttpStatus.OK)
   async resendVerification(@Body() resendDto: ResendVerificationDto) {
