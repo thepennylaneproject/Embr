@@ -4,10 +4,12 @@
  * Design: Follow DESIGN_SYSTEM - typography hierarchy, whitespace, clarity
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWallet } from '@/hooks/useWallet';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { CreatorOnboarding } from '@/components/onboarding/CreatorOnboarding';
+import { AnalyticsEvent } from '@/lib/analytics';
 
 interface EarningsOverviewProps {
   onRequestPayout?: () => void;
@@ -21,9 +23,21 @@ export const EarningsOverview: React.FC<EarningsOverviewProps> = ({
   const { user } = useAuth();
   const { balance, stats, isLoading, error, refetchBalance } = useWallet();
   const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [hasTrackedFirstEarning, setHasTrackedFirstEarning] = useState(false);
+  const analytics = useAnalytics();
 
   // Show onboarding if user has never earned (totalEarned = 0)
   const isNewCreator = !stats?.totalEarned || stats.totalEarned === 0;
+
+  // Track first earning event
+  useEffect(() => {
+    if (!hasTrackedFirstEarning && stats?.totalEarned && stats.totalEarned > 0) {
+      analytics.track(AnalyticsEvent.FIRST_EARNING, {
+        amount: stats.totalEarned,
+      });
+      setHasTrackedFirstEarning(true);
+    }
+  }, [stats?.totalEarned, hasTrackedFirstEarning, analytics]);
 
   if (isLoading) {
     return (

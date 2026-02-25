@@ -6,6 +6,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { AnalyticsEvent } from '@/lib/analytics';
 
 interface OnboardingStep {
   id: 'profile' | 'post' | 'earning';
@@ -24,13 +26,15 @@ interface CreatorOnboardingProps {
 
 export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, onComplete }) => {
   const router = useRouter();
+  const analytics = useAnalytics();
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
 
   useEffect(() => {
     loadOnboardingProgress();
-  }, [userId]);
+    analytics.track(AnalyticsEvent.ONBOARDING_STARTED);
+  }, [userId, analytics]);
 
   const loadOnboardingProgress = async () => {
     try {
@@ -77,6 +81,7 @@ export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, on
     // If all steps done, show celebration
     if (steps.every(s => s.id === stepId || s.completed)) {
       setShowCelebration(true);
+      analytics.track(AnalyticsEvent.ONBOARDING_COMPLETED);
       setTimeout(() => {
         onComplete?.();
       }, 2000);

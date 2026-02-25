@@ -8,8 +8,10 @@
 
 import React, { useState, useCallback, useRef } from 'react';
 import { usePost } from '@/hooks/usePost';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { PostType, PostVisibility, CreatePostInput } from '@shared/types/content.types';
 import { MusicSelectorModal } from '@/components/music/MusicSelectorModal';
+import { AnalyticsEvent } from '@/lib/analytics';
 
 interface PostCreatorProps {
   onPostCreated?: (postId: string) => void;
@@ -24,6 +26,7 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
   defaultVisibility = PostVisibility.PUBLIC,
   className = '',
 }) => {
+  const analytics = useAnalytics();
   const {
     isCreating,
     isUploading,
@@ -141,6 +144,14 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
       }
 
       const post = await createPost(postData);
+
+      // Track analytics
+      analytics.track(AnalyticsEvent.POST_CREATED, {
+        postType: postData.type,
+        hasMedia: !!mediaFile,
+        visibility: visibility,
+        tagCount: hashtags.length,
+      });
 
       setContent('');
       removeMedia();
