@@ -46,10 +46,12 @@ export class CreateGigDto {
 
   @IsNumber()
   @Min(1)
+  @Max(999999.99)
   budgetMin: number;
 
   @IsNumber()
   @Min(1)
+  @Max(999999.99)
   budgetMax: number;
 
   @IsString()
@@ -108,11 +110,13 @@ export class UpdateGigDto {
 
   @IsNumber()
   @Min(1)
+  @Max(999999.99)
   @IsOptional()
   budgetMin?: number;
 
   @IsNumber()
   @Min(1)
+  @Max(999999.99)
   @IsOptional()
   budgetMax?: number;
 
@@ -220,6 +224,7 @@ export class MilestoneProposalDto {
 
   @IsNumber()
   @Min(1)
+  @Max(999999.99)
   amount: number;
 
   @IsInt()
@@ -239,6 +244,7 @@ export class CreateApplicationDto {
 
   @IsNumber()
   @Min(1)
+  @Max(999999.99)
   proposedBudget: number;
 
   @IsInt()
@@ -283,6 +289,7 @@ export class CreateMilestoneDto {
 
   @IsNumber()
   @Min(1)
+  @Max(999999.99)
   amount: number;
 
   @IsDate()

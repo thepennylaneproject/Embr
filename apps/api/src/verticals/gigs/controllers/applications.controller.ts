@@ -79,10 +79,14 @@ export class ApplicationsController {
   /**
    * GET /applications/:id
    * Get a specific application with full details
+   * Authorization: Only the applicant or gig creator can view
    */
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<ApplicationWithDetails> {
-    return await this.applicationsService.findOne(id);
+  async findOne(
+    @Param('id') id: string,
+    @Request() req
+  ): Promise<ApplicationWithDetails> {
+    return await this.applicationsService.findOne(id, req.user.id);
   }
 
   /**

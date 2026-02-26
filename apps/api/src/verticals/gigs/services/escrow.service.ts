@@ -213,8 +213,11 @@ export class EscrowService {
 
   /**
    * Get escrow details
+   * @param id Escrow ID
+   * @param userId Optional user ID for authorization check
+   * @throws ForbiddenException if user is not the payer or payee
    */
-  async findOne(id: string) {
+  async findOne(id: string, userId?: string) {
     const escrow = await this.prisma.escrow.findUnique({
       where: { id },
       include: {
@@ -229,14 +232,22 @@ export class EscrowService {
       throw new NotFoundException('Escrow not found');
     }
 
+    // Authorization check: only payer or payee can view escrow details
+    if (userId && escrow.payerId !== userId && escrow.payeeId !== userId) {
+      throw new ForbiddenException('You cannot view this escrow');
+    }
+
     return escrow;
   }
 
   /**
    * Get escrow by application ID
+   * @param applicationId Application ID
+   * @param userId Optional user ID for authorization check
+   * @throws ForbiddenException if user is not the payer or payee
    */
-  async findByApplication(applicationId: string) {
-    return await this.prisma.escrow.findUnique({
+  async findByApplication(applicationId: string, userId?: string) {
+    const escrow = await this.prisma.escrow.findUnique({
       where: { applicationId },
       include: {
         gig: true,
@@ -245,12 +256,42 @@ export class EscrowService {
         payee: true,
       },
     });
+
+    if (!escrow && userId) {
+      // If escrow doesn't exist but userId is provided, don't expose that
+      return null;
+    }
+
+    // Authorization check: only payer or payee can view escrow details
+    if (userId && escrow && escrow.payerId !== userId && escrow.payeeId !== userId) {
+      throw new ForbiddenException('You cannot view this escrow');
+    }
+
+    return escrow;
   }
 
   /**
    * Get all milestones for an application
+   * @param applicationId Application ID
+   * @param userId Optional user ID for authorization check
+   * @throws ForbiddenException if user is not the applicant or gig creator
    */
-  async getMilestones(applicationId: string) {
+  async getMilestones(applicationId: string, userId?: string) {
+    // Fetch application to check authorization
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { gig: true },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Application not found');
+    }
+
+    // Authorization check: only applicant or gig creator can view milestones
+    if (userId && application.applicantId !== userId && application.gig.creatorId !== userId) {
+      throw new ForbiddenException('You cannot view these milestones');
+    }
+
     return await this.prisma.gigMilestone.findMany({
       where: { applicationId },
       orderBy: { order: 'asc' },
@@ -259,6 +300,17 @@ export class EscrowService {
 
   /**
    * Submit a milestone for review (freelancer action)
+   *
+   * Milestone state machine:
+   * PENDING ──submit──> SUBMITTED
+   * REJECTED ─submit─> SUBMITTED
+   * SUBMITTED ─approve─> APPROVED (no further transitions)
+   * SUBMITTED ─reject──> REJECTED
+   *
+   * Valid transitions:
+   * - PENDING/REJECTED → SUBMITTED (via submitMilestone)
+   * - SUBMITTED → APPROVED (via approveMilestone)
+   * - SUBMITTED → REJECTED (via rejectMilestone)
    */
   async submitMilestone(milestoneId: string, freelancerId: string) {
     const milestone = await this.prisma.gigMilestone.findUnique({

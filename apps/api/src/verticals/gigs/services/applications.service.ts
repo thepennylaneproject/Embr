@@ -45,6 +45,28 @@ export class ApplicationsService {
       throw new BadRequestException('You have already applied to this gig');
     }
 
+    // Validate proposed budget is within gig's budget range
+    if (applicationData.proposedBudget < gig.budgetMin || applicationData.proposedBudget > gig.budgetMax) {
+      throw new BadRequestException(
+        `Proposed budget must be between $${gig.budgetMin} and $${gig.budgetMax}`
+      );
+    }
+
+    // Prevent application spam: max 5 applications per hour per applicant
+    const oneHourAgo = new Date(Date.now() - 3600000);
+    const recentApplicationCount = await this.prisma.application.count({
+      where: {
+        applicantId,
+        createdAt: { gte: oneHourAgo },
+      },
+    });
+
+    if (recentApplicationCount >= 5) {
+      throw new BadRequestException(
+        'Too many applications in a short time. Please wait before applying to more gigs.'
+      );
+    }
+
     if (milestones && milestones.length > 0) {
       const totalMilestoneAmount = milestones.reduce((sum, m) => sum + m.amount, 0);
       if (Math.abs(totalMilestoneAmount - applicationData.proposedBudget) > 0.01) {
@@ -141,8 +163,11 @@ export class ApplicationsService {
 
   /**
    * Find one application with full details
+   * @param id Application ID
+   * @param userId Optional user ID for authorization check
+   * @throws ForbiddenException if user is not the applicant or gig creator
    */
-  async findOne(id: string): Promise<ApplicationWithDetails> {
+  async findOne(id: string, userId?: string): Promise<ApplicationWithDetails> {
     const application = await this.prisma.application.findUnique({
       where: { id },
       include: {
@@ -155,6 +180,11 @@ export class ApplicationsService {
 
     if (!application) {
       throw new NotFoundException('Application not found');
+    }
+
+    // Authorization check: only applicant, gig creator, or admin can view
+    if (userId && application.applicantId !== userId && application.gig.creatorId !== userId) {
+      throw new ForbiddenException('You cannot view this application');
     }
 
     return {
@@ -170,6 +200,7 @@ export class ApplicationsService {
     const application = await this.findOne(id);
     const gig = application.gig;
 
+    // Ensure only the gig creator can accept applications
     if (gig.creatorId !== creatorId) {
       throw new ForbiddenException('Only the gig creator can accept applications');
     }

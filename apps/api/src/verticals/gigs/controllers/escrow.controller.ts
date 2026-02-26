@@ -30,21 +30,27 @@ export class EscrowController {
   /**
    * GET /escrow/application/:applicationId
    * Get escrow details for an application
+   * Authorization: Only the payer or payee can view
    */
   @Get('application/:applicationId')
   async getByApplication(
-    @Param('applicationId') applicationId: string
+    @Param('applicationId') applicationId: string,
+    @Request() req
   ): Promise<Escrow | null> {
-    return await this.escrowService.findByApplication(applicationId);
+    return await this.escrowService.findByApplication(applicationId, req.user.id);
   }
 
   /**
    * GET /escrow/:id
    * Get escrow details
+   * Authorization: Only the payer or payee can view
    */
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Escrow> {
-    return await this.escrowService.findOne(id);
+  async findOne(
+    @Param('id') id: string,
+    @Request() req
+  ): Promise<Escrow> {
+    return await this.escrowService.findOne(id, req.user.id);
   }
 
   /**
@@ -76,9 +82,15 @@ export class EscrowController {
   /**
    * GET /escrow/:id/released-amount
    * Get total amount released from escrow
+   * Authorization: Only the payer or payee can view
    */
   @Get(':id/released-amount')
-  async getReleasedAmount(@Param('id') id: string): Promise<{ amount: number }> {
+  async getReleasedAmount(
+    @Param('id') id: string,
+    @Request() req
+  ): Promise<{ amount: number }> {
+    // Check authorization by fetching escrow
+    await this.escrowService.findOne(id, req.user.id);
     const amount = await this.escrowService.getReleasedAmount(id);
     return { amount };
   }
@@ -92,12 +104,14 @@ export class MilestonesController {
   /**
    * GET /milestones/application/:applicationId
    * Get all milestones for an application
+   * Authorization: Only the applicant or gig creator can view
    */
   @Get('application/:applicationId')
   async getMilestones(
-    @Param('applicationId') applicationId: string
+    @Param('applicationId') applicationId: string,
+    @Request() req
   ): Promise<GigMilestone[]> {
-    return await this.escrowService.getMilestones(applicationId);
+    return await this.escrowService.getMilestones(applicationId, req.user.id);
   }
 
   /**
