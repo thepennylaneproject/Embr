@@ -10,12 +10,16 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { EmailVerifiedGuard } from '../../auth/guards/email-verified.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import { TipService } from '../services/tip.service';
 import { CreateTipDto, GetTipsQueryDto } from '../dto/tip.dto';
 
 @Controller('tips')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, EmailVerifiedGuard, RolesGuard)
 export class TipController {
   constructor(private tipService: TipService) {}
 
@@ -24,6 +28,7 @@ export class TipController {
    * Create a tip
    */
   @Post()
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
   async createTip(@Request() req, @Body() dto: CreateTipDto) {
     return this.tipService.createTip(req.user.id, dto);
@@ -70,12 +75,13 @@ export class TipController {
    * Refund a tip
    */
   @Post(':id/refund')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  @Roles('admin')
   @HttpCode(HttpStatus.OK)
   async refundTip(
     @Param('id') id: string,
     @Body('reason') reason: string,
   ) {
-    // TODO: Add admin guard
     return this.tipService.refundTip(id, reason);
   }
 

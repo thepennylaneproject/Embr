@@ -533,8 +533,8 @@ model Gig {
   description        String
   category           GigCategory
   budgetType         GigBudgetType
-  budgetMin          Float
-  budgetMax          Float
+  budgetMin          Int                // In cents
+  budgetMax          Int                // In cents
   currency           String             @default("USD")
   experienceLevel    GigExperienceLevel
   estimatedDuration  Int
@@ -568,7 +568,7 @@ model Application {
   applicantId        String
   applicant          User               @relation(fields: [applicantId], references: [id], onDelete: Cascade)
   coverLetter        String
-  proposedBudget     Float
+  proposedBudget     Int                // In cents
   proposedTimeline   Int
   portfolioLinks     String[]
   relevantExperience String
@@ -596,7 +596,7 @@ model GigMilestone {
   application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   title         String
   description   String
-  amount        Float
+  amount        Int               // In cents
   dueDate       DateTime
   status        GigMilestoneStatus @default(PENDING)
   order         Int
@@ -622,7 +622,7 @@ model Escrow {
   payer                 User            @relation("EscrowPayer", fields: [payerId], references: [id], onDelete: Cascade)
   payeeId               String
   payee                 User            @relation("EscrowPayee", fields: [payeeId], references: [id], onDelete: Cascade)
-  amount                Float
+  amount                Int             // In cents
   currency              String          @default("USD")
   status                GigEscrowStatus @default(CREATED)
   stripePaymentIntentId String?
@@ -1232,7 +1232,7 @@ model TrackPlay {
   quality           AudioQuality @default(STANDARD)
 
   // Revenue tracking
-  royaltyAmount     Float     // Amount artist earned from this play
+  royaltyAmount     Int       // Amount artist earned from this play (in cents)
 
   createdAt         DateTime  @default(now())
 

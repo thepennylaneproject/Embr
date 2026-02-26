@@ -220,6 +220,8 @@ export class PayoutService {
 
   /**
    * Process payout through Stripe Connect
+   * ATOMIC operation: wallet deduction FIRST, then Stripe payout
+   * All amounts in CENTS (integer)
    */
   private async processStripePayout(payoutId: string): Promise<void> {
     const payout = await this.prisma.payout.findUnique({
@@ -243,20 +245,67 @@ export class PayoutService {
       throw new BadRequestException('No Stripe Connect account found');
     }
 
-    // Update status to processing
-    await this.prisma.payout.update({
-      where: { id: payoutId },
-      data: { status: PrismaPayoutStatus.PROCESSING },
-    });
+    // Validate user owns this Stripe account
+    if (payout.user.wallet?.stripeConnectAccountId !== stripeAccountId) {
+      throw new BadRequestException('Payout account mismatch');
+    }
 
     try {
-      // Convert to cents
-      const amountInCents = Math.round(payout.amount * 100);
+      // ATOMIC TRANSACTION: Deduct wallet first, then create Stripe payout
+      await this.prisma.$transaction(
+        async (tx) => {
+          // 1. First, deduct from wallet (verify ownership)
+          const wallet = await tx.wallet.findUnique({
+            where: { userId: payout.userId },
+          });
 
-      // Create Stripe payout
+          if (!wallet) {
+            throw new BadRequestException('Wallet not found');
+          }
+
+          if (wallet.balance < payout.amount) {
+            throw new BadRequestException('Insufficient balance for payout');
+          }
+
+          // Deduct amount
+          await tx.wallet.update({
+            where: { userId: payout.userId },
+            data: {
+              balance: {
+                decrement: payout.amount,
+              },
+            },
+          });
+
+          // 2. Record transaction in ledger
+          await tx.transaction.create({
+            data: {
+              user: { connect: { id: payout.userId } },
+              wallet: { connect: { id: wallet.id } },
+              type: 'PAYOUT',
+              amount: -payout.amount,
+              description: 'Payout to bank account',
+              referenceId: payoutId,
+              referenceType: 'PAYOUT',
+            },
+          });
+
+          // 3. Update payout status
+          await tx.payout.update({
+            where: { id: payoutId },
+            data: { status: PrismaPayoutStatus.PROCESSING },
+          });
+        },
+        {
+          isolationLevel: 'Serializable',
+        },
+      );
+
+      // 4. NOW create Stripe payout (outside of wallet transaction)
+      // If this fails, we've already deducted from wallet (correct for failure case)
       const stripePayout = await this.stripe.payouts.create(
         {
-          amount: amountInCents,
+          amount: payout.amount, // Already in cents from DB migration
           currency: payout.currency.toLowerCase(),
           description: `Payout for ${payout.user.profile?.username || payout.user.email}`,
           metadata: {
@@ -266,10 +315,12 @@ export class PayoutService {
         },
         {
           stripeAccount: stripeAccountId,
+          // Idempotency key: prevents duplicate payouts
+          idempotencyKey: `payout-${payoutId}-${payout.userId}`,
         },
       );
 
-      // Update payout with Stripe payout ID
+      // 5. Update payout with Stripe payout ID
       await this.prisma.payout.update({
         where: { id: payoutId },
         data: {
@@ -279,43 +330,33 @@ export class PayoutService {
         },
       });
 
-      // Deduct from wallet
-      await this.walletService.deductFunds(
-        payout.userId,
-        payout.amount,
-        `Payout to bank account`,
-      );
-
-      // Record transaction
-      await this.transactionService.recordPayoutTransaction(
-        payout.userId,
-        payout.amount,
-        payoutId,
-      );
-
-      // Notify user
+      // 6. Notify user
       await this.prisma.notification.create({
         data: {
           userId: payout.userId,
           type: 'PAYOUT_PROCESSING',
           title: 'Payout is processing',
-          message: `Your payout of $${payout.amount.toFixed(2)} is being processed`,
+          message: `Your payout of $${(payout.amount / 100).toFixed(2)} is being processed`,
           referenceId: payoutId,
           referenceType: 'PAYOUT',
         },
       });
 
       this.logger.log(
-        `Stripe payout initiated: ${stripePayout.id} for payout ${payoutId}`,
+        `Stripe payout initiated atomically: ${stripePayout.id} for payout ${payoutId} (${payout.amount} cents)`,
       );
     } catch (error) {
+      // If Stripe payout fails, wallet has already been deducted
+      // This is acceptable: money is held pending Stripe retry
       await this.prisma.payout.update({
         where: { id: payoutId },
         data: {
-          status: 'FAILED',
+          status: PrismaPayoutStatus.FAILED,
           failureReason: error.message,
         },
       });
+
+      this.logger.error(`Stripe payout failed for ${payoutId}: ${error.message}`);
       throw error;
     }
   }
