@@ -15,6 +15,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MuxVideoService } from '../services/mux-video.service';
 import { MediaService } from '../services/media.service';
 import { ThumbnailService } from '../services/thumbnail.service';
@@ -29,6 +30,7 @@ export class MuxWebhookController {
     private muxService: MuxVideoService,
     private mediaService: MediaService,
     private thumbnailService: ThumbnailService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -181,6 +183,16 @@ export class MuxWebhookController {
         completedAt: new Date(),
       });
 
+      // Emit success event for notification service
+      this.eventEmitter.emit('media.video.ready', {
+        userId: media.userId,
+        mediaId: media.id,
+        fileName: media.fileName,
+        duration: data.duration,
+        playbackUrl: `https://stream.mux.com/${playbackId}.m3u8`,
+        timestamp: new Date().toISOString(),
+      });
+
       this.logger.log(`Updated media ${media.id} with Mux data`);
     } catch (error) {
       this.logger.error(
@@ -204,9 +216,25 @@ export class MuxWebhookController {
       const media = await this.mediaService.getMediaByMuxAssetId(assetId);
 
       if (media) {
+        const errorMessage = errors
+          .map((e: any) => e.message || JSON.stringify(e))
+          .join('; ');
+
         await this.mediaService.updateMediaStatus(media.id, 'error', {
-          errorMessage: JSON.stringify(errors),
+          errorMessage,
         });
+
+        // Emit error event for notification service
+        this.eventEmitter.emit('media.video.failed', {
+          userId: media.userId,
+          mediaId: media.id,
+          fileName: media.fileName,
+          reason: errorMessage,
+          assetId: assetId,
+          timestamp: new Date().toISOString(),
+        });
+
+        this.logger.log(`Emitted media.video.failed event for media ${media.id}`);
       }
     } catch (error) {
       this.logger.error(
@@ -299,9 +327,23 @@ export class MuxWebhookController {
       const media = await this.mediaService.getMediaByUploadId(uploadId);
 
       if (media) {
+        const errorMessage = error?.message || JSON.stringify(error);
+
         await this.mediaService.updateMediaStatus(media.id, 'error', {
-          errorMessage: JSON.stringify(error),
+          errorMessage,
         });
+
+        // Emit error event for notification service
+        this.eventEmitter.emit('media.upload.failed', {
+          userId: media.userId,
+          mediaId: media.id,
+          fileName: media.fileName,
+          reason: errorMessage,
+          uploadId: uploadId,
+          timestamp: new Date().toISOString(),
+        });
+
+        this.logger.log(`Emitted media.upload.failed event for media ${media.id}`);
       }
     } catch (error) {
       this.logger.error(
