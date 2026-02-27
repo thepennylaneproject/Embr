@@ -110,4 +110,29 @@ export class NotificationsController {
   ) {
     return this.notificationsService.delete(notificationId, userId);
   }
+
+  /**
+   * Get user notification preferences
+   * GET /notifications/preferences
+   */
+  @Get('preferences/me')
+  async getPreferences(@GetUser('id') userId: string) {
+    // TODO: Fetch from user profile or settings
+    return {
+      userId,
+      message: 'Notification preferences endpoint - implement based on Profile model',
+    };
+  }
+
+  /**
+   * Get notification delivery analytics
+   * GET /notifications/analytics (admin only)
+   */
+  @Get('analytics/health')
+  async getAnalytics() {
+    // TODO: Add admin guard
+    return {
+      message: 'Analytics endpoint - implement with NotificationsAnalyticsService',
+    };
+  }
 }
