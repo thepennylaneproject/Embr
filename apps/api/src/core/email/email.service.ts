@@ -22,12 +22,14 @@ export class EmailService {
   private readonly fromName: string;
   private readonly apiKey: string;
   private readonly provider: 'sendgrid' | 'ses' | 'mock';
+  private readonly maxRetries = 3;
+  private readonly baseDelay = 1000; // 1 second
 
   constructor(private readonly configService: ConfigService) {
     this.fromEmail = this.configService.get('EMAIL_FROM', 'noreply@embr.io');
     this.fromName = this.configService.get('EMAIL_FROM_NAME', 'Embr');
     this.apiKey = this.configService.get('SENDGRID_API_KEY', '');
-    
+
     // Determine provider based on config
     if (this.apiKey) {
       this.provider = 'sendgrid';
@@ -37,6 +39,22 @@ export class EmailService {
       this.provider = 'mock';
       this.logger.warn('No email provider configured - emails will be logged only');
     }
+  }
+
+  /**
+   * Sleep helper for exponential backoff
+   */
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Determine if error is transient and should be retried
+   */
+  private isTransientError(statusCode?: number): boolean {
+    if (!statusCode) return true;
+    // Retry on 429 (rate limit), 5xx errors, and timeouts
+    return statusCode === 429 || (statusCode >= 500 && statusCode < 600);
   }
 
   /**
@@ -60,7 +78,7 @@ export class EmailService {
   }
 
   /**
-   * Send via SendGrid
+   * Send via SendGrid with exponential backoff retry logic
    */
   private async sendViaSendGrid(options: {
     to: string;
@@ -69,38 +87,77 @@ export class EmailService {
     html: string;
     text?: string;
   }): Promise<void> {
-    try {
-      const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          personalizations: [{ to: [{ email: options.to }] }],
-          from: { email: this.fromEmail, name: this.fromName },
-          subject: options.subject,
-          content: [
-            ...(options.text ? [{ type: 'text/plain', value: options.text }] : []),
-            { type: 'text/html', value: options.html },
-          ],
-        }),
-      });
+    let lastError: Error | undefined;
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`SendGrid error: ${response.status} - ${error}`);
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      try {
+        const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            personalizations: [{ to: [{ email: options.to }] }],
+            from: { email: this.fromEmail, name: this.fromName },
+            subject: options.subject,
+            content: [
+              ...(options.text ? [{ type: 'text/plain', value: options.text }] : []),
+              { type: 'text/html', value: options.html },
+            ],
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.text();
+          const statusCode = response.status;
+
+          // Permanent errors (4xx) should not be retried
+          if (statusCode >= 400 && statusCode < 500) {
+            this.logger.error(
+              `Failed to send email to ${options.to} (permanent error): ${statusCode} - ${error}`,
+            );
+            throw new Error(`SendGrid error: ${statusCode} - ${error}`);
+          }
+
+          // Transient errors should be retried
+          throw new Error(`SendGrid error: ${statusCode} - ${error}`);
+        }
+
+        this.logger.log(`Email sent to ${options.to}: ${options.subject}`);
+        return;
+      } catch (error) {
+        lastError = error as Error;
+
+        // Check if error is transient
+        const statusCode = (error as any)?.response?.status;
+        if (!this.isTransientError(statusCode) && statusCode && statusCode !== 429) {
+          // Non-transient error, don't retry
+          this.logger.error(`Failed to send email to ${options.to}: ${lastError.message}`);
+          throw lastError;
+        }
+
+        // Transient error, will retry
+        if (attempt < this.maxRetries) {
+          const delay = this.baseDelay * Math.pow(2, attempt - 1);
+          this.logger.warn(
+            `Email send failed (attempt ${attempt}/${this.maxRetries}), retrying in ${delay}ms: ${lastError.message}`,
+          );
+          await this.sleep(delay);
+        } else {
+          this.logger.error(
+            `Failed to send email to ${options.to} after ${this.maxRetries} attempts: ${lastError.message}`,
+          );
+        }
       }
-
-      this.logger.log(`Email sent to ${options.to}: ${options.subject}`);
-    } catch (error) {
-      this.logger.error(`Failed to send email to ${options.to}`, error);
-      throw error;
     }
+
+    throw lastError || new Error('Failed to send email');
   }
 
   /**
    * Send via AWS SES (placeholder - requires @aws-sdk/client-ses)
+   * TODO: Implement with @aws-sdk/client-ses when needed
    */
   private async sendViaSES(options: {
     to: string;
@@ -113,6 +170,7 @@ export class EmailService {
     // For now, log a warning and fall back to mock
     this.logger.warn('AWS SES not fully implemented - logging email instead');
     this.logger.log(`[SES PLACEHOLDER] To: ${options.to} | Subject: ${options.subject}`);
+    // TODO: Once implemented, add similar retry logic to sendViaSendGrid
   }
 
   // =====================================
