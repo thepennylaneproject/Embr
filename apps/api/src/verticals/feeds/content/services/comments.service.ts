@@ -12,12 +12,14 @@ import {
 import { PrismaService } from '../../../core/database/prisma.service';
 import { CreateCommentDto, UpdateCommentDto } from '../dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ContentSanitizerService } from '../../../core/safety/services/content-sanitizer.service';
 
 @Injectable()
 export class CommentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly sanitizer: ContentSanitizerService,
   ) {}
 
   async createComment(
@@ -26,6 +28,9 @@ export class CommentsService {
     createCommentDto: CreateCommentDto,
   ) {
     const { content, parentId } = createCommentDto;
+
+    // Sanitize content
+    const sanitizedContent = this.sanitizer.sanitizeCommentContent(content);
 
     // Verify post exists
     const post = await this.prisma.post.findUnique({
@@ -52,7 +57,7 @@ export class CommentsService {
       data: {
         postId,
         authorId: userId,
-        content,
+        content: sanitizedContent,
         parentId,
       },
       include: {
@@ -107,7 +112,7 @@ export class CommentsService {
     const where = {
       postId,
       parentId: parentId || null,
-      deletedAt: null,
+      // Removed: deletedAt: null - we want to show deleted comments as tombstones
     };
 
     const [comments, total] = await Promise.all([
@@ -130,7 +135,7 @@ export class CommentsService {
           _count: {
             select: {
               replies: {
-                where: { deletedAt: null },
+                // Count all replies, including deleted ones for accurate reply count
               },
             },
           },
@@ -175,7 +180,8 @@ export class CommentsService {
 
   async getComment(commentId: string, userId?: string) {
     const comment = await this.prisma.comment.findUnique({
-      where: { id: commentId, deletedAt: null },
+      where: { id: commentId },
+      // Removed: deletedAt: null - allow retrieving deleted comments to show tombstone
       include: {
         author: {
           include: {
@@ -190,7 +196,7 @@ export class CommentsService {
         _count: {
           select: {
             replies: {
-              where: { deletedAt: null },
+              // Count all replies including deleted ones
             },
           },
         },
@@ -221,9 +227,12 @@ export class CommentsService {
       throw new ForbiddenException('Not authorized to update this comment');
     }
 
+    // Sanitize content
+    const sanitizedContent = this.sanitizer.sanitizeCommentContent(updateCommentDto.content);
+
     const updatedComment = await this.prisma.comment.update({
       where: { id: commentId },
-      data: { content: updateCommentDto.content },
+      data: { content: sanitizedContent },
       include: {
         author: {
           include: {
@@ -254,16 +263,25 @@ export class CommentsService {
       throw new ForbiddenException('Not authorized to delete this comment');
     }
 
-    // Soft delete
-    await this.prisma.comment.update({
-      where: { id: commentId },
+    // Count all descendant comments (replies and their replies)
+    const descendantComments = await this.countDescendants(commentId);
+    const totalDeleted = descendantComments + 1; // +1 for the parent comment
+
+    // Soft delete this comment and all replies (cascade)
+    await this.prisma.comment.updateMany({
+      where: {
+        OR: [
+          { id: commentId },
+          { parentId: commentId, deletedAt: null },
+        ],
+      },
       data: { deletedAt: new Date() },
     });
 
-    // Decrement post comment count
+    // Decrement post comment count by total deleted
     await this.prisma.post.update({
       where: { id: comment.postId },
-      data: { commentCount: { decrement: 1 } },
+      data: { commentCount: { decrement: totalDeleted } },
     });
 
     // Emit event
@@ -271,7 +289,27 @@ export class CommentsService {
       commentId,
       postId: comment.postId,
       authorId: userId,
+      cascadedCount: descendantComments,
     });
+  }
+
+  /**
+   * Recursively count all descendant comments
+   */
+  private async countDescendants(parentId: string): Promise<number> {
+    const replies = await this.prisma.comment.findMany({
+      where: { parentId, deletedAt: null },
+      select: { id: true },
+    });
+
+    let total = replies.length;
+
+    // Recursively count descendants of replies
+    for (const reply of replies) {
+      total += await this.countDescendants(reply.id);
+    }
+
+    return total;
   }
 
   async likeComment(commentId: string, userId: string) {
@@ -358,6 +396,24 @@ export class CommentsService {
   }
 
   private async formatComment(comment: any, userId?: string) {
+    // If comment is deleted, return tombstone (preserve thread structure)
+    if (comment.deletedAt) {
+      return {
+        id: comment.id,
+        postId: comment.postId,
+        authorId: comment.authorId,
+        content: '[This comment was removed]',
+        isDeleted: true,
+        author: null, // Don't expose deleted author info
+        parentId: comment.parentId,
+        likeCount: 0,
+        replyCount: comment._count?.replies || 0,
+        isLiked: false,
+        createdAt: comment.createdAt.toISOString(),
+        updatedAt: comment.updatedAt.toISOString(),
+      };
+    }
+
     const isLiked = userId
       ? await this.prisma.like.findUnique({
           where: {
@@ -386,6 +442,7 @@ export class CommentsService {
       likeCount: comment.likeCount,
       replyCount: comment._count?.replies || 0,
       isLiked,
+      isDeleted: false,
       createdAt: comment.createdAt.toISOString(),
       updatedAt: comment.updatedAt.toISOString(),
     };

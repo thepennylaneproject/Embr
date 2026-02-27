@@ -12,12 +12,14 @@ import {
 import { PrismaService } from '../../../core/database/prisma.service';
 import { CreatePostDto, UpdatePostDto, PostType, PostVisibility } from '../dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ContentSanitizerService } from '../../../core/safety/services/content-sanitizer.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly sanitizer: ContentSanitizerService,
   ) {}
 
   /**
@@ -26,8 +28,12 @@ export class PostsService {
   async createPost(userId: string, createPostDto: CreatePostDto) {
     const { content, type, mediaUrl, thumbnailUrl, visibility, hashtags } = createPostDto;
 
+    // Sanitize content
+    const sanitizedContent = this.sanitizer.sanitizePostContent(content);
+    const sanitizedHashtags = this.sanitizer.sanitizeHashtags(hashtags);
+
     // Validate content for text posts
-    if (type === 'TEXT' && !content) {
+    if (type === 'TEXT' && !sanitizedContent) {
       throw new BadRequestException('Text posts must have content');
     }
 
@@ -39,12 +45,12 @@ export class PostsService {
     const post = await this.prisma.post.create({
       data: {
         authorId: userId,
-        content,
+        content: sanitizedContent,
         type: type || 'TEXT',
         mediaUrl,
         thumbnailUrl,
         visibility: visibility || 'PUBLIC',
-        hashtags: hashtags || [],
+        hashtags: sanitizedHashtags,
       },
       include: {
         author: {
@@ -171,6 +177,21 @@ export class PostsService {
         { visibility: 'PUBLIC' },
         ...(userId ? [{ authorId: userId }] : []),
       ],
+      // Filter out posts from blocked users
+      AND: [
+        {
+          author: {
+            // Exclude users that have blocked the current user
+            blockedBy: { none: { blockerId: userId || 'null' } },
+          },
+        },
+        {
+          author: {
+            // Exclude users that the current user has blocked
+            blocking: { none: { blockedId: userId || 'null' } },
+          },
+        },
+      ],
     };
 
     if (type) {
@@ -261,6 +282,21 @@ export class PostsService {
         { visibility: 'FOLLOWERS' },
         { authorId: userId },
       ],
+      // Filter out posts from blocked users
+      AND: [
+        {
+          author: {
+            // Exclude users that have blocked the current user
+            blockedBy: { none: { blockerId: userId } },
+          },
+        },
+        {
+          author: {
+            // Exclude users that the current user has blocked
+            blocking: { none: { blockedId: userId } },
+          },
+        },
+      ],
     };
 
     const [posts, total] = await Promise.all([
@@ -330,12 +366,16 @@ export class PostsService {
       throw new ForbiddenException('You can only edit your own posts');
     }
 
+    // Sanitize content and hashtags
+    const sanitizedContent = this.sanitizer.sanitizePostContent(updatePostDto.content);
+    const sanitizedHashtags = this.sanitizer.sanitizeHashtags(updatePostDto.hashtags);
+
     const updated = await this.prisma.post.update({
       where: { id: postId },
       data: {
-        content: updatePostDto.content,
+        content: sanitizedContent,
         visibility: updatePostDto.visibility,
-        hashtags: updatePostDto.hashtags,
+        hashtags: sanitizedHashtags,
       },
       include: {
         author: {
@@ -416,6 +456,21 @@ export class PostsService {
       OR: [
         { content: { contains: query, mode: 'insensitive' } },
         { hashtags: { has: query.toLowerCase().replace('#', '') } },
+      ],
+      // Filter out posts from blocked users
+      AND: [
+        {
+          author: {
+            // Exclude users that have blocked the current user
+            blockedBy: { none: { blockerId: userId || 'null' } },
+          },
+        },
+        {
+          author: {
+            // Exclude users that the current user has blocked
+            blocking: { none: { blockedId: userId || 'null' } },
+          },
+        },
       ],
     };
 

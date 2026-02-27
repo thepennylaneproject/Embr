@@ -5,6 +5,7 @@ import { BlockingService } from './services/blocking.service';
 import { ReportsService } from './services/reports.service';
 import { AppealsService } from './services/appeals.service';
 import { ContentFilterService } from './services/content-filter.service';
+import { ContentSanitizerService } from './services/content-sanitizer.service';
 import { RolesGuard } from './guards/roles.guard';
 import { NotificationsModule } from '../notifications/notifications.module';
 
@@ -17,6 +18,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     ReportsService,
     AppealsService,
     ContentFilterService,
+    ContentSanitizerService,
     RolesGuard,
   ],
   exports: [
@@ -25,6 +27,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     ReportsService,
     AppealsService,
     ContentFilterService,
+    ContentSanitizerService,
   ],
 })
 export class SafetyModule {}
