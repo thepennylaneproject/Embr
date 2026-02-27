@@ -6,6 +6,7 @@ import { ReportsService } from './services/reports.service';
 import { AppealsService } from './services/appeals.service';
 import { ContentFilterService } from './services/content-filter.service';
 import { ContentSanitizerService } from './services/content-sanitizer.service';
+import { AdminModerationService } from './services/admin-moderation.service';
 import { RolesGuard } from './guards/roles.guard';
 import { NotificationsModule } from '../notifications/notifications.module';
 
@@ -19,6 +20,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     AppealsService,
     ContentFilterService,
     ContentSanitizerService,
+    AdminModerationService,
     RolesGuard,
   ],
   exports: [
@@ -28,6 +30,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     AppealsService,
     ContentFilterService,
     ContentSanitizerService,
+    AdminModerationService,
   ],
 })
 export class SafetyModule {}
