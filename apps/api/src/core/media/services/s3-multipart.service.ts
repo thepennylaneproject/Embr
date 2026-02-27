@@ -78,10 +78,11 @@ export class S3MultipartService {
     fileName: string,
     fileType: string,
     contentType: 'image' | 'video' | 'document',
+    userId: string,
     expiresIn: number = 3600,
   ): Promise<PresignedUploadResult> {
     const fileExtension = fileName.split('.').pop();
-    const fileKey = this.generateFileKey(contentType, fileExtension);
+    const fileKey = this.generateFileKey(userId, contentType, fileExtension);
 
     const command = new PutObjectCommand({
       Bucket: this.bucket,
@@ -109,9 +110,10 @@ export class S3MultipartService {
     fileType: string,
     fileSize: number,
     contentType: 'image' | 'video' | 'document',
+    userId: string,
   ): Promise<MultipartUploadInitResult> {
     const fileExtension = fileName.split('.').pop();
-    const fileKey = this.generateFileKey(contentType, fileExtension);
+    const fileKey = this.generateFileKey(userId, contentType, fileExtension);
 
     const command = new CreateMultipartUploadCommand({
       Bucket: this.bucket,
@@ -119,6 +121,7 @@ export class S3MultipartService {
       ContentType: fileType,
       Metadata: {
         originalName: fileName,
+        userId,
         uploadedAt: new Date().toISOString(),
       },
     });
@@ -304,6 +307,7 @@ export class S3MultipartService {
    * Generate unique file key with proper structure
    */
   private generateFileKey(
+    userId: string,
     contentType: 'image' | 'video' | 'document',
     extension: string,
   ): string {
@@ -312,7 +316,7 @@ export class S3MultipartService {
     const year = new Date().getFullYear();
     const month = String(new Date().getMonth() + 1).padStart(2, '0');
 
-    return `${contentType}s/${year}/${month}/${uuid}-${timestamp}.${extension}`;
+    return `${contentType}s/${year}/${month}/${userId}/${uuid}-${timestamp}.${extension}`;
   }
 
   /**

@@ -84,6 +84,7 @@ export class MediaUploadController {
       dto.fileName,
       dto.fileType,
       dto.contentType,
+      userId,
       3600, // 1 hour expiry
     );
 
@@ -108,6 +109,7 @@ export class MediaUploadController {
       dto.fileType,
       dto.fileSize,
       dto.contentType,
+      userId,
     );
 
     // Generate presigned URLs for all parts
@@ -175,6 +177,9 @@ export class MediaUploadController {
   ) {
     this.logger.log(`Completing upload for user ${user.id}: ${dto.fileKey}`);
 
+    // Validate file key ownership
+    this.validateFileKeyOwnership(dto.fileKey, user.id);
+
     // Verify file exists in S3
     const exists = await this.s3Service.fileExists(dto.fileKey);
     if (!exists) {
@@ -225,6 +230,9 @@ export class MediaUploadController {
       `Completing multipart upload for user ${user.id}: ${dto.fileKey}`,
     );
 
+    // Validate file key ownership
+    this.validateFileKeyOwnership(dto.fileKey, user.id);
+
     // Complete S3 multipart upload
     const result = await this.s3Service.completeMultipartUpload(
       dto.fileKey,
@@ -270,6 +278,8 @@ export class MediaUploadController {
     this.logger.log(`Aborting upload for user ${user.id}: ${dto.uploadId}`);
 
     if (dto.uploadType === 'multipart') {
+      // Validate file key ownership
+      this.validateFileKeyOwnership(dto.fileKey, user.id);
       await this.s3Service.abortMultipartUpload(dto.fileKey, dto.uploadId);
     }
 
@@ -394,6 +404,25 @@ export class MediaUploadController {
       expiresIn,
       expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
     };
+  }
+
+  /**
+   * Helper: Validate file key ownership (ensure userId in path matches authenticated user)
+   */
+  private validateFileKeyOwnership(fileKey: string, userId: string): void {
+    // File key format: {contentType}s/{year}/{month}/{userId}/{uuid}-{timestamp}.{ext}
+    const pathParts = fileKey.split('/');
+    if (pathParts.length < 4) {
+      throw new HttpException('Invalid file key format', HttpStatus.BAD_REQUEST);
+    }
+
+    const fileKeyUserId = pathParts[3]; // Extract userId from path
+    if (fileKeyUserId !== userId) {
+      throw new HttpException(
+        'Unauthorized: file key does not match user',
+        HttpStatus.FORBIDDEN,
+      );
+    }
   }
 
   /**
