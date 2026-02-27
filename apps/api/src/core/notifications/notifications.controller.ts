@@ -45,11 +45,33 @@ export class NotificationsController {
   /**
    * Get unread notification count
    * GET /notifications/count
+   * MUST be defined before @Get(':id') to ensure it matches first
    */
   @Get('count')
   async getUnreadCount(@GetUser('id') userId: string) {
     const count = await this.notificationsService.getUnreadCount(userId);
     return { unreadCount: count };
+  }
+
+  /**
+   * Mark all notifications as read
+   * PATCH /notifications/read-all
+   * MUST be defined before @Patch(':id/read') to ensure it matches first
+   */
+  @Patch('read-all')
+  async markAllAsRead(@GetUser('id') userId: string) {
+    return this.notificationsService.markAllAsRead(userId);
+  }
+
+  /**
+   * Delete all read notifications
+   * DELETE /notifications/read
+   * MUST be defined before @Delete(':id') to ensure it matches first
+   */
+  @Delete('read')
+  @HttpCode(HttpStatus.OK)
+  async deleteAllRead(@GetUser('id') userId: string) {
+    return this.notificationsService.deleteAllRead(userId);
   }
 
   /**
@@ -77,15 +99,6 @@ export class NotificationsController {
   }
 
   /**
-   * Mark all notifications as read
-   * PATCH /notifications/read-all
-   */
-  @Patch('read-all')
-  async markAllAsRead(@GetUser('id') userId: string) {
-    return this.notificationsService.markAllAsRead(userId);
-  }
-
-  /**
    * Delete a single notification
    * DELETE /notifications/:id
    */
@@ -99,12 +112,27 @@ export class NotificationsController {
   }
 
   /**
-   * Delete all read notifications
-   * DELETE /notifications/read
+   * Get user notification preferences
+   * GET /notifications/preferences
    */
-  @Delete('read')
-  @HttpCode(HttpStatus.OK)
-  async deleteAllRead(@GetUser('id') userId: string) {
-    return this.notificationsService.deleteAllRead(userId);
+  @Get('preferences/me')
+  async getPreferences(@GetUser('id') userId: string) {
+    // TODO: Fetch from user profile or settings
+    return {
+      userId,
+      message: 'Notification preferences endpoint - implement based on Profile model',
+    };
+  }
+
+  /**
+   * Get notification delivery analytics
+   * GET /notifications/analytics (admin only)
+   */
+  @Get('analytics/health')
+  async getAnalytics() {
+    // TODO: Add admin guard
+    return {
+      message: 'Analytics endpoint - implement with NotificationsAnalyticsService',
+    };
   }
 }

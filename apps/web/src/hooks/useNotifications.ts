@@ -15,9 +15,10 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
   const [meta, setMeta] = useState<NotificationsMeta | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchNotifications = useCallback(
-    async (page = 1) => {
+    async (page = 1, append = false) => {
       setIsLoading(true);
       setError(null);
       try {
@@ -26,8 +27,17 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
           limit,
           unreadOnly,
         });
-        setNotifications(response.data);
+
+        // For the first page or when not appending, replace the list
+        // For subsequent pages, append to the list
+        if (append && page > 1) {
+          setNotifications((prev) => [...prev, ...response.data]);
+        } else {
+          setNotifications(response.data);
+        }
+
         setMeta(response.meta);
+        setCurrentPage(page);
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to load notifications');
       } finally {
@@ -36,6 +46,12 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     },
     [limit, unreadOnly],
   );
+
+  const loadMore = useCallback(() => {
+    if (meta && currentPage < meta.totalPages && !isLoading) {
+      fetchNotifications(currentPage + 1, true);
+    }
+  }, [meta, currentPage, isLoading, fetchNotifications]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
@@ -91,6 +107,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     isLoading,
     error,
     fetchNotifications,
+    loadMore,
     markAsRead,
     markAllAsRead,
     deleteNotification,

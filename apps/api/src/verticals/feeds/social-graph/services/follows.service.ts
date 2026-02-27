@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { BlockingService } from '../../../core/safety/services/blocking.service';
+import { NOTIFICATION_TYPES } from '../../../core/notifications/notifications.constants';
 import {
   FollowUserDto,
   GetFollowersDto,
@@ -94,9 +95,9 @@ export class FollowsService {
     await this.prisma.notification.create({
       data: {
         userId: dto.followingId,
-        type: 'NEW_FOLLOWER',
+        type: NOTIFICATION_TYPES.NEW_FOLLOWER,
         actorId: followerId,
-        message: `started following you`,
+        message: 'started following you',
       },
     }).catch(() => {
       // Notification creation is non-critical
