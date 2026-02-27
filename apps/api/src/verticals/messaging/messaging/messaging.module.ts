@@ -4,6 +4,7 @@ import { MessagingController } from './controllers/messaging.controller';
 import { MessagingService } from './services/messaging.service';
 import { MessagingGateway } from './gateways/messaging.gateway';
 import { MessageRateLimiterService } from './services/message-rate-limiter.service';
+import { ConversationAccessService } from './services/conversation-access.service';
 import { RedisModule } from '../../../core/redis/redis.module';
 import { RedisService } from '../../../core/redis/redis.service';
 import { RedisIoAdapter } from '../../../core/redis/redis-io.adapter';
@@ -19,8 +20,18 @@ import { UploadModule } from '../../../core/upload/upload.module';
     }),
   ],
   controllers: [MessagingController],
-  providers: [MessagingService, MessagingGateway, MessageRateLimiterService],
-  exports: [MessagingService, MessagingGateway, MessageRateLimiterService],
+  providers: [
+    MessagingService,
+    MessagingGateway,
+    MessageRateLimiterService,
+    ConversationAccessService,
+  ],
+  exports: [
+    MessagingService,
+    MessagingGateway,
+    MessageRateLimiterService,
+    ConversationAccessService,
+  ],
 })
 export class MessagingModule implements OnModuleInit {
   constructor(

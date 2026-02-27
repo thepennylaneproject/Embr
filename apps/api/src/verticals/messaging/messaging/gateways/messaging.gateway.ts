@@ -18,6 +18,7 @@ import { Injectable, UseGuards, Logger, TooManyRequestsException } from '@nestjs
 import { JwtService } from '@nestjs/jwt';
 import { MessagingService } from '../services/messaging.service';
 import { MessageRateLimiterService } from '../services/message-rate-limiter.service';
+import { ConversationAccessService } from '../services/conversation-access.service';
 import { RedisService } from '../../../../core/redis/redis.service';
 import { RedisIoAdapter } from '../../../../core/redis/redis-io.adapter';
 import {
@@ -61,6 +62,7 @@ export class MessagingGateway
     private messagingService: MessagingService,
     private jwtService: JwtService,
     private rateLimiter: MessageRateLimiterService,
+    private conversationAccess: ConversationAccessService,
   ) {}
 
   // ============================================================
@@ -230,30 +232,58 @@ export class MessagingGateway
     @MessageBody() data: { messageId: string; conversationId: string },
   ) {
     try {
-      // Update message status to delivered
-      // This would be implemented in your MessagingService
-      // For now, just emit the event
+      if (!client.userId) {
+        client.emit(WebSocketEvent.ERROR, {
+          code: 'UNAUTHORIZED',
+          message: 'Not authenticated',
+        });
+        return;
+      }
 
-      // Notify sender that message was delivered
-      const conversation = await this.messagingService.getConversations(
+      // Validate user is a participant in the conversation
+      const conversation = await this.conversationAccess.validateConversationAccess(
         client.userId,
-        { conversationId: data.conversationId } as any,
+        data.conversationId,
       );
 
-      if (conversation.conversations.length > 0) {
-        const conv = conversation.conversations[0];
-        const senderId =
-          conv.otherUser.id === client.userId
-            ? conv.otherUser.id
-            : client.userId;
-
-        this.server.to(`user:${senderId}`).emit(WebSocketEvent.MESSAGE_DELIVERED, {
-          messageId: data.messageId,
-          conversationId: data.conversationId,
+      if (!conversation) {
+        client.emit(WebSocketEvent.ERROR, {
+          code: 'UNAUTHORIZED',
+          message: 'Not a participant in this conversation',
         });
+        return;
       }
+
+      // Validate message exists and belongs to the conversation
+      const isValidMessage = await this.conversationAccess.validateMessageInConversation(
+        data.messageId,
+        data.conversationId,
+      );
+
+      if (!isValidMessage) {
+        client.emit(WebSocketEvent.ERROR, {
+          code: 'NOT_FOUND',
+          message: 'Message not found in this conversation',
+        });
+        return;
+      }
+
+      // Notify sender that message was delivered
+      const recipientId =
+        conversation.participant1Id === client.userId
+          ? conversation.participant2Id
+          : conversation.participant1Id;
+
+      this.server.to(`user:${recipientId}`).emit(WebSocketEvent.MESSAGE_DELIVERED, {
+        messageId: data.messageId,
+        conversationId: data.conversationId,
+      });
     } catch (error) {
       this.logger.error('Error marking message as delivered:', error);
+      client.emit(WebSocketEvent.ERROR, {
+        code: 'DELIVERY_FAILED',
+        message: 'Failed to mark message as delivered',
+      });
     }
   }
 
@@ -358,19 +388,25 @@ export class MessagingGateway
 
       const { conversationId } = dto;
 
-      // Get conversation to find other participant
-      const conversations = await this.messagingService.getConversations(
+      // Validate user is a participant in the conversation
+      const conversation = await this.conversationAccess.validateConversationAccess(
         client.userId,
-        {},
+        conversationId,
       );
 
-      const conversation = conversations.conversations.find(
-        (c) => c.id === conversationId,
-      );
+      if (!conversation) {
+        client.emit(WebSocketEvent.ERROR, {
+          code: 'UNAUTHORIZED',
+          message: 'Not a participant in this conversation',
+        });
+        return;
+      }
 
-      if (!conversation) return;
-
-      const recipientId = conversation.otherUser.id;
+      // Get the other participant
+      const recipientId =
+        conversation.participant1Id === client.userId
+          ? conversation.participant2Id
+          : conversation.participant1Id;
 
       // Clear existing timeout for this user in this conversation
       const timeoutKey = `${conversationId}-${client.userId}`;
@@ -421,19 +457,24 @@ export class MessagingGateway
         this.typingTimeouts.delete(timeoutKey);
       }
 
-      // Get conversation to find other participant
-      const conversations = await this.messagingService.getConversations(
+      // Validate user is a participant in the conversation
+      const conversation = await this.conversationAccess.validateConversationAccess(
         client.userId,
-        {},
+        conversationId,
       );
 
-      const conversation = conversations.conversations.find(
-        (c) => c.id === conversationId,
-      );
+      if (!conversation) {
+        client.emit(WebSocketEvent.ERROR, {
+          code: 'UNAUTHORIZED',
+          message: 'Not a participant in this conversation',
+        });
+        return;
+      }
 
-      if (!conversation) return;
-
-      const recipientId = conversation.otherUser.id;
+      const recipientId =
+        conversation.participant1Id === client.userId
+          ? conversation.participant2Id
+          : conversation.participant1Id;
 
       // Emit stop typing indicator to recipient
       const typingIndicator: TypingIndicator = {
