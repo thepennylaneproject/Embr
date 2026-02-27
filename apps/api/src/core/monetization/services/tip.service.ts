@@ -10,6 +10,7 @@ import { TransactionType as PrismaTransactionType } from '@prisma/client';
 import { WalletService } from './wallet.service';
 import { TransactionService } from './transaction.service';
 import { CreateTipDto, GetTipsQueryDto } from '../dto/tip.dto';
+import { NOTIFICATION_TYPES } from '../../notifications/notifications.constants';
 import Stripe from 'stripe';
 
 @Injectable()
@@ -292,7 +293,7 @@ export class TipService {
         await tx.notification.create({
           data: {
             userId: tip.recipientId,
-            type: 'TIP_RECEIVED',
+            type: NOTIFICATION_TYPES.TIP_RECEIVED,
             title: 'You received a tip!',
             message: tip.message || `Someone tipped you $${(tip.amount / 100).toFixed(2)}`,
             referenceId: tipId,

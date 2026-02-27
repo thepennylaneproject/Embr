@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../../core/database/prisma.service';
 import {
   CreateApplicationDto,
@@ -19,6 +20,7 @@ export class ApplicationsService {
     private prisma: PrismaService,
     private gigsService: GigsService,
     private escrowService: EscrowService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -85,6 +87,14 @@ export class ApplicationsService {
     });
 
     await this.gigsService.incrementApplications(gigId);
+
+    // Emit event for notification creation
+    this.eventEmitter.emit('gig.application.created', {
+      applicationId: application.id,
+      gigId,
+      applicantId,
+      gigCreatorId: gig.creatorId,
+    });
 
     return {
       ...application,
@@ -213,6 +223,13 @@ export class ApplicationsService {
       throw new BadRequestException('Only pending applications can be accepted');
     }
 
+    // Get all pending applications to notify rejected applicants
+    const pendingApplications = await this.prisma.application.findMany({
+      where: { gigId: gig.id, status: ApplicationStatus.PENDING },
+      select: { id: true, applicantId: true },
+    });
+
+    // Reject all other pending applications
     await this.prisma.application.updateMany({
       where: { gigId: gig.id, status: ApplicationStatus.PENDING },
       data: { status: ApplicationStatus.REJECTED },
@@ -253,6 +270,24 @@ export class ApplicationsService {
       }
     }
 
+    // Emit events for notifications
+    this.eventEmitter.emit('gig.application.accepted', {
+      applicationId: application.id,
+      gigId: gig.id,
+      applicantId: application.applicantId,
+    });
+
+    // Notify rejected applicants
+    for (const rejectedApp of pendingApplications) {
+      if (rejectedApp.id !== application.id) {
+        this.eventEmitter.emit('gig.application.rejected', {
+          applicationId: rejectedApp.id,
+          gigId: gig.id,
+          applicantId: rejectedApp.applicantId,
+        });
+      }
+    }
+
     return {
       ...savedApplication,
       milestoneProposals: savedApplication.milestoneProposals as unknown as MilestoneProposal[],
@@ -277,6 +312,13 @@ export class ApplicationsService {
     const updatedApp = await this.prisma.application.update({
       where: { id: application.id },
       data: { status: ApplicationStatus.REJECTED },
+    });
+
+    // Emit event for notification creation
+    this.eventEmitter.emit('gig.application.rejected', {
+      applicationId: application.id,
+      gigId: gig.id,
+      applicantId: application.applicantId,
     });
 
     return {
