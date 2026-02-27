@@ -10,6 +10,7 @@ export default function NotificationsPage() {
     isLoading,
     error,
     fetchNotifications,
+    loadMore,
     markAsRead,
     markAllAsRead,
     deleteNotification,
@@ -18,6 +19,7 @@ export default function NotificationsPage() {
 
   const unreadCount = meta?.unreadCount ?? 0;
   const hasNotifications = notifications.length > 0;
+  const canLoadMore = meta && meta.page < meta.totalPages;
 
   const formattedNotifications = useMemo(
     () =>
@@ -147,6 +149,32 @@ export default function NotificationsPage() {
               </div>
             </div>
           ))}
+
+          {canLoadMore && (
+            <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={loadMore}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Loading...' : 'Load more'}
+              </Button>
+            </div>
+          )}
+
+          {meta && meta.totalPages > 1 && (
+            <div
+              style={{
+                marginTop: '1rem',
+                textAlign: 'center',
+                fontSize: '0.85rem',
+                color: 'var(--embr-muted-text)',
+              }}
+            >
+              Page {meta.page} of {meta.totalPages}
+            </div>
+          )}
         </div>
       )}
     </ProtectedPageShell>

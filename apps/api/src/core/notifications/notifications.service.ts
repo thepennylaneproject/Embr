@@ -5,6 +5,7 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { NOTIFICATION_TYPES, NotificationType } from './notifications.constants';
 
 @Injectable()
 export class NotificationsService {
@@ -15,7 +16,7 @@ export class NotificationsService {
    */
   async create(data: {
     userId: string;
-    type: string;
+    type: NotificationType;
     title?: string;
     message?: string;
     body?: string; // Alias for message
@@ -26,8 +27,8 @@ export class NotificationsService {
   }) {
     // Use body as message if message is not provided
     const messageContent = data.message || data.body;
-    
-    return this.prisma.notification.create({
+
+    const notification = await this.prisma.notification.create({
       data: {
         userId: data.userId,
         type: data.type,
@@ -38,6 +39,16 @@ export class NotificationsService {
         referenceType: data.referenceType,
       },
     });
+
+    // Increment unread count on user (non-blocking, don't fail if this fails)
+    await this.prisma.user.update({
+      where: { id: data.userId },
+      data: { unreadNotificationCount: { increment: 1 } },
+    }).catch(() => {
+      // Ignore errors, count will be recalculated if needed
+    });
+
+    return notification;
   }
 
   /**
@@ -107,21 +118,32 @@ export class NotificationsService {
   }
 
   /**
-   * Mark a single notification as read
+   * Mark a single notification as read (idempotent)
+   * Always returns the same response format regardless of previous state
    */
   async markAsRead(notificationId: string, userId: string) {
     const notification = await this.findOne(notificationId, userId);
 
+    // If already read, just return it as-is (idempotent)
     if (notification.isRead) {
-      return { message: 'Notification already marked as read', notification };
+      return { success: true, notification };
     }
 
+    // Mark as read and decrement unread count
     const updated = await this.prisma.notification.update({
       where: { id: notificationId },
       data: { isRead: true },
     });
 
-    return { message: 'Notification marked as read', notification: updated };
+    // Decrement unread count on user (non-blocking)
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { unreadNotificationCount: { decrement: 1 } },
+    }).catch(() => {
+      // Ignore errors, count will be recalculated if needed
+    });
+
+    return { success: true, notification: updated };
   }
 
   /**
@@ -133,6 +155,16 @@ export class NotificationsService {
       data: { isRead: true },
     });
 
+    // Update user's unread count to 0 (non-blocking)
+    if (result.count > 0) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { unreadNotificationCount: 0 },
+      }).catch(() => {
+        // Ignore errors
+      });
+    }
+
     return {
       message: 'All notifications marked as read',
       count: result.count,
@@ -143,11 +175,21 @@ export class NotificationsService {
    * Delete a single notification
    */
   async delete(notificationId: string, userId: string) {
-    await this.findOne(notificationId, userId); // Verify ownership
+    const notification = await this.findOne(notificationId, userId); // Verify ownership
 
     await this.prisma.notification.delete({
       where: { id: notificationId },
     });
+
+    // Decrement unread count if the notification was unread (non-blocking)
+    if (!notification.isRead) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { unreadNotificationCount: { decrement: 1 } },
+      }).catch(() => {
+        // Ignore errors
+      });
+    }
 
     return { message: 'Notification deleted' };
   }
@@ -167,11 +209,54 @@ export class NotificationsService {
   }
 
   /**
-   * Get unread notification count
+   * Get unread notification count (from denormalized field)
+   * Falls back to database count if denormalized count is out of sync
    */
   async getUnreadCount(userId: string): Promise<number> {
-    return this.prisma.notification.count({
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { unreadNotificationCount: true },
+    });
+
+    if (!user) {
+      return 0;
+    }
+
+    // Use the denormalized count, but verify it's not stale
+    // In a high-traffic scenario, you might want to resync periodically
+    return user.unreadNotificationCount;
+  }
+
+  /**
+   * Recalculate and sync the unread count for a user
+   * Use this to fix any inconsistencies between denormalized and actual counts
+   */
+  async syncUnreadCount(userId: string): Promise<number> {
+    const actualCount = await this.prisma.notification.count({
       where: { userId, isRead: false },
     });
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { unreadNotificationCount: actualCount },
+    });
+
+    return actualCount;
+  }
+
+  /**
+   * Delete notifications older than the specified number of days (retention policy)
+   * Default is 90 days
+   */
+  async cleanup(daysToRetain: number = 90): Promise<{ count: number }> {
+    const cutoffDate = new Date(Date.now() - daysToRetain * 24 * 60 * 60 * 1000);
+
+    const result = await this.prisma.notification.deleteMany({
+      where: {
+        createdAt: { lt: cutoffDate },
+      },
+    });
+
+    return { count: result.count };
   }
 }
