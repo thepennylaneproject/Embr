@@ -11,6 +11,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../../../core/auth/guards/optional-jwt-auth.guard';
 import { FollowsService } from '../services/follows.service';
@@ -84,8 +85,10 @@ export class FollowsController {
 
   /**
    * POST /follows/batch-check - Batch check follow status for multiple users
+   * Rate limited: 30 requests per 15 minutes (prevents follow enumeration)
    */
   @Post('batch-check')
+  @Throttle({ default: { limit: 30, ttl: 900000 } })
   async batchCheckFollowStatus(@Request() req, @Body() dto: BatchFollowCheckDto) {
     return this.followsService.batchCheckFollowStatus(req.user.id, dto);
   }
@@ -108,8 +111,10 @@ export class FollowsController {
 
   /**
    * GET /follows/suggestions - Get suggested users from network
+   * Rate limited: 20 requests per 15 minutes (prevents social graph enumeration)
    */
   @Get('suggestions')
+  @Throttle({ default: { limit: 20, ttl: 900000 } })
   async getSuggestedFromNetwork(@Request() req, @Query('limit') limit?: number) {
     return this.followsService.getSuggestedFromNetwork(req.user.id, limit || 10);
   }
