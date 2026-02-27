@@ -49,10 +49,19 @@ export const artistController = {
   async updateArtist(req: Request, res: Response) {
     try {
       const { artistId } = req.params;
+      const userId = (req as any).user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
       const data = req.body;
-      const artist = await artistService.updateArtist(artistId, data);
+      const artist = await artistService.updateArtist(artistId, userId, data);
       res.json(artist);
     } catch (error) {
+      if (error instanceof Error && error.message.includes('Forbidden')) {
+        return res.status(403).json({ error: error.message });
+      }
       res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
@@ -122,9 +131,18 @@ export const trackController = {
   async publishTrack(req: Request, res: Response) {
     try {
       const { trackId } = req.params;
-      const track = await trackService.publishTrack(trackId);
+      const userId = (req as any).user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const track = await trackService.publishTrack(trackId, userId);
       res.json(track);
     } catch (error) {
+      if (error instanceof Error && error.message.includes('Forbidden')) {
+        return res.status(403).json({ error: error.message });
+      }
       res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
@@ -173,9 +191,15 @@ export const trackController = {
   async updateLicensing(req: Request, res: Response) {
     try {
       const { trackId } = req.params;
+      const userId = (req as any).user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
       const { licensingModel, allowRemix, allowMonetize, attributionRequired } = req.body;
 
-      const track = await trackService.updateTrackLicensing(trackId, {
+      const track = await trackService.updateTrackLicensing(trackId, userId, {
         licensingModel,
         allowRemix,
         allowMonetize,
@@ -184,6 +208,9 @@ export const trackController = {
 
       res.json(track);
     } catch (error) {
+      if (error instanceof Error && error.message.includes('Forbidden')) {
+        return res.status(403).json({ error: error.message });
+      }
       res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
@@ -197,6 +224,12 @@ export const licensingController = {
   // GET /api/music/licensing/check?trackId=X&creatorId=Y
   async checkLicensing(req: Request, res: Response) {
     try {
+      const userId = (req as any).user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
       const { trackId, creatorId } = req.query;
 
       if (!trackId || !creatorId) {
@@ -268,6 +301,15 @@ export const revenueController = {
       const { trackId, durationPlayed, quality } = req.body;
       const userId = (req as any).user?.id;
 
+      // Validate input
+      if (!trackId) {
+        return res.status(400).json({ error: 'trackId is required' });
+      }
+
+      if (!durationPlayed || typeof durationPlayed !== 'number') {
+        return res.status(400).json({ error: 'durationPlayed must be a positive number' });
+      }
+
       const play = await revenueService.recordStream(
         trackId,
         userId,
@@ -277,6 +319,9 @@ export const revenueController = {
 
       res.json(play);
     } catch (error) {
+      if (error instanceof Error && (error.message.includes('Duration') || error.message.includes('Too many stream'))) {
+        return res.status(429).json({ error: error.message });
+      }
       res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
@@ -284,10 +329,16 @@ export const revenueController = {
   // PUT /api/music/usage/:usageId/revenue
   async updateUsageRevenue(req: Request, res: Response) {
     try {
+      const userId = (req as any).user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
       const { usageId } = req.params;
       const { impressions, engagements, totalRevenue } = req.body;
 
-      const usage = await revenueService.updateUsageRevenue(usageId, {
+      const usage = await revenueService.updateUsageRevenue(usageId, userId, {
         impressions,
         engagements,
         totalRevenue,
@@ -295,6 +346,9 @@ export const revenueController = {
 
       res.json(usage);
     } catch (error) {
+      if (error instanceof Error && error.message.includes('Forbidden')) {
+        return res.status(403).json({ error: error.message });
+      }
       res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },

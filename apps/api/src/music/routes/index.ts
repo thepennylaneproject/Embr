@@ -52,7 +52,7 @@ router.put('/tracks/:trackId/licensing', requireAuth, trackController.updateLice
 // ============================================
 
 // Check if track can be licensed
-router.get('/licensing/check', licensingController.checkLicensing);
+router.get('/licensing/check', requireAuth, licensingController.checkLicensing);
 
 // Record music usage in other content (called by Feed/Gig APIs)
 router.post('/licensing/usage', requireAuth, licensingController.recordUsage);
@@ -68,7 +68,7 @@ router.get('/tracks/:trackId/usages', licensingController.getUsageHistory);
 router.post('/stream', requireAuth, revenueController.recordStream);
 
 // Update revenue for a usage (called by monetization system)
-router.put('/usage/:usageId/revenue', revenueController.updateUsageRevenue);
+router.put('/usage/:usageId/revenue', requireAuth, revenueController.updateUsageRevenue);
 
 // Get artist's revenue report
 router.get('/artists/:artistId/revenue', requireAuth, revenueController.getArtistRevenue);
