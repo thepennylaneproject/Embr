@@ -15,6 +15,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MuxVideoService } from '../services/mux-video.service';
 import { MediaService } from '../services/media.service';
 import { ThumbnailService } from '../services/thumbnail.service';
@@ -29,6 +30,7 @@ export class MuxWebhookController {
     private muxService: MuxVideoService,
     private mediaService: MediaService,
     private thumbnailService: ThumbnailService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -43,7 +45,10 @@ export class MuxWebhookController {
     @Headers('mux-timestamp') timestamp: string,
     @Body() body: any,
   ) {
-    this.logger.log(`Received Mux webhook: ${body.type}`);
+    const eventId = body.id; // Mux provides unique event ID
+    const eventType = body.type;
+
+    this.logger.log(`Received Mux webhook ${eventId}: ${eventType}`);
 
     // Verify webhook signature
     const rawBody = request.rawBody?.toString('utf8') || JSON.stringify(body);
@@ -54,20 +59,35 @@ export class MuxWebhookController {
     );
 
     if (!isValid) {
-      this.logger.error('Invalid webhook signature');
+      this.logger.error(`Invalid webhook signature for event ${eventId}`);
       throw new HttpException('Invalid signature', HttpStatus.UNAUTHORIZED);
+    }
+
+    // Check if webhook has already been processed (idempotency)
+    const alreadyProcessed = await this.mediaService.webhookEventProcessed(eventId);
+    if (alreadyProcessed) {
+      this.logger.log(`Webhook event ${eventId} already processed, returning success`);
+      return {
+        success: true,
+        message: 'Webhook already processed',
+      };
     }
 
     // Process webhook event
     try {
       await this.processWebhookEvent(body);
 
+      // Mark event as processed (after successful processing)
+      const sourceId = body.data?.id || '';
+      await this.mediaService.markWebhookEventProcessed(eventId, eventType, sourceId);
+
       return {
         success: true,
         message: 'Webhook processed',
       };
     } catch (error) {
-      this.logger.error('Failed to process webhook', error.stack);
+      this.logger.error(`Failed to process webhook ${eventId}`, error.stack);
+      // Don't mark as processed if there was an error - allow retry
       throw new HttpException(
         'Failed to process webhook',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -163,6 +183,16 @@ export class MuxWebhookController {
         completedAt: new Date(),
       });
 
+      // Emit success event for notification service
+      this.eventEmitter.emit('media.video.ready', {
+        userId: media.userId,
+        mediaId: media.id,
+        fileName: media.fileName,
+        duration: data.duration,
+        playbackUrl: `https://stream.mux.com/${playbackId}.m3u8`,
+        timestamp: new Date().toISOString(),
+      });
+
       this.logger.log(`Updated media ${media.id} with Mux data`);
     } catch (error) {
       this.logger.error(
@@ -186,9 +216,25 @@ export class MuxWebhookController {
       const media = await this.mediaService.getMediaByMuxAssetId(assetId);
 
       if (media) {
+        const errorMessage = errors
+          .map((e: any) => e.message || JSON.stringify(e))
+          .join('; ');
+
         await this.mediaService.updateMediaStatus(media.id, 'error', {
-          errorMessage: JSON.stringify(errors),
+          errorMessage,
         });
+
+        // Emit error event for notification service
+        this.eventEmitter.emit('media.video.failed', {
+          userId: media.userId,
+          mediaId: media.id,
+          fileName: media.fileName,
+          reason: errorMessage,
+          assetId: assetId,
+          timestamp: new Date().toISOString(),
+        });
+
+        this.logger.log(`Emitted media.video.failed event for media ${media.id}`);
       }
     } catch (error) {
       this.logger.error(
@@ -281,9 +327,23 @@ export class MuxWebhookController {
       const media = await this.mediaService.getMediaByUploadId(uploadId);
 
       if (media) {
+        const errorMessage = error?.message || JSON.stringify(error);
+
         await this.mediaService.updateMediaStatus(media.id, 'error', {
-          errorMessage: JSON.stringify(error),
+          errorMessage,
         });
+
+        // Emit error event for notification service
+        this.eventEmitter.emit('media.upload.failed', {
+          userId: media.userId,
+          mediaId: media.id,
+          fileName: media.fileName,
+          reason: errorMessage,
+          uploadId: uploadId,
+          timestamp: new Date().toISOString(),
+        });
+
+        this.logger.log(`Emitted media.upload.failed event for media ${media.id}`);
       }
     } catch (error) {
       this.logger.error(

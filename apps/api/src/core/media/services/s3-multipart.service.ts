@@ -15,6 +15,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
   HeadObjectCommand,
+  ListMultipartUploadsCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
@@ -78,10 +79,16 @@ export class S3MultipartService {
     fileName: string,
     fileType: string,
     contentType: 'image' | 'video' | 'document',
-    expiresIn: number = 3600,
+    userId: string,
+    fileSize: number,
   ): Promise<PresignedUploadResult> {
     const fileExtension = fileName.split('.').pop();
-    const fileKey = this.generateFileKey(contentType, fileExtension);
+    const fileKey = this.generateFileKey(userId, contentType, fileExtension);
+
+    // Calculate dynamic expiry based on file size
+    // Assume ~10 Mbps upload speed, add 5 min buffer for retries
+    const estimatedUploadSeconds = Math.max(300, fileSize / (10 * 1024 * 1024));
+    const expiresIn = Math.min(estimatedUploadSeconds + 300, 900); // Max 15 minutes
 
     const command = new PutObjectCommand({
       Bucket: this.bucket,
@@ -91,7 +98,7 @@ export class S3MultipartService {
 
     const uploadUrl = await getSignedUrl(this.s3Client, command, { expiresIn });
 
-    this.logger.log(`Generated presigned URL for ${fileKey}`);
+    this.logger.log(`Generated presigned URL for ${fileKey} (expires in ${expiresIn}s)`);
 
     return {
       uploadId: uuidv4(),
@@ -109,9 +116,10 @@ export class S3MultipartService {
     fileType: string,
     fileSize: number,
     contentType: 'image' | 'video' | 'document',
+    userId: string,
   ): Promise<MultipartUploadInitResult> {
     const fileExtension = fileName.split('.').pop();
-    const fileKey = this.generateFileKey(contentType, fileExtension);
+    const fileKey = this.generateFileKey(userId, contentType, fileExtension);
 
     const command = new CreateMultipartUploadCommand({
       Bucket: this.bucket,
@@ -119,6 +127,7 @@ export class S3MultipartService {
       ContentType: fileType,
       Metadata: {
         originalName: fileName,
+        userId,
         uploadedAt: new Date().toISOString(),
       },
     });
@@ -146,8 +155,14 @@ export class S3MultipartService {
     fileKey: string,
     uploadId: string,
     totalParts: number,
-    expiresIn: number = 3600,
+    fileSize: number,
   ): Promise<PresignedPartUrls> {
+    // Calculate dynamic expiry based on total file size
+    // Assume ~10 Mbps upload speed for each part (serial)
+    // Add 5 min buffer per part (network delays, retries)
+    const estimatedUploadSeconds = Math.max(300, fileSize / (10 * 1024 * 1024));
+    const expiresIn = Math.min(estimatedUploadSeconds + 600, 3600); // Max 1 hour for multipart
+
     const partUrls: { partNumber: number; url: string }[] = [];
 
     for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
@@ -162,7 +177,9 @@ export class S3MultipartService {
       partUrls.push({ partNumber, url });
     }
 
-    this.logger.log(`Generated ${totalParts} presigned part URLs for ${fileKey}`);
+    this.logger.log(
+      `Generated ${totalParts} presigned part URLs for ${fileKey} (expires in ${expiresIn}s)`,
+    );
 
     return {
       uploadId,
@@ -291,6 +308,49 @@ export class S3MultipartService {
   }
 
   /**
+   * Download file content for scanning (magic bytes validation, antivirus, etc)
+   */
+  async downloadFileContent(fileKey: string, maxBytes: number = 5 * 1024 * 1024): Promise<Buffer> {
+    try {
+      const command = new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: fileKey,
+        Range: `bytes=0-${maxBytes - 1}`, // Only download first N bytes for scanning
+      });
+
+      const response = await this.s3Client.send(command);
+      const chunks: Uint8Array[] = [];
+      let totalBytes = 0;
+
+      // Read stream from S3
+      if (response.Body) {
+        const reader = response.Body as any;
+
+        if (reader[Symbol.asyncIterator]) {
+          // Readable stream
+          for await (const chunk of reader) {
+            chunks.push(chunk);
+            totalBytes += chunk.length;
+
+            if (totalBytes > maxBytes) {
+              break;
+            }
+          }
+        } else {
+          // Fallback for other stream types
+          const data = await response.Body.transformToByteArray();
+          chunks.push(data);
+        }
+      }
+
+      return Buffer.concat(chunks);
+    } catch (error) {
+      this.logger.error(`Failed to download file content for ${fileKey}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
    * Generate CDN or S3 URL for file
    */
   private getFileUrl(fileKey: string): string {
@@ -304,6 +364,7 @@ export class S3MultipartService {
    * Generate unique file key with proper structure
    */
   private generateFileKey(
+    userId: string,
     contentType: 'image' | 'video' | 'document',
     extension: string,
   ): string {
@@ -312,7 +373,7 @@ export class S3MultipartService {
     const year = new Date().getFullYear();
     const month = String(new Date().getMonth() + 1).padStart(2, '0');
 
-    return `${contentType}s/${year}/${month}/${uuid}-${timestamp}.${extension}`;
+    return `${contentType}s/${year}/${month}/${userId}/${uuid}-${timestamp}.${extension}`;
   }
 
   /**
@@ -320,5 +381,74 @@ export class S3MultipartService {
    */
   shouldUseMultipart(fileSize: number): boolean {
     return fileSize >= this.MULTIPART_THRESHOLD;
+  }
+
+  /**
+   * Abort stale multipart uploads older than specified age
+   * Called by scheduled job to clean up abandoned uploads and reduce costs
+   * AWS charges for incomplete parts (~$0.05 per GB per month)
+   */
+  async abortStaleMultipartUploads(ageHours: number = 24): Promise<{
+    abortedCount: number;
+    releasedBytes: number;
+  }> {
+    try {
+      const command = new ListMultipartUploadsCommand({
+        Bucket: this.bucket,
+      });
+
+      const result = await this.s3Client.send(command);
+      let abortedCount = 0;
+      let releasedBytes = 0;
+      const ageMs = ageHours * 60 * 60 * 1000;
+      const now = Date.now();
+
+      const staleUploads = (result.Uploads || []).filter((upload) => {
+        if (!upload.Initiated) return false;
+        const uploadAge = now - upload.Initiated.getTime();
+        return uploadAge > ageMs;
+      });
+
+      this.logger.log(
+        `Found ${staleUploads.length} stale multipart uploads older than ${ageHours}h`,
+      );
+
+      for (const upload of staleUploads) {
+        try {
+          const abortCommand = new AbortMultipartUploadCommand({
+            Bucket: this.bucket,
+            Key: upload.Key,
+            UploadId: upload.UploadId,
+          });
+
+          await this.s3Client.send(abortCommand);
+          abortedCount++;
+
+          // Estimate size based on upload initiation (not 100% accurate but useful for monitoring)
+          const estimatedAge = now - (upload.Initiated?.getTime() || now);
+          const estimatedSizePerHour = 1024 * 1024; // Assume ~1MB per hour as conservative estimate
+          const estimatedSize = Math.ceil(estimatedAge / (60 * 60 * 1000)) * estimatedSizePerHour;
+          releasedBytes += estimatedSize;
+
+          this.logger.log(
+            `Aborted stale multipart upload: ${upload.Key}/${upload.UploadId} (initiated ${new Date(upload.Initiated || new Date()).toISOString()})`,
+          );
+        } catch (error) {
+          this.logger.error(
+            `Failed to abort multipart upload ${upload.Key}/${upload.UploadId}`,
+            error.stack,
+          );
+        }
+      }
+
+      this.logger.log(
+        `Cleanup complete: aborted ${abortedCount} uploads, released ~${(releasedBytes / 1024 / 1024).toFixed(2)}MB`,
+      );
+
+      return { abortedCount, releasedBytes };
+    } catch (error) {
+      this.logger.error('Failed to list multipart uploads for cleanup', error.stack);
+      throw error;
+    }
   }
 }

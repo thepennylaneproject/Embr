@@ -23,6 +23,7 @@ import { S3MultipartService } from '../services/s3-multipart.service';
 import { MuxVideoService } from '../services/mux-video.service';
 import { ThumbnailService } from '../services/thumbnail.service';
 import { MediaService } from '../services/media.service';
+import { MediaValidatorService } from '../services/media-validator.service';
 import {
   InitiateUploadDto,
   CompleteUploadDto,
@@ -42,6 +43,7 @@ export class MediaUploadController {
     private muxService: MuxVideoService,
     private thumbnailService: ThumbnailService,
     private mediaService: MediaService,
+    private mediaValidator: MediaValidatorService,
   ) {}
 
   /**
@@ -60,6 +62,27 @@ export class MediaUploadController {
 
     // Validate file type
     this.validateFileType(dto.fileType, dto.contentType);
+
+    // Check user upload quota
+    const userStats = await this.mediaService.getMediaStats(user.id);
+    const uploadQuota = 100 * 1024 * 1024 * 1024; // 100GB per user (configurable)
+    const totalAfterUpload = userStats.totalSize + dto.fileSize;
+
+    if (totalAfterUpload > uploadQuota) {
+      const usedGB = (userStats.totalSize / 1024 / 1024 / 1024).toFixed(2);
+      const quotaGB = (uploadQuota / 1024 / 1024 / 1024).toFixed(0);
+      const requestGB = (dto.fileSize / 1024 / 1024 / 1024).toFixed(2);
+
+      this.logger.warn(
+        `Upload quota exceeded for user ${user.id}: ${usedGB}GB used, requesting ${requestGB}GB, quota ${quotaGB}GB`,
+      );
+
+      throw new HttpException(
+        `Upload would exceed quota. You have used ${usedGB}GB of ${quotaGB}GB. ` +
+        `This upload is ${requestGB}GB. Please delete some media or upgrade your plan.`,
+        HttpStatus.PAYLOAD_TOO_LARGE,
+      );
+    }
 
     // Determine if multipart upload is needed
     const useMultipart = this.s3Service.shouldUseMultipart(dto.fileSize);
@@ -84,7 +107,8 @@ export class MediaUploadController {
       dto.fileName,
       dto.fileType,
       dto.contentType,
-      3600, // 1 hour expiry
+      userId,
+      dto.fileSize,
     );
 
     return {
@@ -108,6 +132,7 @@ export class MediaUploadController {
       dto.fileType,
       dto.fileSize,
       dto.contentType,
+      userId,
     );
 
     // Generate presigned URLs for all parts
@@ -115,7 +140,7 @@ export class MediaUploadController {
       multipartResult.fileKey,
       multipartResult.uploadId,
       multipartResult.totalParts,
-      3600, // 1 hour expiry
+      dto.fileSize,
     );
 
     return {
@@ -132,8 +157,12 @@ export class MediaUploadController {
    * Initiate Mux upload for videos
    */
   private async initiateMuxUpload(userId: string, dto: InitiateUploadDto) {
+    // Determine playback policy based on privacy preference
+    // Default to 'signed' (private) for better security posture
+    const playbackPolicy = dto.isPrivate === false ? ['public'] : ['signed'];
+
     const muxResult = await this.muxService.createDirectUpload('*', {
-      playbackPolicy: ['public'],
+      playbackPolicy,
       mp4Support: 'standard',
       normalizeAudio: true,
       maxResolution: 'high',
@@ -147,6 +176,7 @@ export class MediaUploadController {
       fileSize: dto.fileSize,
       contentType: dto.contentType,
       uploadId: muxResult.uploadId,
+      playbackPolicy: playbackPolicy[0],
       status: 'uploading',
     });
 
@@ -170,6 +200,9 @@ export class MediaUploadController {
   ) {
     this.logger.log(`Completing upload for user ${user.id}: ${dto.fileKey}`);
 
+    // Validate file key ownership
+    this.validateFileKeyOwnership(dto.fileKey, user.id);
+
     // Verify file exists in S3
     const exists = await this.s3Service.fileExists(dto.fileKey);
     if (!exists) {
@@ -178,6 +211,38 @@ export class MediaUploadController {
 
     // Get file metadata
     const metadata = await this.s3Service.getFileMetadata(dto.fileKey);
+
+    // Validate file content (magic bytes) to detect malware/polyglot files
+    try {
+      const fileBuffer = await this.s3Service.downloadFileContent(dto.fileKey);
+      const maliciousCheck = this.mediaValidator.checkForMalicious(
+        fileBuffer,
+        dto.fileType,
+      );
+
+      if (!maliciousCheck.safe) {
+        // Delete the malicious file from S3
+        await this.s3Service.deleteFile(dto.fileKey);
+
+        this.logger.error(
+          `Malicious file detected and deleted: ${dto.fileKey} - ${maliciousCheck.reason}`,
+        );
+
+        throw new HttpException(
+          `File rejected for security reasons: ${maliciousCheck.reason}`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    } catch (error) {
+      if (error.response?.statusCode === 400) {
+        throw error; // Re-throw validation errors
+      }
+
+      this.logger.warn(
+        `File content validation failed (non-blocking) for ${dto.fileKey}: ${(error as any)?.message}`,
+      );
+      // For non-validation errors, continue with upload (could be S3 access issues)
+    }
 
     // Generate thumbnail if image
     let thumbnail = null;
@@ -220,6 +285,9 @@ export class MediaUploadController {
       `Completing multipart upload for user ${user.id}: ${dto.fileKey}`,
     );
 
+    // Validate file key ownership
+    this.validateFileKeyOwnership(dto.fileKey, user.id);
+
     // Complete S3 multipart upload
     const result = await this.s3Service.completeMultipartUpload(
       dto.fileKey,
@@ -229,6 +297,38 @@ export class MediaUploadController {
 
     // Get file metadata
     const metadata = await this.s3Service.getFileMetadata(dto.fileKey);
+
+    // Validate file content (magic bytes) to detect malware/polyglot files
+    try {
+      const fileBuffer = await this.s3Service.downloadFileContent(dto.fileKey);
+      const maliciousCheck = this.mediaValidator.checkForMalicious(
+        fileBuffer,
+        dto.fileType,
+      );
+
+      if (!maliciousCheck.safe) {
+        // Delete the malicious file from S3
+        await this.s3Service.deleteFile(dto.fileKey);
+
+        this.logger.error(
+          `Malicious file detected and deleted: ${dto.fileKey} - ${maliciousCheck.reason}`,
+        );
+
+        throw new HttpException(
+          `File rejected for security reasons: ${maliciousCheck.reason}`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    } catch (error) {
+      if (error.response?.statusCode === 400) {
+        throw error; // Re-throw validation errors
+      }
+
+      this.logger.warn(
+        `File content validation failed (non-blocking) for ${dto.fileKey}: ${(error as any)?.message}`,
+      );
+      // For non-validation errors, continue with upload (could be S3 access issues)
+    }
 
     // Generate thumbnail if image
     let thumbnail = null;
@@ -265,6 +365,8 @@ export class MediaUploadController {
     this.logger.log(`Aborting upload for user ${user.id}: ${dto.uploadId}`);
 
     if (dto.uploadType === 'multipart') {
+      // Validate file key ownership
+      this.validateFileKeyOwnership(dto.fileKey, user.id);
       await this.s3Service.abortMultipartUpload(dto.fileKey, dto.uploadId);
     }
 
@@ -389,6 +491,25 @@ export class MediaUploadController {
       expiresIn,
       expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
     };
+  }
+
+  /**
+   * Helper: Validate file key ownership (ensure userId in path matches authenticated user)
+   */
+  private validateFileKeyOwnership(fileKey: string, userId: string): void {
+    // File key format: {contentType}s/{year}/{month}/{userId}/{uuid}-{timestamp}.{ext}
+    const pathParts = fileKey.split('/');
+    if (pathParts.length < 4) {
+      throw new HttpException('Invalid file key format', HttpStatus.BAD_REQUEST);
+    }
+
+    const fileKeyUserId = pathParts[3]; // Extract userId from path
+    if (fileKeyUserId !== userId) {
+      throw new HttpException(
+        'Unauthorized: file key does not match user',
+        HttpStatus.FORBIDDEN,
+      );
+    }
   }
 
   /**

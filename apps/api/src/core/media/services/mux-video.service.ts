@@ -270,14 +270,33 @@ export class MuxVideoService {
     rawBody: string,
     signature: string,
     timestamp: string,
+    maxAgeSeconds: number = 300,
   ): boolean {
     try {
-      return (Mux as any).webhooks.verifyHeader(
+      // First verify the signature
+      const isValid = (Mux as any).webhooks.verifyHeader(
         rawBody,
         signature,
         this.webhookSecret,
         timestamp,
       );
+
+      if (!isValid) {
+        return false;
+      }
+
+      // Then check timestamp freshness (prevent replay attacks)
+      const webhookTime = parseInt(timestamp, 10) * 1000; // Convert to milliseconds
+      const timeDiff = Math.abs(Date.now() - webhookTime);
+
+      if (timeDiff > maxAgeSeconds * 1000) {
+        this.logger.warn(
+          `Webhook timestamp too old: ${(timeDiff / 1000).toFixed(1)}s old (max ${maxAgeSeconds}s)`,
+        );
+        return false;
+      }
+
+      return true;
     } catch (error) {
       this.logger.error('Failed to verify webhook signature', error.stack);
       return false;

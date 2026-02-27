@@ -45,9 +45,11 @@ export class InitiateUploadDto {
     description: 'File size in bytes',
     example: 52428800,
     minimum: 1,
+    maximum: 1073741824, // 1GB
   })
   @IsNumber()
   @Min(1)
+  @Max(1073741824) // 1GB max per file
   fileSize: number;
 
   @ApiProperty({
@@ -57,6 +59,14 @@ export class InitiateUploadDto {
   })
   @IsEnum(ContentType)
   contentType: ContentType;
+
+  @ApiProperty({
+    description: 'Whether media should be private (signed URL access) or public',
+    example: false,
+    required: false,
+  })
+  @IsOptional()
+  isPrivate?: boolean;
 }
 
 /**
@@ -262,6 +272,7 @@ export interface CreateMediaRecordDto {
   thumbnailKey?: string;
   muxAssetId?: string;
   muxPlaybackId?: string;
+  playbackPolicy?: string; // 'public' or 'signed' for Mux
   status: string;
 }
 
@@ -272,6 +283,7 @@ export interface UpdateMediaMuxDataDto {
   muxAssetId: string;
   muxPlaybackId: string;
   playbackUrl: string;
+  playbackPolicy?: string; // 'public' or 'signed'
   thumbnailUrl?: string;
   thumbnailKey?: string;
   duration?: number;

@@ -1,0 +1,12 @@
+{
+  "Rules": [
+    {
+      "Id": "AbortIncompleteMultipartUploads",
+      "Description": "Abort incomplete multipart uploads after 24 hours to prevent storage charges",
+      "Status": "Enabled",
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 1
+      }
+    }
+  ]
+}

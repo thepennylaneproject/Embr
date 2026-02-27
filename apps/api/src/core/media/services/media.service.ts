@@ -190,19 +190,26 @@ export class MediaService {
    */
   async updateMediaWithMuxData(mediaId: string, dto: UpdateMediaMuxDataDto) {
     try {
+      const updateData: any = {
+        muxAssetId: dto.muxAssetId,
+        muxPlaybackId: dto.muxPlaybackId,
+        playbackUrl: dto.playbackUrl,
+        thumbnailUrl: dto.thumbnailUrl,
+        thumbnailKey: dto.thumbnailKey,
+        duration: dto.duration,
+        aspectRatio: dto.aspectRatio,
+        status: dto.status,
+        completedAt: dto.completedAt,
+      };
+
+      // Include playbackPolicy if provided
+      if (dto.playbackPolicy) {
+        updateData.playbackPolicy = dto.playbackPolicy;
+      }
+
       const media = await this.prisma.media.update({
         where: { id: mediaId },
-        data: {
-          muxAssetId: dto.muxAssetId,
-          muxPlaybackId: dto.muxPlaybackId,
-          playbackUrl: dto.playbackUrl,
-          thumbnailUrl: dto.thumbnailUrl,
-          thumbnailKey: dto.thumbnailKey,
-          duration: dto.duration,
-          aspectRatio: dto.aspectRatio,
-          status: dto.status,
-          completedAt: dto.completedAt,
-        },
+        data: updateData,
       });
 
       this.logger.log(`Updated media ${mediaId} with Mux data`);
@@ -389,5 +396,44 @@ export class MediaService {
       orderBy: { createdAt: 'desc' },
       take: limit,
     });
+  }
+
+  /**
+   * Check if webhook event has already been processed
+   */
+  async webhookEventProcessed(eventId: string): Promise<boolean> {
+    const processed = await this.prisma.webhookEvent.findUnique({
+      where: { eventId },
+    });
+    return !!processed;
+  }
+
+  /**
+   * Mark webhook event as processed
+   */
+  async markWebhookEventProcessed(
+    eventId: string,
+    eventType: string,
+    sourceId: string,
+  ): Promise<void> {
+    try {
+      await this.prisma.webhookEvent.create({
+        data: {
+          eventId,
+          eventType,
+          sourceId,
+          processedAt: new Date(),
+        },
+      });
+
+      this.logger.log(`Marked webhook event ${eventId} as processed`);
+    } catch (error) {
+      // If unique constraint violation, it's already been processed
+      if (error.code === 'P2002') {
+        this.logger.debug(`Webhook event ${eventId} already marked as processed`);
+        return;
+      }
+      throw error;
+    }
   }
 }
