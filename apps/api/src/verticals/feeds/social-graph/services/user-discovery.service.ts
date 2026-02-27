@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
-import { 
-  SearchUsersDto, 
-  GetRecommendedUsersDto, 
+import { BlockingService } from '../../../core/safety/services/blocking.service';
+import {
+  SearchUsersDto,
+  GetRecommendedUsersDto,
   GetTrendingCreatorsDto,
   SimilarUsersDto
 } from '../dto/discovery.dto';
@@ -17,28 +18,50 @@ interface SearchRankingFactors {
 
 @Injectable()
 export class UserDiscoveryService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private blockingService: BlockingService,
+  ) {}
 
   /**
    * Search users with filters and relevance ranking
    */
   async searchUsers(currentUserId: string | null, dto: SearchUsersDto) {
-    const { 
-      query, 
-      location, 
-      skills, 
-      availability, 
-      verified, 
-      sortBy, 
-      page = 1, 
-      limit = 20 
+    const {
+      query,
+      location,
+      skills,
+      availability,
+      verified,
+      sortBy,
+      page = 1,
+      limit = 20
     } = dto;
 
     const skip = (page - 1) * limit;
 
+    // Get blocked user IDs to exclude from results
+    let blockedUserIds: string[] = [];
+    if (currentUserId) {
+      const blocked = await this.prisma.blockedUser.findMany({
+        where: {
+          OR: [
+            { blockerId: currentUserId },
+            { blockedId: currentUserId },
+          ],
+        },
+        select: {
+          blockerId: true,
+          blockedId: true,
+        },
+      });
+      blockedUserIds = blocked.flatMap(b => [b.blockerId, b.blockedId]);
+    }
+
     // Build where clause
     const where: any = {
       deletedAt: null,
+      id: { notIn: blockedUserIds },
     };
 
     // Text search on username, full name, bio
@@ -282,9 +305,27 @@ export class UserDiscoveryService {
       return this.getGeneralRecommendations(userId, limit);
     }
 
+    // Get blocked user IDs to exclude
+    const blocked = await this.prisma.blockedUser.findMany({
+      where: {
+        OR: [
+          { blockerId: userId },
+          { blockedId: userId },
+        ],
+      },
+      select: {
+        blockerId: true,
+        blockedId: true,
+      },
+    });
+    const blockedUserIds = blocked.flatMap(b => [b.blockerId, b.blockedId]);
+
     const users = await this.prisma.user.findMany({
       where: {
-        id: { not: userId },
+        id: {
+          not: userId,
+          notIn: blockedUserIds,
+        },
         profile: {
           skills: {
             hasSome: currentUser.profile.skills,
@@ -340,10 +381,11 @@ export class UserDiscoveryService {
 
   /**
    * Get users through mutual connections
+   * Excludes blocked users
    */
   private async getMutualConnectionUsers(userId: string, limit: number) {
     const suggestions = await this.prisma.$queryRaw<any[]>`
-      SELECT 
+      SELECT
         u.id,
         u.username,
         u.isVerified,
@@ -360,9 +402,14 @@ export class UserDiscoveryService {
       AND f2.follower_id != ${userId}
       AND u.id != ${userId}
       AND NOT EXISTS (
-        SELECT 1 FROM follows 
-        WHERE follower_id = ${userId} 
+        SELECT 1 FROM follows
+        WHERE follower_id = ${userId}
         AND following_id = u.id
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM blocked_users
+        WHERE (blocker_id = ${userId} AND blocked_id = u.id)
+           OR (blocker_id = u.id AND blocked_id = ${userId})
       )
       GROUP BY u.id, u.username, u.isVerified, p.avatar_url, p.full_name, p.bio, p.follower_count
       ORDER BY mutual_count DESC, p.follower_count DESC
@@ -387,9 +434,27 @@ export class UserDiscoveryService {
   /**
    * Get currently trending users
    */
-  private async getTrendingUsers(limit: number) {
+  private async getTrendingUsers(limit: number, currentUserId?: string) {
     // Users with high engagement in the last 7 days
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    // Get blocked user IDs to exclude (if userId provided)
+    let blockedUserIds: string[] = [];
+    if (currentUserId) {
+      const blocked = await this.prisma.blockedUser.findMany({
+        where: {
+          OR: [
+            { blockerId: currentUserId },
+            { blockedId: currentUserId },
+          ],
+        },
+        select: {
+          blockerId: true,
+          blockedId: true,
+        },
+      });
+      blockedUserIds = blocked.flatMap(b => [b.blockerId, b.blockedId]);
+    }
 
     const trending = await this.prisma.user.findMany({
       where: {
@@ -398,6 +463,7 @@ export class UserDiscoveryService {
             createdAt: { gte: sevenDaysAgo },
           },
         },
+        id: { notIn: blockedUserIds },
       },
       take: limit * 2,
       include: {
@@ -456,7 +522,7 @@ export class UserDiscoveryService {
     const [similar, mutual, trending] = await Promise.all([
       this.getSimilarInterestUsers(userId, Math.ceil(limit / 3)),
       this.getMutualConnectionUsers(userId, Math.ceil(limit / 3)),
-      this.getTrendingUsers(Math.ceil(limit / 3)),
+      this.getTrendingUsers(Math.ceil(limit / 3), userId),
     ]);
 
     recommendations.push(...similar, ...mutual, ...trending);
@@ -480,8 +546,9 @@ export class UserDiscoveryService {
 
   /**
    * Get trending creators with filters
+   * Excludes blocked users if currentUserId is provided
    */
-  async getTrendingCreators(dto: GetTrendingCreatorsDto) {
+  async getTrendingCreators(currentUserId: string | null, dto: GetTrendingCreatorsDto) {
     const { timeframe = 'week', category, limit = 20 } = dto;
 
     const timeMap = {
@@ -492,12 +559,31 @@ export class UserDiscoveryService {
     const days = timeMap[timeframe];
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
+    // Get blocked user IDs to exclude
+    let blockedUserIds: string[] = [];
+    if (currentUserId) {
+      const blocked = await this.prisma.blockedUser.findMany({
+        where: {
+          OR: [
+            { blockerId: currentUserId },
+            { blockedId: currentUserId },
+          ],
+        },
+        select: {
+          blockerId: true,
+          blockedId: true,
+        },
+      });
+      blockedUserIds = blocked.flatMap(b => [b.blockerId, b.blockedId]);
+    }
+
     const where: any = {
       posts: {
         some: {
           createdAt: { gte: startDate },
         },
       },
+      id: { notIn: blockedUserIds },
     };
 
     if (category) {

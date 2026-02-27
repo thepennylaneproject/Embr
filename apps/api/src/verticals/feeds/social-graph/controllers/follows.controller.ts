@@ -1,17 +1,18 @@
-import { 
-  Controller, 
-  Post, 
-  Delete, 
-  Get, 
-  Param, 
-  Body, 
+import {
+  Controller,
+  Post,
+  Delete,
+  Get,
+  Param,
+  Body,
   Query,
-  UseGuards, 
+  UseGuards,
   Request,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../../../core/auth/guards/optional-jwt-auth.guard';
 import { FollowsService } from '../services/follows.service';
 import { 
   FollowUserDto, 
@@ -49,22 +50,28 @@ export class FollowsController {
    * GET /follows/followers/:userId - Get user's followers
    */
   @Get('followers/:userId')
+  @UseGuards(OptionalJwtAuthGuard)
   async getFollowers(
     @Param('userId') userId: string,
-    @Query() dto: GetFollowersDto
+    @Query() dto: GetFollowersDto,
+    @Request() req
   ) {
-    return this.followsService.getFollowers(userId, dto);
+    const requesterId = req.user?.id || null;
+    return this.followsService.getFollowers(userId, requesterId, dto);
   }
 
   /**
    * GET /follows/following/:userId - Get users that user is following
    */
   @Get('following/:userId')
+  @UseGuards(OptionalJwtAuthGuard)
   async getFollowing(
     @Param('userId') userId: string,
-    @Query() dto: GetFollowingDto
+    @Query() dto: GetFollowingDto,
+    @Request() req
   ) {
-    return this.followsService.getFollowing(userId, dto);
+    const requesterId = req.user?.id || null;
+    return this.followsService.getFollowing(userId, requesterId, dto);
   }
 
   /**
