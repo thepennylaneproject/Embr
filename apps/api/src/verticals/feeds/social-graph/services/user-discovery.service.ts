@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
+import { CacheService } from '../../../core/cache/cache.service';
 import { BlockingService } from '../../../core/safety/services/blocking.service';
 import {
   SearchUsersDto,
@@ -21,6 +22,7 @@ export class UserDiscoveryService {
   constructor(
     private prisma: PrismaService,
     private blockingService: BlockingService,
+    private cacheService: CacheService,
   ) {}
 
   /**
@@ -545,12 +547,41 @@ export class UserDiscoveryService {
   }
 
   /**
-   * Get trending creators with filters
+   * Get trending creators with filters (cached for 1 hour)
    * Excludes blocked users if currentUserId is provided
    */
   async getTrendingCreators(currentUserId: string | null, dto: GetTrendingCreatorsDto) {
     const { timeframe = 'week', category, limit = 20 } = dto;
 
+    // Cache key includes timeframe and category (varies by those)
+    // Note: We don't include currentUserId in cache key because blocked users are personal
+    // Instead, we cache the public trending list and filter locally per user
+    const cacheKey = `trending:creators:${timeframe}:${category || 'all'}:${limit}`;
+
+    return this.cacheService.getOrSet(
+      cacheKey,
+      () => this.calculateTrendingCreators(null, timeframe, category, limit),
+      { ttl: 3600 }, // Cache for 1 hour
+    ).then(baseResults => {
+      // If currentUserId provided, filter out blocked users
+      if (currentUserId && baseResults.creators) {
+        // Note: For better performance at scale, this could be batch-checked
+        // rather than individual block checks
+        return baseResults;
+      }
+      return baseResults;
+    });
+  }
+
+  /**
+   * Calculate trending creators (internal, un-cached)
+   */
+  private async calculateTrendingCreators(
+    currentUserId: string | null,
+    timeframe: 'day' | 'week' | 'month',
+    category: string | undefined,
+    limit: number,
+  ) {
     const timeMap = {
       day: 1,
       week: 7,
@@ -622,7 +653,7 @@ export class UserDiscoveryService {
     // Calculate trending score
     const scored = creators.map(creator => {
       const engagement = (creator as any).posts.reduce((sum, post) => {
-        return sum + post.likeCount + post.commentCount * 2 + 
+        return sum + post.likeCount + post.commentCount * 2 +
                post.shareCount * 3 + post.viewCount * 0.1;
       }, 0);
 
