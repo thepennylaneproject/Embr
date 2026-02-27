@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { CacheService } from '../../../core/cache/cache.service';
 import { BlockingService } from '../../../core/safety/services/blocking.service';
@@ -19,6 +19,8 @@ interface SearchRankingFactors {
 
 @Injectable()
 export class UserDiscoveryService {
+  private readonly logger = new Logger(UserDiscoveryService.name);
+
   constructor(
     private prisma: PrismaService,
     private blockingService: BlockingService,
@@ -169,6 +171,16 @@ export class UserDiscoveryService {
         },
       });
       followStatuses = new Map(follows.map(f => [f.followingId, true]));
+    }
+
+    // Audit log user searches with filters
+    const filters = { query, location, skills, availability, verified, sortBy };
+    const hasFilters = Object.values(filters).some(v => v);
+    if (query || hasFilters) {
+      this.logger.log(
+        `User ${currentUserId || 'anonymous'} searched with filters: ${JSON.stringify(filters)}, found ${total} results`,
+        'USER_SEARCH',
+      );
     }
 
     return {
@@ -726,11 +738,14 @@ export class UserDiscoveryService {
             createdAt: { gte: startDate },
           },
           select: {
+            id: true,
             likeCount: true,
             commentCount: true,
             shareCount: true,
             viewCount: true,
+            createdAt: true,
           },
+          orderBy: { createdAt: 'desc' },
         },
         _count: {
           select: {
@@ -741,18 +756,49 @@ export class UserDiscoveryService {
       },
     }) as any);
 
-    // Calculate trending score
+    // Calculate trending score with time decay and fraud detection
     const scored = creators.map(creator => {
-      const engagement = (creator as any).posts.reduce((sum, post) => {
-        return sum + post.likeCount + post.commentCount * 2 +
-               post.shareCount * 3 + post.viewCount * 0.1;
-      }, 0);
+      const posts = (creator as any).posts;
+      let totalEngagement = 0;
+      let timeDecayScore = 0;
+
+      // Calculate engagement with time decay (recent posts weighted more)
+      posts.forEach((post) => {
+        const engagement = post.likeCount + post.commentCount * 2 + post.shareCount * 3 + post.viewCount * 0.1;
+        const ageInDays = (Date.now() - new Date(post.createdAt).getTime()) / (24 * 60 * 60 * 1000);
+        const decayFactor = Math.pow(0.95, ageInDays); // 5% decay per day
+        timeDecayScore += engagement * decayFactor;
+        totalEngagement += engagement;
+      });
+
+      // Fraud detection: flag suspicious engagement patterns
+      let fraudPenalty = 0;
+      if (posts.length > 0) {
+        // Detect engagement spikes (all engagement in 1-2 posts)
+        const avgEngagementPerPost = totalEngagement / posts.length;
+        const highEngagementPosts = posts.filter(p => (p.likeCount + p.commentCount * 2 + p.shareCount * 3) > avgEngagementPerPost * 5).length;
+        if (highEngagementPosts === posts.length && posts.length <= 2) {
+          fraudPenalty = 0.5; // 50% penalty for all engagement in few posts
+        }
+
+        // Detect ratio anomalies (comment/like ratio too high)
+        const avgLikesPerPost = posts.reduce((sum, p) => sum + p.likeCount, 0) / posts.length;
+        const avgCommentsPerPost = posts.reduce((sum, p) => sum + p.commentCount, 0) / posts.length;
+        if (avgCommentsPerPost > avgLikesPerPost * 0.5 && avgLikesPerPost < 10) {
+          fraudPenalty = Math.max(fraudPenalty, 0.3); // 30% penalty for unusual ratio
+        }
+      }
 
       // Normalize by follower count to give smaller creators a chance
-      const engagementRate = engagement / Math.max((creator as any)._count.followers, 100);
-      const score = engagement + engagementRate * 100;
+      const engagementRate = timeDecayScore / Math.max((creator as any)._count.followers, 100);
+      const score = (timeDecayScore + engagementRate * 100) * (1 - fraudPenalty);
 
-      return { creator, score, engagement };
+      return {
+        creator,
+        score,
+        engagement: timeDecayScore,
+        fraudFlags: fraudPenalty > 0 ? fraudPenalty : 0,
+      };
     });
 
     scored.sort((a, b) => b.score - a.score);
@@ -776,6 +822,21 @@ export class UserDiscoveryService {
       timeframe,
       category: category || 'all',
     };
+  }
+
+  /**
+   * Get creator's current account age (for minimum age filtering)
+   */
+  private async getCreatorAccountAge(userId: string): Promise<number> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { createdAt: true },
+    });
+
+    if (!user) return 0;
+
+    const ageInDays = (Date.now() - new Date(user.createdAt).getTime()) / (24 * 60 * 60 * 1000);
+    return ageInDays;
   }
 
   /**

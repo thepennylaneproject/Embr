@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { BlockingService } from '../../../core/safety/services/blocking.service';
 import {
@@ -12,6 +12,8 @@ import {
 
 @Injectable()
 export class FollowsService {
+  private readonly logger = new Logger(FollowsService.name);
+
   constructor(
     private prisma: PrismaService,
     private blockingService: BlockingService,
@@ -82,6 +84,12 @@ export class FollowsService {
       }),
     ]);
 
+    // Audit log successful follow
+    this.logger.log(
+      `User ${followerId} followed user ${dto.followingId}`,
+      'FOLLOW_ACTION',
+    );
+
     // Create notification for followed user
     await this.prisma.notification.create({
       data: {
@@ -145,6 +153,12 @@ export class FollowsService {
         data: { followerCount: { decrement: 1 } },
       }),
     ]);
+
+    // Audit log successful unfollow
+    this.logger.log(
+      `User ${followerId} unfollowed user ${followingId}`,
+      'UNFOLLOW_ACTION',
+    );
 
     return { message: 'Successfully unfollowed user' };
   }
