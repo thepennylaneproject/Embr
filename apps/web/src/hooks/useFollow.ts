@@ -9,39 +9,63 @@ export const useFollow = (userId?: string) => {
   const [followerCount, setFollowerCount] = useState<number>(0);
   const [followingCount, setFollowingCount] = useState<number>(0);
 
-  // Follow a user
+  // Follow a user (optimistic update with rollback on failure)
   const follow = useCallback(async (targetUserId: string) => {
+    // Save previous state for rollback
+    const previousIsFollowing = isFollowing;
+    const previousFollowerCount = followerCount;
+
+    // Optimistic update
     setLoading(true);
     setError(null);
+    setIsFollowing(true);
+    setFollowerCount(prev => prev + 1);
+
     try {
       await socialApi.followUser(targetUserId);
-      setIsFollowing(true);
-      setFollowerCount(prev => prev + 1);
       return true;
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to follow user');
+      // Rollback on failure
+      setIsFollowing(previousIsFollowing);
+      setFollowerCount(previousFollowerCount);
+
+      const errorMsg = err.response?.data?.message || 'Failed to follow user';
+      setError(errorMsg);
+      console.error('Follow error:', errorMsg, err);
       return false;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isFollowing, followerCount]);
 
-  // Unfollow a user
+  // Unfollow a user (optimistic update with rollback on failure)
   const unfollow = useCallback(async (targetUserId: string) => {
+    // Save previous state for rollback
+    const previousIsFollowing = isFollowing;
+    const previousFollowerCount = followerCount;
+
+    // Optimistic update
     setLoading(true);
     setError(null);
+    setIsFollowing(false);
+    setFollowerCount(prev => Math.max(0, prev - 1));
+
     try {
       await socialApi.unfollowUser(targetUserId);
-      setIsFollowing(false);
-      setFollowerCount(prev => Math.max(0, prev - 1));
       return true;
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to unfollow user');
+      // Rollback on failure
+      setIsFollowing(previousIsFollowing);
+      setFollowerCount(previousFollowerCount);
+
+      const errorMsg = err.response?.data?.message || 'Failed to unfollow user';
+      setError(errorMsg);
+      console.error('Unfollow error:', errorMsg, err);
       return false;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isFollowing, followerCount]);
 
   // Toggle follow status
   const toggleFollow = useCallback(async (targetUserId: string) => {

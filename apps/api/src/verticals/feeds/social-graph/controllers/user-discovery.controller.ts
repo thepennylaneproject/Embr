@@ -1,10 +1,11 @@
-import { 
-  Controller, 
-  Get, 
+import {
+  Controller,
+  Get,
   Query,
-  UseGuards, 
+  UseGuards,
   Request,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../../../core/auth/guards/optional-jwt-auth.guard';
 import { UserDiscoveryService } from '../services/user-discovery.service';
@@ -22,9 +23,11 @@ export class UserDiscoveryController {
   /**
    * GET /discovery/search - Search for users
    * Accessible to both authenticated and unauthenticated users
+   * Rate limited: 60 requests per 15 minutes (prevents user enumeration)
    */
   @Get('search')
   @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 60, ttl: 900000 } })
   async searchUsers(@Request() req, @Query() dto: SearchUsersDto) {
     const userId = req.user?.id || null;
     return this.discoveryService.searchUsers(userId, dto);
@@ -33,9 +36,11 @@ export class UserDiscoveryController {
   /**
    * GET /discovery/recommended - Get personalized user recommendations
    * Requires authentication
+   * Rate limited: 30 requests per 15 minutes (per-user cache friendly)
    */
   @Get('recommended')
   @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 30, ttl: 900000 } })
   async getRecommendedUsers(@Request() req, @Query() dto: GetRecommendedUsersDto) {
     return this.discoveryService.getRecommendedUsers(req.user.id, dto);
   }
@@ -43,19 +48,24 @@ export class UserDiscoveryController {
   /**
    * GET /discovery/trending - Get trending creators
    * Accessible to both authenticated and unauthenticated users
+   * Rate limited: 30 requests per 15 minutes (cached server-side, safe limit)
    */
   @Get('trending')
   @UseGuards(OptionalJwtAuthGuard)
-  async getTrendingCreators(@Query() dto: GetTrendingCreatorsDto) {
-    return this.discoveryService.getTrendingCreators(dto);
+  @Throttle({ default: { limit: 30, ttl: 900000 } })
+  async getTrendingCreators(@Request() req, @Query() dto: GetTrendingCreatorsDto) {
+    const userId = req.user?.id || null;
+    return this.discoveryService.getTrendingCreators(userId, dto);
   }
 
   /**
    * GET /discovery/similar - Get users similar to current user
    * Requires authentication
+   * Rate limited: 20 requests per 15 minutes (conservative, expensive computation)
    */
   @Get('similar')
   @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 20, ttl: 900000 } })
   async getSimilarUsers(@Request() req, @Query() dto: SimilarUsersDto) {
     return this.discoveryService.getSimilarUsers(req.user.id, dto);
   }
