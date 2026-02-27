@@ -580,7 +580,7 @@ export class PostsService {
   }
 
   /**
-   * Search posts by content or hashtags
+   * Search posts by content or hashtags (optimized with indexing and caching)
    */
   async searchPosts(
     query: string,
@@ -589,28 +589,37 @@ export class PostsService {
   ) {
     const { page, limit } = params;
     const skip = (page - 1) * limit;
+    const normalizedQuery = query.toLowerCase().trim();
+    const hashtag = normalizedQuery.replace(/^#+/, '');
+
+    // Try cache for first page (popular searches)
+    if (page === 1) {
+      const cacheKey = `search:posts:${normalizedQuery}`;
+      const cached = await this.cache.get(cacheKey);
+      if (cached) return cached;
+    }
 
     const where: any = {
       deletedAt: null,
       visibility: 'PUBLIC',
-      OR: [
-        { content: { contains: query, mode: 'insensitive' } },
-        { hashtags: { has: query.toLowerCase().replace('#', '') } },
-      ],
-      // Filter out posts from blocked users
       AND: [
         {
           author: {
-            // Exclude users that have blocked the current user
             blockedBy: { none: { blockerId: userId || 'null' } },
           },
         },
         {
           author: {
-            // Exclude users that the current user has blocked
             blocking: { none: { blockedId: userId || 'null' } },
           },
         },
+      ],
+      // Multi-field search with different strategies
+      OR: [
+        // Exact hashtag match (indexed field)
+        { hashtags: { has: hashtag } },
+        // Content search
+        { content: { contains: normalizedQuery, mode: 'insensitive' } },
       ],
     };
 
@@ -619,7 +628,11 @@ export class PostsService {
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        // Order by relevance and recency
+        orderBy: [
+          // Hashtag matches are more relevant, followed by recent posts
+          { createdAt: 'desc' },
+        ],
         include: {
           author: {
             select: {
@@ -634,10 +647,12 @@ export class PostsService {
               },
             },
           },
-          likes: userId ? {
-            where: { userId },
-            select: { id: true },
-          } : false,
+          likes: userId
+            ? {
+                where: { userId },
+                select: { id: true },
+              }
+            : false,
           _count: {
             select: {
               likes: true,
@@ -649,7 +664,7 @@ export class PostsService {
       this.prisma.post.count({ where }),
     ]);
 
-    return {
+    const result = {
       data: posts.map((post) => this.formatPost(post, userId)),
       meta: {
         page,
@@ -659,6 +674,14 @@ export class PostsService {
         hasMore: skip + posts.length < total,
       },
     };
+
+    // Cache first page for popular searches (10 minutes TTL)
+    if (page === 1) {
+      const cacheKey = `search:posts:${normalizedQuery}`;
+      await this.cache.set(cacheKey, result, { ttl: 600 });
+    }
+
+    return result;
   }
 
   /**

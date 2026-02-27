@@ -155,13 +155,14 @@ model RefreshToken {
 }
 
 model PasswordResetToken {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String
-  isUsed    Boolean  @default(false)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token      String
+  isUsed     Boolean  @default(false)
+  isVerified Boolean  @default(false) // Flag to distinguish verification vs reset tokens
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
 
   @@index([userId])
 }
@@ -229,6 +230,30 @@ model Post {
   @@index([visibility])
   @@index([createdAt])
   @@index([deletedAt])
+  @@fulltext([content]) // PostgreSQL full-text search index
+}
+
+model ScheduledPost {
+  id            String   @id @default(uuid())
+  authorId      String
+  author        User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content       String
+  type          PostType @default(TEXT)
+  mediaUrl      String?
+  thumbnailUrl  String?
+  visibility    PostVisibility @default(PUBLIC)
+  hashtags      String[]
+  mentions      String[]
+  status        String   @default("PENDING") // PENDING, PUBLISHED, FAILED, CANCELLED
+  scheduledFor  DateTime // When the post should be published
+  publishedAt   DateTime? // When the post was actually published
+  errorMessage  String?  // If status is FAILED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([authorId])
+  @@index([scheduledFor])
+  @@index([status])
 }
 
 model Comment {

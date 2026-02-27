@@ -355,29 +355,94 @@ export class AuthService {
   // PASSWORD MANAGEMENT
   // =====================
 
-  async forgotPassword(email: string): Promise<void> {
+  async forgotPassword(email: string): Promise<{ message: string }> {
     const user = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user) {
       // Don't reveal if user exists
-      return;
+      return { message: 'If that email is in our system, you will receive a verification code.' };
     }
 
-    // Generate reset token
-    const resetToken = randomBytes(32).toString('hex');
-    const hashedToken = await bcrypt.hash(resetToken, 10);
+    // Generate email verification code (6 digits)
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedCode = await bcrypt.hash(verificationCode, 10);
 
-    // Store token
+    // Create verification code token with short TTL (10 minutes)
     await this.prisma.passwordResetToken.create({
       data: {
         userId: user.id,
-        token: hashedToken,
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+        token: hashedCode,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+        isVerified: false, // Add flag to track if this is just verification
       },
     });
 
-    // Send email
-    await this.emailService.sendPasswordResetEmail(user.email, resetToken);
+    // Send verification code via email
+    await this.emailService.sendPasswordResetVerificationEmail(user.email, verificationCode);
+
+    return { message: 'Verification code sent to your email. Please verify to proceed with password reset.' };
+  }
+
+  /**
+   * Verify the email verification code sent during password reset
+   * Returns a temporary reset token that can be used to actually reset the password
+   */
+  async verifyPasswordResetEmail(
+    email: string,
+    verificationCode: string,
+  ): Promise<{ resetToken: string }> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      throw new BadRequestException('Invalid verification code');
+    }
+
+    // Find verification code token
+    const verificationTokens = await this.prisma.passwordResetToken.findMany({
+      where: {
+        userId: user.id,
+        isUsed: false,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+
+    let matchedToken: (typeof verificationTokens)[number] | null = null;
+
+    for (const token of verificationTokens) {
+      const isMatch = await bcrypt.compare(verificationCode, token.token);
+      if (isMatch) {
+        matchedToken = token;
+        break;
+      }
+    }
+
+    if (!matchedToken) {
+      throw new BadRequestException('Invalid or expired verification code');
+    }
+
+    // Mark verification token as used
+    await this.prisma.passwordResetToken.update({
+      where: { id: matchedToken.id },
+      data: { isUsed: true, isVerified: true },
+    });
+
+    // Generate actual password reset token (longer TTL - 1 hour)
+    const resetToken = randomBytes(32).toString('hex');
+    const hashedResetToken = await bcrypt.hash(resetToken, 10);
+
+    // Create actual reset token
+    await this.prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        token: hashedResetToken,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+        isVerified: true, // This is the actual reset token
+      },
+    });
+
+    return { resetToken };
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {

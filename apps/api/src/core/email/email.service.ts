@@ -122,9 +122,44 @@ export class EmailService {
   /**
    * Send password reset email
    */
+  async sendPasswordResetVerificationEmail(email: string, verificationCode: string): Promise<void> {
+    await this.sendEmail({
+      to: email,
+      subject: 'Verify Your Email to Reset Password',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .code { font-size: 32px; font-weight: bold; color: #FF6B35; text-align: center; letter-spacing: 5px; padding: 20px; background: #f5f5f5; border-radius: 6px; margin: 20px 0; }
+            .button { display: inline-block; background: #FF6B35; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            .footer { margin-top: 40px; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Verify Your Email</h1>
+            <p>To reset your Embr password, please verify your email address using this code:</p>
+            <div class="code">${verificationCode}</div>
+            <p>Or enter this code in the password reset form.</p>
+            <p>This code will expire in 10 minutes for security reasons.</p>
+            <p>If you didn't request this, you can safely ignore this email.</p>
+            <div class="footer">
+              <p>&copy; ${new Date().getFullYear()} Embr. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `Your email verification code is: ${verificationCode}\n\nThis code expires in 10 minutes. If you didn't request this, ignore this email.`,
+    });
+  }
+
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
     const resetUrl = `${this.configService.get('APP_URL', 'http://localhost:3004')}/auth/reset-password?token=${resetToken}`;
-    
+
     await this.sendEmail({
       to: email,
       subject: 'Reset Your Embr Password',
@@ -142,7 +177,7 @@ export class EmailService {
         <body>
           <div class="container">
             <h1>Reset Your Password</h1>
-            <p>We received a request to reset your Embr password. Click the button below to create a new password:</p>
+            <p>Your email has been verified. Click the button below to create a new password:</p>
             <a href="${resetUrl}" class="button">Reset Password</a>
             <p>This link will expire in 1 hour for security reasons.</p>
             <p>If you didn't request this, you can safely ignore this email.</p>
