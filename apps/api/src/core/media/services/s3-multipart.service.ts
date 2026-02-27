@@ -80,10 +80,15 @@ export class S3MultipartService {
     fileType: string,
     contentType: 'image' | 'video' | 'document',
     userId: string,
-    expiresIn: number = 3600,
+    fileSize: number,
   ): Promise<PresignedUploadResult> {
     const fileExtension = fileName.split('.').pop();
     const fileKey = this.generateFileKey(userId, contentType, fileExtension);
+
+    // Calculate dynamic expiry based on file size
+    // Assume ~10 Mbps upload speed, add 5 min buffer for retries
+    const estimatedUploadSeconds = Math.max(300, fileSize / (10 * 1024 * 1024));
+    const expiresIn = Math.min(estimatedUploadSeconds + 300, 900); // Max 15 minutes
 
     const command = new PutObjectCommand({
       Bucket: this.bucket,
@@ -93,7 +98,7 @@ export class S3MultipartService {
 
     const uploadUrl = await getSignedUrl(this.s3Client, command, { expiresIn });
 
-    this.logger.log(`Generated presigned URL for ${fileKey}`);
+    this.logger.log(`Generated presigned URL for ${fileKey} (expires in ${expiresIn}s)`);
 
     return {
       uploadId: uuidv4(),
@@ -150,8 +155,14 @@ export class S3MultipartService {
     fileKey: string,
     uploadId: string,
     totalParts: number,
-    expiresIn: number = 3600,
+    fileSize: number,
   ): Promise<PresignedPartUrls> {
+    // Calculate dynamic expiry based on total file size
+    // Assume ~10 Mbps upload speed for each part (serial)
+    // Add 5 min buffer per part (network delays, retries)
+    const estimatedUploadSeconds = Math.max(300, fileSize / (10 * 1024 * 1024));
+    const expiresIn = Math.min(estimatedUploadSeconds + 600, 3600); // Max 1 hour for multipart
+
     const partUrls: { partNumber: number; url: string }[] = [];
 
     for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
@@ -166,7 +177,9 @@ export class S3MultipartService {
       partUrls.push({ partNumber, url });
     }
 
-    this.logger.log(`Generated ${totalParts} presigned part URLs for ${fileKey}`);
+    this.logger.log(
+      `Generated ${totalParts} presigned part URLs for ${fileKey} (expires in ${expiresIn}s)`,
+    );
 
     return {
       uploadId,

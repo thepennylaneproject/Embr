@@ -61,6 +61,27 @@ export class MediaUploadController {
     // Validate file type
     this.validateFileType(dto.fileType, dto.contentType);
 
+    // Check user upload quota
+    const userStats = await this.mediaService.getMediaStats(user.id);
+    const uploadQuota = 100 * 1024 * 1024 * 1024; // 100GB per user (configurable)
+    const totalAfterUpload = userStats.totalSize + dto.fileSize;
+
+    if (totalAfterUpload > uploadQuota) {
+      const usedGB = (userStats.totalSize / 1024 / 1024 / 1024).toFixed(2);
+      const quotaGB = (uploadQuota / 1024 / 1024 / 1024).toFixed(0);
+      const requestGB = (dto.fileSize / 1024 / 1024 / 1024).toFixed(2);
+
+      this.logger.warn(
+        `Upload quota exceeded for user ${user.id}: ${usedGB}GB used, requesting ${requestGB}GB, quota ${quotaGB}GB`,
+      );
+
+      throw new HttpException(
+        `Upload would exceed quota. You have used ${usedGB}GB of ${quotaGB}GB. ` +
+        `This upload is ${requestGB}GB. Please delete some media or upgrade your plan.`,
+        HttpStatus.PAYLOAD_TOO_LARGE,
+      );
+    }
+
     // Determine if multipart upload is needed
     const useMultipart = this.s3Service.shouldUseMultipart(dto.fileSize);
 
@@ -85,7 +106,7 @@ export class MediaUploadController {
       dto.fileType,
       dto.contentType,
       userId,
-      3600, // 1 hour expiry
+      dto.fileSize,
     );
 
     return {
@@ -117,7 +138,7 @@ export class MediaUploadController {
       multipartResult.fileKey,
       multipartResult.uploadId,
       multipartResult.totalParts,
-      3600, // 1 hour expiry
+      dto.fileSize,
     );
 
     return {
