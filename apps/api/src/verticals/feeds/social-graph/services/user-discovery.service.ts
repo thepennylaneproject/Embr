@@ -146,12 +146,14 @@ export class UserDiscoveryService {
     // If sorting by engagement, calculate scores and re-sort
     let rankedUsers = users;
     if (sortBy === 'engagement' || sortBy === 'relevance') {
-      const usersWithScores = await Promise.all(
-        users.map(async (user) => {
-          const score = await this.calculateUserRelevanceScore(user, currentUserId);
-          return { user, score };
-        })
-      );
+      // Batch-load engagement metrics for all users (fixes N+1 problem)
+      const engagementMetrics = await this.batchLoadEngagementMetrics(users.map(u => u.id));
+
+      const usersWithScores = users.map((user) => {
+        const metrics = engagementMetrics.get(user.id) || { avgEngagement: 0 };
+        const score = this.calculateUserRelevanceScoreSynchronous(user, metrics);
+        return { user, score };
+      });
 
       usersWithScores.sort((a, b) => b.score - a.score);
       rankedUsers = usersWithScores.map(u => u.user);
@@ -261,6 +263,95 @@ export class UserDiscoveryService {
       });
 
       score += mutualCount * 5;
+    }
+
+    return score;
+  }
+
+  /**
+   * Batch-load engagement metrics for multiple users (fixes N+1 problem)
+   */
+  private async batchLoadEngagementMetrics(userIds: string[]) {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    // Load all recent posts for all users in one query
+    const recentPosts = await this.prisma.post.findMany({
+      where: {
+        authorId: { in: userIds },
+        createdAt: { gte: thirtyDaysAgo },
+      },
+      select: {
+        authorId: true,
+        likeCount: true,
+        commentCount: true,
+        shareCount: true,
+      },
+      take: 10 * userIds.length, // Limit total posts loaded
+    });
+
+    // Calculate average engagement per user in memory
+    const metrics = new Map<string, { avgEngagement: number }>();
+    const postsByAuthor = new Map<string, any[]>();
+
+    // Group posts by author
+    for (const post of recentPosts) {
+      if (!postsByAuthor.has(post.authorId)) {
+        postsByAuthor.set(post.authorId, []);
+      }
+      postsByAuthor.get(post.authorId)!.push(post);
+    }
+
+    // Calculate average engagement per user
+    for (const userId of userIds) {
+      const posts = postsByAuthor.get(userId) || [];
+      const avgEngagement =
+        posts.length > 0
+          ? posts.reduce(
+              (sum, post) =>
+                sum + post.likeCount + post.commentCount * 2 + post.shareCount * 3,
+              0,
+            ) / posts.length
+          : 0;
+
+      metrics.set(userId, { avgEngagement });
+    }
+
+    return metrics;
+  }
+
+  /**
+   * Calculate relevance score synchronously using pre-loaded metrics
+   * (Synchronous version that doesn't require N+1 queries)
+   */
+  private calculateUserRelevanceScoreSynchronous(
+    user: any,
+    metrics: { avgEngagement: number },
+  ): number {
+    let score = 0;
+
+    // Follower count factor (normalized)
+    const followerScore = Math.log10(user.profile?.followerCount || 1) * 10;
+    score += followerScore;
+
+    // Content quality using pre-loaded metrics
+    const avgEngagement = metrics.avgEngagement || 0;
+    score += Math.log10(avgEngagement + 1) * 15;
+
+    // Verification bonus
+    if (user.isVerified) {
+      score += 20;
+    }
+
+    // Profile completeness
+    const profile = user.profile;
+    if (profile) {
+      let completeness = 0;
+      if (profile.avatarUrl) completeness += 20;
+      if (profile.fullName) completeness += 10;
+      if (profile.bio) completeness += 10;
+      if (profile.location) completeness += 5;
+      if (profile.skills?.length > 0) completeness += 10;
+      score += completeness;
     }
 
     return score;
