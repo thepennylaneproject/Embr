@@ -15,6 +15,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
   HeadObjectCommand,
+  ListMultipartUploadsCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
@@ -324,5 +325,74 @@ export class S3MultipartService {
    */
   shouldUseMultipart(fileSize: number): boolean {
     return fileSize >= this.MULTIPART_THRESHOLD;
+  }
+
+  /**
+   * Abort stale multipart uploads older than specified age
+   * Called by scheduled job to clean up abandoned uploads and reduce costs
+   * AWS charges for incomplete parts (~$0.05 per GB per month)
+   */
+  async abortStaleMultipartUploads(ageHours: number = 24): Promise<{
+    abortedCount: number;
+    releasedBytes: number;
+  }> {
+    try {
+      const command = new ListMultipartUploadsCommand({
+        Bucket: this.bucket,
+      });
+
+      const result = await this.s3Client.send(command);
+      let abortedCount = 0;
+      let releasedBytes = 0;
+      const ageMs = ageHours * 60 * 60 * 1000;
+      const now = Date.now();
+
+      const staleUploads = (result.Uploads || []).filter((upload) => {
+        if (!upload.Initiated) return false;
+        const uploadAge = now - upload.Initiated.getTime();
+        return uploadAge > ageMs;
+      });
+
+      this.logger.log(
+        `Found ${staleUploads.length} stale multipart uploads older than ${ageHours}h`,
+      );
+
+      for (const upload of staleUploads) {
+        try {
+          const abortCommand = new AbortMultipartUploadCommand({
+            Bucket: this.bucket,
+            Key: upload.Key,
+            UploadId: upload.UploadId,
+          });
+
+          await this.s3Client.send(abortCommand);
+          abortedCount++;
+
+          // Estimate size based on upload initiation (not 100% accurate but useful for monitoring)
+          const estimatedAge = now - (upload.Initiated?.getTime() || now);
+          const estimatedSizePerHour = 1024 * 1024; // Assume ~1MB per hour as conservative estimate
+          const estimatedSize = Math.ceil(estimatedAge / (60 * 60 * 1000)) * estimatedSizePerHour;
+          releasedBytes += estimatedSize;
+
+          this.logger.log(
+            `Aborted stale multipart upload: ${upload.Key}/${upload.UploadId} (initiated ${new Date(upload.Initiated || new Date()).toISOString()})`,
+          );
+        } catch (error) {
+          this.logger.error(
+            `Failed to abort multipart upload ${upload.Key}/${upload.UploadId}`,
+            error.stack,
+          );
+        }
+      }
+
+      this.logger.log(
+        `Cleanup complete: aborted ${abortedCount} uploads, released ~${(releasedBytes / 1024 / 1024).toFixed(2)}MB`,
+      );
+
+      return { abortedCount, releasedBytes };
+    } catch (error) {
+      this.logger.error('Failed to list multipart uploads for cleanup', error.stack);
+      throw error;
+    }
   }
 }
