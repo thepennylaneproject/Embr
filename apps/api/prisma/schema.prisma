@@ -1019,6 +1019,7 @@ model Media {
   muxAssetId    String?   @unique
   muxPlaybackId String?
   playbackUrl   String?
+  playbackPolicy String?  // 'public' or 'signed' for Mux videos
   duration      Float?
   aspectRatio   String?
   status        String    @default("pending") // pending, processing, completed, error, deleted
@@ -1034,6 +1035,21 @@ model Media {
   @@index([userId])
   @@index([status])
   @@index([fileKey])
+}
+
+// Webhook Event Deduplication
+// Tracks processed webhook events to prevent duplicate processing
+model WebhookEvent {
+  id           String    @id @default(uuid())
+  eventId      String    @unique // Mux-provided event ID
+  eventType    String    // e.g. 'video.asset.ready', 'video.upload.errored'
+  sourceId     String    // Asset ID or Upload ID from the webhook data
+  processedAt  DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+
+  @@index([eventId])
+  @@index([eventType])
+  @@index([sourceId])
 }
 
 model BlockedUser {
