@@ -207,6 +207,22 @@ export class MessagingService {
       throw new NotFoundException('User not found');
     }
 
+    // Check if either user has blocked the other
+    const hasBlock = await this.prisma.blockedUser.findFirst({
+      where: {
+        OR: [
+          { blockerId: userId, blockedId: participantId },
+          { blockerId: participantId, blockedId: userId },
+        ],
+      },
+    });
+
+    if (hasBlock) {
+      throw new ForbiddenException(
+        'Cannot create conversation. One user may have blocked the other.',
+      );
+    }
+
     // Check if conversation already exists
     const existingConversation = await this.prisma.conversation.findFirst({
       where: {

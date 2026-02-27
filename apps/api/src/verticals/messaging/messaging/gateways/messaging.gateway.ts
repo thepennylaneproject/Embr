@@ -14,7 +14,7 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Injectable, UseGuards, Logger, TooManyRequestsException } from '@nestjs/common';
+import { Injectable, UseGuards, Logger, TooManyRequestsException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { MessagingService } from '../services/messaging.service';
 import { MessageRateLimiterService } from '../services/message-rate-limiter.service';
@@ -215,6 +215,15 @@ export class MessagingGateway
         client.emit(WebSocketEvent.ERROR, {
           code: 'RATE_LIMIT_EXCEEDED',
           message: error.message || 'Too many messages sent. Please wait before sending more.',
+        });
+        return;
+      }
+
+      // Handle block enforcement error
+      if (error instanceof ForbiddenException) {
+        client.emit(WebSocketEvent.ERROR, {
+          code: 'BLOCKED_USER',
+          message: error.message || 'Cannot send message. One user may have blocked the other.',
         });
         return;
       }
