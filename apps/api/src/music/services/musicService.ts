@@ -34,10 +34,26 @@ export const artistService = {
     });
   },
 
-  async updateArtist(artistId: string, data: Partial<ArtistProfile>) {
+  async updateArtist(artistId: string, userId: string, data: Partial<ArtistProfile>) {
+    const artist = await prisma.artist.findUnique({
+      where: { id: artistId },
+    });
+
+    if (!artist) {
+      throw new Error('Artist not found');
+    }
+
+    // Authorization: only the artist owner can update their profile
+    if (artist.userId !== userId) {
+      throw new Error('Forbidden: You can only update your own artist profile');
+    }
+
+    // Prevent users from modifying the isVerified flag
+    const { isVerified, ...safeData } = data;
+
     return prisma.artist.update({
       where: { id: artistId },
-      data,
+      data: safeData,
     });
   },
 
@@ -107,7 +123,21 @@ export const trackService = {
     });
   },
 
-  async publishTrack(trackId: string) {
+  async publishTrack(trackId: string, userId: string) {
+    const track = await prisma.track.findUnique({
+      where: { id: trackId },
+      include: { artist: true },
+    });
+
+    if (!track) {
+      throw new Error('Track not found');
+    }
+
+    // Authorization: only the artist owner can publish
+    if (track.artist.userId !== userId) {
+      throw new Error('Forbidden: You can only publish your own tracks');
+    }
+
     return prisma.track.update({
       where: { id: trackId },
       data: { isPublished: true },
@@ -131,12 +161,26 @@ export const trackService = {
     });
   },
 
-  async updateTrackLicensing(trackId: string, data: Partial<{
+  async updateTrackLicensing(trackId: string, userId: string, data: Partial<{
     licensingModel: LicensingModel;
     allowRemix: boolean;
     allowMonetize: boolean;
     attributionRequired: boolean;
   }>) {
+    const track = await prisma.track.findUnique({
+      where: { id: trackId },
+      include: { artist: true },
+    });
+
+    if (!track) {
+      throw new Error('Track not found');
+    }
+
+    // Authorization: only the artist owner can update licensing
+    if (track.artist.userId !== userId) {
+      throw new Error('Forbidden: You can only update licensing for your own tracks');
+    }
+
     return prisma.track.update({
       where: { id: trackId },
       data,
@@ -306,8 +350,38 @@ export const revenueService = {
       throw new Error('Track not found');
     }
 
+    // Validate duration
+    if (durationPlayed <= 0) {
+      throw new Error('Duration played must be positive');
+    }
+
+    // Duration must not exceed track length (with 10% tolerance for network delays)
+    const maxDuration = track.duration ? track.duration * 1.1 : durationPlayed;
+    if (durationPlayed > maxDuration) {
+      throw new Error('Duration played exceeds track length');
+    }
+
+    // Rate limiting: prevent same user from recording multiple streams for same track within 1 minute
+    if (userId) {
+      const oneMinuteAgo = new Date(Date.now() - 60000);
+      const recentPlay = await prisma.trackPlay.findFirst({
+        where: {
+          trackId,
+          userId,
+          createdAt: { gte: oneMinuteAgo },
+        },
+      });
+
+      if (recentPlay) {
+        throw new Error('Too many stream records for this track. Please wait before playing again.');
+      }
+    }
+
+    // Only count as a stream if at least 30 seconds played
+    const isValidStream = durationPlayed >= 30;
+
     // Calculate royalty (simplified: $0.003 per stream, adjust to taste)
-    const royaltyAmount = 0.003;
+    const royaltyAmount = isValidStream ? 0.003 : 0;
 
     // Record play
     const play = await prisma.trackPlay.create({
@@ -320,20 +394,39 @@ export const revenueService = {
       },
     });
 
-    // Increment stream count
-    await prisma.track.update({
-      where: { id: trackId },
-      data: { streams: { increment: 1n } },
-    });
+    // Only increment stream count if it's a valid stream (>= 30 seconds)
+    if (isValidStream) {
+      await prisma.track.update({
+        where: { id: trackId },
+        data: { streams: { increment: 1n } },
+      });
+    }
 
     return play;
   },
 
-  async updateUsageRevenue(usageId: string, data: {
+  async updateUsageRevenue(usageId: string, userId: string, data: {
     impressions: number;
     engagements: number;
     totalRevenue: number;
   }) {
+    const usage = await prisma.videoUsage.findUnique({
+      where: { id: usageId },
+      include: {
+        track: { include: { artist: true } },
+        creator: true,
+      },
+    });
+
+    if (!usage) {
+      throw new Error('Usage record not found');
+    }
+
+    // Authorization: only the original artist or the creator can update revenue
+    if (usage.track.artist.userId !== userId && usage.creatorId !== userId) {
+      throw new Error('Forbidden: You can only update revenue for your own usage records');
+    }
+
     // Calculate splits (50/40/10)
     const originalArtistShare = Math.floor(data.totalRevenue * 0.5);
     const creatorShare = Math.floor(data.totalRevenue * 0.4);

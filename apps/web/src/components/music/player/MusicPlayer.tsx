@@ -11,6 +11,9 @@ interface MusicPlayerProps {
   thumbnailUrl?: string;
   isPlaying?: boolean;
   onPlayStatusChange?: (isPlaying: boolean) => void;
+  licensingModel?: 'free' | 'commercial' | 'exclusive' | 'restricted';
+  creatorId?: string;
+  onDownloadClick?: () => void;
 }
 
 /**
@@ -26,6 +29,9 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
   thumbnailUrl,
   isPlaying = false,
   onPlayStatusChange,
+  licensingModel = 'free',
+  creatorId,
+  onDownloadClick,
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(isPlaying);
@@ -33,7 +39,29 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [hasRecordedStream, setHasRecordedStream] = useState(false);
+  const [downloadMessage, setDownloadMessage] = useState<string | null>(null);
   const { recordStream } = useRecordStream();
+
+  // Check if download is allowed based on licensing
+  const canDownload = licensingModel !== 'restricted';
+
+  const handleDownloadClick = () => {
+    if (!canDownload) {
+      setDownloadMessage('This track cannot be downloaded due to licensing restrictions');
+      setTimeout(() => setDownloadMessage(null), 3000);
+      return;
+    }
+
+    if (onDownloadClick) {
+      onDownloadClick();
+    } else {
+      // Default: create a download link
+      const link = document.createElement('a');
+      link.href = audioUrl;
+      link.download = `${artistName} - ${trackTitle}.mp3`;
+      link.click();
+    }
+  };
 
   // Handle play/pause
   const handlePlayPause = () => {
@@ -108,7 +136,16 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
           <h3 className="text-lg font-bold truncate text-embr-accent-900">{trackTitle}</h3>
           <p className="text-sm text-embr-accent-600 truncate">{artistName}</p>
           <div className="flex gap-2 mt-3">
-            <button className="text-xs bg-embr-primary-400 hover:bg-embr-primary-500 text-white px-3 py-1 rounded-full transition">
+            <button
+              onClick={handleDownloadClick}
+              disabled={!canDownload}
+              className={`text-xs px-3 py-1 rounded-full transition flex items-center ${
+                canDownload
+                  ? 'bg-embr-primary-400 hover:bg-embr-primary-500 text-white cursor-pointer'
+                  : 'bg-embr-neutral-400 text-embr-neutral-600 cursor-not-allowed opacity-50'
+              }`}
+              title={canDownload ? 'Download track' : 'Download not allowed for this track'}
+            >
               <Download size={14} className="inline mr-1" />
               Download
             </button>
@@ -117,6 +154,9 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
               Share
             </button>
           </div>
+          {downloadMessage && (
+            <p className="text-xs text-embr-alert-500 mt-2">{downloadMessage}</p>
+          )}
         </div>
       </div>
 

@@ -5,8 +5,15 @@
  *
  * @example
  * ```typescript
+ * // Option 1: Provide token explicitly
  * const music = new EmbrtMusicClient({
  *   token: 'your-api-token',
+ *   baseURL: 'https://api.embr.dev/v1/music'
+ * });
+ *
+ * // Option 2: Use environment variable (recommended for security)
+ * // Set EMBR_MUSIC_TOKEN or MUSIC_API_TOKEN environment variable
+ * const music = new EmbrtMusicClient({
  *   baseURL: 'https://api.embr.dev/v1/music'
  * });
  *
@@ -31,7 +38,7 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 // ============================================================================
 
 export interface ClientConfig {
-  token: string;
+  token?: string;
   baseURL?: string;
 }
 
@@ -133,22 +140,59 @@ export class EmbrtMusicClient {
   revenue: RevenueAPI;
 
   constructor(config: ClientConfig) {
+    // Get token from config or environment variables
+    const token = config.token ||
+      process.env.EMBR_MUSIC_TOKEN ||
+      process.env.MUSIC_API_TOKEN;
+
+    if (!token) {
+      throw new Error(
+        'Music API token is required. Provide it via config.token or set EMBR_MUSIC_TOKEN environment variable'
+      );
+    }
+
     this.client = axios.create({
       baseURL: config.baseURL || 'https://api.embr.dev/v1/music',
       headers: {
-        Authorization: `Bearer ${config.token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
 
-    // Add error interceptor
+    // Add retry interceptor for transient failures
     this.client.interceptors.response.use(
       (response) => response,
-      (error: AxiosError<ApiError>) => {
+      async (error: AxiosError<ApiError>) => {
+        const config = error.config;
+
+        // Only retry on transient failures (network errors, 429, 503, 504)
+        const isTransient =
+          !error.response ||
+          error.response.status === 429 || // Too Many Requests
+          error.response.status === 503 || // Service Unavailable
+          error.response.status === 504;   // Gateway Timeout
+
+        // Don't retry if we've already retried too many times
+        const retryCount = (config as any)._retryCount || 0;
+        const maxRetries = 3;
+
+        if (isTransient && retryCount < maxRetries) {
+          // Exponential backoff: 1s, 2s, 4s
+          const delay = Math.pow(2, retryCount) * 1000;
+          await new Promise(resolve => setTimeout(resolve, delay));
+
+          // Mark that we're retrying
+          (config as any)._retryCount = retryCount + 1;
+
+          return this.client(config);
+        }
+
+        // Handle API errors
         const apiError = error.response?.data;
         if (apiError) {
           throw new MusicApiError(apiError.code, apiError.message, apiError.details);
         }
+
         throw error;
       }
     );
