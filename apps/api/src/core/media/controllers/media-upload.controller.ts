@@ -132,8 +132,12 @@ export class MediaUploadController {
    * Initiate Mux upload for videos
    */
   private async initiateMuxUpload(userId: string, dto: InitiateUploadDto) {
+    // Determine playback policy based on privacy preference
+    // Default to 'signed' (private) for better security posture
+    const playbackPolicy = dto.isPrivate === false ? ['public'] : ['signed'];
+
     const muxResult = await this.muxService.createDirectUpload('*', {
-      playbackPolicy: ['public'],
+      playbackPolicy,
       mp4Support: 'standard',
       normalizeAudio: true,
       maxResolution: 'high',
@@ -147,6 +151,7 @@ export class MediaUploadController {
       fileSize: dto.fileSize,
       contentType: dto.contentType,
       uploadId: muxResult.uploadId,
+      playbackPolicy: playbackPolicy[0],
       status: 'uploading',
     });
 
