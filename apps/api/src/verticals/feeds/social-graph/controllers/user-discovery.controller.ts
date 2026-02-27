@@ -46,8 +46,9 @@ export class UserDiscoveryController {
    */
   @Get('trending')
   @UseGuards(OptionalJwtAuthGuard)
-  async getTrendingCreators(@Query() dto: GetTrendingCreatorsDto) {
-    return this.discoveryService.getTrendingCreators(dto);
+  async getTrendingCreators(@Request() req, @Query() dto: GetTrendingCreatorsDto) {
+    const userId = req.user?.id || null;
+    return this.discoveryService.getTrendingCreators(userId, dto);
   }
 
   /**
