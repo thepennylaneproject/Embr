@@ -43,7 +43,10 @@ export class MuxWebhookController {
     @Headers('mux-timestamp') timestamp: string,
     @Body() body: any,
   ) {
-    this.logger.log(`Received Mux webhook: ${body.type}`);
+    const eventId = body.id; // Mux provides unique event ID
+    const eventType = body.type;
+
+    this.logger.log(`Received Mux webhook ${eventId}: ${eventType}`);
 
     // Verify webhook signature
     const rawBody = request.rawBody?.toString('utf8') || JSON.stringify(body);
@@ -54,20 +57,35 @@ export class MuxWebhookController {
     );
 
     if (!isValid) {
-      this.logger.error('Invalid webhook signature');
+      this.logger.error(`Invalid webhook signature for event ${eventId}`);
       throw new HttpException('Invalid signature', HttpStatus.UNAUTHORIZED);
+    }
+
+    // Check if webhook has already been processed (idempotency)
+    const alreadyProcessed = await this.mediaService.webhookEventProcessed(eventId);
+    if (alreadyProcessed) {
+      this.logger.log(`Webhook event ${eventId} already processed, returning success`);
+      return {
+        success: true,
+        message: 'Webhook already processed',
+      };
     }
 
     // Process webhook event
     try {
       await this.processWebhookEvent(body);
 
+      // Mark event as processed (after successful processing)
+      const sourceId = body.data?.id || '';
+      await this.mediaService.markWebhookEventProcessed(eventId, eventType, sourceId);
+
       return {
         success: true,
         message: 'Webhook processed',
       };
     } catch (error) {
-      this.logger.error('Failed to process webhook', error.stack);
+      this.logger.error(`Failed to process webhook ${eventId}`, error.stack);
+      // Don't mark as processed if there was an error - allow retry
       throw new HttpException(
         'Failed to process webhook',
         HttpStatus.INTERNAL_SERVER_ERROR,

@@ -397,4 +397,43 @@ export class MediaService {
       take: limit,
     });
   }
+
+  /**
+   * Check if webhook event has already been processed
+   */
+  async webhookEventProcessed(eventId: string): Promise<boolean> {
+    const processed = await this.prisma.webhookEvent.findUnique({
+      where: { eventId },
+    });
+    return !!processed;
+  }
+
+  /**
+   * Mark webhook event as processed
+   */
+  async markWebhookEventProcessed(
+    eventId: string,
+    eventType: string,
+    sourceId: string,
+  ): Promise<void> {
+    try {
+      await this.prisma.webhookEvent.create({
+        data: {
+          eventId,
+          eventType,
+          sourceId,
+          processedAt: new Date(),
+        },
+      });
+
+      this.logger.log(`Marked webhook event ${eventId} as processed`);
+    } catch (error) {
+      // If unique constraint violation, it's already been processed
+      if (error.code === 'P2002') {
+        this.logger.debug(`Webhook event ${eventId} already marked as processed`);
+        return;
+      }
+      throw error;
+    }
+  }
 }
