@@ -2,12 +2,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { UpdateProfileDto, UpdateUserSettingsDto } from './dto';
 import { PrismaService } from '../database/prisma.service';
+import { UploadService } from '../upload/upload.service';
 import DOMPurify from 'isomorphic-dompurify';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly uploadService: UploadService,
   ) {}
 
   private sanitizeString(input: string | undefined): string | undefined {
@@ -55,12 +57,9 @@ export class UsersService {
   }
 
   async updateAvatar(userId: string, file: Express.Multer.File) {
-    if (!file) {
-      throw new BadRequestException('No file provided');
-    }
-
-    // TODO: Upload to S3 and get URL
-    const avatarUrl = `https://example.com/avatars/${userId}/${file.filename}`;
+    // Upload image to S3
+    const uploadResult = await this.uploadService.uploadImage(file, userId);
+    const avatarUrl = uploadResult.url;
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -87,6 +86,24 @@ export class UsersService {
 
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    // Prevent settings changes for suspended accounts
+    if (user.suspended) {
+      throw new BadRequestException('Cannot update settings while account is suspended');
+    }
+
+    // Validate state transitions
+    const profile = user.profile;
+
+    // Moderators and admins cannot be private (enforce public visibility for platform safety)
+    if (updateSettingsDto.isPrivate && (user.role === 'MODERATOR' || user.role === 'ADMIN')) {
+      throw new BadRequestException('Moderators and admins must maintain public profiles');
+    }
+
+    // Creators must allow tips if they want to monetize
+    if (updateSettingsDto.allowTips === false && updateSettingsDto.isCreator === true) {
+      throw new BadRequestException('Creators must allow tips to receive payments');
     }
 
     // Update settings

@@ -3,6 +3,7 @@ import { Controller, Get, Patch, Body, Param, UseInterceptors, UploadedFile, Del
 import { FileInterceptor } from '@nestjs/platform-express';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 
 import { UsersService } from './users.service';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -18,6 +19,7 @@ export class UsersController {
   }
 
   @Patch('profile')
+  @Throttle({ default: { limit: 10, ttl: 3600000 } }) // 10 updates per hour
   async updateProfile(
     @GetUser('id') userId: string,
     @Body() updateProfileDto: UpdateProfileDto,
@@ -27,6 +29,7 @@ export class UsersController {
 
   @Patch('profile/avatar')
   @UseInterceptors(FileInterceptor('file'))
+  @Throttle({ default: { limit: 5, ttl: 3600000 } }) // 5 avatar updates per hour
   async updateAvatar(
     @GetUser('id') userId: string,
     @UploadedFile() file: Express.Multer.File,
@@ -35,6 +38,7 @@ export class UsersController {
   }
 
   @Patch('settings')
+  @Throttle({ default: { limit: 20, ttl: 3600000 } }) // 20 settings updates per hour
   async updateSettings(
     @GetUser('id') userId: string,
     @Body() updateSettingsDto: UpdateUserSettingsDto,
