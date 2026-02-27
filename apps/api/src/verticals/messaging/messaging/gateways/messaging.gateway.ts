@@ -18,6 +18,8 @@ import { Injectable, UseGuards, Logger, TooManyRequestsException } from '@nestjs
 import { JwtService } from '@nestjs/jwt';
 import { MessagingService } from '../services/messaging.service';
 import { MessageRateLimiterService } from '../services/message-rate-limiter.service';
+import { RedisService } from '../../../../core/redis/redis.service';
+import { RedisIoAdapter } from '../../../../core/redis/redis-io.adapter';
 import {
   SendMessageDto,
   MarkAsReadDto,
@@ -50,8 +52,10 @@ export class MessagingGateway
   server: Server;
 
   private readonly logger = new Logger(MessagingGateway.name);
-  private userSockets: Map<string, Set<string>> = new Map(); // userId -> Set of socketIds
+  private userSockets: Map<string, Set<string>> = new Map(); // userId -> Set of socketIds (fallback for in-memory)
   private typingTimeouts: Map<string, NodeJS.Timeout> = new Map(); // conversationId-userId -> timeout
+  private redisService?: RedisService;
+  private useRedis = false;
 
   constructor(
     private messagingService: MessagingService,
@@ -65,6 +69,20 @@ export class MessagingGateway
 
   afterInit(server: Server) {
     this.logger.log('Messaging WebSocket Gateway initialized');
+  }
+
+  /**
+   * Set Redis adapter and service for distributed deployments
+   */
+  setRedisAdapter(adapter: RedisIoAdapter, redisService?: RedisService) {
+    if (this.server) {
+      this.server.adapter(adapter.createIOServer(0).adapter());
+    }
+    if (redisService) {
+      this.redisService = redisService;
+      this.useRedis = true;
+      this.logger.log('Redis adapter enabled for multi-instance messaging');
+    }
   }
 
   async handleConnection(client: AuthenticatedSocket) {
@@ -89,11 +107,17 @@ export class MessagingGateway
       client.userId = payload.sub;
       client.username = payload.username;
 
-      // Track user socket
-      if (!this.userSockets.has(client.userId)) {
-        this.userSockets.set(client.userId, new Set());
+      // Track user socket (use Redis if available, fallback to in-memory)
+      if (this.useRedis && this.redisService) {
+        try {
+          await this.redisService.addSocket(client.userId, client.id);
+        } catch (error) {
+          this.logger.warn(`Failed to add socket to Redis, using in-memory: ${error.message}`);
+          this.trackSocketInMemory(client.userId, client.id);
+        }
+      } else {
+        this.trackSocketInMemory(client.userId, client.id);
       }
-      this.userSockets.get(client.userId)!.add(client.id);
 
       // Join user's personal room for direct messaging
       client.join(`user:${client.userId}`);
@@ -113,14 +137,18 @@ export class MessagingGateway
     }
   }
 
-  handleDisconnect(client: AuthenticatedSocket) {
+  async handleDisconnect(client: AuthenticatedSocket) {
     if (client.userId) {
-      const userSockets = this.userSockets.get(client.userId);
-      if (userSockets) {
-        userSockets.delete(client.id);
-        if (userSockets.size === 0) {
-          this.userSockets.delete(client.userId);
+      // Remove from Redis if available, fallback to in-memory
+      if (this.useRedis && this.redisService) {
+        try {
+          await this.redisService.removeSocket(client.userId, client.id);
+        } catch (error) {
+          this.logger.warn(`Failed to remove socket from Redis, using in-memory: ${error.message}`);
+          this.removeSocketFromMemory(client.userId, client.id);
         }
+      } else {
+        this.removeSocketFromMemory(client.userId, client.id);
       }
 
       this.logger.log(
@@ -167,7 +195,7 @@ export class MessagingGateway
         .emit(WebSocketEvent.MESSAGE_RECEIVE, result);
 
       // Auto-mark as delivered if recipient is online
-      if (this.isUserOnline(recipientId)) {
+      if (await this.isUserOnline(recipientId)) {
         await this.handleMessageDelivered(client, {
           messageId: result.message.id,
           conversationId: result.conversation.id,
@@ -427,8 +455,37 @@ export class MessagingGateway
   // HELPER METHODS
   // ============================================================
 
-  private isUserOnline(userId: string): boolean {
+  private async isUserOnline(userId: string): Promise<boolean> {
+    if (this.useRedis && this.redisService) {
+      try {
+        return await this.redisService.isOnline(userId);
+      } catch (error) {
+        this.logger.warn(`Failed to check online status from Redis: ${error.message}`);
+        return this.isUserOnlineInMemory(userId);
+      }
+    }
+    return this.isUserOnlineInMemory(userId);
+  }
+
+  private isUserOnlineInMemory(userId: string): boolean {
     return this.userSockets.has(userId) && this.userSockets.get(userId)!.size > 0;
+  }
+
+  private trackSocketInMemory(userId: string, socketId: string): void {
+    if (!this.userSockets.has(userId)) {
+      this.userSockets.set(userId, new Set());
+    }
+    this.userSockets.get(userId)!.add(socketId);
+  }
+
+  private removeSocketFromMemory(userId: string, socketId: string): void {
+    const userSockets = this.userSockets.get(userId);
+    if (userSockets) {
+      userSockets.delete(socketId);
+      if (userSockets.size === 0) {
+        this.userSockets.delete(userId);
+      }
+    }
   }
 
   /**
