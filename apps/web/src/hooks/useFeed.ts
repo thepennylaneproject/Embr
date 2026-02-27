@@ -251,7 +251,7 @@ export const useFeed = (params?: UseFeedParams): UseFeedReturn => {
     [posts, optimisticUpdatePost]
   );
 
-  // Auto-load on mount
+  // Auto-load on mount and when feed type/limit changes
   useEffect(() => {
     if (autoLoad) {
       loadFeed();
@@ -263,7 +263,7 @@ export const useFeed = (params?: UseFeedParams): UseFeedReturn => {
         abortControllerRef.current.abort();
       }
     };
-  }, [autoLoad]); // Only run once on mount
+  }, [autoLoad, feedType, limit, loadFeed]);
 
   return {
     posts,
