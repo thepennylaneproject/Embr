@@ -18,9 +18,31 @@ function hasWindow() {
   return typeof window !== 'undefined';
 }
 
+/**
+ * Decode JWT token to get expiry time
+ * Returns expiry time in milliseconds, or null if invalid
+ */
+function getTokenExpiry(token: string): number | null {
+  try {
+    // JWT format: header.payload.signature
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    // Decode payload (base64url)
+    const decoded = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+    const payload = JSON.parse(decoded);
+
+    // exp is in seconds, convert to milliseconds
+    return payload.exp ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshTimer, setRefreshTimer] = useState<NodeJS.Timeout | null>(null);
 
   const checkAuth = useCallback(async () => {
     if (!hasWindow()) {
@@ -42,9 +64,86 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
+  /**
+   * Refresh access token before expiry
+   * Called proactively to prevent 401 errors mid-session
+   */
+  const refreshAccessToken = useCallback(async () => {
+    try {
+      // Attempt to refresh the token via API
+      // The API uses the refresh token from httpOnly cookie
+      await authApi.refreshToken();
+      console.log('Token refreshed successfully');
+    } catch (error) {
+      console.error('Token refresh failed, user may need to re-login:', error);
+      setUser(null);
+    }
+  }, []);
+
+  /**
+   * Set up proactive token refresh timer
+   * Refresh token 1 minute before it expires
+   */
+  const scheduleTokenRefresh = useCallback(
+    (token: string | null) => {
+      // Clear existing timer
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+        setRefreshTimer(null);
+      }
+
+      if (!token || !hasWindow()) return;
+
+      const expiry = getTokenExpiry(token);
+      if (!expiry) return;
+
+      // Refresh 60 seconds before expiry
+      const refreshTime = expiry - Date.now() - 60000;
+
+      if (refreshTime <= 0) {
+        // Token already expires soon, refresh immediately
+        refreshAccessToken();
+      } else {
+        // Schedule refresh for later
+        const timer = setTimeout(() => {
+          refreshAccessToken();
+        }, refreshTime);
+
+        setRefreshTimer(timer);
+      }
+    },
+    [refreshTimer, refreshAccessToken],
+  );
+
   useEffect(() => {
     checkAuth();
-  }, [checkAuth]);
+
+    // Cleanup on unmount
+    return () => {
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
+    };
+  }, [checkAuth, refreshTimer]);
+
+  /**
+   * Set up token refresh on user login
+   * Note: httpOnly cookies are set by the API, so we can't access the token directly
+   * Instead, we'll use a shorter refresh interval as a fallback
+   */
+  useEffect(() => {
+    if (!user || !hasWindow()) return;
+
+    // As a fallback mechanism, refresh token every 10 minutes
+    // This handles cases where the token doesn't include exp or is inaccessible
+    const fallbackTimer = setInterval(() => {
+      refreshAccessToken();
+    }, 10 * 60 * 1000);
+
+    return () => {
+      if (fallbackTimer) clearInterval(fallbackTimer);
+    };
+  }, [user, refreshAccessToken]);
 
   const login = async (email: string, password: string) => {
     const response = await authApi.login(email, password);
@@ -68,6 +167,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Clear refresh timer
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+        setRefreshTimer(null);
+      }
       // Tokens are in httpOnly cookies and will be cleared by API
       // Clear user state locally
       setUser(null);
