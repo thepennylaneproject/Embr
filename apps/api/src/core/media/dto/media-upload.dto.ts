@@ -57,6 +57,14 @@ export class InitiateUploadDto {
   })
   @IsEnum(ContentType)
   contentType: ContentType;
+
+  @ApiProperty({
+    description: 'Whether media should be private (signed URL access) or public',
+    example: false,
+    required: false,
+  })
+  @IsOptional()
+  isPrivate?: boolean;
 }
 
 /**
@@ -262,6 +270,7 @@ export interface CreateMediaRecordDto {
   thumbnailKey?: string;
   muxAssetId?: string;
   muxPlaybackId?: string;
+  playbackPolicy?: string; // 'public' or 'signed' for Mux
   status: string;
 }
 
@@ -272,6 +281,7 @@ export interface UpdateMediaMuxDataDto {
   muxAssetId: string;
   muxPlaybackId: string;
   playbackUrl: string;
+  playbackPolicy?: string; // 'public' or 'signed'
   thumbnailUrl?: string;
   thumbnailKey?: string;
   duration?: number;

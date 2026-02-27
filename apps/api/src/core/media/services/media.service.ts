@@ -190,19 +190,26 @@ export class MediaService {
    */
   async updateMediaWithMuxData(mediaId: string, dto: UpdateMediaMuxDataDto) {
     try {
+      const updateData: any = {
+        muxAssetId: dto.muxAssetId,
+        muxPlaybackId: dto.muxPlaybackId,
+        playbackUrl: dto.playbackUrl,
+        thumbnailUrl: dto.thumbnailUrl,
+        thumbnailKey: dto.thumbnailKey,
+        duration: dto.duration,
+        aspectRatio: dto.aspectRatio,
+        status: dto.status,
+        completedAt: dto.completedAt,
+      };
+
+      // Include playbackPolicy if provided
+      if (dto.playbackPolicy) {
+        updateData.playbackPolicy = dto.playbackPolicy;
+      }
+
       const media = await this.prisma.media.update({
         where: { id: mediaId },
-        data: {
-          muxAssetId: dto.muxAssetId,
-          muxPlaybackId: dto.muxPlaybackId,
-          playbackUrl: dto.playbackUrl,
-          thumbnailUrl: dto.thumbnailUrl,
-          thumbnailKey: dto.thumbnailKey,
-          duration: dto.duration,
-          aspectRatio: dto.aspectRatio,
-          status: dto.status,
-          completedAt: dto.completedAt,
-        },
+        data: updateData,
       });
 
       this.logger.log(`Updated media ${mediaId} with Mux data`);
