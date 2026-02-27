@@ -14,9 +14,13 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Injectable, UseGuards, Logger } from '@nestjs/common';
+import { Injectable, UseGuards, Logger, TooManyRequestsException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { MessagingService } from '../services/messaging.service';
+import { MessageRateLimiterService } from '../services/message-rate-limiter.service';
+import { ConversationAccessService } from '../services/conversation-access.service';
+import { RedisService } from '../../../../core/redis/redis.service';
+import { RedisIoAdapter } from '../../../../core/redis/redis-io.adapter';
 import {
   SendMessageDto,
   MarkAsReadDto,
@@ -49,12 +53,16 @@ export class MessagingGateway
   server: Server;
 
   private readonly logger = new Logger(MessagingGateway.name);
-  private userSockets: Map<string, Set<string>> = new Map(); // userId -> Set of socketIds
+  private userSockets: Map<string, Set<string>> = new Map(); // userId -> Set of socketIds (fallback for in-memory)
   private typingTimeouts: Map<string, NodeJS.Timeout> = new Map(); // conversationId-userId -> timeout
+  private redisService?: RedisService;
+  private useRedis = false;
 
   constructor(
     private messagingService: MessagingService,
     private jwtService: JwtService,
+    private rateLimiter: MessageRateLimiterService,
+    private conversationAccess: ConversationAccessService,
   ) {}
 
   // ============================================================
@@ -63,6 +71,20 @@ export class MessagingGateway
 
   afterInit(server: Server) {
     this.logger.log('Messaging WebSocket Gateway initialized');
+  }
+
+  /**
+   * Set Redis adapter and service for distributed deployments
+   */
+  setRedisAdapter(adapter: RedisIoAdapter, redisService?: RedisService) {
+    if (this.server) {
+      this.server.adapter(adapter.createIOServer(0).adapter());
+    }
+    if (redisService) {
+      this.redisService = redisService;
+      this.useRedis = true;
+      this.logger.log('Redis adapter enabled for multi-instance messaging');
+    }
   }
 
   async handleConnection(client: AuthenticatedSocket) {
@@ -87,11 +109,17 @@ export class MessagingGateway
       client.userId = payload.sub;
       client.username = payload.username;
 
-      // Track user socket
-      if (!this.userSockets.has(client.userId)) {
-        this.userSockets.set(client.userId, new Set());
+      // Track user socket (use Redis if available, fallback to in-memory)
+      if (this.useRedis && this.redisService) {
+        try {
+          await this.redisService.addSocket(client.userId, client.id);
+        } catch (error) {
+          this.logger.warn(`Failed to add socket to Redis, using in-memory: ${error.message}`);
+          this.trackSocketInMemory(client.userId, client.id);
+        }
+      } else {
+        this.trackSocketInMemory(client.userId, client.id);
       }
-      this.userSockets.get(client.userId)!.add(client.id);
 
       // Join user's personal room for direct messaging
       client.join(`user:${client.userId}`);
@@ -111,14 +139,18 @@ export class MessagingGateway
     }
   }
 
-  handleDisconnect(client: AuthenticatedSocket) {
+  async handleDisconnect(client: AuthenticatedSocket) {
     if (client.userId) {
-      const userSockets = this.userSockets.get(client.userId);
-      if (userSockets) {
-        userSockets.delete(client.id);
-        if (userSockets.size === 0) {
-          this.userSockets.delete(client.userId);
+      // Remove from Redis if available, fallback to in-memory
+      if (this.useRedis && this.redisService) {
+        try {
+          await this.redisService.removeSocket(client.userId, client.id);
+        } catch (error) {
+          this.logger.warn(`Failed to remove socket from Redis, using in-memory: ${error.message}`);
+          this.removeSocketFromMemory(client.userId, client.id);
         }
+      } else {
+        this.removeSocketFromMemory(client.userId, client.id);
       }
 
       this.logger.log(
@@ -165,7 +197,7 @@ export class MessagingGateway
         .emit(WebSocketEvent.MESSAGE_RECEIVE, result);
 
       // Auto-mark as delivered if recipient is online
-      if (this.isUserOnline(recipientId)) {
+      if (await this.isUserOnline(recipientId)) {
         await this.handleMessageDelivered(client, {
           messageId: result.message.id,
           conversationId: result.conversation.id,
@@ -177,6 +209,25 @@ export class MessagingGateway
       );
     } catch (error) {
       this.logger.error('Error sending message:', error);
+
+      // Handle rate limiting error
+      if (error instanceof TooManyRequestsException) {
+        client.emit(WebSocketEvent.ERROR, {
+          code: 'RATE_LIMIT_EXCEEDED',
+          message: error.message || 'Too many messages sent. Please wait before sending more.',
+        });
+        return;
+      }
+
+      // Handle block enforcement error
+      if (error instanceof ForbiddenException) {
+        client.emit(WebSocketEvent.ERROR, {
+          code: 'BLOCKED_USER',
+          message: error.message || 'Cannot send message. One user may have blocked the other.',
+        });
+        return;
+      }
+
       client.emit(WebSocketEvent.ERROR, {
         code: 'MESSAGE_SEND_FAILED',
         message: error.message || 'Failed to send message',
@@ -190,30 +241,58 @@ export class MessagingGateway
     @MessageBody() data: { messageId: string; conversationId: string },
   ) {
     try {
-      // Update message status to delivered
-      // This would be implemented in your MessagingService
-      // For now, just emit the event
+      if (!client.userId) {
+        client.emit(WebSocketEvent.ERROR, {
+          code: 'UNAUTHORIZED',
+          message: 'Not authenticated',
+        });
+        return;
+      }
 
-      // Notify sender that message was delivered
-      const conversation = await this.messagingService.getConversations(
+      // Validate user is a participant in the conversation
+      const conversation = await this.conversationAccess.validateConversationAccess(
         client.userId,
-        { conversationId: data.conversationId } as any,
+        data.conversationId,
       );
 
-      if (conversation.conversations.length > 0) {
-        const conv = conversation.conversations[0];
-        const senderId =
-          conv.otherUser.id === client.userId
-            ? conv.otherUser.id
-            : client.userId;
-
-        this.server.to(`user:${senderId}`).emit(WebSocketEvent.MESSAGE_DELIVERED, {
-          messageId: data.messageId,
-          conversationId: data.conversationId,
+      if (!conversation) {
+        client.emit(WebSocketEvent.ERROR, {
+          code: 'UNAUTHORIZED',
+          message: 'Not a participant in this conversation',
         });
+        return;
       }
+
+      // Validate message exists and belongs to the conversation
+      const isValidMessage = await this.conversationAccess.validateMessageInConversation(
+        data.messageId,
+        data.conversationId,
+      );
+
+      if (!isValidMessage) {
+        client.emit(WebSocketEvent.ERROR, {
+          code: 'NOT_FOUND',
+          message: 'Message not found in this conversation',
+        });
+        return;
+      }
+
+      // Notify sender that message was delivered
+      const recipientId =
+        conversation.participant1Id === client.userId
+          ? conversation.participant2Id
+          : conversation.participant1Id;
+
+      this.server.to(`user:${recipientId}`).emit(WebSocketEvent.MESSAGE_DELIVERED, {
+        messageId: data.messageId,
+        conversationId: data.conversationId,
+      });
     } catch (error) {
       this.logger.error('Error marking message as delivered:', error);
+      client.emit(WebSocketEvent.ERROR, {
+        code: 'DELIVERY_FAILED',
+        message: 'Failed to mark message as delivered',
+      });
     }
   }
 
@@ -318,19 +397,25 @@ export class MessagingGateway
 
       const { conversationId } = dto;
 
-      // Get conversation to find other participant
-      const conversations = await this.messagingService.getConversations(
+      // Validate user is a participant in the conversation
+      const conversation = await this.conversationAccess.validateConversationAccess(
         client.userId,
-        {},
+        conversationId,
       );
 
-      const conversation = conversations.conversations.find(
-        (c) => c.id === conversationId,
-      );
+      if (!conversation) {
+        client.emit(WebSocketEvent.ERROR, {
+          code: 'UNAUTHORIZED',
+          message: 'Not a participant in this conversation',
+        });
+        return;
+      }
 
-      if (!conversation) return;
-
-      const recipientId = conversation.otherUser.id;
+      // Get the other participant
+      const recipientId =
+        conversation.participant1Id === client.userId
+          ? conversation.participant2Id
+          : conversation.participant1Id;
 
       // Clear existing timeout for this user in this conversation
       const timeoutKey = `${conversationId}-${client.userId}`;
@@ -381,19 +466,24 @@ export class MessagingGateway
         this.typingTimeouts.delete(timeoutKey);
       }
 
-      // Get conversation to find other participant
-      const conversations = await this.messagingService.getConversations(
+      // Validate user is a participant in the conversation
+      const conversation = await this.conversationAccess.validateConversationAccess(
         client.userId,
-        {},
+        conversationId,
       );
 
-      const conversation = conversations.conversations.find(
-        (c) => c.id === conversationId,
-      );
+      if (!conversation) {
+        client.emit(WebSocketEvent.ERROR, {
+          code: 'UNAUTHORIZED',
+          message: 'Not a participant in this conversation',
+        });
+        return;
+      }
 
-      if (!conversation) return;
-
-      const recipientId = conversation.otherUser.id;
+      const recipientId =
+        conversation.participant1Id === client.userId
+          ? conversation.participant2Id
+          : conversation.participant1Id;
 
       // Emit stop typing indicator to recipient
       const typingIndicator: TypingIndicator = {
@@ -415,8 +505,37 @@ export class MessagingGateway
   // HELPER METHODS
   // ============================================================
 
-  private isUserOnline(userId: string): boolean {
+  private async isUserOnline(userId: string): Promise<boolean> {
+    if (this.useRedis && this.redisService) {
+      try {
+        return await this.redisService.isOnline(userId);
+      } catch (error) {
+        this.logger.warn(`Failed to check online status from Redis: ${error.message}`);
+        return this.isUserOnlineInMemory(userId);
+      }
+    }
+    return this.isUserOnlineInMemory(userId);
+  }
+
+  private isUserOnlineInMemory(userId: string): boolean {
     return this.userSockets.has(userId) && this.userSockets.get(userId)!.size > 0;
+  }
+
+  private trackSocketInMemory(userId: string, socketId: string): void {
+    if (!this.userSockets.has(userId)) {
+      this.userSockets.set(userId, new Set());
+    }
+    this.userSockets.get(userId)!.add(socketId);
+  }
+
+  private removeSocketFromMemory(userId: string, socketId: string): void {
+    const userSockets = this.userSockets.get(userId);
+    if (userSockets) {
+      userSockets.delete(socketId);
+      if (userSockets.size === 0) {
+        this.userSockets.delete(userId);
+      }
+    }
   }
 
   /**
