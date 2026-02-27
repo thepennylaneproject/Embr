@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { MessagingController } from './controllers/messaging.controller';
 import { MessagingService } from './services/messaging.service';
 import { MessagingGateway } from './gateways/messaging.gateway';
+import { MessageRateLimiterService } from './services/message-rate-limiter.service';
 import { UploadModule } from '../../../core/upload/upload.module';
 
 @Module({
@@ -14,7 +15,7 @@ import { UploadModule } from '../../../core/upload/upload.module';
     }),
   ],
   controllers: [MessagingController],
-  providers: [MessagingService, MessagingGateway],
-  exports: [MessagingService, MessagingGateway],
+  providers: [MessagingService, MessagingGateway, MessageRateLimiterService],
+  exports: [MessagingService, MessagingGateway, MessageRateLimiterService],
 })
 export class MessagingModule {}

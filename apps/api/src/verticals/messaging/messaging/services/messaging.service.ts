@@ -10,6 +10,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
+import { MessageRateLimiterService } from './message-rate-limiter.service';
+import { toRateLimitConfig, MESSAGE_RATE_LIMITS } from '../config/messaging-rate-limits';
 import {
   MessageType as PrismaMessageType,
   MessageStatus as PrismaMessageStatus,
@@ -43,7 +45,10 @@ import {
 
 @Injectable()
 export class MessagingService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private rateLimiter: MessageRateLimiterService,
+  ) {}
 
   // ============================================================
   // CONVERSATION OPERATIONS
@@ -419,6 +424,13 @@ export class MessagingService {
       });
       conversation = createResult.conversation;
     }
+
+    // Check rate limit before creating message
+    await this.rateLimiter.isAllowed(
+      userId,
+      conversation.id,
+      toRateLimitConfig(MESSAGE_RATE_LIMITS.USER_PER_CONVERSATION),
+    );
 
     // Create message
     const message = await this.prisma.message.create({
