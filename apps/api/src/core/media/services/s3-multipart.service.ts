@@ -308,6 +308,49 @@ export class S3MultipartService {
   }
 
   /**
+   * Download file content for scanning (magic bytes validation, antivirus, etc)
+   */
+  async downloadFileContent(fileKey: string, maxBytes: number = 5 * 1024 * 1024): Promise<Buffer> {
+    try {
+      const command = new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: fileKey,
+        Range: `bytes=0-${maxBytes - 1}`, // Only download first N bytes for scanning
+      });
+
+      const response = await this.s3Client.send(command);
+      const chunks: Uint8Array[] = [];
+      let totalBytes = 0;
+
+      // Read stream from S3
+      if (response.Body) {
+        const reader = response.Body as any;
+
+        if (reader[Symbol.asyncIterator]) {
+          // Readable stream
+          for await (const chunk of reader) {
+            chunks.push(chunk);
+            totalBytes += chunk.length;
+
+            if (totalBytes > maxBytes) {
+              break;
+            }
+          }
+        } else {
+          // Fallback for other stream types
+          const data = await response.Body.transformToByteArray();
+          chunks.push(data);
+        }
+      }
+
+      return Buffer.concat(chunks);
+    } catch (error) {
+      this.logger.error(`Failed to download file content for ${fileKey}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
    * Generate CDN or S3 URL for file
    */
   private getFileUrl(fileKey: string): string {

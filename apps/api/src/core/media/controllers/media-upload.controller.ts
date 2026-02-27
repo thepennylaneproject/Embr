@@ -23,6 +23,7 @@ import { S3MultipartService } from '../services/s3-multipart.service';
 import { MuxVideoService } from '../services/mux-video.service';
 import { ThumbnailService } from '../services/thumbnail.service';
 import { MediaService } from '../services/media.service';
+import { MediaValidatorService } from '../services/media-validator.service';
 import {
   InitiateUploadDto,
   CompleteUploadDto,
@@ -42,6 +43,7 @@ export class MediaUploadController {
     private muxService: MuxVideoService,
     private thumbnailService: ThumbnailService,
     private mediaService: MediaService,
+    private mediaValidator: MediaValidatorService,
   ) {}
 
   /**
@@ -210,6 +212,38 @@ export class MediaUploadController {
     // Get file metadata
     const metadata = await this.s3Service.getFileMetadata(dto.fileKey);
 
+    // Validate file content (magic bytes) to detect malware/polyglot files
+    try {
+      const fileBuffer = await this.s3Service.downloadFileContent(dto.fileKey);
+      const maliciousCheck = this.mediaValidator.checkForMalicious(
+        fileBuffer,
+        dto.fileType,
+      );
+
+      if (!maliciousCheck.safe) {
+        // Delete the malicious file from S3
+        await this.s3Service.deleteFile(dto.fileKey);
+
+        this.logger.error(
+          `Malicious file detected and deleted: ${dto.fileKey} - ${maliciousCheck.reason}`,
+        );
+
+        throw new HttpException(
+          `File rejected for security reasons: ${maliciousCheck.reason}`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    } catch (error) {
+      if (error.response?.statusCode === 400) {
+        throw error; // Re-throw validation errors
+      }
+
+      this.logger.warn(
+        `File content validation failed (non-blocking) for ${dto.fileKey}: ${(error as any)?.message}`,
+      );
+      // For non-validation errors, continue with upload (could be S3 access issues)
+    }
+
     // Generate thumbnail if image
     let thumbnail = null;
     if (dto.contentType === 'image') {
@@ -263,6 +297,38 @@ export class MediaUploadController {
 
     // Get file metadata
     const metadata = await this.s3Service.getFileMetadata(dto.fileKey);
+
+    // Validate file content (magic bytes) to detect malware/polyglot files
+    try {
+      const fileBuffer = await this.s3Service.downloadFileContent(dto.fileKey);
+      const maliciousCheck = this.mediaValidator.checkForMalicious(
+        fileBuffer,
+        dto.fileType,
+      );
+
+      if (!maliciousCheck.safe) {
+        // Delete the malicious file from S3
+        await this.s3Service.deleteFile(dto.fileKey);
+
+        this.logger.error(
+          `Malicious file detected and deleted: ${dto.fileKey} - ${maliciousCheck.reason}`,
+        );
+
+        throw new HttpException(
+          `File rejected for security reasons: ${maliciousCheck.reason}`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    } catch (error) {
+      if (error.response?.statusCode === 400) {
+        throw error; // Re-throw validation errors
+      }
+
+      this.logger.warn(
+        `File content validation failed (non-blocking) for ${dto.fileKey}: ${(error as any)?.message}`,
+      );
+      // For non-validation errors, continue with upload (could be S3 access issues)
+    }
 
     // Generate thumbnail if image
     let thumbnail = null;
