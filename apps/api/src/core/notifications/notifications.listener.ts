@@ -5,6 +5,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationsService } from './notifications.service';
 import { NOTIFICATION_TYPES } from './notifications.constants';
 import { PrismaService } from '../database/prisma.service';
@@ -16,6 +17,7 @@ export class NotificationsListener {
   constructor(
     private notificationsService: NotificationsService,
     private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -45,13 +47,19 @@ export class NotificationsListener {
         ? NOTIFICATION_TYPES.COMMENT_REPLY
         : NOTIFICATION_TYPES.NEW_COMMENT;
 
-      await this.notificationsService.create({
+      const notification = await this.notificationsService.create({
         userId: post.authorId,
         type: notificationType,
         actorId: payload.authorId,
         referenceId: payload.commentId,
         referenceType: 'COMMENT',
         message: isReply ? 'replied to a comment on your post' : 'commented on your post',
+      });
+
+      // Emit event for WebSocket broadcast
+      this.eventEmitter.emit('notification.created', {
+        userId: post.authorId,
+        notification,
       });
 
       this.logger.debug(`Created ${notificationType} notification for post ${payload.postId}`);
@@ -83,13 +91,19 @@ export class NotificationsListener {
         return;
       }
 
-      await this.notificationsService.create({
+      const notification = await this.notificationsService.create({
         userId: comment.authorId,
         type: NOTIFICATION_TYPES.COMMENT_LIKED,
         actorId: payload.likedBy,
         referenceId: payload.commentId,
         referenceType: 'COMMENT_LIKE',
         message: 'liked your comment',
+      });
+
+      // Emit event for WebSocket broadcast
+      this.eventEmitter.emit('notification.created', {
+        userId: comment.authorId,
+        notification,
       });
 
       this.logger.debug(`Created COMMENT_LIKED notification for comment ${payload.commentId}`);
@@ -120,13 +134,19 @@ export class NotificationsListener {
         return;
       }
 
-      await this.notificationsService.create({
+      const notification = await this.notificationsService.create({
         userId: post.authorId,
         type: NOTIFICATION_TYPES.POST_LIKED,
         actorId: payload.likedBy,
         referenceId: payload.postId,
         referenceType: 'POST_LIKE',
         message: 'liked your post',
+      });
+
+      // Emit event for WebSocket broadcast
+      this.eventEmitter.emit('notification.created', {
+        userId: post.authorId,
+        notification,
       });
 
       this.logger.debug(`Created POST_LIKED notification for post ${payload.postId}`);
@@ -155,13 +175,19 @@ export class NotificationsListener {
         return;
       }
 
-      await this.notificationsService.create({
+      const notification = await this.notificationsService.create({
         userId: payload.gigCreatorId,
         type: NOTIFICATION_TYPES.GIG_APPLICATION,
         actorId: payload.applicantId,
         referenceId: payload.applicationId,
         referenceType: 'GIG_APPLICATION',
         message: `${applicant.username} applied for your gig`,
+      });
+
+      // Emit event for WebSocket broadcast
+      this.eventEmitter.emit('notification.created', {
+        userId: payload.gigCreatorId,
+        notification,
       });
 
       this.logger.debug(
@@ -185,12 +211,18 @@ export class NotificationsListener {
     applicantId: string;
   }) {
     try {
-      await this.notificationsService.create({
+      const notification = await this.notificationsService.create({
         userId: payload.applicantId,
         type: NOTIFICATION_TYPES.GIG_APPLICATION_ACCEPTED,
         referenceId: payload.applicationId,
         referenceType: 'GIG_APPLICATION',
         message: 'Your application was accepted!',
+      });
+
+      // Emit event for WebSocket broadcast
+      this.eventEmitter.emit('notification.created', {
+        userId: payload.applicantId,
+        notification,
       });
 
       this.logger.debug(
@@ -214,12 +246,18 @@ export class NotificationsListener {
     applicantId: string;
   }) {
     try {
-      await this.notificationsService.create({
+      const notification = await this.notificationsService.create({
         userId: payload.applicantId,
         type: NOTIFICATION_TYPES.GIG_APPLICATION_REJECTED,
         referenceId: payload.applicationId,
         referenceType: 'GIG_APPLICATION',
         message: 'Your application was not selected',
+      });
+
+      // Emit event for WebSocket broadcast
+      this.eventEmitter.emit('notification.created', {
+        userId: payload.applicantId,
+        notification,
       });
 
       this.logger.debug(
