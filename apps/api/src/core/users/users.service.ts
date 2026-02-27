@@ -2,12 +2,18 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { UpdateProfileDto, UpdateUserSettingsDto } from './dto';
 import { PrismaService } from '../database/prisma.service';
+import DOMPurify from 'isomorphic-dompurify';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
   ) {}
+
+  private sanitizeString(input: string | undefined): string | undefined {
+    if (!input) return input;
+    return DOMPurify.sanitize(input, { ALLOWED_TAGS: [] });
+  }
 
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
@@ -32,10 +38,17 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
+    // Sanitize potentially dangerous fields to prevent XSS
+    const sanitizedData = {
+      ...updateProfileDto,
+      displayName: this.sanitizeString(updateProfileDto.displayName),
+      bio: this.sanitizeString(updateProfileDto.bio),
+    };
+
     // Update profile fields
     await this.prisma.profile.update({
       where: { id: user.profile.id },
-      data: updateProfileDto,
+      data: sanitizedData,
     });
 
     return this.getProfile(userId);
@@ -85,7 +98,7 @@ export class UsersService {
     return { message: 'Settings updated successfully' };
   }
 
-  async getUserByUsername(username: string) {
+  async getUserByUsername(username: string, currentUserId?: string) {
     const user = await this.prisma.user.findFirst({
       where: { profile: { username } },
       include: { profile: true, wallet: true },
@@ -93,6 +106,36 @@ export class UsersService {
 
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    // Check if users have blocked each other
+    if (currentUserId && currentUserId !== user.id) {
+      const isBlocked = await this.prisma.blockedUser.findFirst({
+        where: {
+          OR: [
+            { blockerId: currentUserId, blockedId: user.id },
+            { blockerId: user.id, blockedId: currentUserId },
+          ],
+        },
+      });
+
+      if (isBlocked) {
+        throw new NotFoundException('User not found');
+      }
+    }
+
+    // Check if profile is private and enforce access control
+    if (user.profile?.isPrivate && user.id !== currentUserId) {
+      // Return limited public data for private profiles viewed by non-owners
+      return {
+        id: user.id,
+        username: user.username,
+        profile: {
+          displayName: user.profile.displayName,
+          avatarUrl: user.profile.avatarUrl,
+          isPrivate: true,
+        },
+      };
     }
 
     return this.sanitizeUser(user);
