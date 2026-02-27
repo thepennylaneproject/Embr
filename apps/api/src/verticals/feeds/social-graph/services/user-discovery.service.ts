@@ -66,6 +66,9 @@ export class UserDiscoveryService {
     const where: any = {
       deletedAt: null,
       id: { notIn: blockedUserIds },
+      profile: {
+        isPrivate: false,
+      },
     };
 
     // Text search on username, full name, bio
@@ -77,31 +80,22 @@ export class UserDiscoveryService {
       ];
     }
 
-    // Location filter
+    // Build profile conditions
+    const profileConditions: any = { isPrivate: false };
+
     if (location) {
-      where.profile = {
-        ...where.profile,
-        location: { contains: location, mode: 'insensitive' },
-      };
+      profileConditions.location = { contains: location, mode: 'insensitive' };
     }
 
-    // Skills filter
     if (skills && skills.length > 0) {
-      where.profile = {
-        ...where.profile,
-        skills: {
-          hasSome: skills,
-        },
-      };
+      profileConditions.skills = { hasSome: skills };
     }
 
-    // Availability filter
     if (availability && availability !== 'any') {
-      where.profile = {
-        ...where.profile,
-        availability: availability === 'available' ? 'available' : 'busy',
-      };
+      profileConditions.availability = availability === 'available' ? 'available' : 'busy';
     }
+
+    where.profile = profileConditions;
 
     // Verified filter
     if (verified !== undefined) {
@@ -432,6 +426,7 @@ export class UserDiscoveryService {
           notIn: blockedUserIds,
         },
         profile: {
+          isPrivate: false,
           skills: {
             hasSome: currentUser.profile.skills,
           },
@@ -516,6 +511,7 @@ export class UserDiscoveryService {
         WHERE (blocker_id = ${userId} AND blocked_id = u.id)
            OR (blocker_id = u.id AND blocked_id = ${userId})
       )
+      AND p.is_private = false
       GROUP BY u.id, u.username, u.isVerified, p.avatar_url, p.full_name, p.bio, p.follower_count
       ORDER BY mutual_count DESC, p.follower_count DESC
       LIMIT ${limit}
@@ -569,6 +565,9 @@ export class UserDiscoveryService {
           },
         },
         id: { notIn: blockedUserIds },
+        profile: {
+          isPrivate: false,
+        },
       },
       take: limit * 2,
       include: {
@@ -718,10 +717,14 @@ export class UserDiscoveryService {
         },
       },
       id: { notIn: blockedUserIds },
+      profile: {
+        isPrivate: false,
+      },
     };
 
     if (category) {
       where.profile = {
+        ...where.profile,
         skills: {
           has: category,
         },

@@ -1,6 +1,8 @@
 // apps/api/src/modules/users/users.controller.ts
 import { Controller, Get, Patch, Body, Param, UseInterceptors, UploadedFile, Delete } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
+import { UseGuards } from '@nestjs/common';
 
 import { UsersService } from './users.service';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -41,8 +43,12 @@ export class UsersController {
   }
 
   @Get(':username')
-  async getUserByUsername(@Param('username') username: string) {
-    return this.usersService.getUserByUsername(username);
+  @UseGuards(OptionalJwtAuthGuard)
+  async getUserByUsername(
+    @Param('username') username: string,
+    @GetUser('id') userId?: string,
+  ) {
+    return this.usersService.getUserByUsername(username, userId);
   }
 
   @Delete('account')

@@ -22,6 +22,6 @@ export class UpdateProfileDto {
 
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
+  @IsUrl({}, { each: true })
   socialLinks?: string[];
 }
