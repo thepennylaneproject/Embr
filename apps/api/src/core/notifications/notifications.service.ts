@@ -5,6 +5,7 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { NOTIFICATION_TYPES, NotificationType } from './notifications.constants';
 
 @Injectable()
 export class NotificationsService {
@@ -15,7 +16,7 @@ export class NotificationsService {
    */
   async create(data: {
     userId: string;
-    type: string;
+    type: NotificationType;
     title?: string;
     message?: string;
     body?: string; // Alias for message
@@ -107,21 +108,24 @@ export class NotificationsService {
   }
 
   /**
-   * Mark a single notification as read
+   * Mark a single notification as read (idempotent)
+   * Always returns the same response format regardless of previous state
    */
   async markAsRead(notificationId: string, userId: string) {
     const notification = await this.findOne(notificationId, userId);
 
+    // If already read, just return it as-is (idempotent)
     if (notification.isRead) {
-      return { message: 'Notification already marked as read', notification };
+      return { success: true, notification };
     }
 
+    // Mark as read
     const updated = await this.prisma.notification.update({
       where: { id: notificationId },
       data: { isRead: true },
     });
 
-    return { message: 'Notification marked as read', notification: updated };
+    return { success: true, notification: updated };
   }
 
   /**
@@ -173,5 +177,21 @@ export class NotificationsService {
     return this.prisma.notification.count({
       where: { userId, isRead: false },
     });
+  }
+
+  /**
+   * Delete notifications older than the specified number of days (retention policy)
+   * Default is 90 days
+   */
+  async cleanup(daysToRetain: number = 90): Promise<{ count: number }> {
+    const cutoffDate = new Date(Date.now() - daysToRetain * 24 * 60 * 60 * 1000);
+
+    const result = await this.prisma.notification.deleteMany({
+      where: {
+        createdAt: { lt: cutoffDate },
+      },
+    });
+
+    return { count: result.count };
   }
 }
