@@ -8,11 +8,15 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  TooManyRequestsException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { CreatePostDto, UpdatePostDto, PostType, PostVisibility } from '../dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContentSanitizerService } from '../../../core/safety/services/content-sanitizer.service';
+import { RateLimitService } from '../../../core/rate-limit/rate-limit.service';
+import { CursorPaginationService } from '../../../core/pagination/cursor-pagination.service';
+import { CacheService } from '../../../core/cache/cache.service';
 
 @Injectable()
 export class PostsService {
@@ -20,6 +24,9 @@ export class PostsService {
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
     private readonly sanitizer: ContentSanitizerService,
+    private readonly rateLimit: RateLimitService,
+    private readonly pagination: CursorPaginationService,
+    private readonly cache: CacheService,
   ) {}
 
   /**
@@ -27,6 +34,18 @@ export class PostsService {
    */
   async createPost(userId: string, createPostDto: CreatePostDto) {
     const { content, type, mediaUrl, thumbnailUrl, visibility, hashtags } = createPostDto;
+
+    // Rate limiting: max 10 posts per hour per user
+    const maxPostsPerHour = 10;
+    const oneHourMs = 60 * 60 * 1000;
+
+    if (!this.rateLimit.isAllowed(userId, 'post:create', maxPostsPerHour, oneHourMs)) {
+      const resetTimeMs = this.rateLimit.getResetTime(userId, 'post:create');
+      const resetTimeSec = Math.ceil(resetTimeMs / 1000);
+      throw new TooManyRequestsException(
+        `Too many posts. Please try again in ${resetTimeSec} seconds.`,
+      );
+    }
 
     // Sanitize content
     const sanitizedContent = this.sanitizer.sanitizePostContent(content);
@@ -251,6 +270,127 @@ export class PostsService {
         hasMore: skip + posts.length < total,
       },
     };
+  }
+
+  /**
+   * Get feed with cursor-based pagination (recommended)
+   * More efficient for large datasets and real-time feeds
+   * Includes caching for performance optimization
+   */
+  async getFeedCursor(
+    params: {
+      cursor?: string;
+      limit: number;
+      type?: PostType;
+      authorId?: string;
+      hashtag?: string;
+    },
+    userId?: string,
+  ) {
+    const { cursor, limit, type, authorId, hashtag } = params;
+
+    // Generate cache key based on parameters
+    const cacheKey = `feed:cursor:${userId || 'anon'}:${cursor || 'start'}:${limit}:${type || 'all'}:${authorId || 'all'}:${hashtag || 'all'}`;
+
+    // Try to get from cache first (only for initial page, not when cursor is used)
+    if (!cursor) {
+      const cached = await this.cache.get(cacheKey);
+      if (cached) return cached;
+    }
+
+    const where: any = {
+      deletedAt: null,
+      OR: [
+        { visibility: 'PUBLIC' },
+        ...(userId ? [{ authorId: userId }] : []),
+      ],
+      // Filter out posts from blocked users
+      AND: [
+        {
+          author: {
+            blockedBy: { none: { blockerId: userId || 'null' } },
+          },
+        },
+        {
+          author: {
+            blocking: { none: { blockedId: userId || 'null' } },
+          },
+        },
+      ],
+      // Apply cursor filter if provided
+      ...this.pagination.getCursorWhereClause(cursor, 'forward'),
+    };
+
+    if (type) {
+      where.type = type;
+    }
+
+    if (authorId) {
+      where.authorId = authorId;
+    }
+
+    if (hashtag) {
+      where.hashtags = { has: hashtag };
+    }
+
+    // Fetch limit+1 to determine if there are more results
+    const posts = await this.prisma.post.findMany({
+      where,
+      take: limit + 1,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            profile: {
+              select: {
+                displayName: true,
+                avatarUrl: true,
+                isVerified: true,
+              },
+            },
+          },
+        },
+        likes: userId
+          ? {
+              where: { userId },
+              select: { id: true },
+            }
+          : false,
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+      },
+    });
+
+    const hasMore = posts.length > limit;
+    const data = posts.slice(0, limit);
+
+    const result = {
+      data: data.map((post) => this.formatPost(post, userId)),
+      ...this.pagination.buildResponse(data, limit, hasMore),
+    };
+
+    // Cache the first page result (5 minutes TTL)
+    if (!cursor) {
+      await this.cache.set(cacheKey, result, { ttl: 300 });
+    }
+
+    return result;
+  }
+
+  /**
+   * Invalidate feed cache when content changes
+   */
+  private async invalidateFeedCache(userId?: string): Promise<void> {
+    // Invalidate all feed caches for the user or all users if not specified
+    const pattern = userId ? `feed:*${userId}*` : 'feed:*';
+    // Note: In-memory cache doesn't support pattern deletion
+    // For Redis, you would use KEYS pattern matching
   }
 
   /**

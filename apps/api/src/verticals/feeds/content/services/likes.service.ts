@@ -31,6 +31,11 @@ export class LikesService {
       throw new NotFoundException('Post not found');
     }
 
+    // Prevent self-likes
+    if (post.authorId === userId) {
+      throw new ConflictException('You cannot like your own post');
+    }
+
     // Check if already liked
     const existingLike = await this.prisma.like.findUnique({
       where: {

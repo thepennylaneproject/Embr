@@ -41,7 +41,7 @@ export class CommentsService {
       throw new NotFoundException('Post not found');
     }
 
-    // If replying, verify parent comment exists
+    // If replying, verify parent comment exists and check nesting depth
     if (parentId) {
       const parentComment = await this.prisma.comment.findUnique({
         where: { id: parentId, postId, deletedAt: null },
@@ -49,6 +49,15 @@ export class CommentsService {
 
       if (!parentComment) {
         throw new NotFoundException('Parent comment not found');
+      }
+
+      // Enforce max nesting depth of 3 levels (main -> reply -> reply)
+      const depth = await this.getCommentDepth(parentComment.id, postId);
+      const maxDepth = 2; // 0-based, so max 3 levels total
+      if (depth >= maxDepth) {
+        throw new BadRequestException(
+          'Comment nesting limit reached. You can only reply up to 2 levels deep.',
+        );
       }
     }
 
@@ -321,6 +330,11 @@ export class CommentsService {
       throw new NotFoundException('Comment not found');
     }
 
+    // Prevent self-likes
+    if (comment.authorId === userId) {
+      throw new BadRequestException('You cannot like your own comment');
+    }
+
     // Check if already liked
     const existingLike = await this.prisma.like.findUnique({
       where: {
@@ -393,6 +407,29 @@ export class CommentsService {
     });
 
     return { message: 'Comment unliked successfully' };
+  }
+
+  /**
+   * Get the nesting depth of a comment by traversing parent chain
+   * Returns the depth: 0 for top-level, 1 for first reply, etc.
+   */
+  private async getCommentDepth(commentId: string, postId: string): Promise<number> {
+    let depth = 0;
+    let currentCommentId: string | null = commentId;
+
+    while (currentCommentId) {
+      const comment = await this.prisma.comment.findUnique({
+        where: { id: currentCommentId },
+        select: { parentId: true },
+      });
+
+      if (!comment || !comment.parentId) break;
+
+      depth++;
+      currentCommentId = comment.parentId;
+    }
+
+    return depth;
   }
 
   private async formatComment(comment: any, userId?: string) {
