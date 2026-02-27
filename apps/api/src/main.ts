@@ -7,12 +7,16 @@ dotenv.config({ path: '../../.env', override: false }); // monorepo root .env
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './shared/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
+  // Security middleware
+  app.use(helmet());
+
   // Global prefix for all routes
   app.setGlobalPrefix('api');
   
@@ -43,9 +47,28 @@ async function bootstrap() {
   });
   
   const port = process.env.PORT ? Number(process.env.PORT) : 3003;
-  await app.listen(port);
-  
+  const server = await app.listen(port);
+
   console.log(`🚀 Embr API running on http://localhost:${port}/api`);
+
+  // Graceful shutdown handling for containerized deployments
+  process.on('SIGTERM', async () => {
+    console.log('SIGTERM received, starting graceful shutdown...');
+    await app.close();
+    server.close(() => {
+      console.log('Server closed. Exiting process.');
+      process.exit(0);
+    });
+  });
+
+  process.on('SIGINT', async () => {
+    console.log('SIGINT received, starting graceful shutdown...');
+    await app.close();
+    server.close(() => {
+      console.log('Server closed. Exiting process.');
+      process.exit(0);
+    });
+  });
 }
 
 bootstrap();
