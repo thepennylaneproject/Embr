@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { ProtectedPageShell } from '@/components/layout';
 import { useNotifications } from '@/hooks/useNotifications';
-import { Button } from '@/components/ui';
+import { Button } from '@embr/ui';
 
 export default function NotificationsPage() {
   const {

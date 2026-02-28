@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Button } from '@embr/ui/Button';
+import { Button } from './Button';
 
 interface PageStateProps {
   title: string;

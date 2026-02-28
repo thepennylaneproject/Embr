@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
 import { getApiErrorMessage } from '@/lib/api/error';
-import { Button, Card, Input } from '@/components/ui';
+import { Button, Card, Input } from '@embr/ui';
 
 export default function LoginPage() {
   const router = useRouter();

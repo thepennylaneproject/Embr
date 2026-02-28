@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ProtectedPageShell } from '@/components/layout';
 import { TrackDiscovery } from '@/components/music/discovery/TrackDiscovery';
-import { Button } from '@/components/ui';
+import { Button } from '@embr/ui';
 
 export default function MusicDiscoveryPage() {
   const router = useRouter();

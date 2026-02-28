@@ -7,7 +7,7 @@ import { TipButton } from '@/components/monetization/TipButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGig } from '@/hooks/useGig';
 import { GigBudgetType, GigStatus } from '@shared/types/gig.types';
-import { Button } from '@/components/ui';
+import { Button } from '@embr/ui';
 
 export default function GigDetailPage() {
   const router = useRouter();

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { authApi } from '@/lib/api/auth';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
 import { getApiErrorMessage } from '@/lib/api/error';
-import { Button, Card, Input, PageState } from '@/components/ui';
+import { Button, Card, Input, PageState } from '@embr/ui';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');

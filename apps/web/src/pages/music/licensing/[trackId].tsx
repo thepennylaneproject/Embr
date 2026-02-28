@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { ProtectedPageShell } from '@/components/layout';
-import { Button } from '@/components/ui';
+import { Button } from '@embr/ui';
 import { Music, CheckCircle, Lock, Share2 } from 'lucide-react';
 
 interface Track {

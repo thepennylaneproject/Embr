@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { PropsWithChildren, useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, Button } from '@/components/ui';
+import { Avatar, Button } from '@embr/ui';
 import type { CSSProperties } from 'react';
 
 const navItems = [

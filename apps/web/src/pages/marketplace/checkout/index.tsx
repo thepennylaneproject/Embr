@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { ProtectedPageShell } from '@/components/layout';
-import { Button } from '@/components/ui';
+import { Button } from '@embr/ui';
 import { ShoppingCart, Package, Truck, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface CartItem {

@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import { usersApi } from '@/lib/api/users';
 import { ProtectedPageShell } from '@/components/layout';
-import { Button, Card, Input, PageState, TextArea, useToast } from '@/components/ui';
+import { Button, Card, Input, PageState, TextArea, useToast } from '@embr/ui';
 
 export default function EditProfilePage() {
   const { user, updateUser } = useAuth();

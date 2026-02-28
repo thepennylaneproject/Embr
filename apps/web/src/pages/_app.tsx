@@ -1,6 +1,6 @@
 import type { AppProps } from 'next/app';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { ToastProvider } from '@/components/ui';
+import { ToastProvider } from '@embr/ui';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import '../styles/globals.css';
 

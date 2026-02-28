@@ -4,7 +4,7 @@ import { PropsWithChildren, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppShell, type AppShellProps } from './AppShell';
-import { Card, PageState } from '@/components/ui';
+import { Card, PageState } from '@embr/ui';
 
 interface ProtectedPageShellProps extends AppShellProps {
   requireAuth?: boolean;

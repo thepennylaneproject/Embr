@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button, Card, PageState } from '@/components/ui';
+import { Button, Card, PageState } from '@embr/ui';
 
 export default function HomePage() {
   const { isAuthenticated, loading } = useAuth();
