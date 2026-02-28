@@ -1,28 +1,77 @@
 :root {
   color-scheme: light;
 
-  --embr-ink: #293241;
-  --embr-slate: #6b7b82;
-  --embr-mist: #aeb7bd;
-  --embr-ivory: #e6e1d2;
-  --embr-warm-1: #c37e67;
-  --embr-warm-2: #d99f84;
-  --embr-sun: #e2c895;
-  --embr-sea-glass: #8bbbb6;
+  /* Primary - Muted Terracotta (Phoenix) */
+  --embr-primary-50: #faf6f4;
+  --embr-primary-100: #f5eee9;
+  --embr-primary-200: #ebd7cc;
+  --embr-primary-300: #d9baa8;
+  --embr-primary-400: #c4977d;
+  --embr-primary-500: #b88566;
+  --embr-primary-600: #a67452;
+  --embr-primary-700: #886043;
+  --embr-primary-800: #6d4a37;
+  --embr-primary-900: #523729;
 
-  --embr-bg: var(--embr-ivory);
-  --embr-surface: #f4f0e5;
-  --embr-text: var(--embr-ink);
-  --embr-muted-text: var(--embr-slate);
-  --embr-border: color-mix(in srgb, var(--embr-ink) 15%, white);
-  --embr-focus: var(--embr-sea-glass);
-  --embr-accent: var(--embr-warm-1);
+  /* Secondary - Teal (Water/Calm) */
+  --embr-secondary-50: #f0f7f6;
+  --embr-secondary-100: #dceee8;
+  --embr-secondary-200: #b8d9d3;
+  --embr-secondary-300: #8dbfb0;
+  --embr-secondary-400: #6ba898;
+  --embr-secondary-500: #5a9684;
+  --embr-secondary-600: #497e6f;
+  --embr-secondary-700: #3a6659;
+  --embr-secondary-800: #2d5246;
+  --embr-secondary-900: #213c35;
+
+  /* Accent - Navy (Grounding) */
+  --embr-accent-50: #f5f7fa;
+  --embr-accent-100: #e8ecf2;
+  --embr-accent-200: #cbd5e3;
+  --embr-accent-300: #a1b3c8;
+  --embr-accent-400: #6a7f9e;
+  --embr-accent-500: #4a5f7f;
+  --embr-accent-600: #374563;
+  --embr-accent-700: #2c3847;
+  --embr-accent-800: #232d39;
+  --embr-accent-900: #1a202c;
+
+  /* Neutral - Cream (Background) */
+  --embr-neutral-50: #fefdfb;
+  --embr-neutral-100: #faf8f5;
+  --embr-neutral-200: #f3ebe5;
+  --embr-neutral-300: #e8ddd2;
+  --embr-neutral-400: #d4ccc0;
+  --embr-neutral-500: #c0b8ac;
+  --embr-neutral-600: #a89d91;
+  --embr-neutral-700: #8f8478;
+  --embr-neutral-800: #76695e;
+  --embr-neutral-900: #5d5248;
+
+  /* Semantic Colors */
+  --embr-success: #6ba898;
+  --embr-warning: #c4977d;
+  --embr-error: #9b6b5a;
+  --embr-info: #4a5f7f;
+
+  /* Semantic Aliases (backwards compatibility) */
+  --embr-bg: var(--embr-neutral-50);
+  --embr-surface: var(--embr-neutral-100);
+  --embr-text: var(--embr-accent-900);
+  --embr-muted-text: var(--embr-accent-600);
+  --embr-border: var(--embr-neutral-200);
+  --embr-focus: var(--embr-secondary-400);
+  --embr-accent: var(--embr-primary-400);
   --embr-accent-contrast: #ffffff;
-  --embr-error: #9f2f2f;
+
+  /* Border Radius */
   --embr-radius-sm: 8px;
   --embr-radius-md: 12px;
   --embr-radius-lg: 16px;
   --embr-radius-xl: 24px;
+
+  /* Shadow */
   --embr-shadow: 0 16px 40px rgba(41, 50, 65, 0.08);
 }
 
@@ -186,7 +235,7 @@ select {
 }
 
 .ui-button[data-variant='secondary'] {
-  background: color-mix(in srgb, var(--embr-ink) 9%, white);
+  background: color-mix(in srgb, var(--embr-accent-900) 9%, white);
   color: var(--embr-text);
 }
 

@@ -81,16 +81,20 @@ export function AppShell({
             aria-label="Primary navigation"
             data-mobile-open={mobileMenuOpen}
           >
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="embr-nav-link"
-                data-active={isNavActive(item.href)}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isActive = isNavActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="embr-nav-link"
+                  data-active={isActive}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* User menu */}

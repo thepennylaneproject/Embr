@@ -35,7 +35,23 @@ export function ToastProvider({ children }: PropsWithChildren) {
       {children}
       <div className="ui-toast-stack" aria-live="polite" aria-atomic="true">
         {toasts.map((toast) => (
-          <article key={toast.id} className="ui-toast" data-kind={toast.kind}>
+          <article key={toast.id} className="ui-toast" data-kind={toast.kind} role="status">
+            {/* Announce toast kind to screen readers */}
+            <span
+              style={{
+                position: 'absolute',
+                width: 1,
+                height: 1,
+                padding: 0,
+                margin: -1,
+                overflow: 'hidden',
+                clip: 'rect(0, 0, 0, 0)',
+                whiteSpace: 'nowrap',
+                borderWidth: 0,
+              }}
+            >
+              {toast.kind === 'error' ? 'Error notification: ' : 'Information notification: '}
+            </span>
             <strong>{toast.title}</strong>
             {toast.description ? <div style={{ marginTop: 4, color: 'var(--embr-muted-text)' }}>{toast.description}</div> : null}
           </article>

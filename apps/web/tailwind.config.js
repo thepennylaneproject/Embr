@@ -8,20 +8,65 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: "#fdf8f6",
-          100: "#fce8e3",
-          200: "#f5ccc2",
-          300: "#edb0a0",
-          400: "#e8998d",
-          500: "#e0827a",
-          600: "#d66b63",
-          700: "#c9554c",
-          800: "#a84438",
-          900: "#7d3228",
+        embr: {
+          // Primary - Muted Terracotta (Phoenix)
+          primary: {
+            50: "#faf6f4",
+            100: "#f5eee9",
+            200: "#ebd7cc",
+            300: "#d9baa8",
+            400: "#c4977d",
+            500: "#b88566",
+            600: "#a67452",
+            700: "#886043",
+            800: "#6d4a37",
+            900: "#523729",
+          },
+          // Secondary - Teal (Water/Calm)
+          secondary: {
+            50: "#f0f7f6",
+            100: "#dceee8",
+            200: "#b8d9d3",
+            300: "#8dbfb0",
+            400: "#6ba898",
+            500: "#5a9684",
+            600: "#497e6f",
+            700: "#3a6659",
+            800: "#2d5246",
+            900: "#213c35",
+          },
+          // Accent - Navy (Grounding)
+          accent: {
+            50: "#f5f7fa",
+            100: "#e8ecf2",
+            200: "#cbd5e3",
+            300: "#a1b3c8",
+            400: "#6a7f9e",
+            500: "#4a5f7f",
+            600: "#374563",
+            700: "#2c3847",
+            800: "#232d39",
+            900: "#1a202c",
+          },
+          // Neutral - Cream (Background)
+          neutral: {
+            50: "#fefdfb",
+            100: "#faf8f5",
+            200: "#f3ebe5",
+            300: "#e8ddd2",
+            400: "#d4ccc0",
+            500: "#c0b8ac",
+            600: "#a89d91",
+            700: "#8f8478",
+            800: "#76695e",
+            900: "#5d5248",
+          },
+          // Semantic
+          success: "#6ba898",
+          warning: "#c4977d",
+          error: "#9b6b5a",
+          info: "#4a5f7f",
         },
-        secondary: "#C9ADA7",
-        accent: "#9A8C98",
       },
       fontFamily: {
         sans: ["system-ui", "sans-serif"],
