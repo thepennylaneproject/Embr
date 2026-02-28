@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { PropsWithChildren, useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, Button } from '@/components/ui';
+import { Avatar, Button } from '@embr/ui';
 import type { CSSProperties } from 'react';
 
 const navItems = [
@@ -81,16 +81,20 @@ export function AppShell({
             aria-label="Primary navigation"
             data-mobile-open={mobileMenuOpen}
           >
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="embr-nav-link"
-                data-active={isNavActive(item.href)}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isActive = isNavActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="embr-nav-link"
+                  data-active={isActive}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* User menu */}

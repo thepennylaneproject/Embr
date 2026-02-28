@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { ProtectedPageShell } from '@/components/layout';
-import { Button } from '@/components/ui';
+import { Button } from '@embr/ui';
 import { Calendar, Clock, MapPin, AlertCircle, CheckCircle, Shield } from 'lucide-react';
 
 interface Gig {

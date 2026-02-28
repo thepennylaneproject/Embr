@@ -2,4 +2,5 @@
 @tailwind components;
 @tailwind utilities;
 
-@import './design-system.css';
+/* Import design system and component styles from @embr/ui */
+@import '@embr/ui/src/styles/index.css';

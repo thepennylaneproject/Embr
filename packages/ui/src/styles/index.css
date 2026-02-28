@@ -1,0 +1,13 @@
+/**
+ * @embr/ui - Design System & Component Styles
+ *
+ * This file imports all design system and component styles for the @embr/ui library.
+ *
+ * Import this in your application's entry point to enable component styling:
+ *
+ * @example
+ * // In your app's root component or _app.tsx
+ * import '@embr/ui/styles';
+ */
+
+@import './design-system.css';

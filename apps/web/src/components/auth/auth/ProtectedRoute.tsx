@@ -1,7 +1,7 @@
 import { PropsWithChildren, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, PageState } from '@/components/ui';
+import { Card, PageState } from '@embr/ui';
 
 interface ProtectedRouteProps {
   requireAuth?: boolean;

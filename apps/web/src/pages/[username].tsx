@@ -9,7 +9,7 @@ import { Post } from '@shared/types/content.types';
 import { PostCard } from '@/components/content';
 import { FollowButton } from '@/components/social/FollowButton';
 import { AppShell } from '@/components/layout';
-import { Button } from '@/components/ui';
+import { Button } from '@embr/ui';
 
 export default function UserProfilePage() {
   const router = useRouter();

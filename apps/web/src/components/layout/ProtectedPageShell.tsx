@@ -4,7 +4,7 @@ import { PropsWithChildren, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppShell, type AppShellProps } from './AppShell';
-import { Card, PageState } from '@/components/ui';
+import { Card, PageState } from '@embr/ui';
 
 interface ProtectedPageShellProps extends AppShellProps {
   requireAuth?: boolean;
@@ -48,7 +48,13 @@ export function ProtectedPageShell({
     }
 
     if (requireAuth && !user) {
-      const t = setTimeout(() => router.replace(redirectTo), 50);
+      const t = setTimeout(() => {
+        router
+          .replace(redirectTo)
+          .catch((error) => {
+            console.error('Failed to redirect to login:', error);
+          });
+      }, 500);
       return () => clearTimeout(t);
     }
   }, [loading, redirectTo, requireAuth, router, user]);
@@ -67,7 +73,10 @@ export function ProtectedPageShell({
     return (
       <AppShell title={title} subtitle={subtitle} breadcrumbs={breadcrumbs} accent={accent}>
         <Card padding="lg">
-          <PageState title="Redirecting" description="You need to sign in to view this page." />
+          <PageState
+            title="Redirecting you to sign in"
+            description="Please wait while we redirect you to the login page. If this page doesn't redirect automatically, you can sign in manually."
+          />
         </Card>
       </AppShell>
     );

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedPageShell } from '@/components/layout';
-import { Button, Input, TextArea, useToast } from '@/components/ui';
+import { Button, Input, TextArea, useToast } from '@embr/ui';
 
 export default function CreateArtistPage() {
   const router = useRouter();

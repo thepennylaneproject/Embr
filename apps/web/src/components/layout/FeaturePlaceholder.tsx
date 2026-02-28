@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
-import { Button, Card, PageState } from '@/components/ui';
+import { Button, Card, PageState } from '@embr/ui';
 
 type PlaceholderState = 'loading' | 'empty' | 'error';
 

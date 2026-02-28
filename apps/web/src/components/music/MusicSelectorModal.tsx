@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Input } from '@/components/ui';
+import { Button, Input } from '@embr/ui';
 
 interface Track {
   id: string;

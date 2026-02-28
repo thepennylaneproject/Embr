@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useState } from 'react';
 import { cn } from '@/lib/cn';
 
 interface AvatarProps {
@@ -16,11 +17,16 @@ function initialsFromName(name?: string | null) {
 }
 
 export function Avatar({ src, alt, name, size = 36, className }: AvatarProps) {
+  const [imageError, setImageError] = useState(false);
   const style: CSSProperties = { width: size, height: size, fontSize: Math.max(12, size * 0.35) };
 
   return (
     <span className={cn('ui-avatar', className)} style={style} aria-label={alt || name || 'User avatar'}>
-      {src ? <img src={src} alt={alt || name || 'Avatar'} /> : initialsFromName(name)}
+      {src && !imageError ? (
+        <img src={src} alt={alt || name || 'Avatar'} onError={() => setImageError(true)} />
+      ) : (
+        initialsFromName(name)
+      )}
     </span>
   );
 }

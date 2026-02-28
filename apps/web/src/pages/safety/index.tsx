@@ -4,7 +4,7 @@ import { BlockedMutedList } from '@/components/safety/blocking/BlockedMutedList'
 import { ReportModal } from '@/components/safety/reporting/ReportModal';
 import { useSafety } from '@/hooks/useSafety';
 import { ReportEntityType } from '@shared/types/safety.types';
-import { Button, Input } from '@/components/ui';
+import { Button, Input } from '@embr/ui';
 
 export default function SafetyPage() {
   const { blockUser, muteUser, isSubmitting, error } = useSafety();

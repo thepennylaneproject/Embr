@@ -6,7 +6,7 @@ import { contentApi } from '@shared/api/content.api';
 import { Post } from '@shared/types/content.types';
 import { PostCard } from '@/components/content';
 import { ProtectedPageShell } from '@/components/layout';
-import { Button } from '@/components/ui';
+import { Button } from '@embr/ui';
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
