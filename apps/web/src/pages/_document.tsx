@@ -3,7 +3,37 @@ import { Html, Head, Main, NextScript } from 'next/document';
 export default function Document() {
   return (
     <Html lang="en">
-      <Head />
+      <Head>
+        {/* Viewport and mobile optimization */}
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+
+        {/* SEO meta tags */}
+        <meta name="description" content="Embr - Connect with creators, share gigs, and grow your network" />
+        <meta name="keywords" content="creator economy, gig marketplace, social network, freelance" />
+        <meta name="theme-color" content="#FF6B35" />
+
+        {/* Open Graph for social sharing */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Embr - Creator Community & Gig Marketplace" />
+        <meta property="og:description" content="Connect with creators, share gigs, and grow your network" />
+        <meta property="og:site_name" content="Embr" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Embr - Creator Community & Gig Marketplace" />
+        <meta name="twitter:description" content="Connect with creators, share gigs, and grow your network" />
+
+        {/* Favicon and app icons */}
+        <link rel="icon" href="/favicon.ico" />
+
+        {/* Security headers as meta tags (complementary to Helmet) */}
+        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+        {/* Preconnect to external services */}
+        <link rel="preconnect" href="https://api.sendgrid.com" />
+      </Head>
       <body>
         <Main />
         <NextScript />
