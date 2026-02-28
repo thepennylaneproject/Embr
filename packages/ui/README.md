@@ -189,15 +189,42 @@ npm install @embr/ui
 ### Import Components
 
 ```typescript
-import { Button, Input, Modal } from '@embr/ui';
+import { Button, Input, Modal, Avatar, Card, PageState } from '@embr/ui';
+import { ToastProvider, useToast } from '@embr/ui';
 ```
+
+### Import Styles
+
+The components require CSS to display correctly. Import the styles in your application:
+
+**Option 1: Import CSS directly (Recommended)**
+
+```css
+/* In your main CSS file or globals.css */
+@import '@embr/ui/src/styles/index.css';
+```
+
+**Option 2: Import in JavaScript**
+
+```typescript
+// In your _app.tsx, main.tsx, or app entry point
+import '@embr/ui/src/styles/index.css';
+```
+
+**Option 3: Import only design-system CSS**
+
+```css
+@import '@embr/ui/src/styles/design-system.css';
+```
+
+See [Styles README](./src/styles/README.md) for more details on CSS customization.
 
 ### TypeScript Support
 
 All components include full TypeScript definitions:
 
 ```typescript
-import type { ButtonProps, InputProps } from '@embr/ui';
+import type { ButtonProps, InputProps, CardProps } from '@embr/ui';
 ```
 
 ## ♿ Accessibility
@@ -223,11 +250,12 @@ const spacing = designTokens.spacing.md; // 1rem
 
 ## 🚀 Future Work
 
-- Move component implementations from `apps/web` to `packages/ui/src/components`
-- Add Storybook for component documentation
-- Add comprehensive tests
-- Establish component extension patterns
-- Document styling customization
+- [ ] **Phase 1**: Add Storybook for component documentation and interactive showcase
+- [ ] **Phase 2**: Add comprehensive component tests (unit, integration, a11y)
+- [ ] **Phase 3**: Dark mode support and theme customization
+- [ ] **Phase 4**: Create design tokens package (separate from CSS)
+- [ ] **Phase 5**: Document styling customization and CSS variable override patterns
+- [ ] **Phase 6**: Mobile component variants (React Native support if needed)
 
 ## 📝 Contributing
 
@@ -241,6 +269,21 @@ When adding new components:
 
 ## 📚 Resources
 
-- **Design System**: See `apps/web/src/theme/DESIGN_SYSTEM.md`
+- **Styles Guide**: See [Styles README](./src/styles/README.md)
+- **Design System Details**: See `apps/web/src/theme/DESIGN_SYSTEM.md`
 - **Color Palette**: See `apps/web/src/theme/colorPalette.ts`
-- **Styles**: See `apps/web/src/styles/design-system.css`
+- **Migration Guide**: See [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)
+
+## 📦 Package Structure
+
+```
+packages/ui/
+├── src/
+│   ├── components/        # React components (Button, Input, Modal, etc.)
+│   ├── styles/           # CSS design system (design-system.css, index.css)
+│   ├── utils/            # Shared utilities (cn function)
+│   └── index.ts          # Main entry point
+├── README.md             # This file
+├── MIGRATION_GUIDE.md    # Component library migration guide
+└── package.json
+```
