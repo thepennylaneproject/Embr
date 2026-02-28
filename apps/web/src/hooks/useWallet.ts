@@ -80,7 +80,9 @@ export function useWallet(): UseWalletReturn {
   useEffect(() => {
     const loadWalletData = async () => {
       setIsLoading(true);
-      await Promise.all([refetchBalance(), refetchStats(), loadTransactions()]);
+      // Use allSettled to ensure partial data loads even if one call fails
+      // This prevents entire hook from becoming unusable if any single data fetch fails
+      await Promise.allSettled([refetchBalance(), refetchStats(), loadTransactions()]);
       setIsLoading(false);
     };
 

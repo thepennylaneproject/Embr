@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRouter } from 'next/router';
 import { UserSearchBar } from '@/components/social/UserSearchBar';
 import { TrendingCreators } from '@/components/social/TrendingCreators';
 import { SuggestedUsers } from '@/components/social/SuggestedUsers';
@@ -9,12 +10,13 @@ import type { SearchUser, TrendingCreator, RecommendedUser } from '@shared/types
 type Tab = 'trending' | 'suggested' | 'search';
 
 const DiscoveryPage: React.FC = () => {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('trending');
   const { users, loading, searchUsers, hasMore, loadMore } = useUserSearch();
 
   const handleUserClick = (user: SearchUser | TrendingCreator | RecommendedUser) => {
-    // Navigate to user profile
-    window.location.href = `/profile/${user.username}`;
+    // Navigate to user profile using Next.js router for client-side navigation
+    router.push(`/profile/${user.username}`);
   };
 
   const handleSearch = (query: string) => {
