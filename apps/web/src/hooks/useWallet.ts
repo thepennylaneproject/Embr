@@ -12,6 +12,9 @@ interface UseWalletReturn {
   stats: WalletStats | null;
   transactions: Transaction[];
   isLoading: boolean;
+  isLoadingBalance: boolean;
+  isLoadingStats: boolean;
+  isLoadingTransactions: boolean;
   error: string | null;
   refetchBalance: () => Promise<void>;
   refetchStats: () => Promise<void>;
@@ -29,9 +32,13 @@ export function useWallet(): UseWalletReturn {
   const [stats, setStats] = useState<WalletStats | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const refetchBalance = useCallback(async () => {
+    setIsLoadingBalance(true);
     try {
       setError(null);
       const data = await walletApi.getBalance();
@@ -39,10 +46,13 @@ export function useWallet(): UseWalletReturn {
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load balance');
       console.error('Error fetching balance:', err);
+    } finally {
+      setIsLoadingBalance(false);
     }
   }, []);
 
   const refetchStats = useCallback(async () => {
+    setIsLoadingStats(true);
     try {
       setError(null);
       const data = await walletApi.getStats();
@@ -50,6 +60,8 @@ export function useWallet(): UseWalletReturn {
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load stats');
       console.error('Error fetching stats:', err);
+    } finally {
+      setIsLoadingStats(false);
     }
   }, []);
 
@@ -61,16 +73,16 @@ export function useWallet(): UseWalletReturn {
       page?: number;
       limit?: number;
     }) => {
+      setIsLoadingTransactions(true);
       try {
         setError(null);
-        setIsLoading(true);
         const data = await walletApi.getTransactions(filters);
         setTransactions(data.transactions);
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to load transactions');
         console.error('Error fetching transactions:', err);
       } finally {
-        setIsLoading(false);
+        setIsLoadingTransactions(false);
       }
     },
     [],
@@ -94,6 +106,9 @@ export function useWallet(): UseWalletReturn {
     stats,
     transactions,
     isLoading,
+    isLoadingBalance,
+    isLoadingStats,
+    isLoadingTransactions,
     error,
     refetchBalance,
     refetchStats,
