@@ -5,6 +5,7 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 
 export interface EmailOptions {
   to: string;
@@ -24,6 +25,7 @@ export class EmailService {
   private readonly provider: 'sendgrid' | 'ses' | 'mock';
   private readonly maxRetries = 3;
   private readonly baseDelay = 1000; // 1 second
+  private sesClient: SESClient | null = null;
 
   constructor(private readonly configService: ConfigService) {
     this.fromEmail = this.configService.get('EMAIL_FROM', 'noreply@embr.io');
@@ -35,6 +37,10 @@ export class EmailService {
       this.provider = 'sendgrid';
     } else if (this.configService.get('AWS_SES_REGION')) {
       this.provider = 'ses';
+      // Initialize SES client
+      this.sesClient = new SESClient({
+        region: this.configService.get('AWS_SES_REGION', 'us-east-1'),
+      });
     } else {
       this.provider = 'mock';
       this.logger.warn('No email provider configured - emails will be logged only');
@@ -156,8 +162,7 @@ export class EmailService {
   }
 
   /**
-   * Send via AWS SES (placeholder - requires @aws-sdk/client-ses)
-   * TODO: Implement with @aws-sdk/client-ses when needed
+   * Send via AWS SES with exponential backoff retry logic
    */
   private async sendViaSES(options: {
     to: string;
@@ -166,11 +171,73 @@ export class EmailService {
     html: string;
     text?: string;
   }): Promise<void> {
-    // AWS SES implementation would go here
-    // For now, log a warning and fall back to mock
-    this.logger.warn('AWS SES not fully implemented - logging email instead');
-    this.logger.log(`[SES PLACEHOLDER] To: ${options.to} | Subject: ${options.subject}`);
-    // TODO: Once implemented, add similar retry logic to sendViaSendGrid
+    if (!this.sesClient) {
+      throw new Error('SES client not initialized');
+    }
+
+    let lastError: Error | undefined;
+
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      try {
+        const command = new SendEmailCommand({
+          Source: options.from,
+          Destination: {
+            ToAddresses: [options.to],
+          },
+          Message: {
+            Subject: {
+              Data: options.subject,
+              Charset: 'UTF-8',
+            },
+            Body: {
+              Html: {
+                Data: options.html,
+                Charset: 'UTF-8',
+              },
+              ...(options.text && {
+                Text: {
+                  Data: options.text,
+                  Charset: 'UTF-8',
+                },
+              }),
+            },
+          },
+        });
+
+        const response = await this.sesClient.send(command);
+        this.logger.log(
+          `Email sent to ${options.to} via SES: ${options.subject} (MessageId: ${response.MessageId})`,
+        );
+        return;
+      } catch (error) {
+        lastError = error as Error;
+        const errorCode = (error as any)?.$metadata?.httpStatusCode;
+        const errorName = (error as any)?.name;
+
+        // Permanent errors (4xx) should not be retried
+        if (errorCode && errorCode >= 400 && errorCode < 500) {
+          this.logger.error(
+            `Failed to send email to ${options.to} via SES (permanent error): ${errorCode} - ${lastError.message}`,
+          );
+          throw lastError;
+        }
+
+        // Transient errors should be retried
+        if (attempt < this.maxRetries) {
+          const delay = this.baseDelay * Math.pow(2, attempt - 1);
+          this.logger.warn(
+            `SES send failed (attempt ${attempt}/${this.maxRetries}), retrying in ${delay}ms: ${lastError.message}`,
+          );
+          await this.sleep(delay);
+        } else {
+          this.logger.error(
+            `Failed to send email to ${options.to} via SES after ${this.maxRetries} attempts: ${lastError.message}`,
+          );
+        }
+      }
+    }
+
+    throw lastError || new Error('Failed to send email via SES');
   }
 
   // =====================================

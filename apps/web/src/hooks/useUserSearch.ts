@@ -1,13 +1,31 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { socialApi } from '@shared/api/social.api';
-import type { 
-  SearchUser, 
-  RecommendedUser, 
+import type {
+  SearchUser,
+  RecommendedUser,
   TrendingCreator,
   SearchUsersRequest,
   GetRecommendedUsersRequest,
-  GetTrendingCreatorsRequest 
+  GetTrendingCreatorsRequest
 } from '@shared/types/social.types';
+
+/**
+ * Debounce helper to delay function execution
+ */
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout;
+  return function executedFunction(...args: Parameters<T>) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
 export const useUserSearch = () => {
   const [users, setUsers] = useState<SearchUser[]>([]);
@@ -16,14 +34,13 @@ export const useUserSearch = () => {
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [page, setPage] = useState<number>(1);
   const [lastQuery, setLastQuery] = useState<SearchUsersRequest>({});
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const searchUsers = useCallback(async (
+  const performSearch = useCallback(async (
     params: SearchUsersRequest,
-    resetPage: boolean = false
+    currentPage: number,
+    resetPage: boolean
   ) => {
-    if (loading) return;
-
-    const currentPage = resetPage ? 1 : page;
     const searchParams = { ...params, page: currentPage, limit: 20 };
 
     setLoading(true);
@@ -49,20 +66,50 @@ export const useUserSearch = () => {
     } finally {
       setLoading(false);
     }
-  }, [loading, page]);
+  }, []);
+
+  const searchUsers = useCallback((
+    params: SearchUsersRequest,
+    resetPage: boolean = false
+  ) => {
+    // Clear existing debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Set new debounce timer (300ms delay to avoid excessive API calls)
+    debounceTimerRef.current = setTimeout(() => {
+      const currentPage = resetPage ? 1 : page;
+      performSearch(params, currentPage, resetPage);
+    }, 300);
+  }, [page, performSearch]);
 
   const loadMore = useCallback(() => {
     if (hasMore && !loading) {
-      searchUsers(lastQuery, false);
+      // loadMore should not be debounced (explicit user action)
+      const currentPage = page;
+      performSearch(lastQuery, currentPage, false);
     }
-  }, [hasMore, loading, lastQuery, searchUsers]);
+  }, [hasMore, loading, lastQuery, page, performSearch]);
 
   const reset = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
     setUsers([]);
     setPage(1);
     setHasMore(true);
     setError(null);
     setLastQuery({});
+  }, []);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
   }, []);
 
   return {

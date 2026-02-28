@@ -11,11 +11,13 @@ interface UsePayoutsReturn {
   createPayoutRequest: (amount: number, note?: string) => Promise<Payout>;
   getPayoutStats: () => Promise<PayoutStats>;
   isCreating: boolean;
+  isLoadingStats: boolean;
   error: string | null;
 }
 
 export function usePayouts(): UsePayoutsReturn {
   const [isCreating, setIsCreating] = useState(false);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const createPayoutRequest = useCallback(
@@ -45,6 +47,7 @@ export function usePayouts(): UsePayoutsReturn {
   );
 
   const getPayoutStats = useCallback(async (): Promise<PayoutStats> => {
+    setIsLoadingStats(true);
     try {
       setError(null);
       const stats = await payoutsApi.getStats();
@@ -53,6 +56,8 @@ export function usePayouts(): UsePayoutsReturn {
       const errorMessage = err.response?.data?.message || 'Failed to load payout stats';
       setError(errorMessage);
       throw new Error(errorMessage);
+    } finally {
+      setIsLoadingStats(false);
     }
   }, []);
 
@@ -60,6 +65,7 @@ export function usePayouts(): UsePayoutsReturn {
     createPayoutRequest,
     getPayoutStats,
     isCreating,
+    isLoadingStats,
     error,
   };
 }

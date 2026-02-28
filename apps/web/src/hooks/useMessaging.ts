@@ -71,19 +71,13 @@ export function useMessaging(options: UseMessagingOptions = {}) {
   // ============================================================
 
   const connect = useCallback(() => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      const error = new Error("No access token available");
-      setError(error);
-      onError?.(error);
-      return;
-    }
-
+    // WebSocket connection uses httpOnly cookies for authentication
+    // Cookies are automatically sent by the browser with the request
     const newSocket = io(
       `${process.env.NEXT_PUBLIC_WS_URL || "http://localhost:3003"}/messaging`,
       {
-        auth: { token },
         transports: ["websocket", "polling"],
+        withCredentials: true, // Enable sending cookies with WebSocket requests
       },
     );
 
