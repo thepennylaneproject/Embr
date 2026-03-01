@@ -5,7 +5,7 @@ import {
   MilestoneProposal,
   Gig,
   GigBudgetType,
-} from '../../shared/types/gig.types';
+} from '@embr/types';
 interface ApplicationFormProps {
   gig: Gig;
   onSuccess?: (applicationId: string) => void;

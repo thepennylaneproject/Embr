@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@embr/types": "workspace:*",
     "axios": "^1.6.7",
     "date-fns": "^3.6.0",
     "lucide-react": "^0.378.0",

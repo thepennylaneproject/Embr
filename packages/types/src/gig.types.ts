@@ -4,72 +4,80 @@
  */
 
 // ============================================================================
-// ENUMS
+// ENUMS (as const + type pattern for tree-shakability)
 // ============================================================================
 
-export enum GigStatus {
-  DRAFT = 'DRAFT',
-  OPEN = 'OPEN',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
-  DISPUTED = 'DISPUTED',
-}
+export const GigStatus = {
+  DRAFT: 'DRAFT',
+  OPEN: 'OPEN',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+  DISPUTED: 'DISPUTED',
+} as const;
+export type GigStatus = typeof GigStatus[keyof typeof GigStatus];
 
-export enum GigCategory {
-  VIDEO_EDITING = 'VIDEO_EDITING',
-  GRAPHIC_DESIGN = 'GRAPHIC_DESIGN',
-  WRITING = 'WRITING',
-  MUSIC_AUDIO = 'MUSIC_AUDIO',
-  ANIMATION = 'ANIMATION',
-  PHOTOGRAPHY = 'PHOTOGRAPHY',
-  SOCIAL_MEDIA = 'SOCIAL_MEDIA',
-  CONSULTING = 'CONSULTING',
-  WEB_DEV = 'WEB_DEV',
-  VOICE_OVER = 'VOICE_OVER',
-  OTHER = 'OTHER',
-}
+export const GigCategory = {
+  VIDEO_EDITING: 'VIDEO_EDITING',
+  GRAPHIC_DESIGN: 'GRAPHIC_DESIGN',
+  WRITING: 'WRITING',
+  MUSIC_AUDIO: 'MUSIC_AUDIO',
+  ANIMATION: 'ANIMATION',
+  PHOTOGRAPHY: 'PHOTOGRAPHY',
+  SOCIAL_MEDIA: 'SOCIAL_MEDIA',
+  CONSULTING: 'CONSULTING',
+  WEB_DEV: 'WEB_DEV',
+  VOICE_OVER: 'VOICE_OVER',
+  OTHER: 'OTHER',
+} as const;
+export type GigCategory = typeof GigCategory[keyof typeof GigCategory];
 
-export enum GigBudgetType {
-  FIXED = 'FIXED',
-  HOURLY = 'HOURLY',
-  MILESTONE = 'MILESTONE',
-}
+export const GigBudgetType = {
+  FIXED: 'FIXED',
+  HOURLY: 'HOURLY',
+  MILESTONE: 'MILESTONE',
+} as const;
+export type GigBudgetType = typeof GigBudgetType[keyof typeof GigBudgetType];
 
-export enum GigExperienceLevel {
-  BEGINNER = 'BEGINNER',
-  INTERMEDIATE = 'INTERMEDIATE',
-  EXPERT = 'EXPERT',
-}
+export const GigExperienceLevel = {
+  BEGINNER: 'BEGINNER',
+  INTERMEDIATE: 'INTERMEDIATE',
+  EXPERT: 'EXPERT',
+} as const;
+export type GigExperienceLevel = typeof GigExperienceLevel[keyof typeof GigExperienceLevel];
 
-export enum ApplicationStatus {
-  PENDING = 'PENDING',
-  ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REJECTED',
-  WITHDRAWN = 'WITHDRAWN',
-}
+export const ApplicationStatus = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  REJECTED: 'REJECTED',
+  WITHDRAWN: 'WITHDRAWN',
+} as const;
+export type ApplicationStatus = typeof ApplicationStatus[keyof typeof ApplicationStatus];
 
-export enum MilestoneStatus {
-  PENDING = 'PENDING',
-  IN_PROGRESS = 'IN_PROGRESS',
-  SUBMITTED = 'SUBMITTED',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-}
+export const MilestoneStatus = {
+  PENDING: 'PENDING',
+  IN_PROGRESS: 'IN_PROGRESS',
+  SUBMITTED: 'SUBMITTED',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+} as const;
+export type MilestoneStatus = typeof MilestoneStatus[keyof typeof MilestoneStatus];
 
-export enum EscrowStatus {
-  CREATED = 'CREATED',
-  FUNDED = 'FUNDED',
-  RELEASED = 'RELEASED',
-  REFUNDED = 'REFUNDED',
-  DISPUTED = 'DISPUTED',
-}
+export const EscrowStatus = {
+  CREATED: 'CREATED',
+  FUNDED: 'FUNDED',
+  RELEASED: 'RELEASED',
+  REFUNDED: 'REFUNDED',
+  DISPUTED: 'DISPUTED',
+} as const;
+export type EscrowStatus = typeof EscrowStatus[keyof typeof EscrowStatus];
 
-export enum DisputeStatus {
-  OPEN = 'OPEN',
-  UNDER_REVIEW = 'UNDER_REVIEW',
-  RESOLVED = 'RESOLVED',
-}
+export const DisputeStatus = {
+  OPEN: 'OPEN',
+  UNDER_REVIEW: 'UNDER_REVIEW',
+  RESOLVED: 'RESOLVED',
+} as const;
+export type DisputeStatus = typeof DisputeStatus[keyof typeof DisputeStatus];
 
 // ============================================================================
 // INTERFACES
@@ -93,9 +101,9 @@ export interface Gig {
   applicationsCount: number;
   viewsCount: number;
   attachments: string[];
-  createdAt: Date;
-  updatedAt: Date;
-  expiresAt?: Date;
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+  expiresAt?: string; // ISO 8601
   creator?: PublicProfile;
 }
 
@@ -106,15 +114,15 @@ export interface GigMilestone {
   title: string;
   description: string;
   amount: number;
-  dueDate: Date;
+  dueDate: string; // ISO 8601
   status: MilestoneStatus;
   order: number;
-  submittedAt?: Date;
-  approvedAt?: Date;
-  rejectedAt?: Date;
+  submittedAt?: string; // ISO 8601
+  approvedAt?: string; // ISO 8601
+  rejectedAt?: string; // ISO 8601
   feedback?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
 }
 
 export interface Application {
@@ -128,8 +136,8 @@ export interface Application {
   relevantExperience: string;
   milestoneProposals?: MilestoneProposal[];
   status: ApplicationStatus;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
   applicant?: PublicProfile;
   gig?: Gig;
 }
@@ -152,11 +160,11 @@ export interface Escrow {
   status: EscrowStatus;
   stripePaymentIntentId?: string;
   stripeFundingMethod?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  fundedAt?: Date;
-  releasedAt?: Date;
-  refundedAt?: Date;
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+  fundedAt?: string; // ISO 8601
+  releasedAt?: string; // ISO 8601
+  refundedAt?: string; // ISO 8601
 }
 
 export interface Dispute {
@@ -172,9 +180,9 @@ export interface Dispute {
   status: DisputeStatus;
   resolution?: string;
   resolvedBy?: string; // admin userId
-  createdAt: Date;
-  updatedAt: Date;
-  resolvedAt?: Date;
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+  resolvedAt?: string; // ISO 8601
 }
 
 export interface GigReview {
@@ -189,8 +197,8 @@ export interface GigReview {
   communication: number;
   quality: number;
   timeliness: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
   reviewer?: PublicProfile;
 }
 
@@ -284,7 +292,7 @@ export interface CreateGigData {
   skills: string[];
   deliverables: string[];
   attachments?: string[];
-  expiresAt?: Date;
+  expiresAt?: string; // ISO 8601
 }
 
 export interface UpdateGigData extends Partial<CreateGigData> {
@@ -309,7 +317,7 @@ export interface CreateMilestoneData {
   title: string;
   description: string;
   amount: number;
-  dueDate: Date;
+  dueDate: string; // ISO 8601
   order: number;
 }
 

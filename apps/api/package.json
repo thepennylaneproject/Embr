@@ -19,6 +19,7 @@
     "db:format": "prisma format --schema ./prisma/schema.prisma"
   },
   "dependencies": {
+    "@embr/types": "workspace:*",
     "@aws-sdk/client-s3": "^3.656.0",
     "@aws-sdk/client-ses": "^3.1000.0",
     "@aws-sdk/s3-request-presigner": "^3.656.0",

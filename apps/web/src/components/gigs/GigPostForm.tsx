@@ -5,7 +5,7 @@ import {
   GigBudgetType, 
   GigExperienceLevel,
   CreateGigData,
-} from '@shared/types/gig.types';
+} from '@embr/types';
 
 interface GigPostFormProps {
   onSuccess?: (gigId: string) => void;

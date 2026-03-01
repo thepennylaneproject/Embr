@@ -1,5 +1,5 @@
 import React from 'react';
-import { Gig, GigCategory, GigBudgetType } from '@shared/types/gig.types';
+import { Gig, GigCategory, GigBudgetType } from '@embr/types';
 
 interface GigCardProps {
   gig: Gig;

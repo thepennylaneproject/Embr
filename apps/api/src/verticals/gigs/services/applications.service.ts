@@ -10,7 +10,7 @@ import {
   PaginatedApplications,
   ApplicationWithDetails,
   MilestoneProposal,
-} from '../../../shared/types/gig.types';
+} from '@embr/types';
 import { GigsService } from './gigs.service';
 import { EscrowService } from './escrow.service';
 

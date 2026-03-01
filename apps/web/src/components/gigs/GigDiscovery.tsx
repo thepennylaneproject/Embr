@@ -8,7 +8,7 @@ import {
   GigBudgetType,
   GigExperienceLevel,
   GigSearchParams,
-} from '@shared/types/gig.types';
+} from '@embr/types';
 
 const CATEGORIES = [
   { value: '', label: 'All Categories' },

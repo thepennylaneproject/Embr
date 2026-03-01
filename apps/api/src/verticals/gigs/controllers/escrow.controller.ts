@@ -20,7 +20,7 @@ import {
 import { 
   Escrow,
   GigMilestone,
-} from '../../../shared/types/gig.types';
+} from '@embr/types';
 
 @Controller('escrow')
 @UseGuards(JwtAuthGuard)

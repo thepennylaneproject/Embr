@@ -20,7 +20,7 @@ import {
   GigCategory,
   GigBudgetType,
   GigExperienceLevel,
-} from '../../../shared/types/gig.types';
+} from '@embr/types';
 
 @Injectable()
 export class GigsService {
@@ -34,7 +34,7 @@ export class GigsService {
       throw new BadRequestException('Budget minimum cannot exceed maximum');
     }
 
-    if (createGigDto.expiresAt && createGigDto.expiresAt < new Date()) {
+    if (createGigDto.expiresAt && new Date(createGigDto.expiresAt) < new Date()) {
       throw new BadRequestException('Expiration date cannot be in the past');
     }
 

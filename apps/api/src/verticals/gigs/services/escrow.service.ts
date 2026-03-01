@@ -7,7 +7,7 @@ import {
 import {
   EscrowStatus,
   MilestoneStatus,
-} from '../../../shared/types/gig.types';
+} from '@embr/types';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {

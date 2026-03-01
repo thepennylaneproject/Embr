@@ -16,7 +16,7 @@ export { GigManagementDashboard } from './GigManagementDashboard';
 export { useGig, useApplication, useMilestones } from '@/hooks/useGig';
 
 // Types
-export * from '@shared/types/gig.types';
+export * from '@embr/types';
 
 // API
 export { gigsApi, applicationsApi, escrowApi, milestonesApi } from '@shared/api/gigs.api';

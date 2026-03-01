@@ -11,7 +11,7 @@ import type {
   UpdateGigData,
   CreateApplicationData,
   GigSearchParams,
-} from '@shared/types/gig.types';
+} from '@embr/types';
 
 interface UseGigResult {
   gig: GigWithDetails | null;

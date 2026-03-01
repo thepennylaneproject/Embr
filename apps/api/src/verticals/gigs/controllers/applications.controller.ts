@@ -20,7 +20,7 @@ import {
   Application, 
   PaginatedApplications,
   ApplicationWithDetails,
-} from '../../../shared/types/gig.types';
+} from '@embr/types';
 
 @Controller('applications')
 @UseGuards(JwtAuthGuard)

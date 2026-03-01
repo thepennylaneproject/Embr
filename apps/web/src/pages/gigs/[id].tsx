@@ -6,7 +6,7 @@ import { ApplicationForm } from '@/components/gigs/ApplicationForm';
 import { TipButton } from '@/components/monetization/TipButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGig } from '@/hooks/useGig';
-import { GigBudgetType, GigStatus } from '@shared/types/gig.types';
+import { GigBudgetType, GigStatus } from '@embr/types';
 import { Button } from '@embr/ui';
 
 export default function GigDetailPage() {

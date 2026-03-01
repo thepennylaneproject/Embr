@@ -6,7 +6,6 @@ import {
   IsOptional,
   Min,
   Max,
-  IsDate,
   IsUrl,
   ArrayMinSize,
   MinLength,
@@ -21,7 +20,7 @@ import {
   GigStatus,
   ApplicationStatus,
   MilestoneStatus,
-} from '../../../shared/types/gig.types';
+} from '@embr/types';
 
 // ============================================================================
 // GIG DTOs
@@ -81,10 +80,9 @@ export class CreateGigDto {
   @IsOptional()
   attachments?: string[];
 
-  @IsDate()
-  @Type(() => Date)
+  @IsString()
   @IsOptional()
-  expiresAt?: Date;
+  expiresAt?: string; // ISO 8601 format
 }
 
 export class UpdateGigDto {
@@ -149,10 +147,9 @@ export class UpdateGigDto {
   @IsOptional()
   status?: GigStatus;
 
-  @IsDate()
-  @Type(() => Date)
+  @IsString()
   @IsOptional()
-  expiresAt?: Date;
+  expiresAt?: string; // ISO 8601 format
 }
 
 export class GigSearchDto {
@@ -292,9 +289,8 @@ export class CreateMilestoneDto {
   @Max(999999.99)
   amount: number;
 
-  @IsDate()
-  @Type(() => Date)
-  dueDate: Date;
+  @IsString()
+  dueDate: string; // ISO 8601 format
 
   @IsInt()
   @Min(0)
