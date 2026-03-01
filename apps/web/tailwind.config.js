@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const sharedConfig = require("@embr/config/tailwind");
+
 module.exports = {
   content: [
     "./src/app/**/*.{js,ts,jsx,tsx}",
@@ -7,7 +9,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      ...sharedConfig.theme.extend,
       colors: {
+        ...sharedConfig.theme.extend.colors,
         embr: {
           // Primary - Muted Terracotta (Phoenix)
           primary: {
@@ -68,9 +72,6 @@ module.exports = {
           info: "#4a5f7f",
         },
       },
-      fontFamily: {
-        sans: ["system-ui", "sans-serif"],
-      },
       spacing: {
         xs: "0.25rem",
         sm: "0.5rem",
@@ -82,5 +83,5 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: sharedConfig.plugins || [],
 };
