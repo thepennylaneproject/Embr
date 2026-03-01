@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { gigsApi } from '@shared/api/gigs.api';
-import { Gig, GigCategory, GigSearchParams } from '@shared/types/gig.types';
+import { Gig, GigCategory, GigSearchParams } from '@embr/types';
 
 const CATEGORIES = [
   { value: '', label: 'All Categories' },
