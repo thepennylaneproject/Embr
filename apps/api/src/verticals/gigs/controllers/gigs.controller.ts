@@ -19,7 +19,7 @@ import {
   UpdateGigDto, 
   GigSearchDto 
 } from '../dto/gig.dto';
-import { Gig, PaginatedGigs, GigWithDetails, GigStats } from '../../../shared/types/gig.types';
+import { Gig, PaginatedGigs, GigWithDetails, GigStats } from '@embr/types';
 
 @Controller('gigs')
 @UseGuards(JwtAuthGuard)

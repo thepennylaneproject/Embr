@@ -15,7 +15,7 @@ import type {
   CreateApplicationData,
   FundEscrowData,
   ReleaseMilestoneData,
-} from '@shared/types/gig.types';
+} from '@embr/types';
 
 // ============================================================================
 // GIGS API

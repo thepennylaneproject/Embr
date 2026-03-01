@@ -20,7 +20,7 @@ import {
   GigCategory,
   GigBudgetType,
   GigExperienceLevel,
-} from '../../../shared/types/gig.types';
+} from '@embr/types';
 
 @Injectable()
 export class GigsService {

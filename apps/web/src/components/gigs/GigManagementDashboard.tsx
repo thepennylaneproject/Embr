@@ -8,7 +8,7 @@ import {
   GigStatus,
   ApplicationStatus,
   MilestoneStatus,
-} from '@shared/types/gig.types';
+} from '@embr/types';
 
 type DashboardView = 'my-gigs' | 'my-applications' | 'active-work';
 
