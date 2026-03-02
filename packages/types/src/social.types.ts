@@ -165,7 +165,6 @@ export interface SuggestedUser {
     followerCount?: number;
   };
   mutualFollowersCount?: number;
-  mutualFollowers?: number;
   mutualFollowers?: {
     id: string;
     username: string;

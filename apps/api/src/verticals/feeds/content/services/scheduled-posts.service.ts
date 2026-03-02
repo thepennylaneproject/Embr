@@ -4,7 +4,7 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../../../core/database/prisma.service';
+import { PrismaService } from '../../../../core/database/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 export interface SchedulePostDto {
@@ -48,7 +48,7 @@ export class ScheduledPostsService {
         content,
         scheduledFor: new Date(scheduledFor),
         ...postData,
-      },
+      } as any,
       include: {
         author: {
           select: {
@@ -137,12 +137,12 @@ export class ScheduledPostsService {
       where: { id: scheduleId },
       data: {
         ...(updateData.content && { content: updateData.content }),
-        ...(updateData.type && { type: updateData.type }),
+        ...(updateData.type && { type: updateData.type as any }),
         ...(updateData.mediaUrl !== undefined && { mediaUrl: updateData.mediaUrl }),
-        ...(updateData.visibility && { visibility: updateData.visibility }),
+        ...(updateData.visibility && { visibility: updateData.visibility as any }),
         ...(updateData.hashtags && { hashtags: updateData.hashtags }),
         ...(updateData.scheduledFor && { scheduledFor: new Date(updateData.scheduledFor) }),
-      },
+      } as any,
     });
 
     return updated;
@@ -211,13 +211,13 @@ export class ScheduledPostsService {
           data: {
             authorId: scheduledPost.authorId,
             content: scheduledPost.content,
-            type: scheduledPost.type,
+            type: scheduledPost.type as any,
             mediaUrl: scheduledPost.mediaUrl,
             thumbnailUrl: scheduledPost.thumbnailUrl,
-            visibility: scheduledPost.visibility,
+            visibility: scheduledPost.visibility as any,
             hashtags: scheduledPost.hashtags,
             mentions: scheduledPost.mentions,
-          },
+          } as any,
         });
 
         // Mark scheduled post as published

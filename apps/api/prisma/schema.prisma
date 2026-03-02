@@ -89,6 +89,7 @@ model User {
   trackLikes    TrackLike[]
   trackComments TrackComment[]
   videoUsages   VideoUsage[] // Tracks where creator used music from Music vertical
+  scheduledPosts ScheduledPost[]
 
   @@index([email])
   @@index([role])
@@ -231,7 +232,7 @@ model Post {
   @@index([visibility])
   @@index([createdAt])
   @@index([deletedAt])
-  @@fulltext([content]) // PostgreSQL full-text search index
+  // Note: @@fulltext is not supported on PostgreSQL in Prisma 5. Use raw SQL GIN/tsvector for full-text search.
 }
 
 model ScheduledPost {

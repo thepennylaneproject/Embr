@@ -160,6 +160,13 @@ export interface Thumbnail {
   size: number;
 }
 
+export interface MediaUploadResponse {
+  id: string;
+  url: string;
+  thumbnailUrl?: string;
+  type: string;
+}
+
 export interface VideoPlaybackInfo {
   playbackId: string;
   playbackUrl: string;

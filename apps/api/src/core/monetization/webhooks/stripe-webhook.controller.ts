@@ -174,7 +174,6 @@ export class StripeWebhookController {
         data: {
           status: 'FAILED',
           failureReason: payout.failure_message || 'Stripe payout failed',
-          failedAt: new Date(),
         },
       });
 

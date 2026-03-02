@@ -15,7 +15,6 @@ export class WalletService {
 
   constructor(
     private prisma: PrismaService,
-    private transactionService: TransactionService,
   ) {}
 
   /**
@@ -92,9 +91,9 @@ export class WalletService {
     const availableCents = Math.max(0, wallet.balance - pendingCents);
 
     return {
-      availableCents, // Integer cents (no decimals!)
-      pendingCents,   // Integer cents
-      totalCents: wallet.balance, // Integer cents
+      available: availableCents, // Integer cents (no decimals!)
+      pending: pendingCents,   // Integer cents
+      total: wallet.balance, // Integer cents
       currency: wallet.currency,
     };
   }
@@ -108,7 +107,7 @@ export class WalletService {
     amountCents: number,
   ): Promise<boolean> {
     const balance = await this.getWalletBalance(userId);
-    return balance.availableCents >= amountCents;
+    return balance.available >= amountCents;
   }
 
   /**

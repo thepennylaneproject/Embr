@@ -9,7 +9,6 @@ import {
   Get,
   Req,
   Res,
-  Query,
   Patch,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -44,7 +43,7 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: LoginDto, @Res() res: Response, @Req() req: Request) {
+  async login(@Body() loginDto: LoginDto, @Res() res: Response, @Req() _req: Request) {
     const { accessToken, refreshToken, user } = await this.authService.login(loginDto);
 
     // Set tokens as secure httpOnly cookies
@@ -77,7 +76,7 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleAuthCallback(@Req() req: Request, @Res() res: Response) {
-    const { accessToken, refreshToken, user } = await this.authService.googleLogin(
+    const { accessToken, refreshToken } = await this.authService.googleLogin(
       req.user,
     );
 

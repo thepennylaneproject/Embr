@@ -2,14 +2,12 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateReportDto,
   UpdateReportDto,
   QueryReportsDto,
-  ReportStatus,
   ReportEntityType,
 } from '../dto/safety.dto';
 import { NotificationsService } from '../../notifications/notifications.service';
@@ -110,7 +108,7 @@ export class ReportsService {
   /**
    * Get paginated list of reports with filters
    */
-  async getReports(query: QueryReportsDto, moderatorId?: string) {
+  async getReports(query: QueryReportsDto, _moderatorId?: string) {
     const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' } = query;
     const skip = (page - 1) * limit;
 
@@ -193,7 +191,7 @@ export class ReportsService {
   /**
    * Get a single report by ID
    */
-  async getReportById(reportId: string, moderatorId?: string) {
+  async getReportById(reportId: string, _moderatorId?: string) {
     const report = await this.prisma.report.findUnique({
       where: { id: reportId },
       include: {
@@ -306,7 +304,7 @@ export class ReportsService {
         status === PrismaReportStatus.DISMISSED) {
       await this.notificationsService.create({
         userId: report.reporterId,
-        type: 'report_resolved',
+        type: 'REPORT_RESOLVED' as any,
         title: 'Report Update',
         body: `Your report has been ${status === PrismaReportStatus.ACTION_TAKEN ? 'acted upon' : 'reviewed'}`,
         metadata: { reportId: report.id, status: dto.status },
@@ -352,7 +350,7 @@ export class ReportsService {
       totalActionTaken,
       totalDismissed,
       reportsByReason,
-      reportsByEntity,
+      _reportsByEntity,
     ] = await Promise.all([
       this.prisma.report.count({ where: { status: PrismaReportStatus.PENDING } }),
       this.prisma.report.count({ where: { status: PrismaReportStatus.UNDER_REVIEW } }),
@@ -461,7 +459,7 @@ export class ReportsService {
       moderators.map((mod) =>
         this.notificationsService.create({
           userId: mod.id,
-          type: 'moderation_alert',
+          type: 'MODERATION_ALERT' as any,
           title: type === 'high_priority_report' ? '🚨 High Priority Report' : 'New Report',
           body: type === 'high_priority_report' 
             ? 'Multiple reports detected - immediate review needed'

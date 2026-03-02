@@ -12,8 +12,8 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
-import { OptionalJwtAuthGuard } from '../../../core/auth/guards/optional-jwt-auth.guard';
+import { JwtAuthGuard } from '../../../../core/auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../../../../core/auth/guards/optional-jwt-auth.guard';
 import { FollowsService } from '../services/follows.service';
 import { 
   FollowUserDto, 

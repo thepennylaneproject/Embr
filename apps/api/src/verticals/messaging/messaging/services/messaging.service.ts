@@ -9,13 +9,11 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../../../core/database/prisma.service';
+import { PrismaService } from '../../../../core/database/prisma.service';
+import { Message, Conversation } from '@prisma/client';
+import { MessageType, MessageStatus } from '@embr/types';
 import { MessageRateLimiterService } from './message-rate-limiter.service';
 import { toRateLimitConfig, MESSAGE_RATE_LIMITS } from '../config/messaging-rate-limits';
-import {
-  MessageType as PrismaMessageType,
-  MessageStatus as PrismaMessageStatus,
-} from '@prisma/client';
 import {
   SendMessageDto,
   MarkAsReadDto,
@@ -27,13 +25,9 @@ import {
   DeleteConversationDto,
 } from '../dto/messaging.dto';
 import {
-  Message,
-  Conversation,
   ConversationPreview,
   ConversationWithDetails,
   MessageWithSender,
-  MessageType,
-  MessageStatus,
   GetConversationsResponse,
   GetMessagesResponse,
   SearchMessagesResponse,
@@ -41,7 +35,7 @@ import {
   MarkAsReadResponse,
   CreateConversationResponse,
   GetUnreadCountResponse,
-} from '../../../shared/types/messaging.types';
+} from '@embr/types';
 
 @Injectable()
 export class MessagingService {
@@ -135,7 +129,7 @@ export class MessagingService {
           where: {
             conversationId: conv.id,
             senderId: { not: userId },
-            status: { not: MessageStatus.READ },
+            status: { not: 'READ' as any },
           },
         });
 
@@ -283,8 +277,8 @@ export class MessagingService {
           conversationId: conversation.id,
           senderId: userId,
           content: initialMessage,
-          type: PrismaMessageType.TEXT,
-          status: PrismaMessageStatus.SENT,
+          type: 'TEXT' as any,
+          status: 'SENT' as any,
         },
         include: {
           sender: {
@@ -458,8 +452,8 @@ export class MessagingService {
         mediaType: dto.mediaType,
         fileName: dto.fileName,
         fileSize: dto.fileSize,
-        type,
-        status: PrismaMessageStatus.SENT,
+        type: type as any,
+        status: 'SENT' as any,
         metadata: metadata as any,
       },
       include: {
@@ -686,7 +680,7 @@ export class MessagingService {
     const where: any = {
       conversationId,
       senderId: { not: userId },
-      status: { not: MessageStatus.READ },
+      status: { not: 'READ' as any },
     };
 
     if (messageIds && messageIds.length > 0) {
@@ -697,7 +691,7 @@ export class MessagingService {
     const result = await this.prisma.message.updateMany({
       where,
       data: {
-        status: PrismaMessageStatus.READ,
+        status: 'READ' as any,
         readAt: new Date(),
       },
     });
@@ -903,7 +897,7 @@ export class MessagingService {
       where: {
         conversationId,
         senderId: { not: userId },
-        status: { not: MessageStatus.READ },
+        status: { not: 'READ' as any },
       },
     });
   }
