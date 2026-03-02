@@ -22,7 +22,7 @@ import {
   GetUnreadCountResponse,
   MediaUploadRequest,
   MediaUploadResponse,
-} from "../../shared/types/messaging.types";
+} from "../messaging.types";
 
 export class MessagingAPIClient {
   private client: AxiosInstance;
