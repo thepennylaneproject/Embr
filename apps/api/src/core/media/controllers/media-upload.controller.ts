@@ -41,7 +41,6 @@ export class MediaUploadController {
   constructor(
     private s3Service: S3MultipartService,
     private muxService: MuxVideoService,
-    private thumbnailService: ThumbnailService,
     private mediaService: MediaService,
     private mediaValidator: MediaValidatorService,
   ) {}
@@ -162,7 +161,7 @@ export class MediaUploadController {
     const playbackPolicy = dto.isPrivate === false ? ['public'] : ['signed'];
 
     const muxResult = await this.muxService.createDirectUpload('*', {
-      playbackPolicy,
+      playbackPolicy: playbackPolicy as any,
       mp4Support: 'standard',
       normalizeAudio: true,
       maxResolution: 'high',
@@ -217,7 +216,7 @@ export class MediaUploadController {
       const fileBuffer = await this.s3Service.downloadFileContent(dto.fileKey);
       const maliciousCheck = this.mediaValidator.checkForMalicious(
         fileBuffer,
-        dto.fileType,
+        (dto as any).fileType,
       );
 
       if (!maliciousCheck.safe) {
@@ -303,7 +302,7 @@ export class MediaUploadController {
       const fileBuffer = await this.s3Service.downloadFileContent(dto.fileKey);
       const maliciousCheck = this.mediaValidator.checkForMalicious(
         fileBuffer,
-        dto.fileType,
+        (dto as any).fileType,
       );
 
       if (!maliciousCheck.safe) {
@@ -542,7 +541,7 @@ export class MediaUploadController {
   /**
    * Helper: Generate image thumbnail
    */
-  private async generateImageThumbnail(fileKey: string) {
+  private async generateImageThumbnail(_fileKey: string) {
     // This would download the file from S3 and generate thumbnail
     // Simplified for example
     return null;

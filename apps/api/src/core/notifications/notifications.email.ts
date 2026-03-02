@@ -50,7 +50,6 @@ export class NotificationsEmailService {
         return;
       }
 
-      const displayName = user.profile?.displayName || 'User';
       const subject = `${payload.title} - Embr`;
 
       const htmlContent = `
@@ -65,7 +64,7 @@ export class NotificationsEmailService {
         <p style="color: #666; font-size: 12px;">You received this email because you have an active Embr account. You can manage your notification preferences in your account settings.</p>
       `;
 
-      await this.emailService.send({
+      await this.emailService.sendEmail({
         to: user.email,
         subject,
         html: htmlContent,

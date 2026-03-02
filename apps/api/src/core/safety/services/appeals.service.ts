@@ -13,7 +13,6 @@ import {
   CreateAppealDto,
   UpdateAppealDto,
   QueryAppealsDto,
-  AppealStatus,
 } from '../dto/safety.dto';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { ModerationActionsService } from './moderation-actions.service';
@@ -271,7 +270,7 @@ export class AppealsService {
     // Notify user
     await this.notificationsService.create({
       userId: appeal.userId,
-      type: 'appeal_resolved',
+      type: 'APPEAL_RESOLVED' as any,
       title: (dto.status as unknown as PrismaAppealStatus) === PrismaAppealStatus.APPROVED ? '✅ Appeal Approved' : '❌ Appeal Denied',
       body:
         (dto.status as unknown as PrismaAppealStatus) === PrismaAppealStatus.APPROVED
@@ -409,7 +408,7 @@ export class AppealsService {
       moderators.map((mod) =>
         this.notificationsService.create({
           userId: mod.id,
-          type: 'appeal_submitted',
+          type: 'APPEAL_SUBMITTED' as any,
           title: '📝 New Appeal Submitted',
           body: `${appeal.user.username} has appealed a ${appeal.action.type}`,
           metadata: {

@@ -8,15 +8,16 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
-  TooManyRequestsException,
+  HttpStatus,
+  HttpException,
 } from '@nestjs/common';
-import { PrismaService } from '../../../core/database/prisma.service';
+import { PrismaService } from '../../../../core/database/prisma.service';
 import { CreatePostDto, UpdatePostDto, PostType, PostVisibility } from '../dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ContentSanitizerService } from '../../../core/safety/services/content-sanitizer.service';
-import { RateLimitService } from '../../../core/rate-limit/rate-limit.service';
-import { CursorPaginationService } from '../../../core/pagination/cursor-pagination.service';
-import { CacheService } from '../../../core/cache/cache.service';
+import { ContentSanitizerService } from '../../../../core/safety/services/content-sanitizer.service';
+import { RateLimitService } from '../../../../core/rate-limit/rate-limit.service';
+import { CursorPaginationService } from '../../../../core/pagination/cursor-pagination.service';
+import { CacheService } from '../../../../core/cache/cache.service';
 
 @Injectable()
 export class PostsService {
@@ -42,8 +43,9 @@ export class PostsService {
     if (!this.rateLimit.isAllowed(userId, 'post:create', maxPostsPerHour, oneHourMs)) {
       const resetTimeMs = this.rateLimit.getResetTime(userId, 'post:create');
       const resetTimeSec = Math.ceil(resetTimeMs / 1000);
-      throw new TooManyRequestsException(
+      throw new HttpException(
         `Too many posts. Please try again in ${resetTimeSec} seconds.`,
+        HttpStatus.TOO_MANY_REQUESTS,
       );
     }
 

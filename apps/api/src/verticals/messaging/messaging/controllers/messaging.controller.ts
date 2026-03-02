@@ -36,7 +36,7 @@ import {
 import {
   MESSAGE_CONSTRAINTS,
   MessageType,
-} from '../../../../shared/types/messaging.types';
+} from '@embr/types';
 
 @ApiTags('Messaging')
 @Controller('messaging')
@@ -197,13 +197,13 @@ export class MessagingController {
     // Upload to appropriate service
     switch (dto.type) {
       case MessageType.IMAGE:
-        uploadResult = await this.uploadService.uploadImage(file);
+        uploadResult = await this.uploadService.uploadImage(file, req.user.id);
         break;
       case MessageType.VIDEO:
-        uploadResult = await this.uploadService.uploadVideo(file);
+        uploadResult = await this.uploadService.uploadVideo(file, req.user.id);
         break;
       case MessageType.FILE:
-        uploadResult = await this.uploadService.uploadFile(file);
+        uploadResult = await this.uploadService.uploadFile(file, req.user.id, 'document');
         break;
       default:
         throw new BadRequestException('Invalid message type for upload');

@@ -2,13 +2,11 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import {
   CreateModerationActionDto,
   QueryModerationActionsDto,
-  ActionType,
 } from '../dto/safety.dto';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { ActionType as PrismaActionType } from '@prisma/client';
@@ -226,7 +224,7 @@ export class ModerationActionsService {
   /**
    * Revoke a moderation action
    */
-  async revokeAction(actionId: string, moderatorId: string, reason: string) {
+  async revokeAction(actionId: string, _moderatorId: string, reason: string) {
     const action = await this.prisma.moderationAction.findUnique({
       where: { id: actionId },
       include: { user: true },
@@ -256,7 +254,7 @@ export class ModerationActionsService {
     // Notify user
     await this.notificationsService.create({
       userId: action.userId,
-      type: 'moderation_revoked',
+      type: 'MODERATION_REVOKED' as any,
       title: 'Action Revoked',
       body: `Your ${action.type} has been revoked`,
       metadata: { actionId: action.id, reason },
@@ -371,7 +369,6 @@ export class ModerationActionsService {
 
     const [
       totalActions,
-      actionsByType,
       totalWarnings,
       totalSuspensions,
       totalBans,
@@ -379,11 +376,6 @@ export class ModerationActionsService {
     ] = await Promise.all([
       this.prisma.moderationAction.count({
         where: { createdAt: { gte: since } },
-      }),
-      this.prisma.moderationAction.groupBy({
-        by: ['type'],
-        where: { createdAt: { gte: since } },
-        _count: true,
       }),
       this.prisma.moderationAction.count({
         where: {
@@ -498,7 +490,7 @@ export class ModerationActionsService {
 
     await this.notificationsService.create({
       userId: action.userId,
-      type: 'moderation_action',
+      type: 'MODERATION_ACTION' as any,
       title: message.title,
       body: `${message.body}\n\nReason: ${action.reason}`,
       metadata: {

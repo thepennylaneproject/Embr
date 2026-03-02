@@ -28,7 +28,7 @@ export function generateAccessToken(
   secret: string,
   expiresIn: string = '24h',
 ): string {
-  return jwt.sign(payload, secret, { expiresIn });
+  return jwt.sign(payload, secret, { expiresIn: expiresIn as any });
 }
 
 /**
@@ -39,7 +39,7 @@ export function generateRefreshToken(
   secret: string,
   expiresIn: string = '7d',
 ): string {
-  return jwt.sign({ sub: userId }, secret, { expiresIn });
+  return jwt.sign({ sub: userId }, secret, { expiresIn: expiresIn as any });
 }
 
 /**
@@ -67,7 +67,7 @@ export function decodeToken(token: string): JwtPayload | null {
 /**
  * Check if token is expired
  */
-export function isTokenExpired(token: string): boolean {
+export function isJwtExpired(token: string): boolean {
   const decoded = decodeToken(token);
   if (!decoded || !decoded.exp) return true;
   return decoded.exp * 1000 < Date.now();

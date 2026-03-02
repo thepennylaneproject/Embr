@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
-import { PrismaService } from '../../../core/database/prisma.service';
-import { BlockingService } from '../../../core/safety/services/blocking.service';
-import { NOTIFICATION_TYPES } from '../../../core/notifications/notifications.constants';
+import { PrismaService } from '../../../../core/database/prisma.service';
+import { BlockingService } from '../../../../core/safety/services/blocking.service';
+import { NOTIFICATION_TYPES } from '../../../../core/notifications/notifications.constants';
 import {
   FollowUserDto,
   GetFollowersDto,

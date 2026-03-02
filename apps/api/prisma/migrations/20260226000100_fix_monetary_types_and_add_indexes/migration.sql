@@ -6,7 +6,6 @@
   - You are about to alter the column `proposedBudget` on the `Application` table. The data in that column could be lost. The data in that column will be cast from `DoublePrecision` to `Integer`.
   - You are about to alter the column `amount` on the `GigMilestone` table. The data in that column could be lost. The data in that column will be cast from `DoublePrecision` to `Integer`.
   - You are about to alter the column `amount` on the `Escrow` table. The data in that column could be lost. The data in that column will be cast from `DoublePrecision` to `Integer`.
-  - You are about to alter the column `royaltyAmount` on the `TrackPlay` table. The data in that column could be lost. The data in that column will be cast from `DoublePrecision` to `Integer`.
 
 */
 
@@ -23,8 +22,6 @@ ALTER TABLE "GigMilestone" ALTER COLUMN "amount" TYPE INTEGER USING CAST(ROUND("
 -- Convert Escrow monetary amounts from Float to Int (cents)
 ALTER TABLE "Escrow" ALTER COLUMN "amount" TYPE INTEGER USING CAST(ROUND("amount" * 100) AS INTEGER);
 
--- Convert TrackPlay royalty amounts from Float to Int (cents)
-ALTER TABLE "TrackPlay" ALTER COLUMN "royaltyAmount" TYPE INTEGER USING CAST(ROUND("royaltyAmount" * 100) AS INTEGER);
 
 -- Add composite indexes for performance optimization
 CREATE INDEX "Post_authorId_createdAt_idx" ON "Post"("authorId", "createdAt");

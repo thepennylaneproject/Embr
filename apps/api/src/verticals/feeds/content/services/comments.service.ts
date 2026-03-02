@@ -9,10 +9,10 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../../../core/database/prisma.service';
+import { PrismaService } from '../../../../core/database/prisma.service';
 import { CreateCommentDto, UpdateCommentDto } from '../dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ContentSanitizerService } from '../../../core/safety/services/content-sanitizer.service';
+import { ContentSanitizerService } from '../../../../core/safety/services/content-sanitizer.service';
 
 @Injectable()
 export class CommentsService {
