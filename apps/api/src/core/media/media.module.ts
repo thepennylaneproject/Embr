@@ -13,6 +13,7 @@ import { MuxVideoService } from './services/mux-video.service';
 import { ThumbnailService } from './services/thumbnail.service';
 import { MediaService } from './services/media.service';
 import { MediaNotificationService } from './services/media-notification.service';
+import { MediaValidatorService } from './media-validator.service';
 import { PrismaModule } from '../database/prisma.module';
 
 @Module({
@@ -31,6 +32,7 @@ import { PrismaModule } from '../database/prisma.module';
     ThumbnailService,
     MediaService,
     MediaNotificationService,
+    MediaValidatorService,
   ],
   exports: [
     S3MultipartService,
