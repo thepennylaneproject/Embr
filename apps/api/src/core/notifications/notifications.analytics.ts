@@ -5,7 +5,6 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { NOTIFICATION_TYPES } from './notifications.constants';
 
 interface NotificationMetrics {
   type: string;
@@ -113,7 +112,7 @@ export class NotificationsAnalyticsService {
    * Get per-user notification engagement
    */
   async getUserNotificationStats(userId: string) {
-    const [total, unread, read, deleted] = await Promise.all([
+    const [total, unread, read] = await Promise.all([
       this.prisma.notification.count({ where: { userId } }),
       this.prisma.notification.count({
         where: { userId, isRead: false },

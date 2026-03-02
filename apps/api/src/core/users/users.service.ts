@@ -94,7 +94,6 @@ export class UsersService {
     }
 
     // Validate state transitions
-    const profile = user.profile;
 
     // Moderators and admins cannot be private (enforce public visibility for platform safety)
     if (updateSettingsDto.isPrivate && (user.role === 'MODERATOR' || user.role === 'ADMIN')) {

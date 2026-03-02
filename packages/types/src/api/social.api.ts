@@ -1,3 +1,5 @@
+<<<<<<< Current (Your changes)
+=======
 import { apiClient } from './base';
 import type {
   FollowUser,
@@ -134,3 +136,4 @@ export const {
   getTrendingCreators,
   getSimilarUsers,
 } = socialApi;
+>>>>>>> Incoming (Background Agent changes)

@@ -1,3 +1,5 @@
+<<<<<<< Current (Your changes)
+=======
 /**
  * Messaging API Client
  * HTTP client for messaging REST endpoints
@@ -194,3 +196,4 @@ export class MessagingAPIClient {
 
 // Export singleton instance
 export const messagingAPI = new MessagingAPIClient();
+>>>>>>> Incoming (Background Agent changes)

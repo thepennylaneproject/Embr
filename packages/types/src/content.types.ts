@@ -161,24 +161,10 @@ export interface FeedResponse {
 // UPLOAD TYPES
 // ============================================
 
-export interface UploadProgress {
-  loaded: number;
-  total: number;
-  percentage: number;
-}
-
 export interface PresignedUrlResponse {
   uploadUrl: string;
   fileUrl: string;
   fields?: Record<string, string>;
-}
-
-export interface MediaUploadResponse {
-  mediaUrl: string;
-  thumbnailUrl?: string;
-  muxAssetId?: string;
-  muxPlaybackId?: string;
-  duration?: number;
 }
 
 // ============================================
@@ -191,19 +177,6 @@ export interface PaginationParams {
   cursor?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasMore: boolean;
-    nextCursor?: string;
-    prevCursor?: string;
-  };
 }
 
 // ============================================

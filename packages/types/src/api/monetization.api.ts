@@ -1,3 +1,5 @@
+<<<<<<< Current (Your changes)
+=======
 import axios from "axios";
 import type {
   WalletBalance,
@@ -201,3 +203,4 @@ export const stripeConnectApi = {
     await api.delete("/stripe-connect/account");
   },
 };
+>>>>>>> Incoming (Background Agent changes)

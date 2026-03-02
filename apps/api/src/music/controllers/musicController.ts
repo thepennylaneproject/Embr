@@ -22,9 +22,9 @@ export const artistController = {
       }
 
       const artist = await artistService.createArtist(userId, stageName, bio, profileImage);
-      res.status(201).json(artist);
+      return res.status(201).json(artist);
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 
@@ -39,9 +39,9 @@ export const artistController = {
       }
 
       const stats = await artistService.getArtistStats(artistId);
-      res.json({ ...artist, stats });
+      return res.json({ ...artist, stats });
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 
@@ -57,12 +57,12 @@ export const artistController = {
 
       const data = req.body;
       const artist = await artistService.updateArtist(artistId, userId, data);
-      res.json(artist);
+      return res.json(artist);
     } catch (error) {
       if (error instanceof Error && error.message.includes('Forbidden')) {
         return res.status(403).json({ error: error.message });
       }
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 
@@ -71,9 +71,9 @@ export const artistController = {
     try {
       const { artistId } = req.params;
       const stats = await artistService.getArtistStats(artistId);
-      res.json(stats);
+      return res.json(stats);
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 };
@@ -105,9 +105,9 @@ export const trackController = {
         ...req.body,
       });
 
-      res.status(201).json(track);
+      return res.status(201).json(track);
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 
@@ -121,9 +121,9 @@ export const trackController = {
         return res.status(404).json({ error: 'Track not found' });
       }
 
-      res.json(track);
+      return res.json(track);
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 
@@ -138,12 +138,12 @@ export const trackController = {
       }
 
       const track = await trackService.publishTrack(trackId, userId);
-      res.json(track);
+      return res.json(track);
     } catch (error) {
       if (error instanceof Error && error.message.includes('Forbidden')) {
         return res.status(403).json({ error: error.message });
       }
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 
@@ -154,9 +154,9 @@ export const trackController = {
       const { muxVideoAssetId, muxVideoPlaybackId, thumbnailUrl } = req.body;
 
       const track = await trackService.uploadTrackVideo(trackId, muxVideoAssetId, muxVideoPlaybackId, thumbnailUrl);
-      res.json(track);
+      return res.json(track);
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 
@@ -165,9 +165,9 @@ export const trackController = {
     try {
       const { artistId } = req.params;
       const tracks = await trackService.getArtistTracks(artistId);
-      res.json(tracks);
+      return res.json(tracks);
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 
@@ -181,9 +181,9 @@ export const trackController = {
       }
 
       const tracks = await trackService.searchTracks(q, Math.min(parseInt(limit as string), 100));
-      res.json(tracks);
+      return res.json(tracks);
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 
@@ -206,12 +206,12 @@ export const trackController = {
         attributionRequired,
       });
 
-      res.json(track);
+      return res.json(track);
     } catch (error) {
       if (error instanceof Error && error.message.includes('Forbidden')) {
         return res.status(403).json({ error: error.message });
       }
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 };
@@ -241,9 +241,9 @@ export const licensingController = {
         creatorId as string,
       );
 
-      res.json(result);
+      return res.json(result);
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 
@@ -266,9 +266,9 @@ export const licensingController = {
         creatorId,
       });
 
-      res.status(201).json(usage);
+      return res.status(201).json(usage);
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 
@@ -283,9 +283,9 @@ export const licensingController = {
         Math.min(parseInt(limit as string), 100),
       );
 
-      res.json(usages);
+      return res.json(usages);
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 };
@@ -317,12 +317,12 @@ export const revenueController = {
         quality || 'standard',
       );
 
-      res.json(play);
+      return res.json(play);
     } catch (error) {
       if (error instanceof Error && (error.message.includes('Duration') || error.message.includes('Too many stream'))) {
         return res.status(429).json({ error: error.message });
       }
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 
@@ -344,12 +344,12 @@ export const revenueController = {
         totalRevenue,
       });
 
-      res.json(usage);
+      return res.json(usage);
     } catch (error) {
       if (error instanceof Error && error.message.includes('Forbidden')) {
         return res.status(403).json({ error: error.message });
       }
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 
@@ -364,9 +364,9 @@ export const revenueController = {
         (period as any) || 'monthly',
       );
 
-      res.json(revenue);
+      return res.json(revenue);
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 
@@ -381,9 +381,9 @@ export const revenueController = {
         (period as any) || 'monthly',
       );
 
-      res.json(revenue);
+      return res.json(revenue);
     } catch (error) {
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
     }
   },
 };

@@ -3,7 +3,6 @@ import {
   Logger,
   NotFoundException,
   BadRequestException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { TransactionType as PrismaTransactionType } from '@prisma/client';
@@ -79,9 +78,9 @@ export class TipService {
         senderId,
         recipientId,
         postId,
-        amount,
+        amount: amountCents,
         message,
-        status: 'PENDING',
+        status: 'PENDING' as any,
       },
       include: {
         sender: {
@@ -154,7 +153,7 @@ export class TipService {
       }
 
       this.logger.log(
-        `Tip created: ${amount} from ${senderId} to ${recipientId}`,
+        `Tip created: ${amountCents} from ${senderId} to ${recipientId}`,
       );
 
       return tip;
@@ -241,7 +240,7 @@ export class TipService {
     }
 
     // Use Serializable isolation level to prevent race conditions
-    const completedTip = await this.prisma.$transaction(
+    await this.prisma.$transaction(
       async (tx) => {
         // Check if still PROCESSING (prevents double-completion)
         const currentTip = await tx.tip.findUnique({
@@ -275,7 +274,7 @@ export class TipService {
         );
 
         // Update wallet balance (add net amount to recipient)
-        const wallet = await tx.wallet.upsert({
+        await tx.wallet.upsert({
           where: { userId: tip.recipientId },
           create: {
             userId: tip.recipientId,

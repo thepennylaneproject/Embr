@@ -153,7 +153,7 @@ export class AdminModerationService {
     // Update report status
     await this.prisma.report.update({
       where: { id: reportId },
-      data: { status: action === 'APPROVE' ? 'RESOLVED' : 'DISMISSED' },
+      data: { status: (action === 'APPROVE' ? 'RESOLVED' : 'DISMISSED') as any },
     });
 
     // Create moderation action record
@@ -167,19 +167,19 @@ export class AdminModerationService {
         where: { id: report.reportedUserId },
         data: {
           suspended: true,
-          suspendedUntil,
+          suspendedUntil: suspendUntil as any,
         },
       });
 
       // Log moderation action
       await this.prisma.moderationAction.create({
         data: {
-          affectedUserId: report.reportedUserId,
+          targetUserId: report.reportedUserId,
           moderatorId: adminId,
-          action: 'SUSPEND',
+          action: 'SUSPEND' as any,
           reason,
           duration: suspensionDays || 7,
-        },
+        } as any,
       });
     }
 
@@ -209,17 +209,17 @@ export class AdminModerationService {
 
     await this.prisma.user.update({
       where: { id: userId },
-      data: { suspended: true, suspendedUntil },
+      data: { suspended: true, suspendedUntil: suspendUntil as any },
     });
 
     await this.prisma.moderationAction.create({
       data: {
-        affectedUserId: userId,
+        targetUserId: userId,
         moderatorId: adminId,
-        action: 'SUSPEND',
+        action: 'SUSPEND' as any,
         reason,
         duration: suspensionDays,
-      },
+      } as any,
     });
 
     return { message: `User suspended for ${suspensionDays} days`, user };
@@ -268,11 +268,11 @@ export class AdminModerationService {
 
       await this.prisma.moderationAction.create({
         data: {
-          affectedUserId: post.authorId,
+          targetUserId: post.authorId,
           moderatorId: adminId,
-          action: 'REMOVE_CONTENT',
+          action: 'REMOVE_CONTENT' as any,
           reason,
-        },
+        } as any,
       });
     } else {
       const comment = await this.prisma.comment.findUnique({
@@ -289,11 +289,11 @@ export class AdminModerationService {
 
       await this.prisma.moderationAction.create({
         data: {
-          affectedUserId: comment.authorId,
+          targetUserId: comment.authorId,
           moderatorId: adminId,
-          action: 'REMOVE_CONTENT',
+          action: 'REMOVE_CONTENT' as any,
           reason,
-        },
+        } as any,
       });
     }
 
@@ -313,9 +313,9 @@ export class AdminModerationService {
         comments: { select: { id: true, createdAt: true, deletedAt: true } },
         reports: { select: { id: true, status: true, createdAt: true } },
         reportsReceived: { select: { id: true, status: true, createdAt: true } },
-        moderationActions: { select: { id: true, action: true, createdAt: true } },
+        moderationActions: { select: { id: true, action: true, createdAt: true } as any },
       },
-    });
+    }) as any;
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -361,8 +361,8 @@ export class AdminModerationService {
         orderBy: { createdAt: 'desc' },
         include: {
           user: { select: { id: true, username: true, email: true } },
-          relatedAction: true,
-        },
+          moderationAction: true,
+        } as any,
       }),
       this.prisma.appeal.count({ where: { status: 'PENDING' } }),
     ]);
@@ -392,11 +392,11 @@ export class AdminModerationService {
     await this.prisma.appeal.update({
       where: { id: appealId },
       data: {
-        status: decision,
-        reviewedBy: adminId,
+        status: decision as any,
+        reviewerId: adminId,
         reviewedAt: new Date(),
         reviewNote: reason,
-      },
+      } as any,
     });
 
     // If approved, lift suspension

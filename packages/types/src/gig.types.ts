@@ -101,9 +101,9 @@ export interface Gig {
   applicationsCount: number;
   viewsCount: number;
   attachments: string[];
-  createdAt: string; // ISO 8601
-  updatedAt: string; // ISO 8601
-  expiresAt?: string; // ISO 8601
+  createdAt: Date | string; // ISO 8601
+  updatedAt: Date | string; // ISO 8601
+  expiresAt?: Date | string; // ISO 8601
   creator?: PublicProfile;
 }
 
@@ -114,15 +114,15 @@ export interface GigMilestone {
   title: string;
   description: string;
   amount: number;
-  dueDate: string; // ISO 8601
+  dueDate: Date | string; // ISO 8601
   status: MilestoneStatus;
   order: number;
-  submittedAt?: string; // ISO 8601
-  approvedAt?: string; // ISO 8601
-  rejectedAt?: string; // ISO 8601
+  submittedAt?: Date | string; // ISO 8601
+  approvedAt?: Date | string; // ISO 8601
+  rejectedAt?: Date | string; // ISO 8601
   feedback?: string;
-  createdAt: string; // ISO 8601
-  updatedAt: string; // ISO 8601
+  createdAt: Date | string; // ISO 8601
+  updatedAt: Date | string; // ISO 8601
 }
 
 export interface Application {
@@ -136,8 +136,8 @@ export interface Application {
   relevantExperience: string;
   milestoneProposals?: MilestoneProposal[];
   status: ApplicationStatus;
-  createdAt: string; // ISO 8601
-  updatedAt: string; // ISO 8601
+  createdAt: Date | string; // ISO 8601
+  updatedAt: Date | string; // ISO 8601
   applicant?: PublicProfile;
   gig?: Gig;
 }
@@ -160,11 +160,11 @@ export interface Escrow {
   status: EscrowStatus;
   stripePaymentIntentId?: string;
   stripeFundingMethod?: string;
-  createdAt: string; // ISO 8601
-  updatedAt: string; // ISO 8601
-  fundedAt?: string; // ISO 8601
-  releasedAt?: string; // ISO 8601
-  refundedAt?: string; // ISO 8601
+  createdAt: Date | string; // ISO 8601
+  updatedAt: Date | string; // ISO 8601
+  fundedAt?: Date | string; // ISO 8601
+  releasedAt?: Date | string; // ISO 8601
+  refundedAt?: Date | string; // ISO 8601
 }
 
 export interface Dispute {
@@ -180,9 +180,9 @@ export interface Dispute {
   status: DisputeStatus;
   resolution?: string;
   resolvedBy?: string; // admin userId
-  createdAt: string; // ISO 8601
-  updatedAt: string; // ISO 8601
-  resolvedAt?: string; // ISO 8601
+  createdAt: Date | string; // ISO 8601
+  updatedAt: Date | string; // ISO 8601
+  resolvedAt?: Date | string; // ISO 8601
 }
 
 export interface GigReview {
@@ -197,8 +197,8 @@ export interface GigReview {
   communication: number;
   quality: number;
   timeliness: number;
-  createdAt: string; // ISO 8601
-  updatedAt: string; // ISO 8601
+  createdAt: Date | string; // ISO 8601
+  updatedAt: Date | string; // ISO 8601
   reviewer?: PublicProfile;
 }
 
