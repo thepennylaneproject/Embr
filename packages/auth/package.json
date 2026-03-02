@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "description": "Shared authentication utilities for Embr (JWT, OAuth, password management)",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "prepare": "tsc"
   },
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "@nestjs/jwt": "^10.0.0",
     "@nestjs/passport": "^10.0.0",
     "jsonwebtoken": "^9.0.0",

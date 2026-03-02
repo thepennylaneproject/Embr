@@ -8,7 +8,6 @@
  * - Session management
  */
 
-export * from './jwt.utils';
-export * from './password.utils';
-export * from './token.utils';
-export * from './types';
+export * from './password.utils.js';
+export * from './token.utils.js';
+export * from './types.js';

@@ -448,6 +448,12 @@ export class MessagingService {
       toRateLimitConfig(MESSAGE_RATE_LIMITS.USER_PER_CONVERSATION),
     );
 
+    // Map shared MessageType (e.g. 'text') to Prisma enum (e.g. 'TEXT')
+    const prismaType =
+      type != null
+        ? (String(type).toUpperCase() as PrismaMessageType)
+        : PrismaMessageType.TEXT;
+
     // Create message
     const message = await this.prisma.message.create({
       data: {
@@ -458,7 +464,7 @@ export class MessagingService {
         mediaType: dto.mediaType,
         fileName: dto.fileName,
         fileSize: dto.fileSize,
-        type,
+        type: prismaType,
         status: PrismaMessageStatus.SENT,
         metadata: metadata as any,
       },

@@ -50,6 +50,13 @@
     "@types/bcrypt": "^5.0.2",
     "@types/node": "^20.10.6",
     "concurrently": "^9.2.1",
+<<<<<<< HEAD
+=======
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.1.6",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+>>>>>>> 9cbef9d (the neverending story)
     "prisma": "^5.8.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"

@@ -41,7 +41,6 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const {
     comments: replies,
     isLoading: isLoadingReplies,
-    createComment: createReply,
   } = useComments({
     postId,
     parentId: comment.id,
