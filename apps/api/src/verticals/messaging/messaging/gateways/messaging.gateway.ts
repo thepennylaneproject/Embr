@@ -14,7 +14,7 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Injectable, UseGuards, Logger, TooManyRequestsException, ForbiddenException } from '@nestjs/common';
+import { Injectable, UseGuards, Logger, HttpException, HttpStatus, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { MessagingService } from '../services/messaging.service';
 import { MessageRateLimiterService } from '../services/message-rate-limiter.service';
@@ -31,7 +31,7 @@ import {
   MessageWithSender,
   TypingIndicator,
   ConversationWithDetails,
-} from '../../../../shared/types/messaging.types';
+} from '@embr/types';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -211,7 +211,7 @@ export class MessagingGateway
       this.logger.error('Error sending message:', error);
 
       // Handle rate limiting error
-      if (error instanceof TooManyRequestsException) {
+      if (error instanceof HttpException && error.getStatus() === HttpStatus.TOO_MANY_REQUESTS) {
         client.emit(WebSocketEvent.ERROR, {
           code: 'RATE_LIMIT_EXCEEDED',
           message: error.message || 'Too many messages sent. Please wait before sending more.',

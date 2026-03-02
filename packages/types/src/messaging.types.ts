@@ -256,13 +256,6 @@ export interface MediaUploadRequest {
   type: MessageType;
 }
 
-export interface MediaUploadResponse {
-  url: string;
-  mediaType: string;
-  fileName: string;
-  fileSize: number;
-}
-
 // ============================================================
 // ERROR TYPES
 // ============================================================

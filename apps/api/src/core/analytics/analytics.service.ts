@@ -58,11 +58,11 @@ export class AnalyticsService {
       await this.prisma.analyticsEvent.create({
         data: {
           userId: event.userId,
-          eventType: event.eventType,
+          type: event.eventType as any,
           metadata: event.metadata || {},
           userAgent: event.userAgent,
           ipAddress: event.ipAddress,
-        },
+        } as any,
       });
     } catch (error) {
       // Silently fail to not disrupt user experience
@@ -85,22 +85,22 @@ export class AnalyticsService {
       pageViews,
     ] = await Promise.all([
       this.prisma.analyticsEvent.count({
-        where: { userId, eventType: EventType.POST_CREATED, createdAt: { gte: startDate } },
+        where: { userId, type: EventType.POST_CREATED as any, createdAt: { gte: startDate } },
       }),
       this.prisma.analyticsEvent.count({
-        where: { userId, eventType: EventType.COMMENT_CREATED, createdAt: { gte: startDate } },
+        where: { userId, type: EventType.COMMENT_CREATED as any, createdAt: { gte: startDate } },
       }),
       this.prisma.analyticsEvent.count({
-        where: { userId, eventType: EventType.POST_LIKED, createdAt: { gte: startDate } },
+        where: { userId, type: EventType.POST_LIKED as any, createdAt: { gte: startDate } },
       }),
       this.prisma.analyticsEvent.count({
-        where: { userId, eventType: EventType.SEARCH_PERFORMED, createdAt: { gte: startDate } },
+        where: { userId, type: EventType.SEARCH_PERFORMED as any, createdAt: { gte: startDate } },
       }),
       this.prisma.analyticsEvent.count({
-        where: { userId, eventType: EventType.USER_FOLLOWED, createdAt: { gte: startDate } },
+        where: { userId, type: EventType.USER_FOLLOWED as any, createdAt: { gte: startDate } },
       }),
       this.prisma.analyticsEvent.count({
-        where: { userId, eventType: EventType.PAGE_VIEWED, createdAt: { gte: startDate } },
+        where: { userId, type: EventType.PAGE_VIEWED as any, createdAt: { gte: startDate } },
       }),
     ]);
 
@@ -138,19 +138,19 @@ export class AnalyticsService {
         select: { userId: true },
       }).then((events) => new Set(events.map((e) => e.userId)).size),
       this.prisma.analyticsEvent.count({
-        where: { eventType: EventType.USER_SIGNUP, createdAt: { gte: startDate } },
+        where: { type: EventType.USER_SIGNUP as any, createdAt: { gte: startDate } },
       }),
       this.prisma.analyticsEvent.count({
         where: { createdAt: { gte: startDate } },
       }),
       this.prisma.analyticsEvent.count({
-        where: { eventType: EventType.POST_CREATED, createdAt: { gte: startDate } },
+        where: { type: EventType.POST_CREATED as any, createdAt: { gte: startDate } },
       }),
       this.prisma.analyticsEvent.count({
-        where: { eventType: EventType.COMMENT_CREATED, createdAt: { gte: startDate } },
+        where: { type: EventType.COMMENT_CREATED as any, createdAt: { gte: startDate } },
       }),
       this.prisma.analyticsEvent.count({
-        where: { eventType: EventType.SEARCH_PERFORMED, createdAt: { gte: startDate } },
+        where: { type: EventType.SEARCH_PERFORMED as any, createdAt: { gte: startDate } },
       }),
     ]);
 
@@ -176,7 +176,7 @@ export class AnalyticsService {
 
     const searches = await this.prisma.analyticsEvent.findMany({
       where: {
-        eventType: EventType.SEARCH_PERFORMED,
+        type: EventType.SEARCH_PERFORMED as any,
         createdAt: { gte: startDate },
       },
       select: { metadata: true },
@@ -212,13 +212,13 @@ export class AnalyticsService {
       lastActiveAt,
     ] = await Promise.all([
       this.prisma.analyticsEvent.count({
-        where: { userId, eventType: EventType.POST_LIKED },
+        where: { userId, type: EventType.POST_LIKED as any },
       }),
       this.prisma.analyticsEvent.count({
-        where: { userId, eventType: EventType.COMMENT_CREATED },
+        where: { userId, type: EventType.COMMENT_CREATED as any },
       }),
       this.prisma.analyticsEvent.count({
-        where: { userId, eventType: EventType.POST_VIEWED },
+        where: { userId, type: EventType.POST_VIEWED as any },
       }),
       this.prisma.analyticsEvent.findFirst({
         where: { userId },

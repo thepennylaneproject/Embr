@@ -1,3 +1,5 @@
+<<<<<<< Current (Your changes)
+=======
 /**
  * Media API Client
  * Handles all media-related API requests
@@ -213,3 +215,4 @@ export class MediaApiClient {
 // Export singleton instance
 export const mediaApi = new MediaApiClient();
 export default mediaApi;
+>>>>>>> Incoming (Background Agent changes)

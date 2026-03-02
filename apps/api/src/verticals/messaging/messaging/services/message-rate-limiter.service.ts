@@ -3,7 +3,7 @@
  * Implements token bucket algorithm for rate limiting message sends
  */
 
-import { Injectable, TooManyRequestsException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 
 interface TokenBucket {
   tokens: number;
@@ -85,8 +85,9 @@ export class MessageRateLimiterService {
     // Check if we have tokens available
     if (bucket.tokens < 1) {
       const resetTime = this.getResetTime(bucketKey, limits);
-      throw new TooManyRequestsException(
-        `Rate limit exceeded. Try again in ${resetTime}ms`,
+      throw new HttpException(
+        'Too many messages sent. Please wait before sending more.',
+        HttpStatus.TOO_MANY_REQUESTS
       );
     }
 

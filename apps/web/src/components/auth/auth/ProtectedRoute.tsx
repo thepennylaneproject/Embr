@@ -20,7 +20,7 @@ export default function ProtectedRoute({
 
   useEffect(() => {
     if (loading || !router.isReady) {
-      return;
+      return undefined;
     }
 
     if (requireAuth && !user) {
@@ -33,6 +33,8 @@ export default function ProtectedRoute({
       const t = setTimeout(() => router.replace('/feed'), 50);
       return () => clearTimeout(t);
     }
+
+    return;
   }, [loading, redirectAuthenticated, redirectTo, requireAuth, router, user]);
 
   if (loading) {

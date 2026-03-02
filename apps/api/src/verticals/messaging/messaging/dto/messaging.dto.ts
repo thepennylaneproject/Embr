@@ -21,7 +21,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { MessageType, MessageStatus } from '../../../../shared/types/messaging.types';
+import { MessageType, MessageStatus } from '@embr/types';
 
 // ============================================================
 // SEND MESSAGE DTO

@@ -183,7 +183,7 @@ export class TrendingService {
             (engagement._sum.likeCount || 0) + (engagement._sum.commentCount || 0);
           const score =
             totalEngagement * 0.5 +
-            (engagement._count * 10) +
+            ((engagement._count as any).id * 10) +
             (user.profile?.isVerified ? 50 : 0);
 
           return { user, score };

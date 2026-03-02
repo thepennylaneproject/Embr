@@ -1,3 +1,5 @@
+<<<<<<< Current (Your changes)
+=======
 import { apiClient } from './client';
 import type {
   Gig,
@@ -281,3 +283,4 @@ export const milestonesApi = {
     return response.data;
   },
 };
+>>>>>>> Incoming (Background Agent changes)

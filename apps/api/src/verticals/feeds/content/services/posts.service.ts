@@ -8,7 +8,8 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
-  TooManyRequestsException,
+  HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../../core/database/prisma.service';
 import { CreatePostDto, UpdatePostDto, PostType, PostVisibility } from '../dto';
@@ -42,8 +43,9 @@ export class PostsService {
     if (!this.rateLimit.isAllowed(userId, 'post:create', maxPostsPerHour, oneHourMs)) {
       const resetTimeMs = this.rateLimit.getResetTime(userId, 'post:create');
       const resetTimeSec = Math.ceil(resetTimeMs / 1000);
-      throw new TooManyRequestsException(
+      throw new HttpException(
         `Too many posts. Please try again in ${resetTimeSec} seconds.`,
+        HttpStatus.TOO_MANY_REQUESTS,
       );
     }
 

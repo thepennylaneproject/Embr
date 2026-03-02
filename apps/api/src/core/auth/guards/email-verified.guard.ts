@@ -1,10 +1,8 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 export const SKIP_EMAIL_VERIFICATION_KEY = 'skipEmailVerification';
-export const SkipEmailVerification = () => ({
-  [Symbol.metadata]: { [SKIP_EMAIL_VERIFICATION_KEY]: true },
-});
+export const SkipEmailVerification = () => SetMetadata(SKIP_EMAIL_VERIFICATION_KEY, true);
 
 @Injectable()
 export class EmailVerifiedGuard implements CanActivate {
