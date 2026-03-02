@@ -234,11 +234,8 @@ model Post {
   @@index([visibility])
   @@index([createdAt])
   @@index([deletedAt])
-<<<<<<< Current (Your changes)
-  // Note: @@fulltext is not supported on PostgreSQL in Prisma 5. Use raw SQL GIN/tsvector for full-text search.
-=======
   // Full-text search handled via pg_trgm GIN index in init.sql
->>>>>>> Incoming (Background Agent changes)
+  // Note: @@fulltext is not supported on PostgreSQL in Prisma 5. Use raw SQL GIN/tsvector for full-text search.
 }
 
 model ScheduledPost {
