@@ -17,7 +17,7 @@ import type {
   CreateStripeConnectAccountResponse,
   TransactionType,
   PayoutStatus,
-} from "../types/monetization.types";
+} from "../monetization.types";
 
 const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3003"}/api`;
 

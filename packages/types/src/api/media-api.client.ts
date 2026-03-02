@@ -16,7 +16,7 @@ import {
   GetUserMediaRequest,
   GetUserMediaResponse,
   MediaStats,
-} from './media.types';
+} from '../media.types';
 
 export class MediaApiClient {
   private client: AxiosInstance;

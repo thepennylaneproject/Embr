@@ -17,7 +17,7 @@ import type {
   TrendingCreatorsResponse,
   SuggestedUser,
   BatchFollowStatus,
-} from '../types/social.types';
+} from '../social.types';
 
 export const socialApi = {
   // Follow operations

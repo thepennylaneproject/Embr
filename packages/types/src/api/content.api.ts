@@ -18,7 +18,7 @@ import {
   PresignedUrlResponse,
   MediaUploadResponse,
   UploadProgress,
-} from "../types/content.types";
+} from "../content.types";
 
 class ContentApiClient {
   private client: AxiosInstance;
