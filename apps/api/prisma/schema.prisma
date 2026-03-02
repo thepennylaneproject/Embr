@@ -83,6 +83,8 @@ model User {
   filterLogs    FilterLog[]
   transactionsRelated Transaction[] @relation("TransactionRelatedUser")
 
+  scheduledPosts ScheduledPost[]
+
   // Music Vertical (Phase 2)
   artist        Artist?
   trackPlays    TrackPlay[]
@@ -231,7 +233,7 @@ model Post {
   @@index([visibility])
   @@index([createdAt])
   @@index([deletedAt])
-  @@fulltext([content]) // PostgreSQL full-text search index
+  // Full-text search handled via pg_trgm GIN index in init.sql
 }
 
 model ScheduledPost {
