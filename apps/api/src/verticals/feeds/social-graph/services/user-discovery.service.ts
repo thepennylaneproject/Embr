@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../../core/database/prisma.service';
-import { CacheService } from '../../../core/cache/cache.service';
-import { BlockingService } from '../../../core/safety/services/blocking.service';
+import { PrismaService } from '../../../../core/database/prisma.service';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { BlockingService } from '../../../../core/safety/services/blocking.service';
 import {
   SearchUsersDto,
   GetRecommendedUsersDto,

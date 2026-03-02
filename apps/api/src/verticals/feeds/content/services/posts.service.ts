@@ -10,13 +10,13 @@ import {
   BadRequestException,
   TooManyRequestsException,
 } from '@nestjs/common';
-import { PrismaService } from '../../../core/database/prisma.service';
+import { PrismaService } from '../../../../core/database/prisma.service';
 import { CreatePostDto, UpdatePostDto, PostType, PostVisibility } from '../dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ContentSanitizerService } from '../../../core/safety/services/content-sanitizer.service';
-import { RateLimitService } from '../../../core/rate-limit/rate-limit.service';
-import { CursorPaginationService } from '../../../core/pagination/cursor-pagination.service';
-import { CacheService } from '../../../core/cache/cache.service';
+import { ContentSanitizerService } from '../../../../core/safety/services/content-sanitizer.service';
+import { RateLimitService } from '../../../../core/rate-limit/rate-limit.service';
+import { CursorPaginationService } from '../../../../core/pagination/cursor-pagination.service';
+import { CacheService } from '../../../../core/cache/cache.service';
 
 @Injectable()
 export class PostsService {

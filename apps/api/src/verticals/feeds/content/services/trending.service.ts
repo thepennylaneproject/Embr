@@ -4,8 +4,8 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../core/database/prisma.service';
-import { CacheService } from '../../../core/cache/cache.service';
+import { PrismaService } from '../../../../core/database/prisma.service';
+import { CacheService } from '../../../../core/cache/cache.service';
 
 interface TrendingScore {
   id: string;

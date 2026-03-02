@@ -9,7 +9,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../../../core/database/prisma.service';
+import { PrismaService } from '../../../../core/database/prisma.service';
 import { MessageRateLimiterService } from './message-rate-limiter.service';
 import { toRateLimitConfig, MESSAGE_RATE_LIMITS } from '../config/messaging-rate-limits';
 import {
@@ -41,7 +41,7 @@ import {
   MarkAsReadResponse,
   CreateConversationResponse,
   GetUnreadCountResponse,
-} from '../../../shared/types/messaging.types';
+} from '../../../../shared/types/messaging.types';
 
 @Injectable()
 export class MessagingService {
