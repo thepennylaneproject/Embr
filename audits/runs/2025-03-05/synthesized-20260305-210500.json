@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.1.0",
+  "kind": "synthesizer_output",
+  "run_id": "synthesized-20260305-210500",
+  "run_metadata": {
+    "timestamp": "2026-03-05T21:05:00Z",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "notes": "Post-fix re-audit refresh for selected P0/P1 findings."
+  },
+  "summary": {
+    "total_findings": 89,
+    "open_findings": 80,
+    "resolved_findings": 9,
+    "new_findings": 0,
+    "resolved_this_run": 9
+  },
+  "resolved_finding_ids": [
+    "f-security-f-001",
+    "f-security-f-002",
+    "f-0d7c9a12",
+    "f-ux-f-001",
+    "f-ux-f-002",
+    "f-ux-f-003",
+    "f-ux-f-004",
+    "f-dpl-0005",
+    "f-dpl-0006"
+  ],
+  "decision_updates": [
+    {
+      "finding_id": "f-perf-012",
+      "decision": "deferred",
+      "note": "Requires EXPLAIN ANALYZE in staging."
+    },
+    {
+      "finding_id": "f-data-data-f011",
+      "decision": "deferred",
+      "note": "App-layer authorization remains canonical for now."
+    },
+    {
+      "finding_id": "f-ux-f-019",
+      "decision": "deferred",
+      "note": "Move to dedicated UX/content pass."
+    }
+  ]
+}

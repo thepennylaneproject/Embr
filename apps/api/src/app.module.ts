@@ -22,8 +22,11 @@ import { GroupsModule } from './verticals/groups/groups.module';
 import { MutualAidModule } from './verticals/mutual-aid/mutual-aid.module';
 import { MarketplaceModule } from './verticals/marketplace/marketplace.module';
 import { EventsModule } from './verticals/events/events.module';
+import { RedisModule } from './core/redis/redis.module';
+import { HealthController } from './health.controller';
 
 @Module({
+  controllers: [HealthController],
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
@@ -50,6 +53,7 @@ import { EventsModule } from './verticals/events/events.module';
     ]),
     
     PrismaModule,
+    RedisModule,
     EmailModule,
     AuthModule,
     UsersModule,

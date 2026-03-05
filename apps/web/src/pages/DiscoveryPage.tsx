@@ -16,7 +16,7 @@ const DiscoveryPage: React.FC = () => {
 
   const handleUserClick = (user: SearchUser | TrendingCreator | RecommendedUser) => {
     // Navigate to user profile using Next.js router for client-side navigation
-    router.push(`/profile/${user.username}`);
+    router.push(`/${user.username}`);
   };
 
   return (

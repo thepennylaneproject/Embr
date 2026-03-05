@@ -9,6 +9,7 @@ import type { CSSProperties } from 'react';
 
 const navItems = [
   { href: '/feed', label: 'Feed' },
+  { href: '/discover', label: 'Discover' },
   { href: '/create', label: 'Create' },
   { href: '/groups', label: 'Groups' },
   { href: '/events', label: 'Events' },

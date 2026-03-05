@@ -59,21 +59,21 @@ export class SafetyController {
 
   @Get('reports')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'moderator')
+  @Roles('ADMIN', 'MODERATOR')
   async getReports(@Query() query: QueryReportsDto, @Req() req) {
     return this.reportsService.getReports(query, req.user.id);
   }
 
   @Get('reports/:id')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'moderator')
+  @Roles('ADMIN', 'MODERATOR')
   async getReportById(@Param('id') id: string, @Req() req) {
     return this.reportsService.getReportById(id, req.user.id);
   }
 
   @Put('reports/:id')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'moderator')
+  @Roles('ADMIN', 'MODERATOR')
   async updateReport(
     @Param('id') id: string,
     @Req() req,
@@ -84,7 +84,7 @@ export class SafetyController {
 
   @Put('reports/bulk')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'moderator')
+  @Roles('ADMIN', 'MODERATOR')
   async bulkUpdateReports(
     @Req() req,
     @Body() body: { reportIds: string[]; updates: UpdateReportDto },
@@ -98,7 +98,7 @@ export class SafetyController {
 
   @Get('reports/stats/queue')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'moderator')
+  @Roles('ADMIN', 'MODERATOR')
   async getQueueStats() {
     return this.reportsService.getQueueStats();
   }
@@ -109,7 +109,7 @@ export class SafetyController {
 
   @Post('moderation/actions')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'moderator')
+  @Roles('ADMIN', 'MODERATOR')
   @HttpCode(HttpStatus.CREATED)
   async createModerationAction(@Req() req, @Body() dto: CreateModerationActionDto) {
     return this.moderationActionsService.createAction(req.user.id, dto);
@@ -117,21 +117,21 @@ export class SafetyController {
 
   @Get('moderation/actions')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'moderator')
+  @Roles('ADMIN', 'MODERATOR')
   async getModerationActions(@Query() query: QueryModerationActionsDto) {
     return this.moderationActionsService.getActions(query);
   }
 
   @Get('moderation/actions/:id')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'moderator')
+  @Roles('ADMIN', 'MODERATOR')
   async getModerationActionById(@Param('id') id: string) {
     return this.moderationActionsService.getActionById(id);
   }
 
   @Delete('moderation/actions/:id')
   @UseGuards(RolesGuard)
-  @Roles('admin')
+  @Roles('ADMIN')
   async revokeModerationAction(
     @Param('id') id: string,
     @Req() req,
@@ -142,7 +142,7 @@ export class SafetyController {
 
   @Get('moderation/users/:userId/history')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'moderator')
+  @Roles('ADMIN', 'MODERATOR')
   async getUserModerationHistory(@Param('userId') userId: string) {
     return this.moderationActionsService.getUserHistory(userId);
   }
@@ -154,7 +154,7 @@ export class SafetyController {
 
   @Get('moderation/stats')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'moderator')
+  @Roles('ADMIN', 'MODERATOR')
   async getModerationStats(@Query('days') days?: number) {
     return this.moderationActionsService.getStats(days ? parseInt(days as any) : 30);
   }
@@ -251,7 +251,7 @@ export class SafetyController {
 
   @Get('appeals')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'moderator')
+  @Roles('ADMIN', 'MODERATOR')
   async getAppeals(@Query() query: QueryAppealsDto) {
     return this.appealsService.getAppeals(query);
   }
@@ -263,7 +263,7 @@ export class SafetyController {
 
   @Put('appeals/:id')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'moderator')
+  @Roles('ADMIN', 'MODERATOR')
   async updateAppeal(
     @Param('id') id: string,
     @Req() req,
@@ -279,7 +279,7 @@ export class SafetyController {
 
   @Get('appeals/stats')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'moderator')
+  @Roles('ADMIN', 'MODERATOR')
   async getAppealStats(@Query('days') days?: number) {
     return this.appealsService.getStats(days ? parseInt(days as any) : 30);
   }
@@ -301,7 +301,7 @@ export class SafetyController {
 
   @Post('filter/rules')
   @UseGuards(RolesGuard)
-  @Roles('admin')
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.CREATED)
   async createContentRule(@Body() dto: CreateContentRuleDto) {
     return this.contentFilterService.createRule(dto);
@@ -309,14 +309,14 @@ export class SafetyController {
 
   @Get('filter/rules')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'moderator')
+  @Roles('ADMIN', 'MODERATOR')
   async getContentRules(@Query('includeDisabled') includeDisabled?: boolean) {
     return this.contentFilterService.getRules(includeDisabled === true);
   }
 
   @Put('filter/rules/:id')
   @UseGuards(RolesGuard)
-  @Roles('admin')
+  @Roles('ADMIN')
   async updateContentRule(
     @Param('id') id: string,
     @Body() updates: Partial<CreateContentRuleDto>,
@@ -326,14 +326,14 @@ export class SafetyController {
 
   @Delete('filter/rules/:id')
   @UseGuards(RolesGuard)
-  @Roles('admin')
+  @Roles('ADMIN')
   async deleteContentRule(@Param('id') id: string) {
     return this.contentFilterService.deleteRule(id);
   }
 
   @Get('filter/stats')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'moderator')
+  @Roles('ADMIN', 'MODERATOR')
   async getFilterStats(@Query('days') days?: number) {
     return this.contentFilterService.getStats(days ? parseInt(days as any) : 30);
   }

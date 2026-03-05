@@ -116,7 +116,7 @@ export class WalletController {
    */
   @Post('add-funds')
   @Throttle({ default: { limit: 30, ttl: 60000 } })
-  @Roles('admin')
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   async addFunds(
     @Request() req,

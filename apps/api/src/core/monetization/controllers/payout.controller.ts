@@ -64,7 +64,7 @@ export class PayoutController {
    * Get all pending payouts for admin review
    */
   @Get('pending')
-  @Roles('admin')
+  @Roles('ADMIN')
   async getPendingPayouts() {
     return this.payoutService.getPendingPayouts();
   }
@@ -74,7 +74,7 @@ export class PayoutController {
    * Approve or reject a payout request
    */
   @Post(':id/approve')
-  @Roles('admin')
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   async approvePayout(
     @Request() req,
@@ -92,7 +92,7 @@ export class PayoutController {
    * Reject a payout request
    */
   @Post(':id/reject')
-  @Roles('admin')
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   async rejectPayout(
     @Request() req,

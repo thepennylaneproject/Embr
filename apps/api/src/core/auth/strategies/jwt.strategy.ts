@@ -38,9 +38,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: JwtPayload): Promise<any> {
-    // #region agent log
-    fetch('http://127.0.0.1:7760/ingest/52e30910-2c9b-4282-99bc-06b24f01d527',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a106a6'},body:JSON.stringify({sessionId:'a106a6',location:'jwt.strategy.ts:validate',message:'JWT validated from cookie/header',data:{sub:payload.sub,email:payload.email},timestamp:Date.now(),hypothesisId:'H-jwt-cookie'})}).catch(()=>{});
-    // #endregion
     const user = await this.authService.validateUser(payload.sub);
 
     if (!user) {

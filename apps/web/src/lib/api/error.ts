@@ -7,7 +7,10 @@ export function getApiErrorMessage(error: any, fallback: string) {
   }
 
   if (error?.code === 'ERR_NETWORK' || error?.message === 'Network Error' || !error?.response) {
-    return `API unavailable at ${defaultApiUrl}. Start the API server and try again.`;
+    if (process.env.NODE_ENV !== 'production') {
+      console.error(`API unavailable at ${defaultApiUrl}`, error);
+    }
+    return 'Unable to connect. Please check your connection and try again.';
   }
 
   return fallback;

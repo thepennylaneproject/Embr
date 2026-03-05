@@ -14,20 +14,20 @@ export default function CreatePostPage() {
 
   const handleCancel = () => {
     // Go back to feed
-    router.push('/feeds');
+    router.push('/feed');
   };
 
   return (
     <ProtectedPageShell
       title="Create Post"
       breadcrumbs={[
-        { label: 'Feed', href: '/feeds' },
+        { label: 'Feed', href: '/feed' },
         { label: 'Create' },
       ]}
     >
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <div style={{ marginBottom: '1.5rem' }}>
-          <Link href="/feeds">
+          <Link href="/feed">
             <button
               style={{
                 display: 'flex',
