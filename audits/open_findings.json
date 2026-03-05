@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-03-05T21:05:00Z",
-  "last_run_id": "synthesized-20260305-210500",
+  "last_updated": "2026-03-05T22:55:21Z",
+  "last_run_id": "synthesized-20260305-225521",
   "findings": [
     {
       "finding_id": "f-perf-001",
