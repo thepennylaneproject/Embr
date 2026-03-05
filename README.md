@@ -31,6 +31,13 @@ scripts/                # DB scripts + seed
 
 Detailed integration notes are in `docs/ASSEMBLY_NOTES.md`.
 
+## Production Deployment Targets
+
+- Web: Vercel (`deploy-web` workflow path).
+- API: self-hosted Docker Compose using `docker/docker-compose.prod.yml`.
+
+These targets are the canonical production direction unless explicitly superseded.
+
 ## UI Constitution Checklist
 - [ ] Page has title + orientation line (no redundancy)
 - [ ] One primary CTA (btn--primary)

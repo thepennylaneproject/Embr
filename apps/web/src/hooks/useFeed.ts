@@ -55,9 +55,19 @@ export const useFeed = (params?: UseFeedParams): UseFeedReturn => {
 
   const isMountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isLoadingRef = useRef(false);
+  const isLoadingMoreRef = useRef(false);
+
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  }, [isLoading]);
+
+  useEffect(() => {
+    isLoadingMoreRef.current = isLoadingMore;
+  }, [isLoadingMore]);
 
   const loadFeed = useCallback(async () => {
-    if (isLoading || isLoadingMore) return;
+    if (isLoadingRef.current || isLoadingMoreRef.current) return;
 
     try {
       // Cancel previous request
@@ -92,7 +102,7 @@ export const useFeed = (params?: UseFeedParams): UseFeedReturn => {
         setIsLoading(false);
       }
     }
-  }, [feedType, limit, isLoading, isLoadingMore]);
+  }, [feedType, limit]);
 
   const loadMore = useCallback(async () => {
     if (!hasMore || isLoading || isLoadingMore) return;
@@ -253,6 +263,8 @@ export const useFeed = (params?: UseFeedParams): UseFeedReturn => {
 
   // Auto-load on mount and when feed type/limit changes
   useEffect(() => {
+    isMountedRef.current = true;
+
     if (autoLoad) {
       loadFeed();
     }
@@ -263,7 +275,7 @@ export const useFeed = (params?: UseFeedParams): UseFeedReturn => {
         abortControllerRef.current.abort();
       }
     };
-  }, [autoLoad, feedType, limit, loadFeed]);
+  }, [autoLoad, loadFeed]);
 
   return {
     posts,

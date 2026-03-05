@@ -58,9 +58,9 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
-          echo "Deploy API to production"
-          # Add your deployment script here
-          # Example: ssh deployment, docker push, etc.
+          echo "Deploy API (self-hosted Docker Compose target)"
+          # Canonical target: self-hosted API using docker/docker-compose.prod.yml
+          # Add SSH-based compose rollout steps here (pull image/source, compose up -d).
 
   deploy-web:
     needs: build
@@ -79,5 +79,5 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          echo "Deploy Web to Vercel"
+          echo "Deploy Web to Vercel (canonical web target)"
           # Example: npx vercel --prod --token $VERCEL_TOKEN

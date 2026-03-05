@@ -76,7 +76,7 @@ export class TipController {
    */
   @Post(':id/refund')
   @Throttle({ default: { limit: 30, ttl: 60000 } })
-  @Roles('admin')
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   async refundTip(
     @Param('id') id: string,
