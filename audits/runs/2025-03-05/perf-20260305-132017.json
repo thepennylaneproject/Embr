@@ -1,0 +1,779 @@
+{
+  "schema_version": "1.1.0",
+  "kind": "agent_output",
+  "run_id": "perf-20260305-132017",
+  "run_metadata": {
+    "timestamp": "2026-03-05T13:20:17Z",
+    "branch": "unknown",
+    "commit": "unknown",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "gpt-5.3-codex",
+    "preflight_artifacts": {
+      "build_output": "audits/artifacts/_run_/build.txt",
+      "bundle_stats": "audits/artifacts/_run_/bundle-stats.txt"
+    },
+    "notes": "History lookup completed: audits/open_findings.json and audits/index.json contain no prior performance findings/runs for tracked categories."
+  },
+  "suite": "performance",
+  "agent": {
+    "name": "performance-cost-auditor",
+    "role": "Find performance bottlenecks, unnecessary costs, inefficient queries, oversized bundles, wasteful API calls, and rendering inefficiencies.",
+    "inputs_used": [
+      "audits/open_findings.json",
+      "audits/index.json",
+      "audits/artifacts/_run_/build.txt",
+      "audits/artifacts/_run_/bundle-stats.txt",
+      "apps/api/prisma/schema.prisma",
+      "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+      "apps/api/src/verticals/feeds/content/services/comments.service.ts",
+      "apps/api/src/verticals/feeds/content/services/posts.service.ts",
+      "apps/api/src/verticals/feeds/content/services/scheduled-posts.service.ts",
+      "apps/api/src/verticals/groups/services/groups.service.ts",
+      "apps/api/src/verticals/marketplace/services/listings.service.ts",
+      "apps/api/src/verticals/marketplace/services/orders.service.ts",
+      "apps/api/src/core/monetization/webhooks/stripe-webhook.controller.ts",
+      "apps/api/src/core/monetization/services/stripe-connect.service.ts",
+      "apps/api/src/core/monetization/controllers/stripe-connect.controller.ts",
+      "apps/api/src/core/media/services/s3-multipart.service.ts",
+      "apps/api/src/core/media/controllers/media-upload.controller.ts",
+      "apps/api/src/core/email/email.service.ts",
+      "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+      "apps/api/src/verticals/feeds/social-graph/services/user-discovery.service.ts",
+      "apps/web/package.json",
+      "apps/web/next.config.js",
+      "apps/web/src/hooks/useMessaging.ts",
+      "apps/web/src/components/messaging/DMInbox.tsx",
+      "apps/web/src/contexts/AuthContext.tsx",
+      "apps/web/src/hooks/useFeed.ts",
+      "apps/web/src/components/content/Feed.tsx",
+      "apps/web/src/components/content/PostCard.tsx",
+      "apps/web/src/components/content/PostCreator.tsx",
+      "apps/web/src/components/music/discovery/TrackDiscovery.tsx",
+      "apps/web/src/components/music/hooks/useMusic.ts",
+      "apps/web/src/pages/marketplace/index.tsx",
+      "apps/web/src/pages/DiscoveryPage.tsx",
+      "apps/web/src/components/social/SuggestedUsers.tsx",
+      "apps/web/src/components/social/UserSearchBar.tsx",
+      "apps/web/src/hooks/useUserSearch.ts",
+      "packages/ui/src/components/Avatar.tsx"
+    ],
+    "stop_conditions_hit": [
+      "No runtime profiling/APM/Lighthouse data found; findings are static-analysis inferences unless marked evidence.",
+      "No executable bundle analyzer output available (bundle-stats artifact reports unknown --analyze option).",
+      "No query execution plans available; EXPLAIN ANALYZE requested as question findings."
+    ]
+  },
+  "coverage": {
+    "files_examined": [
+      "apps/api/src/**",
+      "apps/api/prisma/schema.prisma",
+      "apps/web/src/**",
+      "apps/web/package.json",
+      "apps/web/next.config.js",
+      "packages/ui/src/**",
+      "audits/**"
+    ],
+    "files_skipped": [
+      "node_modules/**",
+      ".archive/** (non-runtime historical copies)",
+      "generated build manifests not present"
+    ],
+    "coverage_complete": true,
+    "incomplete_reason": null
+  },
+  "findings": [
+    {
+      "finding_id": "f-perf-001",
+      "type": "bug",
+      "category": "n-plus-one",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Conversation list computes unread counts with per-conversation count queries",
+      "description": "Conversation retrieval issues one base query then executes one `message.count` per conversation in a map. This creates an N+1 pattern and scales linearly with page size.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Per-conversation unread count query inside map",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "getConversations",
+          "start_line": 128,
+          "end_line": 141
+        },
+        {
+          "hook_type": "data_shape",
+          "summary": "Expected batched group count vs observed fan-out counts",
+          "expected": "1 query to fetch conversations + 1 grouped unread aggregation",
+          "actual": "1 query to fetch conversations + N individual `message.count` calls"
+        }
+      ],
+      "repro_steps": [
+        "Seed user with 100+ conversations",
+        "Call GET conversations endpoint with limit=20",
+        "Observe query count rising with limit"
+      ],
+      "impact": "Higher DB round-trips and tail latency on inbox load; cost scales with active conversation count.",
+      "suggested_fix": {
+        "approach": "Replace per-row counts with grouped aggregation using `groupBy` on `conversationId` (or raw SQL CTE) and merge in memory.",
+        "affected_files": [
+          "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "Low risk; response shape unchanged if merged carefully.",
+        "tests_needed": [
+          "Performance regression test for query count at limit=20/50",
+          "Functional test ensuring unread counts match previous behavior"
+        ]
+      },
+      "owner": "backend",
+      "status": "open",
+      "related_ids": [
+        "f-perf-002"
+      ],
+      "history": [],
+      "artifacts": []
+    },
+    {
+      "finding_id": "f-perf-002",
+      "type": "bug",
+      "category": "n-plus-one",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Unread total endpoint fans out count query for every conversation",
+      "description": "Unread totals are computed by loading all conversation IDs then invoking `getUnreadCountForConversation` for each conversation.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Conversation IDs loaded then per-ID unread count",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "getUnreadCount",
+          "start_line": 876,
+          "end_line": 915
+        },
+        {
+          "hook_type": "data_shape",
+          "summary": "Expected single grouped query vs observed N fan-out",
+          "expected": "Single grouped count query keyed by conversationId",
+          "actual": "1 query for conversations + N count queries"
+        }
+      ],
+      "repro_steps": [],
+      "impact": "Hot endpoint can become expensive for power users and drives unnecessary DB CPU.",
+      "suggested_fix": {
+        "approach": "Use one grouped count query with filters (`senderId != userId`, `status != READ`) and aggregate totals from grouped result.",
+        "affected_files": [
+          "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "Low risk.",
+        "tests_needed": [
+          "Unit test comparing grouped totals to previous per-conversation logic"
+        ]
+      },
+      "owner": "backend",
+      "status": "open",
+      "related_ids": [
+        "f-perf-001"
+      ],
+      "history": [],
+      "artifacts": []
+    },
+    {
+      "finding_id": "f-perf-003",
+      "type": "bug",
+      "category": "n-plus-one",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Comment formatting performs per-comment like lookup",
+      "description": "Each comment calls `like.findUnique` in `formatComment`, creating N additional queries for paginated comment lists.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Map over comments calls formatter with async like lookup",
+          "file": "apps/api/src/verticals/feeds/content/services/comments.service.ts",
+          "symbol": "getComments/formatComment",
+          "start_line": 156,
+          "end_line": 463
+        },
+        {
+          "hook_type": "data_shape",
+          "summary": "Expected single prefetch of likes for visible comment IDs",
+          "expected": "1 query for comments + 1 query for all likes by user on those comment IDs",
+          "actual": "1 query for comments + N `findUnique` like checks"
+        }
+      ],
+      "repro_steps": [],
+      "impact": "Comment pages degrade in latency with larger page sizes and high engagement.",
+      "suggested_fix": {
+        "approach": "Prefetch liked comment IDs using `where: { userId, commentId: { in: [...] } }` and compute `isLiked` from a Set.",
+        "affected_files": [
+          "apps/api/src/verticals/feeds/content/services/comments.service.ts"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "Low risk.",
+        "tests_needed": [
+          "Integration test ensuring `isLiked` correctness for mixed liked/unliked comments"
+        ]
+      },
+      "owner": "backend",
+      "status": "open",
+      "related_ids": [],
+      "history": [],
+      "artifacts": []
+    },
+    {
+      "finding_id": "f-perf-004",
+      "type": "enhancement",
+      "category": "api-cost",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Stripe webhook lacks idempotency guard and can reprocess retried events",
+      "description": "Stripe webhook handler processes events directly without storing/validating `event.id`, unlike the Mux webhook which has explicit dedupe persistence.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Stripe handler switch executes without event dedupe check",
+          "file": "apps/api/src/core/monetization/webhooks/stripe-webhook.controller.ts",
+          "symbol": "handleWebhook",
+          "start_line": 66,
+          "end_line": 97
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Mux webhook uses processed-event guard",
+          "file": "apps/api/src/core/media/controllers/mux-webhook.controller.ts",
+          "symbol": "handleWebhook",
+          "start_line": 66,
+          "end_line": 83
+        }
+      ],
+      "repro_steps": [
+        "Replay same Stripe event payload/event.id twice",
+        "Observe handler side effects invoked twice"
+      ],
+      "impact": "Duplicate payout/tip processing risk and inflated metered calls/notification writes.",
+      "suggested_fix": {
+        "approach": "Implement processed-event table check for Stripe events (same pattern as Mux), transactional insert+handle to guarantee idempotency.",
+        "affected_files": [
+          "apps/api/src/core/monetization/webhooks/stripe-webhook.controller.ts",
+          "apps/api/prisma/schema.prisma"
+        ],
+        "estimated_effort": "medium",
+        "risk_notes": "Requires migration and careful transaction boundaries.",
+        "tests_needed": [
+          "Webhook replay test asserting second delivery is no-op"
+        ]
+      },
+      "owner": "payments",
+      "status": "open",
+      "related_ids": [],
+      "history": [],
+      "artifacts": []
+    },
+    {
+      "finding_id": "f-perf-005",
+      "type": "enhancement",
+      "category": "api-cost",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Stripe account status/details endpoints call Stripe on every request without cache",
+      "description": "`/stripe-connect/status` and `/stripe-connect/account` invoke `stripe.accounts.retrieve` each time. Stripe API is metered/rate-limited and these routes are likely polled by UI.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Direct Stripe retrieve calls in service methods",
+          "file": "apps/api/src/core/monetization/services/stripe-connect.service.ts",
+          "symbol": "getAccountStatus/getAccountDetails",
+          "start_line": 233,
+          "end_line": 286
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Controller routes expose status/details without cache headers",
+          "file": "apps/api/src/core/monetization/controllers/stripe-connect.controller.ts",
+          "symbol": "getAccountStatus/getAccountDetails",
+          "start_line": 41,
+          "end_line": 53
+        }
+      ],
+      "repro_steps": [],
+      "impact": "Higher Stripe bill and increased risk of 429 rate limiting under dashboard polling.",
+      "suggested_fix": {
+        "approach": "Add short-lived cache (e.g., 30-120s) keyed by account ID and invalidate on Stripe webhook `account.updated`.",
+        "affected_files": [
+          "apps/api/src/core/monetization/services/stripe-connect.service.ts",
+          "apps/api/src/core/monetization/webhooks/stripe-webhook.controller.ts"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "Slight staleness acceptable for status UI.",
+        "tests_needed": [
+          "Cache hit/miss unit tests",
+          "Webhook invalidation integration test"
+        ]
+      },
+      "owner": "payments",
+      "status": "open",
+      "related_ids": [],
+      "history": [],
+      "artifacts": []
+    },
+    {
+      "finding_id": "f-perf-006",
+      "type": "enhancement",
+      "category": "api-cost",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Multipart presigned URL generation is sequential per part",
+      "description": "S3 multipart URL generation loops with awaited signing per part, producing linear latency growth for large uploads.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Serial await in part signing loop",
+          "file": "apps/api/src/core/media/services/s3-multipart.service.ts",
+          "symbol": "getPresignedPartUrls",
+          "start_line": 168,
+          "end_line": 178
+        },
+        {
+          "hook_type": "command",
+          "summary": "Expected bounded concurrency behavior",
+          "expected": "Parallel signing with capped concurrency (e.g., 5-10) for lower tail latency",
+          "actual": "Serial signing across all parts"
+        }
+      ],
+      "repro_steps": [],
+      "impact": "Slow upload initialization for large files and increased request timeout risk.",
+      "suggested_fix": {
+        "approach": "Generate part URL promises with bounded concurrency and preserve part order in output.",
+        "affected_files": [
+          "apps/api/src/core/media/services/s3-multipart.service.ts"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "Need to avoid overwhelming signer if unconstrained.",
+        "tests_needed": [
+          "Unit test validating URL count/order and reduced elapsed time for high part counts"
+        ]
+      },
+      "owner": "media",
+      "status": "open",
+      "related_ids": [],
+      "history": [],
+      "artifacts": []
+    },
+    {
+      "finding_id": "f-perf-007",
+      "type": "enhancement",
+      "category": "render-waste",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Messaging hook reconnect risk from unstable callback references",
+      "description": "Caller passes inline callbacks to `useMessaging`; hook `connect` depends on those callbacks and auto-connect effect depends on `connect`, which can trigger reconnect churn on rerenders.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Inline callbacks in DMInbox options object",
+          "file": "apps/web/src/components/messaging/DMInbox.tsx",
+          "symbol": "DMInbox",
+          "start_line": 39,
+          "end_line": 51
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "connect useCallback and auto-connect effect dependency chain",
+          "file": "apps/web/src/hooks/useMessaging.ts",
+          "symbol": "connect/useEffect",
+          "start_line": 72,
+          "end_line": 230
+        }
+      ],
+      "repro_steps": [
+        "Render DMInbox and trigger state changes unrelated to connection",
+        "Observe repeated connect/disconnect logs"
+      ],
+      "impact": "Unnecessary websocket reconnects, duplicate event setup, and avoidable API/socket load.",
+      "suggested_fix": {
+        "approach": "Stabilize callbacks with refs inside hook or memoize callbacks in caller with `useCallback`; isolate connection effect from volatile handlers.",
+        "affected_files": [
+          "apps/web/src/hooks/useMessaging.ts",
+          "apps/web/src/components/messaging/DMInbox.tsx"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "Careful to avoid stale event handlers.",
+        "tests_needed": [
+          "Hook test asserting single connection across rerenders"
+        ]
+      },
+      "owner": "frontend",
+      "status": "open",
+      "related_ids": [],
+      "history": [],
+      "artifacts": []
+    },
+    {
+      "finding_id": "f-perf-008",
+      "type": "enhancement",
+      "category": "render-waste",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Feed rerender pressure from unstable callbacks and non-memoized post cards",
+      "description": "`useFeed` action callbacks depend on `posts`, changing references frequently; `Feed` passes these into every `PostCard`, which is not memoized and also creates inline handlers.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Action callbacks close over posts array",
+          "file": "apps/web/src/hooks/useFeed.ts",
+          "symbol": "likePost/unlikePost/incrementCommentCount/incrementShareCount",
+          "start_line": 174,
+          "end_line": 252
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Post list maps all PostCard children with changing handlers",
+          "file": "apps/web/src/components/content/Feed.tsx",
+          "symbol": "Feed render",
+          "start_line": 176,
+          "end_line": 186
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "PostCard includes inline click closures and local like state",
+          "file": "apps/web/src/components/content/PostCard.tsx",
+          "symbol": "PostCard",
+          "start_line": 213,
+          "end_line": 241
+        }
+      ],
+      "repro_steps": [],
+      "impact": "Higher commit time and dropped frames on long feeds.",
+      "suggested_fix": {
+        "approach": "Use stable action dispatchers (state updater form), memoize `PostCard` (`React.memo`), and pass stable handler references.",
+        "affected_files": [
+          "apps/web/src/hooks/useFeed.ts",
+          "apps/web/src/components/content/Feed.tsx",
+          "apps/web/src/components/content/PostCard.tsx"
+        ],
+        "estimated_effort": "medium",
+        "risk_notes": "Need to keep optimistic updates consistent.",
+        "tests_needed": [
+          "React profiler benchmark comparing rerender counts before/after"
+        ]
+      },
+      "owner": "frontend",
+      "status": "open",
+      "related_ids": [],
+      "history": [],
+      "artifacts": []
+    },
+    {
+      "finding_id": "f-perf-009",
+      "type": "enhancement",
+      "category": "cache-miss",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Search flows trigger redundant network calls due missing/duplicate debounce patterns",
+      "description": "Marketplace search refetches on every filter keystroke, music track search fetches on each query change, and user search is double-debounced (component + hook), increasing latency and waste.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Marketplace effect reloads on each input dependency change",
+          "file": "apps/web/src/pages/marketplace/index.tsx",
+          "symbol": "useEffect(load)",
+          "start_line": 36,
+          "end_line": 36
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Track search fetches immediately on query change",
+          "file": "apps/web/src/components/music/hooks/useMusic.ts",
+          "symbol": "useSearchTracks",
+          "start_line": 155,
+          "end_line": 157
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "UserSearchBar and useUserSearch both debounce 300ms",
+          "file": "apps/web/src/components/social/UserSearchBar.tsx",
+          "symbol": "useDebounce/searchUsers",
+          "start_line": 29,
+          "end_line": 45
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Additional debounce in hook",
+          "file": "apps/web/src/hooks/useUserSearch.ts",
+          "symbol": "searchUsers",
+          "start_line": 57,
+          "end_line": 67
+        }
+      ],
+      "repro_steps": [],
+      "impact": "Higher API volume and slower perceived search responsiveness.",
+      "suggested_fix": {
+        "approach": "Use one debounce layer only, add request cancellation, and trigger marketplace fetch on submit/settled debounce instead of every keypress.",
+        "affected_files": [
+          "apps/web/src/pages/marketplace/index.tsx",
+          "apps/web/src/components/music/hooks/useMusic.ts",
+          "apps/web/src/components/social/UserSearchBar.tsx",
+          "apps/web/src/hooks/useUserSearch.ts"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "Minimal behavior changes if thresholds are tuned.",
+        "tests_needed": [
+          "Debounce behavioral tests and API-call count assertions per input sequence"
+        ]
+      },
+      "owner": "frontend",
+      "status": "open",
+      "related_ids": [],
+      "history": [],
+      "artifacts": []
+    },
+    {
+      "finding_id": "f-perf-010",
+      "type": "enhancement",
+      "category": "bundle-size",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Missing dynamic imports and image optimization increase bundle and runtime cost",
+      "description": "No `next/dynamic` usage found in app source, modal-heavy components are statically imported, and raw `<img>` is used across key pages/components instead of `next/image` optimization.",
+      "proof_hooks": [
+        {
+          "hook_type": "command",
+          "summary": "No dynamic import usage found",
+          "expected": "Heavy optional UI split via `next/dynamic`",
+          "actual": "0 matches for `next/dynamic` in apps/web/src"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "PostCreator statically imports MusicSelectorModal",
+          "file": "apps/web/src/components/content/PostCreator.tsx",
+          "symbol": "import section",
+          "start_line": 13,
+          "end_line": 13
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Raw image tags used in hot components",
+          "file": "apps/web/src/components/content/PostCard.tsx",
+          "symbol": "PostCard",
+          "start_line": 84,
+          "end_line": 153
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Shared avatar uses raw img",
+          "file": "packages/ui/src/components/Avatar.tsx",
+          "symbol": "Avatar",
+          "start_line": 25,
+          "end_line": 27
+        },
+        {
+          "hook_type": "command",
+          "summary": "Bundle analyzer preflight artifact unavailable",
+          "expected": "Bundle stats generated by analyzer",
+          "actual": "audits/artifacts/_run_/bundle-stats.txt => `unknown option '--analyze'`"
+        }
+      ],
+      "repro_steps": [],
+      "impact": "Larger JS and image payloads, slower LCP/TTI on constrained devices.",
+      "suggested_fix": {
+        "approach": "Adopt `next/dynamic` for optional modals/sections, migrate hot-path images to `next/image`, and fix analyzer command to collect concrete chunk sizes in CI.",
+        "affected_files": [
+          "apps/web/src/components/content/PostCreator.tsx",
+          "apps/web/src/pages/DiscoveryPage.tsx",
+          "apps/web/src/components/content/PostCard.tsx",
+          "apps/web/next.config.js"
+        ],
+        "estimated_effort": "medium",
+        "risk_notes": "May require image domain allowlist and layout tuning.",
+        "tests_needed": [
+          "Next build bundle report before/after",
+          "Lighthouse perf regression baseline"
+        ]
+      },
+      "owner": "frontend",
+      "status": "open",
+      "related_ids": [],
+      "history": [],
+      "artifacts": [
+        "audits/artifacts/_run_/bundle-stats.txt"
+      ]
+    },
+    {
+      "finding_id": "f-perf-011",
+      "type": "enhancement",
+      "category": "missing-index",
+      "severity": "major",
+      "priority": "P2",
+      "confidence": "inference",
+      "title": "Group listing sorts by memberCount without explicit schema index",
+      "description": "Groups query orders by `memberCount desc`; schema indexes `Group.slug/type/category/createdAt/deletedAt` but not `memberCount`.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Order by memberCount in group discovery query",
+          "file": "apps/api/src/verticals/groups/services/groups.service.ts",
+          "symbol": "findAll",
+          "start_line": 67,
+          "end_line": 70
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "No Group.memberCount index in Prisma model",
+          "file": "apps/api/prisma/schema.prisma",
+          "symbol": "model Group",
+          "start_line": 1479,
+          "end_line": 1515
+        }
+      ],
+      "repro_steps": [],
+      "impact": "Potential sort cost/full scan as group table grows.",
+      "suggested_fix": {
+        "approach": "Add index on `memberCount` (possibly composite with `deletedAt` / `type` depending on query cardinality).",
+        "affected_files": [
+          "apps/api/prisma/schema.prisma"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "Index write overhead; validate with EXPLAIN ANALYZE first.",
+        "tests_needed": [
+          "Query plan comparison before/after index"
+        ]
+      },
+      "owner": "backend",
+      "status": "open",
+      "related_ids": [
+        "f-perf-012"
+      ],
+      "history": [],
+      "artifacts": []
+    },
+    {
+      "finding_id": "f-perf-012",
+      "type": "question",
+      "category": "missing-index",
+      "severity": "minor",
+      "priority": "P2",
+      "confidence": "speculation",
+      "title": "Need EXPLAIN ANALYZE for heavy social discovery raw SQL and trending hashtag scan",
+      "description": "Raw SQL in follow/discovery services and full 24h hashtag scans may require additional indexes or query rewrite, but execution plans are unavailable.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Raw SQL joins/NOT EXISTS in network suggestion query",
+          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "symbol": "getSuggestedFromNetwork",
+          "start_line": 466,
+          "end_line": 495
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Raw SQL joins/NOT EXISTS in mutual recommendation query",
+          "file": "apps/api/src/verticals/feeds/social-graph/services/user-discovery.service.ts",
+          "symbol": "getMutualConnectionUsers",
+          "start_line": 487,
+          "end_line": 518
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Trending hashtag query loads all recent hashtags for in-memory aggregation",
+          "file": "apps/api/src/verticals/feeds/content/services/posts.service.ts",
+          "symbol": "getTrendingHashtags",
+          "start_line": 700,
+          "end_line": 724
+        },
+        {
+          "hook_type": "command",
+          "summary": "Execution plan request",
+          "command": "Run EXPLAIN (ANALYZE, BUFFERS) for the two raw SQL recommendation queries and for equivalent SQL of trending hashtags window scan",
+          "expected": "Index scans on follow/block join keys, bounded sort cost, acceptable row estimates",
+          "actual": "Unknown; profiling data not available"
+        }
+      ],
+      "repro_steps": [],
+      "impact": "Unknown until measured; risk of hidden full scans and sort spill at scale.",
+      "suggested_fix": {
+        "approach": "Capture query plans in staging with realistic cardinality; add/adjust composite indexes only where plans confirm bottlenecks.",
+        "affected_files": [
+          "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "apps/api/src/verticals/feeds/social-graph/services/user-discovery.service.ts",
+          "apps/api/src/verticals/feeds/content/services/posts.service.ts",
+          "apps/api/prisma/schema.prisma"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "Do not guess plans; collect evidence first.",
+        "tests_needed": [
+          "Plan snapshots and latency benchmarks in CI/perf env"
+        ]
+      },
+      "owner": "backend",
+      "status": "open",
+      "related_ids": [
+        "f-perf-011"
+      ],
+      "history": [],
+      "artifacts": []
+    }
+  ],
+  "rollups": {
+    "by_severity": {
+      "blocker": 0,
+      "major": 10,
+      "minor": 1,
+      "nit": 0
+    },
+    "by_category": {
+      "n-plus-one": 3,
+      "missing-index": 2,
+      "bundle-size": 1,
+      "render-waste": 2,
+      "api-cost": 3,
+      "cache-miss": 1
+    },
+    "by_type": {
+      "bug": 3,
+      "enhancement": 7,
+      "debt": 0,
+      "question": 1
+    },
+    "by_status": {
+      "open": 11
+    }
+  },
+  "next_actions": [
+    {
+      "action": "Fix messaging unread-count N+1 paths with grouped aggregation",
+      "finding_id": "f-perf-001",
+      "rationale": "Highest backend latency/cost win with low implementation risk."
+    },
+    {
+      "action": "Add Stripe webhook idempotency and short cache for account status/details",
+      "finding_id": "f-perf-004",
+      "rationale": "Reduces duplicate billing side effects and metered API usage."
+    },
+    {
+      "action": "Stabilize messaging/feed callback references and memoize heavy post items",
+      "finding_id": "f-perf-007",
+      "rationale": "Directly reduces frontend rerender and reconnect churn."
+    },
+    {
+      "action": "Implement debounced/cancelable search and remove duplicate debounce layer",
+      "finding_id": "f-perf-009",
+      "rationale": "Cuts unnecessary API traffic and improves perceived responsiveness."
+    },
+    {
+      "action": "Enable real bundle profiling and run Lighthouse + EXPLAIN ANALYZE baseline",
+      "finding_id": "f-perf-010",
+      "rationale": "Converts inference findings into measurable targets and validates index work."
+    }
+  ]
+}
