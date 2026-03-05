@@ -1,0 +1,237 @@
+{
+  "schema_version": "1.1.0",
+  "kind": "agent_output",
+  "run_id": "logic-20250304-143022",
+  "run_metadata": {
+    "timestamp": "2025-03-04T14:30:22Z",
+    "branch": "main",
+    "commit": "a1b2c3d",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "claude-sonnet-4-5",
+    "preflight_artifacts": {
+      "test_output": "audits/artifacts/_run_/tests.txt",
+      "lint_output": "audits/artifacts/_run_/lint.txt",
+      "build_output": "audits/artifacts/_run_/build.txt"
+    },
+    "notes": "Routine weekly audit after job ingestion refactor."
+  },
+  "suite": "logic",
+  "agent": {
+    "name": "runtime-bug-hunter",
+    "role": "Find runtime exceptions, null-safety violations, logic bugs, unhandled edge cases, and error handling gaps.",
+    "inputs_used": [
+      "src/services/jobIngestion.ts",
+      "src/hooks/useJob.ts",
+      "src/utils/retry.ts",
+      "package.json",
+      "tsconfig.json",
+      "audits/artifacts/_run_/tests.txt"
+    ],
+    "stop_conditions_hit": []
+  },
+  "coverage": {
+    "files_examined": [
+      "src/services/**",
+      "src/hooks/**",
+      "src/utils/**",
+      "src/lib/**"
+    ],
+    "files_skipped": [
+      "src/components/** - UI only, deferred to UX agent",
+      "dist/** - generated code",
+      "node_modules/** - third-party"
+    ],
+    "coverage_complete": true,
+    "incomplete_reason": null
+  },
+  "findings": [
+    {
+      "finding_id": "f-a3b7c9e1",
+      "type": "bug",
+      "category": "null-ref",
+      "severity": "blocker",
+      "priority": "P0",
+      "confidence": "evidence",
+      "title": "Unhandled null in parseJobResponse when API returns empty results array",
+      "description": "When the external job API returns {results: null} instead of {results: []}, the parseJobResponse function throws a TypeError. This crashes the ingestion pipeline silently because the catch block logs but does not re-throw or mark the batch as failed. The null case is documented in the API changelog from v2.3.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Nullable access on results without guard",
+          "file": "src/services/jobIngestion.ts",
+          "symbol": "parseJobResponse",
+          "start_line": 47,
+          "end_line": 47
+        },
+        {
+          "hook_type": "error_text",
+          "summary": "TypeError thrown when results is null",
+          "error_text": "TypeError: Cannot read properties of null (reading 'map')"
+        },
+        {
+          "hook_type": "repro_steps",
+          "summary": "Reproduce by mocking null API response",
+          "steps": [
+            "Set API_MOCK=true in .env.local",
+            "Add mock response file at __mocks__/api/empty-null.json with {results: null}",
+            "Run: npx ts-node scripts/ingest.ts --source=mock",
+            "Observe TypeError in console and zero jobs ingested"
+          ]
+        }
+      ],
+      "repro_steps": [
+        "Set API_MOCK=true in .env.local",
+        "Add mock response file at __mocks__/api/empty-null.json with {results: null}",
+        "Run: npx ts-node scripts/ingest.ts --source=mock",
+        "Observe TypeError in console and zero jobs ingested"
+      ],
+      "impact": "Job ingestion silently fails for any API source that returns null instead of empty array. Database stagnates. Users see stale listings.",
+      "suggested_fix": {
+        "approach": "Add null coalescing at line 47: (results ?? []).map(...). Add a guard log when null is received so you can track which APIs behave this way.",
+        "affected_files": ["src/services/jobIngestion.ts"],
+        "estimated_effort": "trivial",
+        "risk_notes": "Very low risk. Null coalescing is additive. Verify that downstream code handles empty arrays correctly (it already does based on line 62 check).",
+        "tests_needed": [
+          "Unit test: parseJobResponse with null results returns empty array",
+          "Unit test: parseJobResponse with undefined results returns empty array",
+          "Integration test: full ingestion pipeline with mock null response completes without error"
+        ]
+      },
+      "owner": "solo-dev",
+      "status": "open",
+      "related_ids": ["f-e2d4f6a8"],
+      "history": [
+        {
+          "timestamp": "2025-03-04T14:30:22Z",
+          "actor": "runtime-bug-hunter",
+          "event": "created",
+          "notes": "Discovered during static analysis of null-safety patterns in ingestion pipeline. Confirmed via preflight test output showing no coverage for null API responses."
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "finding_id": "f-e2d4f6a8",
+      "type": "enhancement",
+      "category": "error-handling",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "inference",
+      "title": "Ingestion pipeline has no retry logic for transient API failures",
+      "description": "The fetchJobs function makes a single HTTP request per source. If the request fails due to a timeout or 503, the entire source is skipped until the next scheduled run. Given that some APIs have known intermittent availability, a retry with exponential backoff would significantly improve data freshness.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Single try/catch with no retry loop in fetchJobs",
+          "file": "src/services/jobIngestion.ts",
+          "symbol": "fetchJobs",
+          "start_line": 22,
+          "end_line": 35
+        },
+        {
+          "hook_type": "command",
+          "summary": "Simulating transient failure shows source is permanently skipped",
+          "command": "npx ts-node scripts/ingest.ts --source=mock --mock-status=503",
+          "expected": "Retry and eventually succeed or fail gracefully with clear error",
+          "actual": "Source silently skipped, no retry attempted"
+        }
+      ],
+      "repro_steps": [],
+      "impact": "Missed job data on transient failures. Users may not see jobs from sources that had a momentary outage during the fetch window.",
+      "suggested_fix": {
+        "approach": "Wrap fetchJobs call in a retry utility with max 3 attempts, exponential backoff starting at 1s, and a circuit breaker that skips after 3 consecutive full failures for a source.",
+        "affected_files": [
+          "src/services/jobIngestion.ts",
+          "src/utils/retry.ts (new file)"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "Retries increase total API call count. If you are on a metered API plan, add a daily call budget. Also ensure retries do not cause duplicate ingestion by checking idempotency keys.",
+        "tests_needed": [
+          "Unit test: retry utility retries on 503 and succeeds on second attempt",
+          "Unit test: retry utility gives up after max attempts and throws",
+          "Unit test: retry utility does not retry on 400 (client error)"
+        ]
+      },
+      "owner": "solo-dev",
+      "status": "open",
+      "related_ids": ["f-a3b7c9e1"],
+      "history": [
+        {
+          "timestamp": "2025-03-04T14:30:22Z",
+          "actor": "runtime-bug-hunter",
+          "event": "created",
+          "notes": "Identified as a reliability gap during ingestion pipeline review. Related to f-a3b7c9e1 (both are ingestion resilience issues)."
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "finding_id": "f-c1d9e3f0",
+      "type": "question",
+      "category": "ambiguous-behavior",
+      "severity": "minor",
+      "priority": "P2",
+      "confidence": "speculation",
+      "title": "Unclear intended behavior when duplicate job is ingested from two different sources",
+      "description": "When the same job posting appears from two API sources with slightly different titles or descriptions, there is no deduplication logic. It is unclear whether duplicates should be merged, kept as separate listings, or flagged for manual review. This needs a product decision before code can be written.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "No dedup check exists in the insertion path",
+          "file": "src/services/jobIngestion.ts",
+          "symbol": "insertJobs",
+          "start_line": 78,
+          "end_line": 95
+        }
+      ],
+      "repro_steps": [],
+      "impact": "Users may see duplicate job listings from different sources. Not a crash, but erodes trust in data quality.",
+      "suggested_fix": {
+        "approach": "DECISION NEEDED: Choose one of: (A) deduplicate by URL, (B) deduplicate by title+company fuzzy match, (C) show all and let users flag duplicates. Each has different effort and trade-offs. Recommend starting with (A) as the simplest.",
+        "affected_files": ["src/services/jobIngestion.ts"],
+        "estimated_effort": "medium",
+        "risk_notes": "Dedup logic can be aggressive and accidentally merge distinct jobs. Start conservative.",
+        "tests_needed": [
+          "Unit test: same URL from two sources produces one listing",
+          "Unit test: different URLs with same title are NOT merged (if using approach A)"
+        ]
+      },
+      "owner": "solo-dev",
+      "status": "open",
+      "related_ids": [],
+      "history": [
+        {
+          "timestamp": "2025-03-04T14:30:22Z",
+          "actor": "runtime-bug-hunter",
+          "event": "created",
+          "notes": "Emitting as type 'question' because this requires a product decision, not just a code fix. Agent cannot determine intended behavior."
+        }
+      ],
+      "artifacts": []
+    }
+  ],
+  "rollups": {
+    "by_severity": { "blocker": 1, "major": 1, "minor": 1, "nit": 0 },
+    "by_category": { "null-ref": 1, "error-handling": 1, "ambiguous-behavior": 1 },
+    "by_type": { "bug": 1, "enhancement": 1, "debt": 0, "question": 1 },
+    "by_status": { "open": 3 }
+  },
+  "next_actions": [
+    {
+      "action": "Fix null coalescing in parseJobResponse",
+      "finding_id": "f-a3b7c9e1",
+      "rationale": "Blocker/P0. Trivial fix prevents silent pipeline failure."
+    },
+    {
+      "action": "Implement retry utility and wire into fetchJobs",
+      "finding_id": "f-e2d4f6a8",
+      "rationale": "Major/P1. Small effort for significant reliability improvement."
+    },
+    {
+      "action": "Make product decision on job deduplication strategy",
+      "finding_id": "f-c1d9e3f0",
+      "rationale": "Question/P2. Blocks future data quality work. No code needed yet, just a decision."
+    }
+  ]
+}

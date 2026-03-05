@@ -1,0 +1,7 @@
+Unknown command: "lint"
+
+
+Did you mean this?
+  npm link # Symlink a package folder
+To see a list of supported npm commands, run:
+  npm help
