@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { ProtectedPageShell } from '@/components/layout';
 import { Button } from '@embr/ui';
-import { ShoppingCart, Package, Truck, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react';
+import { ShoppingCart, Package, Truck, AlertCircle } from 'lucide-react';
+import { useMarketplace } from '@/hooks/useMarketplace';
+import { trackReliabilityEvent } from '@/lib/reliability';
 
 interface CartItem {
   productId: string;
@@ -14,21 +15,16 @@ interface CartItem {
   sellerName: string;
 }
 
-interface CheckoutStep {
-  id: string;
-  title: string;
-  description: string;
-  complete: boolean;
-}
-
 export default function MarketplaceCheckoutPage() {
-  const router = useRouter();
+  const { checkout } = useMarketplace();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [step, setStep] = useState<'cart' | 'payment' | 'success'>('cart');
+  const [step, setStep] = useState<'cart' | 'success'>('cart');
   const [paymentLoading, setPaymentLoading] = useState(false);
-  const [orderId, setOrderId] = useState<string>('');
+  const [orderIds, setOrderIds] = useState<string[]>([]);
+  const [checkoutStatus, setCheckoutStatus] = useState('');
+  const demoMode = process.env.NEXT_PUBLIC_DEMO_SAFE_MODE === 'true';
 
   // Fetch cart from localStorage
   useEffect(() => {
@@ -44,6 +40,11 @@ export default function MarketplaceCheckoutPage() {
   }, []);
 
   const handleCheckout = async () => {
+    if (demoMode) {
+      setError('Checkout is disabled in demo-safe mode.');
+      return;
+    }
+
     if (cart.length === 0) {
       setError('Cart is empty');
       return;
@@ -51,42 +52,44 @@ export default function MarketplaceCheckoutPage() {
 
     setPaymentLoading(true);
     setError('');
+    setCheckoutStatus('Creating your order...');
 
     try {
-      // Prepare cart items for API
       const cartItems = cart.map((item) => ({
-        productId: item.productId,
+        listingId: item.productId,
         quantity: item.quantity,
       }));
 
-      // Create order
-      const response = await fetch('/api/marketplace/orders/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ cartItems }),
+      const idempotencyKey = sessionStorage.getItem('checkout_idempotency_key') || (
+        typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+          ? crypto.randomUUID()
+          : `checkout_${Date.now()}`
+      );
+      sessionStorage.setItem('checkout_idempotency_key', idempotencyKey);
+
+      const response = await checkout({
+        items: cartItems,
+        idempotencyKey,
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Checkout failed');
+      if (!response?.orders?.length) {
+        throw new Error('No orders were created. Please retry.');
       }
 
-      const { data } = await response.json();
-
-      // Store order details
-      sessionStorage.setItem('paymentIntentId', data.paymentIntentId);
-      sessionStorage.setItem('orderId', data.orderId);
-      setOrderId(data.orderId);
-
-      // In production, integrate Stripe.js for full payment
-      // For now, show success
+      const ids = response.orders.map((order) => order.id);
+      setOrderIds(ids);
+      setCheckoutStatus(response.idempotentReplay ? 'Recovered your previous checkout result.' : 'Order confirmed by server.');
       setStep('success');
       localStorage.removeItem('marketplace_cart');
+      sessionStorage.removeItem('checkout_idempotency_key');
+      trackReliabilityEvent('checkout_confirmed', {
+        orderCount: response.orders.length,
+        idempotentReplay: response.idempotentReplay,
+      });
     } catch (err: any) {
-      setError(err.message || 'Failed to process checkout');
+      setError(err?.response?.data?.message || err.message || 'Failed to process checkout');
+      setCheckoutStatus('');
+      trackReliabilityEvent('checkout_failed');
     } finally {
       setPaymentLoading(false);
     }
@@ -175,6 +178,11 @@ export default function MarketplaceCheckoutPage() {
         <div>
           {step === 'cart' && (
             <>
+              {demoMode && (
+                <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'var(--embr-bg)', color: 'var(--embr-muted-text)' }}>
+                  Demo-safe mode is active: checkout submission is disabled for live demos.
+                </div>
+              )}
               {/* Items by Seller */}
               {sellers.map(([sellerId, items]) => (
                 <div key={sellerId} className="ui-card" data-padding="lg" style={{ marginBottom: '2rem' }}>
@@ -270,6 +278,11 @@ export default function MarketplaceCheckoutPage() {
                   <div>{error}</div>
                 </div>
               )}
+              {checkoutStatus && !error && (
+                <div style={{ marginBottom: '1rem', color: 'var(--embr-muted-text)', fontSize: '0.9rem' }}>
+                  {checkoutStatus}
+                </div>
+              )}
             </>
           )}
 
@@ -280,8 +293,15 @@ export default function MarketplaceCheckoutPage() {
                 Order Placed!
               </h2>
               <p style={{ color: 'var(--embr-muted-text)', marginBottom: '2rem' }}>
-                Order #{orderId.slice(0, 8).toUpperCase()} has been confirmed.
+                {orderIds.length === 1
+                  ? `Order #${orderIds[0]?.slice(0, 8).toUpperCase()} has been confirmed.`
+                  : `${orderIds.length} orders were confirmed with your sellers.`}
               </p>
+              {checkoutStatus && (
+                <p style={{ color: 'var(--embr-muted-text)', marginTop: '-1rem', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                  {checkoutStatus}
+                </p>
+              )}
 
               <div
                 style={{
@@ -381,10 +401,14 @@ export default function MarketplaceCheckoutPage() {
           {step === 'cart' && (
             <Button
               onClick={handleCheckout}
-              disabled={paymentLoading || cart.length === 0}
+              disabled={paymentLoading || cart.length === 0 || demoMode}
               style={{ width: '100%', marginBottom: '1rem' }}
             >
-              {paymentLoading ? 'Processing...' : 'Continue to Payment'}
+              {demoMode
+                ? 'Checkout Disabled (Demo Mode)'
+                : paymentLoading
+                  ? 'Processing...'
+                  : 'Place Order'}
             </Button>
           )}
 

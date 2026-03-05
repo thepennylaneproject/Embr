@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, DollarSign, Music, Target, Download } from 'lucide-react';
+import { TrendingUp, DollarSign, Music, Download } from 'lucide-react';
 import { useCreatorRevenue } from '../hooks/useMusic';
 
 interface CreatorRevenueDashboardProps {

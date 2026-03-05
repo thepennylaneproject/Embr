@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { socialApi } from '@shared/api/social.api';
-import type { FollowUser, FollowCounts, FollowStatus, MutualConnections } from '@shared/types/social.types';
+import type { FollowUser, MutualConnections } from '@shared/types/social.types';
 
-export const useFollow = (userId?: string) => {
+export const useFollow = (_userId?: string) => {
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);

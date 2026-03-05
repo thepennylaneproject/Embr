@@ -4,7 +4,6 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { requireAuth } from '@/lib/api/middleware/auth';
 
 interface AnalyticsEvent {
   userId?: string;

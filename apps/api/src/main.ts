@@ -8,6 +8,7 @@ dotenv.config({ path: '../../.env', override: false }); // monorepo root .env
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
+import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './shared/filters/http-exception.filter';
 
@@ -16,6 +17,7 @@ async function bootstrap() {
 
   // Security middleware
   app.use(helmet());
+  app.use(cookieParser());
 
   // Global prefix for all routes
   app.setGlobalPrefix('api');

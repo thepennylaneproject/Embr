@@ -6,7 +6,7 @@ import { ArtistDashboard } from '@/components/music/artist/ArtistDashboard';
 export default function ArtistProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
 
   const artistId = useMemo(() => {
     if (typeof router.query.id !== 'string') return '';

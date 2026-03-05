@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Play, Heart, Share2, Lock, Unlock } from 'lucide-react';
 import { useSearchTracks } from '../hooks/useMusic';
+import { MusicPlayer } from '../player/MusicPlayer';
 
 interface TrackDiscoveryProps {
   onTrackSelect?: (trackId: string) => void;
@@ -13,7 +14,10 @@ interface TrackDiscoveryProps {
  */
 export const TrackDiscovery: React.FC<TrackDiscoveryProps> = ({ onTrackSelect, onUseTrack }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { results, loading, search } = useSearchTracks(searchQuery, 50);
+  const { results, loading } = useSearchTracks(searchQuery, 50);
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+
+  const playingTrack = playingIndex !== null ? results[playingIndex] : null;
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
@@ -51,26 +55,40 @@ export const TrackDiscovery: React.FC<TrackDiscoveryProps> = ({ onTrackSelect, o
         </div>
       </div>
 
+      {/* Section label */}
+      {!searchQuery && results.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-embr-accent-900">Featured Tracks</h2>
+          <p className="text-sm text-embr-accent-600 mt-1">Popular music available for licensing</p>
+        </div>
+      )}
+      {searchQuery && results.length > 0 && (
+        <div className="mb-6">
+          <p className="text-sm text-embr-accent-600">{results.length} result{results.length !== 1 ? 's' : ''} for &ldquo;{searchQuery}&rdquo;</p>
+        </div>
+      )}
+
       {/* Results */}
-      {loading && searchQuery && (
+      {loading && (
         <div className="text-center py-12">
           <div className="inline-block animate-spin">
             <div className="w-8 h-8 border-4 border-embr-neutral-300 border-t-embr-primary-400 rounded-full" />
           </div>
-          <p className="text-embr-accent-500 mt-4">Searching...</p>
+          <p className="text-embr-accent-500 mt-4">{searchQuery ? 'Searching...' : 'Loading tracks...'}</p>
         </div>
       )}
 
       {!loading && searchQuery && results.length === 0 && (
         <div className="text-center py-12 text-embr-accent-500">
-          <p className="text-lg">No tracks found</p>
-          <p className="text-sm">Try searching with different keywords</p>
+          <p className="text-lg">No tracks found for &ldquo;{searchQuery}&rdquo;</p>
+          <p className="text-sm">Try different keywords or browse featured tracks below</p>
         </div>
       )}
 
-      {!searchQuery && (
+      {!loading && !searchQuery && results.length === 0 && (
         <div className="text-center py-12 text-embr-accent-500">
-          <p className="text-lg">Start searching to discover amazing music</p>
+          <p className="text-lg">No tracks available yet</p>
+          <p className="text-sm">Be the first to upload music to Embr</p>
         </div>
       )}
 
@@ -95,7 +113,11 @@ export const TrackDiscovery: React.FC<TrackDiscoveryProps> = ({ onTrackSelect, o
                 )}
                 <div className="absolute inset-0 bg-embr-accent-900/30 group-hover:bg-embr-accent-900/15 transition flex items-center justify-center">
                   <button
-                    onClick={() => onTrackSelect?.(track.id)}
+                    onClick={() => {
+                      const idx = results.indexOf(track);
+                      setPlayingIndex(playingIndex === idx ? null : idx);
+                      onTrackSelect?.(track.id);
+                    }}
                     className="bg-embr-primary-400 hover:bg-embr-primary-500 p-3 rounded-full transform scale-0 group-hover:scale-100 transition text-white"
                   >
                     <Play size={24} fill="white" />
@@ -163,6 +185,28 @@ export const TrackDiscovery: React.FC<TrackDiscoveryProps> = ({ onTrackSelect, o
           );
         })}
       </div>
+
+      {/* Sticky bottom player */}
+      {playingTrack && (playingTrack as any).audioUrl && (
+        <div style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+          boxShadow: '0 -4px 24px rgba(0,0,0,0.15)',
+        }}>
+          <MusicPlayer
+            trackId={playingTrack.id}
+            trackTitle={playingTrack.title}
+            artistName={(playingTrack as any).artist?.stageName || 'Unknown Artist'}
+            audioUrl={(playingTrack as any).audioUrl}
+            duration={(playingTrack as any).duration || 0}
+            thumbnailUrl={(playingTrack as any).videoThumbnailUrl}
+            licensingModel={(playingTrack as any).licensingModel}
+            isPlaying
+            onPrevious={playingIndex !== null && playingIndex > 0 ? () => setPlayingIndex((playingIndex ?? 1) - 1) : undefined}
+            onNext={playingIndex !== null && playingIndex < results.length - 1 ? () => setPlayingIndex((playingIndex ?? 0) + 1) : undefined}
+            onPlayStatusChange={(playing) => { if (!playing) setPlayingIndex(null); }}
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -4,10 +4,11 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedPageShell } from '@/components/layout';
 import { Button, Input, TextArea, useToast } from '@embr/ui';
+import apiClient from '@/lib/api/client';
 
 export default function CreateArtistPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -44,25 +45,11 @@ export default function CreateArtistPage() {
       }
 
       // Call API to create artist
-      const response = await fetch('/api/music/artists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          stageName: formData.stageName,
-          bio: formData.bio,
-          profileImage: formData.profileImage,
-        }),
+      const { data: artist } = await apiClient.post('/music/artists', {
+        stageName: formData.stageName,
+        bio: formData.bio,
+        profileImage: formData.profileImage,
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to create artist profile');
-      }
-
-      const artist = await response.json();
 
       showToast({
         title: 'Artist profile created!',
@@ -73,7 +60,7 @@ export default function CreateArtistPage() {
       // Redirect to artist dashboard
       await router.push(`/music/artist/${artist.id}`);
     } catch (err: any) {
-      const message = err.message || 'Failed to create artist profile';
+      const message = err.response?.data?.message || err.message || 'Failed to create artist profile';
       setError(message);
       showToast({
         title: 'Error',

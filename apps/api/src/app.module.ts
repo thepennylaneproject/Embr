@@ -18,6 +18,10 @@ import { MessagingModule } from './verticals/messaging/messaging/messaging.modul
 import { SafetyModule } from './core/safety/safety.module';
 import { NotificationsModule } from './core/notifications/notifications.module';
 import { MusicModule } from './music/music.module';
+import { GroupsModule } from './verticals/groups/groups.module';
+import { MutualAidModule } from './verticals/mutual-aid/mutual-aid.module';
+import { MarketplaceModule } from './verticals/marketplace/marketplace.module';
+import { EventsModule } from './verticals/events/events.module';
 
 @Module({
   imports: [
@@ -58,6 +62,10 @@ import { MusicModule } from './music/music.module';
     SafetyModule,
     NotificationsModule,
     MusicModule,
+    GroupsModule,
+    MutualAidModule,
+    MarketplaceModule,
+    EventsModule,
   ],
   providers: [
     // Global rate limiting guard (runs before auth)

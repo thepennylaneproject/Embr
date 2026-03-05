@@ -29,4 +29,4 @@ export type {
   RecommendationsResponse,
   TrendingCreatorsResponse,
   BatchFollowStatus,
-} from '@shared/types';
+} from '@embr/types';

@@ -30,3 +30,10 @@ scripts/                # DB scripts + seed
 - **Safety**: `apps/api/src/modules/safety`, `apps/web/src/components/safety`, `apps/web/src/hooks`, `packages/shared`
 
 Detailed integration notes are in `docs/ASSEMBLY_NOTES.md`.
+
+## UI Constitution Checklist
+- [ ] Page has title + orientation line (no redundancy)
+- [ ] One primary CTA (btn--primary)
+- [ ] PageProfileProvider explicit (ledger/form/marketing)
+- [ ] Stack/Typo primitives (no raw p-4/text-3xl)
+- [ ] 8px rhythm (--space-2/4/6/8)

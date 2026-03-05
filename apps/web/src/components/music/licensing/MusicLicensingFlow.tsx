@@ -26,7 +26,7 @@ export const MusicLicensingFlow: React.FC<MusicLicensingFlowProps> = ({
   const [step, setStep] = useState<'check' | 'confirm' | 'success' | 'error'>('check');
   const [errorMessage, setErrorMessage] = useState('');
   const { licensing, loading: licensingLoading, error: licensingError } = useLicensing(trackId, creatorId);
-  const { recordUsage, loading: recordingLoading, error: recordingError } = useRecordUsage();
+  const { recordUsage, loading: recordingLoading, error: _recordingError } = useRecordUsage();
 
   const handleConfirm = async () => {
     if (!licensing?.allowed) {

@@ -24,7 +24,7 @@ export const authApi = {
     return response.data;
   },
 
-  googleLogin: (redirectUrl: string) => {
+  googleLogin: (_redirectUrl: string) => {
     if (typeof window !== 'undefined') {
       // Redirect to Google OAuth - callback will set httpOnly cookies
       window.location.href = `${API_PUBLIC_URL}/auth/google/callback`;
@@ -72,6 +72,10 @@ export const authApi = {
   getMe: async (): Promise<User> => {
     const response = await apiClient.get('/auth/me');
     return response.data;
+  },
+
+  refreshToken: async (): Promise<void> => {
+    await apiClient.post('/auth/refresh', {}, { withCredentials: true });
   },
 };
 

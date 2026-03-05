@@ -55,9 +55,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // by attempting to fetch user data. The API will use the cookies automatically.
       const userData = await authApi.getMe();
       setUser(userData);
-    } catch (error) {
-      // User is not authenticated or session expired
-      console.error('Auth check failed:', error);
+    } catch (error: any) {
+      // 401 is expected when not logged in; only log other failures
+      if (error?.response?.status !== 401) {
+        console.error('Auth check failed:', error);
+      }
       setUser(null);
     } finally {
       setLoading(false);
@@ -84,7 +86,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    * Set up proactive token refresh timer
    * Refresh token 1 minute before it expires
    */
-  const scheduleTokenRefresh = useCallback(
+  const _scheduleTokenRefresh = useCallback(
     (token: string | null) => {
       // Clear existing timer
       if (refreshTimer) {
@@ -124,7 +126,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         clearTimeout(refreshTimer);
       }
     };
-  }, [checkAuth, refreshTimer]);
+  }, [checkAuth, refreshTimer, _scheduleTokenRefresh]);
 
   /**
    * Set up token refresh on user login

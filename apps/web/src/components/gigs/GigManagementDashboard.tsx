@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { gigsApi, applicationsApi, escrowApi, milestonesApi } from '@shared/api/gigs.api';
+import { gigsApi, applicationsApi, milestonesApi } from '@shared/api/gigs.api';
 import {
   Gig,
   Application,

@@ -24,14 +24,19 @@ export default function ProtectedRoute({
     }
 
     if (requireAuth && !user) {
-      // Small delay so any in-flight navigation from AuthContext.login can settle first
-      const t = setTimeout(() => router.replace(redirectTo), 50);
-      return () => clearTimeout(t);
+      let cancelled = false;
+      router.replace(redirectTo).catch((e) => {
+        if (!cancelled && e?.cancelled !== true) console.error('Redirect failed:', e);
+      });
+      return () => { cancelled = true; };
     }
 
     if (!requireAuth && user) {
-      const t = setTimeout(() => router.replace('/feed'), 50);
-      return () => clearTimeout(t);
+      let cancelled = false;
+      router.replace('/feed').catch((e) => {
+        if (!cancelled && e?.cancelled !== true) console.error('Redirect failed:', e);
+      });
+      return () => { cancelled = true; };
     }
 
     return;

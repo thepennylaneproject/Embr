@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ProtectedPageShell } from '@/components/layout';
 import { Button } from '@embr/ui';
 import { Calendar, Clock, MapPin, AlertCircle, CheckCircle, Shield } from 'lucide-react';
+import apiClient from '@/lib/api/client';
 
 interface Gig {
   id: string;
@@ -33,7 +34,7 @@ export default function GigBookingPage() {
   const [error, setError] = useState('');
   const [step, setStep] = useState<'details' | 'payment' | 'success'>('details');
   const [paymentLoading, setPaymentLoading] = useState(false);
-  const [bookingId, setBookingId] = useState<string>('');
+  const [_bookingId, setBookingId] = useState<string>('');
 
   // Fetch gig details
   useEffect(() => {
@@ -41,19 +42,11 @@ export default function GigBookingPage() {
 
     const fetchGig = async () => {
       try {
-        const response = await fetch(`/api/gigs/${gigId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-
-        if (!response.ok) throw new Error('Failed to fetch gig');
-
-        const data = await response.json();
+        const { data } = await apiClient.get(`/gigs/${gigId}`);
         setGig(data);
         setLoading(false);
       } catch (err: any) {
-        setError(err.message || 'Failed to load gig');
+        setError(err.response?.data?.message || err.message || 'Failed to load gig');
         setLoading(false);
       }
     };
@@ -68,29 +61,10 @@ export default function GigBookingPage() {
     setError('');
 
     try {
-      // Create payment intent for booking
-      const response = await fetch(
-        `/api/gigs/bookings/${gig.id}/checkout`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({
-            artistId: gig.id, // In a real app, this would be the artist's user ID
-          }),
-        }
-      );
+      const { data } = await apiClient.post(`/gigs/bookings/${gig.id}/checkout`, {
+        artistId: gig.id,
+      });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Booking failed');
-      }
-
-      const { data } = await response.json();
-
-      // Store booking details for confirmation
       sessionStorage.setItem('paymentIntentId', data.paymentIntentId);
       sessionStorage.setItem('gigId', gig.id);
       setBookingId(data.paymentIntentId);

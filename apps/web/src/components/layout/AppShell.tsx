@@ -4,17 +4,27 @@ import Link from 'next/link';
 import { PropsWithChildren, useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, Button } from '@embr/ui';
+import { Avatar } from '@embr/ui';
 import type { CSSProperties } from 'react';
 
 const navItems = [
   { href: '/feed', label: 'Feed' },
   { href: '/create', label: 'Create' },
+  { href: '/groups', label: 'Groups' },
+  { href: '/events', label: 'Events' },
+  { href: '/mutual-aid', label: 'Mutual Aid' },
+  { href: '/marketplace', label: 'Marketplace' },
   { href: '/music', label: 'Music' },
   { href: '/gigs', label: 'Gigs' },
   { href: '/earnings', label: 'Earnings' },
   { href: '/messages', label: 'Messages' },
   { href: '/profile', label: 'Profile' },
+];
+
+const quickCreateItems = [
+  { href: '/events/create', label: 'Host Event' },
+  { href: '/groups/create', label: 'Create Group' },
+  { href: '/marketplace/sell', label: 'Sell' },
 ];
 
 export interface AppShellProps {
@@ -32,10 +42,10 @@ const accentMap = {
 };
 
 export function AppShell({
-  title,
-  subtitle,
+  title: _title,
+  subtitle: _subtitle,
   accent = 'warm1',
-  breadcrumbs,
+  breadcrumbs: _breadcrumbs,
   children,
 }: PropsWithChildren<AppShellProps>) {
   const router = useRouter();
@@ -98,7 +108,26 @@ export function AppShell({
           </nav>
 
           {/* User menu */}
-          <div className="embr-user-menu">
+          <div className="embr-user-menu" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+              {quickCreateItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  style={{
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: 'var(--embr-radius-md)',
+                    border: '1px solid var(--embr-border)',
+                    color: 'var(--embr-muted-text)',
+                    fontSize: '0.72rem',
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                  }}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
             <button
               className="embr-user-button"
               onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -126,6 +155,9 @@ export function AppShell({
                 <Link href="/profile/edit" className="embr-dropdown-item embr-dropdown-link">
                   Edit Profile
                 </Link>
+                <Link href="/settings" className="embr-dropdown-item embr-dropdown-link">
+                  Settings
+                </Link>
                 <hr className="embr-dropdown-divider" />
                 <button
                   onClick={logout}
@@ -139,39 +171,9 @@ export function AppShell({
         </div>
       </header>
 
-      {/* Breadcrumbs */}
-      {breadcrumbs && breadcrumbs.length > 0 && (
-        <div className="embr-breadcrumbs">
-          <div className="embr-container">
-            <nav aria-label="Breadcrumb" className="embr-breadcrumb-nav">
-              {breadcrumbs.map((item, index) => (
-                <div key={index} className="embr-breadcrumb-item">
-                  {item.href ? (
-                    <>
-                      <Link href={item.href} className="embr-breadcrumb-link">
-                        {item.label}
-                      </Link>
-                      {index < breadcrumbs.length - 1 && (
-                        <span className="embr-breadcrumb-separator">/</span>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <span className="embr-breadcrumb-current">{item.label}</span>
-                    </>
-                  )}
-                </div>
-              ))}
-            </nav>
-          </div>
-        </div>
-      )}
-
       <main className="embr-content">
         <div className="embr-container">
-          {title ? <h1 className="ui-page-title">{title}</h1> : null}
-          {subtitle ? <p className="ui-page-subtitle">{subtitle}</p> : null}
-          <div style={{ marginTop: title ? '1.2rem' : 0 }}>{children}</div>
+          {children}
         </div>
       </main>
     </div>

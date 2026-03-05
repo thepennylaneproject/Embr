@@ -4,7 +4,6 @@ import type {
   Payout,
   CreatePayoutRequest,
   PayoutStats,
-  PayoutStatus,
 } from '@shared/types/monetization.types';
 
 interface UsePayoutsReturn {

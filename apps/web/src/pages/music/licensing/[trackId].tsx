@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ProtectedPageShell } from '@/components/layout';
 import { Button } from '@embr/ui';
 import { Music, CheckCircle, Lock, Share2 } from 'lucide-react';
+import apiClient from '@/lib/api/client';
 
 interface Track {
   id: string;
@@ -42,19 +43,11 @@ export default function MusicLicensingPage() {
 
     const fetchTrack = async () => {
       try {
-        const response = await fetch(`/api/music/tracks/${trackId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-
-        if (!response.ok) throw new Error('Failed to fetch track');
-
-        const data = await response.json();
+        const { data } = await apiClient.get(`/music/tracks/${trackId}`);
         setTrack(data);
         setLoading(false);
       } catch (err: any) {
-        setError(err.message || 'Failed to load track');
+        setError(err.response?.data?.message || err.message || 'Failed to load track');
         setLoading(false);
       }
     };
@@ -75,37 +68,14 @@ export default function MusicLicensingPage() {
     setError('');
 
     try {
-      // Create payment intent
-      const response = await fetch(
-        `/api/music/licensing/${track.id}/checkout`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({
-            creatorId: track.id,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Payment failed');
-      }
-
-      const { data } = await response.json();
-
-      // Store payment intent ID for webhook confirmation
+      const { data } = await apiClient.post(`/music/licensing/${track.id}/checkout`, {
+        creatorId: track.id,
+      });
       sessionStorage.setItem('paymentIntentId', data.paymentIntentId);
       sessionStorage.setItem('trackId', track.id);
-
-      // In a real implementation, you'd redirect to Stripe Checkout or use Elements
-      // For now, show success (in production, integrate Stripe.js)
       setStep('success');
     } catch (err: any) {
-      setError(err.message || 'Failed to process payment');
+      setError(err.response?.data?.message || err.message || 'Failed to process payment');
     } finally {
       setPaymentLoading(false);
     }

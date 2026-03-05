@@ -44,19 +44,21 @@ export function ProtectedPageShell({
 
   useEffect(() => {
     if (loading || !router.isReady) {
-      return;
+      return undefined;
     }
 
     if (requireAuth && !user) {
-      const t = setTimeout(() => {
-        router
-          .replace(redirectTo)
-          .catch((error) => {
+      let cancelled = false;
+      router
+        .replace(redirectTo)
+        .catch((error) => {
+          if (!cancelled && error?.cancelled !== true) {
             console.error('Failed to redirect to login:', error);
-          });
-      }, 500);
-      return () => clearTimeout(t);
+          }
+        });
+      return () => { cancelled = true; };
     }
+    return undefined;
   }, [loading, redirectTo, requireAuth, router, user]);
 
   if (loading) {

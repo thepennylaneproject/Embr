@@ -75,7 +75,7 @@ export interface ConversationWithDetails extends Conversation {
 export interface ConversationPreview {
   id: string;
   otherUser: UserPreview;
-  lastMessage: Message;
+  lastMessage: Message | null;
   unreadCount: number;
   lastMessageAt: string;
 }

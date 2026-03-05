@@ -1,9 +1,9 @@
 /**
  * Messaging API Client
- * HTTP client for messaging REST endpoints
+ * HTTP client for messaging REST endpoints — uses shared apiClient (cookie-based auth)
  */
 
-import axios, { AxiosInstance } from "axios";
+import apiClient from "@/lib/api/client";
 import {
   SendMessageRequest,
   SendMessageResponse,
@@ -24,73 +24,9 @@ import {
   MediaUploadResponse,
 } from "../../shared/types/messaging.types";
 
+const BASE = "/messaging";
+
 export class MessagingAPIClient {
-  private client: AxiosInstance;
-  private apiBaseURL: string;
-
-  constructor(
-    baseURL: string = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3003"}/api`,
-  ) {
-    this.apiBaseURL = baseURL;
-    this.client = axios.create({
-      baseURL: `${this.apiBaseURL}/messaging`,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    // Add auth token interceptor
-    this.client.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem("accessToken");
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error),
-    );
-
-    // Add response interceptor for token refresh
-    this.client.interceptors.response.use(
-      (response) => response,
-      async (error) => {
-        const originalRequest = error.config;
-
-        // If 401 and not already retried, try to refresh token
-        if (error.response?.status === 401 && !originalRequest._retry) {
-          originalRequest._retry = true;
-
-          try {
-            const refreshToken = localStorage.getItem("refreshToken");
-            if (!refreshToken) {
-              throw new Error("No refresh token");
-            }
-
-            // Call your auth refresh endpoint
-            const { data } = await axios.post(
-              `${this.apiBaseURL}/auth/refresh`,
-              { refreshToken },
-            );
-
-            localStorage.setItem("accessToken", data.accessToken);
-            originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
-
-            return this.client(originalRequest);
-          } catch (refreshError) {
-            // Refresh failed, logout user
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
-            window.location.href = "/login";
-            return Promise.reject(refreshError);
-          }
-        }
-
-        return Promise.reject(error);
-      },
-    );
-  }
-
   // ============================================================
   // CONVERSATION METHODS
   // ============================================================
@@ -98,19 +34,19 @@ export class MessagingAPIClient {
   async getConversations(
     params: GetConversationsRequest = {},
   ): Promise<GetConversationsResponse> {
-    const { data } = await this.client.get("/conversations", { params });
+    const { data } = await apiClient.get(`${BASE}/conversations`, { params });
     return data;
   }
 
   async createConversation(
     payload: CreateConversationRequest,
   ): Promise<CreateConversationResponse> {
-    const { data } = await this.client.post("/conversations", payload);
+    const { data } = await apiClient.post(`${BASE}/conversations`, payload);
     return data;
   }
 
   async deleteConversation(payload: DeleteConversationRequest): Promise<void> {
-    await this.client.delete(`/conversations/${payload.conversationId}`);
+    await apiClient.delete(`${BASE}/conversations/${payload.conversationId}`);
   }
 
   // ============================================================
@@ -118,28 +54,26 @@ export class MessagingAPIClient {
   // ============================================================
 
   async sendMessage(payload: SendMessageRequest): Promise<SendMessageResponse> {
-    const { data } = await this.client.post("/messages", payload);
+    const { data } = await apiClient.post(`${BASE}/messages`, payload);
     return data;
   }
 
   async getMessages(params: GetMessagesRequest): Promise<GetMessagesResponse> {
     const { conversationId, ...queryParams } = params;
-    const { data } = await this.client.get(
-      `/conversations/${conversationId}/messages`,
-      {
-        params: queryParams,
-      },
+    const { data } = await apiClient.get(
+      `${BASE}/conversations/${conversationId}/messages`,
+      { params: queryParams },
     );
     return data;
   }
 
   async markAsRead(payload: MarkAsReadRequest): Promise<MarkAsReadResponse> {
-    const { data } = await this.client.post("/messages/read", payload);
+    const { data } = await apiClient.post(`${BASE}/messages/read`, payload);
     return data;
   }
 
   async deleteMessage(payload: DeleteMessageRequest): Promise<void> {
-    await this.client.delete(`/messages/${payload.messageId}`, {
+    await apiClient.delete(`${BASE}/messages/${payload.messageId}`, {
       params: { conversationId: payload.conversationId },
     });
   }
@@ -148,11 +82,9 @@ export class MessagingAPIClient {
     params: SearchMessagesRequest,
   ): Promise<SearchMessagesResponse> {
     const { conversationId, ...queryParams } = params;
-    const { data } = await this.client.get(
-      `/conversations/${conversationId}/search`,
-      {
-        params: queryParams,
-      },
+    const { data } = await apiClient.get(
+      `${BASE}/conversations/${conversationId}/search`,
+      { params: queryParams },
     );
     return data;
   }
@@ -162,7 +94,7 @@ export class MessagingAPIClient {
   // ============================================================
 
   async getUnreadCount(): Promise<GetUnreadCountResponse> {
-    const { data } = await this.client.get("/unread");
+    const { data } = await apiClient.get(`${BASE}/unread`);
     return data;
   }
 
@@ -172,18 +104,13 @@ export class MessagingAPIClient {
 
   async uploadMedia(request: MediaUploadRequest): Promise<MediaUploadResponse> {
     const formData = new FormData();
-
     formData.append("file", request.file);
-
     formData.append("conversationId", request.conversationId);
     formData.append("type", request.type);
 
-    const { data } = await this.client.post("/media/upload", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+    const { data } = await apiClient.post(`${BASE}/media/upload`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
     });
-
     return data;
   }
 }

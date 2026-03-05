@@ -8,7 +8,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Upload, X, Image, Video, FileText, AlertCircle } from 'lucide-react';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
-import { UploadProgress, UploadProgressItem } from './UploadProgress';
+import { UploadProgress } from './UploadProgress';
 
 interface MediaUploaderProps {
   accept?: string;
@@ -41,7 +41,6 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
     uploadFiles,
     cancelUpload,
     retryUpload,
-    clearCompleted,
   } = useMediaUpload({
     onComplete: (results) => {
       onUploadComplete?.(results);
@@ -326,7 +325,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
         uploads={uploads}
         onCancel={cancelUpload}
         onRetry={retryUpload}
-        onDismiss={(id) => {
+        onDismiss={(_id) => {
           // Handle dismiss
         }}
         position="bottom-right"

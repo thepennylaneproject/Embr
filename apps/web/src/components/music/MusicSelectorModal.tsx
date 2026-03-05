@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Input } from '@embr/ui';
+import { Input } from '@embr/ui';
+import apiClient from '@/lib/api/client';
 
 interface Track {
   id: string;
@@ -31,30 +32,17 @@ export const MusicSelectorModal: React.FC<MusicSelectorModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Search for tracks
+  // Search for tracks (or load popular on empty query)
   const searchTracks = useCallback(async (query: string) => {
-    if (!query.trim()) {
-      setTracks([]);
-      return;
-    }
-
     setLoading(true);
     setError('');
 
     try {
-      const response = await fetch(
-        `/api/music/search?q=${encodeURIComponent(query)}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
-
-      if (!response.ok) throw new Error('Failed to search tracks');
-
-      const data = await response.json();
-      setTracks(Array.isArray(data) ? data : data.data || []);
+      const url = query.trim()
+        ? `/music/search?q=${encodeURIComponent(query)}&limit=30`
+        : `/music/tracks?limit=30&sort=popular`;
+      const { data } = await apiClient.get(url);
+      setTracks(Array.isArray(data) ? data : data.data || data.tracks || []);
     } catch (err) {
       setError('Failed to search tracks. Try again.');
       setTracks([]);
@@ -64,12 +52,13 @@ export const MusicSelectorModal: React.FC<MusicSelectorModalProps> = ({
   }, []);
 
   useEffect(() => {
+    if (!isOpen) return;
     const timer = setTimeout(() => {
       searchTracks(search);
-    }, 300);
+    }, search ? 300 : 0);
 
     return () => clearTimeout(timer);
-  }, [search, searchTracks]);
+  }, [search, searchTracks, isOpen]);
 
   if (!isOpen) return null;
 
@@ -152,9 +141,9 @@ export const MusicSelectorModal: React.FC<MusicSelectorModalProps> = ({
           </div>
         )}
 
-        {!loading && !search && (
+        {!loading && !search && tracks.length === 0 && (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--embr-muted-text)' }}>
-            Search for a track to add to your post
+            No tracks available yet
           </div>
         )}
 

@@ -103,14 +103,24 @@ export class AuthController {
   @Public()
   @Post('refresh')
   @UseGuards(JwtRefreshGuard)
-  async refresh(@GetUser('id') userId: string, @Body() refreshTokenDto: RefreshTokenDto) {
-    return this.authService.refreshTokens(userId, refreshTokenDto.refreshToken);
+  async refresh(
+    @GetUser('id') userId: string,
+    @Req() req: Request,
+    @Body() refreshTokenDto: RefreshTokenDto,
+  ) {
+    const token = (req as any).cookies?.refreshToken || refreshTokenDto.refreshToken;
+    return this.authService.refreshTokens(userId, token);
   }
 
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async logout(@GetUser('id') userId: string, @Body() body: { refreshToken: string }) {
-    await this.authService.logout(userId, body.refreshToken);
+  async logout(
+    @GetUser('id') userId: string,
+    @Req() req: Request,
+    @Body() body: { refreshToken?: string },
+  ) {
+    const token = (req as any).cookies?.refreshToken || body.refreshToken || '';
+    await this.authService.logout(userId, token);
   }
 
   @Post('logout-all')

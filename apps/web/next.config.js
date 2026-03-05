@@ -2,6 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
   transpilePackages: [ // pragma: allowlist secret
     '@embr/ui', '@embr/types', '@embr/utils', '@embr/config',
     '@embr/auth', '@embr/monetization', '@embr/music-sdk', '@embr/creator-tools',

@@ -4,9 +4,8 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        {/* Viewport and mobile optimization */}
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        {/* Viewport is set by Next.js; do not add it in _document — use next/head in _app or per-page if you need a custom viewport */}
 
         {/* SEO meta tags */}
         <meta name="description" content="Embr - Connect with creators, share gigs, and grow your network" />

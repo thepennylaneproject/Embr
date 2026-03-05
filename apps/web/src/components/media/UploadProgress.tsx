@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, AlertCircle, CheckCircle, Loader, RefreshCw } from 'lucide-react';
 
 export interface UploadProgressItem {
@@ -102,7 +102,7 @@ interface UploadProgressCardProps {
 const UploadProgressCard: React.FC<UploadProgressCardProps> = ({
   upload,
   expanded,
-  onToggleExpand,
+  onToggleExpand: _onToggleExpand,
   onCancel,
   onRetry,
   onDismiss,

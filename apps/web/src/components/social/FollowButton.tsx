@@ -31,6 +31,7 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
       const timer = setTimeout(() => setShowError(false), 5000); // Hide error after 5 seconds
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [error]);
 
   const handleClick = async (e: React.MouseEvent) => {
@@ -155,6 +156,7 @@ export const FollowButtonCompact: React.FC<FollowButtonCompactProps> = ({
       const timer = setTimeout(() => setShowError(false), 5000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [error]);
 
   const handleClick = async (e: React.MouseEvent) => {

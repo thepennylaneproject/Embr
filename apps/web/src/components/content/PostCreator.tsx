@@ -6,12 +6,15 @@
 
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { usePost } from '@/hooks/usePost';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { PostType, PostVisibility, CreatePostInput } from '@shared/types/content.types';
 import { MusicSelectorModal } from '@/components/music/MusicSelectorModal';
 import { AnalyticsEvent } from '@/lib/analytics';
+import { clearDraft, readDraft, writeDraft } from '@/lib/draft';
+import { trackReliabilityEvent } from '@/lib/reliability';
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 
 interface PostCreatorProps {
   onPostCreated?: (postId: string) => void;
@@ -26,6 +29,7 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
   defaultVisibility = PostVisibility.PUBLIC,
   className = '',
 }) => {
+  const draftKey = 'draft_post_creator_v1';
   const analytics = useAnalytics();
   const {
     isCreating,
@@ -46,8 +50,43 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
   const [hashtags, setHashtags] = useState<string[]>([]);
   const [selectedMusic, setSelectedMusic] = useState<any | null>(null);
   const [showMusicModal, setShowMusicModal] = useState(false);
+  const [draftStatus, setDraftStatus] = useState<'idle' | 'saved' | 'error' | 'restored'>('idle');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const draft = readDraft<{
+      content: string;
+      visibility: PostVisibility;
+      hashtags: string[];
+      selectedMusic: any | null;
+    }>(draftKey);
+
+    if (!draft) {
+      return;
+    }
+
+    if (draft.content) setContent(draft.content);
+    if (draft.visibility) setVisibility(draft.visibility);
+    if (Array.isArray(draft.hashtags)) setHashtags(draft.hashtags);
+    if (draft.selectedMusic) setSelectedMusic(draft.selectedMusic);
+    setDraftStatus('restored');
+    trackReliabilityEvent('draft_restored', { flow: 'post_creator' });
+  }, []);
+
+  useEffect(() => {
+    const hasDraftableContent = Boolean(content.trim() || mediaPreview || selectedMusic);
+    if (!hasDraftableContent) {
+      return;
+    }
+
+    const didSave = writeDraft(draftKey, { content, visibility, hashtags, selectedMusic });
+    setDraftStatus(didSave ? 'saved' : 'error');
+  }, [content, visibility, hashtags, selectedMusic, mediaPreview]);
+
+  useUnsavedChangesGuard({
+    enabled: Boolean(content.trim() || mediaPreview || selectedMusic),
+  });
 
   const handleMediaSelect = useCallback((file: File) => {
     const type = file.type.startsWith('image/') ? 'image' : 'video';
@@ -157,10 +196,13 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
       removeMedia();
       setHashtags([]);
       setSelectedMusic(null);
+      clearDraft(draftKey);
+      setDraftStatus('idle');
 
       onPostCreated?.(post.id);
     } catch (err) {
       console.error('Failed to create post:', err);
+      trackReliabilityEvent('post_create_failed', { flow: 'post_creator' });
     }
   }, [content, mediaFile, mediaType, visibility, hashtags, selectedMusic, uploadMedia, createPost, removeMedia, onPostCreated]);
 
@@ -169,6 +211,8 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
     removeMedia();
     setHashtags([]);
     setSelectedMusic(null);
+    clearDraft(draftKey);
+    setDraftStatus('idle');
     reset();
     onCancel?.();
   }, [removeMedia, reset, onCancel]);
@@ -176,7 +220,7 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
   const isSubmitDisabled = (!content.trim() && !mediaFile) || isCreating || isUploading;
 
   return (
-    <div style={{
+    <div className={className} style={{
       backgroundColor: 'white',
       borderRadius: '8px',
       border: '1px solid #e0e0e0',
@@ -205,12 +249,21 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
 
       {/* CHARACTER COUNT */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px', marginBottom: '16px' }}>
-        <span style={{
-          fontSize: '12px',
-          color: content.length > 450 ? '#ef4444' : '#ccc',
-        }}>
-          {content.length}/500
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {draftStatus !== 'idle' && (
+            <span style={{ fontSize: '12px', color: draftStatus === 'error' ? '#ef4444' : '#9ca3af' }}>
+              {draftStatus === 'restored' && 'Draft restored'}
+              {draftStatus === 'saved' && 'Draft saved locally'}
+              {draftStatus === 'error' && 'Draft save failed'}
+            </span>
+          )}
+          <span style={{
+            fontSize: '12px',
+            color: content.length > 450 ? '#ef4444' : '#ccc',
+          }}>
+            {content.length}/500
+          </span>
+        </div>
       </div>
 
       {/* MEDIA PREVIEW */}

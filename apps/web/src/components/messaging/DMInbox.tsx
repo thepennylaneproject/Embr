@@ -8,6 +8,8 @@ import { useMessaging } from '@/hooks/useMessaging';
 import { ConversationList } from './ConversationList';
 import { MessageThread } from './MessageThread';
 import { ConversationPreview, MessageType } from '@shared/types/messaging.types';
+import { messagingAPI } from '@shared/api/messaging.api';
+import { useUserSearch } from '@/hooks/useUserSearch';
 
 interface DMInboxProps {
   className?: string;
@@ -36,7 +38,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({
     uploadMedia,
   } = useMessaging({
     autoConnect: true,
-    onMessage: (message, conversation) => {
+    onMessage: (message, _conversation) => {
       console.log('New message received:', message);
       // Handle new message notification
     },
@@ -52,6 +54,10 @@ export const DMInbox: React.FC<DMInboxProps> = ({
     useState<ConversationPreview | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileView, setIsMobileView] = useState(false);
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [composeSearch, setComposeSearch] = useState('');
+  const [composeLoading, setComposeLoading] = useState(false);
+  const { users: userResults, searchUsers, reset: resetUserSearch } = useUserSearch();
 
   // Fetch conversations on mount
   useEffect(() => {
@@ -85,6 +91,43 @@ export const DMInbox: React.FC<DMInboxProps> = ({
 
   const handleBackToList = () => {
     setSelectedConversation(null);
+  };
+
+  const handleComposeOpen = () => {
+    resetUserSearch();
+    setComposeSearch('');
+    setComposeOpen(true);
+  };
+
+  const handleComposeSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const q = e.target.value;
+    setComposeSearch(q);
+    if (q.trim()) {
+      searchUsers({ query: q }, true);
+    } else {
+      resetUserSearch();
+    }
+  };
+
+  const handleStartConversation = async (userId: string) => {
+    setComposeLoading(true);
+    try {
+      const conv = await messagingAPI.createConversation({ participantId: userId });
+      setComposeOpen(false);
+      await fetchConversations();
+      const fresh = conversations.find((c) => c.id === conv.id) ?? ({
+        id: conv.id,
+        otherUser: (conv as any).otherUser,
+        unreadCount: 0,
+        lastMessage: null,
+        updatedAt: new Date().toISOString(),
+      } as ConversationPreview);
+      handleConversationSelect(fresh);
+    } catch (err) {
+      console.error('Failed to create conversation:', err);
+    } finally {
+      setComposeLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -157,9 +200,24 @@ export const DMInbox: React.FC<DMInboxProps> = ({
 
     return (
       <div className={`h-full flex flex-col ${className}`}>
+        {/* Mobile compose button */}
+        <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--embr-border)', display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            onClick={handleComposeOpen}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              padding: '0.5rem 1rem', borderRadius: 'var(--embr-radius-md)',
+              background: 'var(--embr-accent)', color: '#fff',
+              fontSize: '0.875rem', fontWeight: '600', border: 'none', cursor: 'pointer',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+            New Message
+          </button>
+        </div>
         <ConversationList
           conversations={conversations}
-          selectedConversationId={selectedConversation?.id}
+          selectedConversationId={selectedConversation ? (selectedConversation as ConversationPreview).id : undefined}
           unreadCount={unreadCount}
           searchQuery={searchQuery}
           loading={loading}
@@ -168,18 +226,43 @@ export const DMInbox: React.FC<DMInboxProps> = ({
           onConversationSelect={handleConversationSelect}
           onSearchChange={setSearchQuery}
         />
+        {composeOpen && <ComposeModal
+          search={composeSearch}
+          users={userResults}
+          loading={composeLoading}
+          onSearchChange={handleComposeSearch}
+          onSelect={handleStartConversation}
+          onClose={() => setComposeOpen(false)}
+        />}
       </div>
     );
   }
 
   // Desktop view: show both list and thread side by side
   return (
-    <div className={`h-full flex ${className}`}>
+    <div className={`h-full flex ${className}`} style={{ position: 'relative' }}>
       {/* Conversation List - Left sidebar */}
       <div className="w-96 border-r border-gray-200 dark:border-gray-800 flex flex-col">
+        {/* Compose button header */}
+        <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--embr-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontWeight: '600', fontSize: '1rem' }}>Messages</span>
+          <button
+            onClick={handleComposeOpen}
+            title="New Message"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              padding: '0.45rem 0.9rem', borderRadius: 'var(--embr-radius-md)',
+              background: 'var(--embr-accent)', color: '#fff',
+              fontSize: '0.8rem', fontWeight: '600', border: 'none', cursor: 'pointer',
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+            New
+          </button>
+        </div>
         <ConversationList
           conversations={conversations}
-          selectedConversationId={selectedConversation?.id}
+          selectedConversationId={selectedConversation ? (selectedConversation as ConversationPreview).id : undefined}
           unreadCount={unreadCount}
           searchQuery={searchQuery}
           loading={loading}
@@ -223,12 +306,116 @@ export const DMInbox: React.FC<DMInboxProps> = ({
                 Select a conversation
               </h3>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Choose a conversation from the list to start messaging
+                Choose a conversation from the list, or start a new one
               </p>
+              <button
+                onClick={handleComposeOpen}
+                style={{
+                  marginTop: '1rem', padding: '0.5rem 1.2rem',
+                  borderRadius: 'var(--embr-radius-md)',
+                  background: 'var(--embr-accent)', color: '#fff',
+                  fontSize: '0.875rem', fontWeight: '600',
+                  border: 'none', cursor: 'pointer',
+                }}
+              >
+                New Message
+              </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* Compose modal */}
+      {composeOpen && <ComposeModal
+        search={composeSearch}
+        users={userResults}
+        loading={composeLoading}
+        onSearchChange={handleComposeSearch}
+        onSelect={handleStartConversation}
+        onClose={() => setComposeOpen(false)}
+      />}
     </div>
   );
 };
+
+// -------------------------------------------------------
+// Compose Modal
+// -------------------------------------------------------
+interface ComposeModalProps {
+  search: string;
+  users: any[];
+  loading: boolean;
+  onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSelect: (userId: string) => void;
+  onClose: () => void;
+}
+
+const ComposeModal: React.FC<ComposeModalProps> = ({ search, users, loading, onSearchChange, onSelect, onClose }) => (
+  <div
+    style={{
+      position: 'fixed', inset: 0, zIndex: 1000,
+      background: 'rgba(0,0,0,0.45)', display: 'flex',
+      alignItems: 'center', justifyContent: 'center',
+    }}
+    onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+  >
+    <div style={{
+      background: 'var(--embr-card-bg, #fff)', borderRadius: 'var(--embr-radius-lg)',
+      width: '100%', maxWidth: '420px', padding: '1.5rem',
+      boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700' }}>New Message</h2>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.25rem', lineHeight: 1 }}>×</button>
+      </div>
+      <input
+        type="text"
+        value={search}
+        onChange={onSearchChange}
+        placeholder="Search by name or username..."
+        autoFocus
+        style={{
+          width: '100%', padding: '0.6rem 0.9rem',
+          border: '1px solid var(--embr-border)',
+          borderRadius: 'var(--embr-radius-md)',
+          fontSize: '0.9rem', outline: 'none',
+          boxSizing: 'border-box',
+        }}
+      />
+      <div style={{ marginTop: '0.75rem', maxHeight: '280px', overflowY: 'auto' }}>
+        {loading && <p style={{ padding: '0.75rem', color: 'var(--embr-muted-text)', textAlign: 'center' }}>Searching...</p>}
+        {!loading && search && users.length === 0 && (
+          <p style={{ padding: '0.75rem', color: 'var(--embr-muted-text)', textAlign: 'center' }}>No users found</p>
+        )}
+        {!search && !loading && (
+          <p style={{ padding: '0.75rem', color: 'var(--embr-muted-text)', textAlign: 'center' }}>Type to search for a user</p>
+        )}
+        {users.map((u: any) => (
+          <button
+            key={u.id}
+            onClick={() => onSelect(u.id)}
+            style={{
+              width: '100%', textAlign: 'left', padding: '0.6rem 0.5rem',
+              borderRadius: 'var(--embr-radius-md)', border: 'none',
+              background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem',
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--embr-hover-bg, #f5f5f5)'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
+          >
+            {u.profile?.avatarUrl ? (
+              <img src={u.profile.avatarUrl} alt="" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--embr-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '0.85rem' }}>
+                {(u.profile?.displayName || u.username || '?')[0].toUpperCase()}
+              </div>
+            )}
+            <div>
+              <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{u.profile?.displayName || u.username}</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--embr-muted-text)' }}>@{u.username}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+);

@@ -83,7 +83,24 @@ model User {
   filterLogs    FilterLog[]
   transactionsRelated Transaction[] @relation("TransactionRelatedUser")
 
-  scheduledPosts ScheduledPost[]
+  // Groups
+  groupsCreated         Group[]              @relation("GroupCreator")
+  groupMemberships      GroupMember[]
+  groupJoinRequests     GroupJoinRequest[]
+  groupInvitesSent      GroupInvite[]        @relation("GroupInviter")
+  groupInvitesReceived  GroupInvite[]        @relation("GroupInvitee")
+
+  // Mutual Aid
+  mutualAidPosts        MutualAidPost[]
+  mutualAidResponses    MutualAidResponse[]
+
+  // Marketplace
+  marketplaceListings         MarketplaceListing[]
+  marketplaceOrdersAsBuyer    MarketplaceOrder[]   @relation("OrderBuyer")
+  marketplaceOrdersAsSeller   MarketplaceOrder[]   @relation("OrderSeller")
+  marketplaceReviewsGiven     MarketplaceReview[]  @relation("MarketplaceReviewer")
+  marketplaceReviewsReceived  MarketplaceReview[]  @relation("MarketplaceSeller")
+  marketplaceOffers           MarketplaceOffer[]
 
   // Music Vertical (Phase 2)
   artist        Artist?
@@ -92,6 +109,16 @@ model User {
   trackComments TrackComment[]
   videoUsages   VideoUsage[] // Tracks where creator used music from Music vertical
   scheduledPosts ScheduledPost[]
+
+  // Events
+  hostedEvents      Event[]          @relation("EventHost")
+  eventAttendances  EventAttendee[]
+
+  // Organizing
+  actionAlerts              ActionAlert[]
+  polls                     Poll[]
+  pollVotes                 PollVote[]
+  treasuryContributions     GroupTreasuryTransaction[] @relation("TreasuryContributor")
 
   @@index([email])
   @@index([role])
@@ -218,6 +245,8 @@ model Post {
   shareCount    Int            @default(0)
   duration      Int?           // Video duration in seconds
   isProcessing  Boolean        @default(false)
+  groupId       String?
+  group         Group?         @relation(fields: [groupId], references: [id], onDelete: SetNull)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   deletedAt     DateTime?      // Soft delete
@@ -228,10 +257,12 @@ model Post {
   reports       Report[]
   tips          Tip[]
   media         Media[]
+  eventRecap    EventRecap?
 
   @@index([authorId])
   @@index([type])
   @@index([visibility])
+  @@index([groupId])
   @@index([createdAt])
   @@index([deletedAt])
   // Full-text search handled via pg_trgm GIN index in init.sql
@@ -321,6 +352,9 @@ enum TransactionType {
   ADJUSTMENT
   CREDIT
   DEBIT
+  MARKETPLACE_PURCHASE
+  MARKETPLACE_SALE
+  MARKETPLACE_REFUND
 }
 
 model Wallet {
@@ -1411,5 +1445,593 @@ model VideoUsage {
   @@index([contentType])
   @@index([usageDate])
   @@index([totalRevenue])
+}
+
+// ============================================
+// GROUPS
+// ============================================
+
+enum GroupType {
+  PUBLIC
+  PRIVATE
+  SECRET
+}
+
+enum GroupMemberRole {
+  MEMBER
+  MODERATOR
+  ADMIN
+}
+
+enum GroupJoinRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum GroupInviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model Group {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?   @db.Text
+  coverUrl    String?
+  avatarUrl   String?
+  type        GroupType @default(PUBLIC)
+  category    String?
+  tags        String[]  @default([])
+  rules       String[]  @default([])
+  memberCount Int       @default(0)
+  postCount   Int       @default(0)
+  isVerified  Boolean   @default(false)
+  createdById String
+  createdBy   User      @relation("GroupCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  members      GroupMember[]
+  joinRequests GroupJoinRequest[]
+  invites      GroupInvite[]
+  posts        Post[]
+  mutualAidPosts MutualAidPost[]
+  listings     MarketplaceListing[]
+  events       Event[]
+  alerts       ActionAlert[]
+  polls        Poll[]
+  treasury     GroupTreasury?
+
+  @@index([slug])
+  @@index([type])
+  @@index([category])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+model GroupMember {
+  id       String          @id @default(uuid())
+  groupId  String
+  group    Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     GroupMemberRole @default(MEMBER)
+  joinedAt DateTime        @default(now())
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+}
+
+model GroupJoinRequest {
+  id        String                 @id @default(uuid())
+  groupId   String
+  group     Group                  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String?
+  status    GroupJoinRequestStatus @default(PENDING)
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+  @@index([status])
+}
+
+model GroupInvite {
+  id         String            @id @default(uuid())
+  groupId    String
+  group      Group             @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  inviterId  String
+  inviter    User              @relation("GroupInviter", fields: [inviterId], references: [id], onDelete: Cascade)
+  inviteeId  String
+  invitee    User              @relation("GroupInvitee", fields: [inviteeId], references: [id], onDelete: Cascade)
+  token      String            @unique @default(uuid())
+  status     GroupInviteStatus @default(PENDING)
+  expiresAt  DateTime?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@index([groupId])
+  @@index([inviteeId])
+  @@index([token])
+}
+
+// ============================================
+// MUTUAL AID NETWORKS
+// ============================================
+
+enum MutualAidType {
+  REQUEST
+  OFFER
+}
+
+enum MutualAidCategory {
+  FOOD
+  SHELTER
+  TRANSPORTATION
+  CHILDCARE
+  MEDICAL
+  FINANCIAL
+  SKILLS
+  SUPPLIES
+  EMOTIONAL_SUPPORT
+  OTHER
+}
+
+enum MutualAidUrgency {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum MutualAidStatus {
+  OPEN
+  IN_PROGRESS
+  FULFILLED
+  CANCELLED
+  EXPIRED
+}
+
+enum MutualAidResponseStatus {
+  PENDING
+  ACCEPTED
+  COMPLETED
+  DECLINED
+}
+
+model MutualAidPost {
+  id            String               @id @default(uuid())
+  authorId      String
+  author        User                 @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  type          MutualAidType
+  category      MutualAidCategory
+  title         String
+  description   String               @db.Text
+  quantity      String?
+  location      String?
+  isRemote      Boolean              @default(false)
+  urgency       MutualAidUrgency     @default(MEDIUM)
+  status        MutualAidStatus      @default(OPEN)
+  expiresAt     DateTime?
+  tags          String[]             @default([])
+  groupId       String?
+  group         Group?               @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  responseCount Int                  @default(0)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  deletedAt     DateTime?
+
+  responses     MutualAidResponse[]
+  linkedEvents  Event[]
+
+  @@index([authorId])
+  @@index([type])
+  @@index([category])
+  @@index([urgency])
+  @@index([status])
+  @@index([groupId])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+model MutualAidResponse {
+  id          String                  @id @default(uuid())
+  postId      String
+  post        MutualAidPost           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  responderId String
+  responder   User                    @relation(fields: [responderId], references: [id], onDelete: Cascade)
+  message     String                  @db.Text
+  status      MutualAidResponseStatus @default(PENDING)
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  @@unique([postId, responderId])
+  @@index([postId])
+  @@index([responderId])
+  @@index([status])
+}
+
+// ============================================
+// MARKETPLACE (GOODS)
+// ============================================
+
+enum ListingType {
+  PHYSICAL
+  DIGITAL
+  BUNDLE
+}
+
+enum ListingCondition {
+  NEW
+  LIKE_NEW
+  GOOD
+  FAIR
+  POOR
+}
+
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  SOLD
+  RESERVED
+  CANCELLED
+  EXPIRED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  COMPLETED
+  DISPUTED
+  REFUNDED
+  CANCELLED
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COUNTERED
+  EXPIRED
+  WITHDRAWN
+}
+
+model MarketplaceListing {
+  id           String           @id @default(uuid())
+  sellerId     String
+  seller       User             @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  title        String
+  description  String           @db.Text
+  price        Int
+  type         ListingType
+  condition    ListingCondition?
+  category     String
+  tags         String[]         @default([])
+  images       String[]         @default([])
+  status       ListingStatus    @default(DRAFT)
+  quantity     Int              @default(1)
+  allowOffers  Boolean          @default(false)
+  isShippable  Boolean          @default(false)
+  shippingCost Int?
+  location     String?
+  viewCount    Int              @default(0)
+  groupId      String?
+  group        Group?           @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  deletedAt    DateTime?
+
+  orders  MarketplaceOrder[]
+  reviews MarketplaceReview[]
+  offers  MarketplaceOffer[]
+
+  @@index([sellerId])
+  @@index([type])
+  @@index([category])
+  @@index([status])
+  @@index([groupId])
+  @@index([createdAt])
+  @@index([deletedAt])
+}
+
+model MarketplaceOrder {
+  id                    String      @id @default(uuid())
+  listingId             String
+  listing               MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  buyerId               String
+  buyer                 User        @relation("OrderBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  sellerId              String
+  seller                User        @relation("OrderSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  quantity              Int         @default(1)
+  subtotal              Int
+  shippingCost          Int         @default(0)
+  platformFee           Int
+  totalAmount           Int
+  status                OrderStatus @default(PENDING)
+  shippingAddress       Json?
+  trackingNumber        String?
+  notes                 String?
+  stripePaymentIntentId String?     @unique
+  completedAt           DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  review MarketplaceReview?
+
+  @@index([listingId])
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model MarketplaceReview {
+  id         String   @id @default(uuid())
+  orderId    String   @unique
+  order      MarketplaceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  listingId  String
+  listing    MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reviewerId String
+  reviewer   User     @relation("MarketplaceReviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  sellerId   String
+  sellerUser User     @relation("MarketplaceSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  rating     Int
+  comment    String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([listingId])
+  @@index([sellerId])
+  @@index([reviewerId])
+}
+
+model MarketplaceOffer {
+  id         String      @id @default(uuid())
+  listingId  String
+  listing    MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId    String
+  buyer      User        @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  amount     Int
+  message    String?
+  status     OfferStatus @default(PENDING)
+  expiresAt  DateTime?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([listingId])
+  @@index([buyerId])
+  @@index([status])
+}
+
+// ─── Events ──────────────────────────────────────────────────────────────────
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum EventType {
+  IN_PERSON
+  VIRTUAL
+  HYBRID
+}
+
+enum PricingType {
+  FREE
+  FIXED
+  SLIDING_SCALE
+  PAY_WHAT_YOU_CAN
+}
+
+enum RsvpStatus {
+  GOING
+  MAYBE
+  NOT_GOING
+}
+
+model Event {
+  id             String      @id @default(uuid())
+  hostId         String
+  host           User        @relation("EventHost", fields: [hostId], references: [id], onDelete: Cascade)
+  groupId        String?
+  group          Group?      @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  title          String
+  description    String      @db.Text
+  eventType      EventType   @default(IN_PERSON)
+  coverUrl       String?
+  location       String?
+  virtualLink    String?
+  startAt        DateTime
+  endAt          DateTime
+  timezone       String      @default("UTC")
+  maxAttendees   Int?
+  isTicketed     Boolean     @default(false)
+  pricingType    PricingType @default(FREE)
+  minPrice       Int?        // cents
+  suggestedPrice Int?        // cents
+  status         EventStatus @default(DRAFT)
+  tags           String[]    @default([])
+  linkedMutualAidId String?
+  linkedMutualAid   MutualAidPost? @relation(fields: [linkedMutualAidId], references: [id], onDelete: SetNull)
+  attendees      EventAttendee[]
+  recap          EventRecap?
+  polls          Poll[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  deletedAt      DateTime?
+
+  @@index([hostId])
+  @@index([groupId])
+  @@index([startAt])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model EventAttendee {
+  id                    String     @id @default(uuid())
+  eventId               String
+  event                 Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId                String
+  user                  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status                RsvpStatus @default(GOING)
+  amountPaid            Int?       // cents, for ticketed events
+  stripePaymentIntentId String?
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+}
+
+model EventRecap {
+  id        String   @id @default(uuid())
+  eventId   String   @unique
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  postId    String?  @unique
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: SetNull)
+  notes     String?  @db.Text
+  mediaUrls String[] @default([])
+  createdAt DateTime @default(now())
+}
+
+// ─── Action Alerts ────────────────────────────────────────────────────────────
+
+enum AlertUrgency {
+  NORMAL
+  URGENT
+  CRITICAL
+}
+
+model ActionAlert {
+  id        String       @id @default(uuid())
+  groupId   String
+  group     Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title     String
+  body      String       @db.Text
+  urgency   AlertUrgency @default(NORMAL)
+  ctaText   String?
+  ctaUrl    String?
+  expiresAt DateTime?
+  isActive  Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([groupId])
+  @@index([authorId])
+  @@index([isActive])
+}
+
+// ─── Polls / Voting ───────────────────────────────────────────────────────────
+
+enum PollStatus {
+  OPEN
+  CLOSED
+}
+
+model Poll {
+  id          String     @id @default(uuid())
+  authorId    String
+  author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  groupId     String?
+  group       Group?     @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  eventId     String?
+  event       Event?     @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  question    String
+  description String?    @db.Text
+  multiSelect Boolean    @default(false)
+  isAnonymous Boolean    @default(false)
+  endsAt      DateTime?
+  status      PollStatus @default(OPEN)
+  options     PollOption[]
+  votes       PollVote[]
+  treasuryTransactions GroupTreasuryTransaction[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([groupId])
+  @@index([eventId])
+  @@index([authorId])
+  @@index([status])
+}
+
+model PollOption {
+  id        String     @id @default(uuid())
+  pollId    String
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  text      String
+  voteCount Int        @default(0)
+  votes     PollVote[]
+
+  @@index([pollId])
+}
+
+model PollVote {
+  id        String     @id @default(uuid())
+  pollId    String
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  optionId  String
+  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+
+  @@unique([pollId, optionId, userId])
+  @@index([pollId])
+  @@index([userId])
+}
+
+// ─── Group Treasury ───────────────────────────────────────────────────────────
+
+enum TreasuryTransactionType {
+  CONTRIBUTION
+  DISBURSEMENT
+  PLATFORM_FEE
+  REFUND
+}
+
+model GroupTreasury {
+  id             String                    @id @default(uuid())
+  groupId        String                    @unique
+  group          Group                     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  balance        Int                       @default(0) // cents
+  totalRaised    Int                       @default(0) // cents
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+
+  transactions   GroupTreasuryTransaction[]
+}
+
+model GroupTreasuryTransaction {
+  id                    String                   @id @default(uuid())
+  treasuryId            String
+  treasury              GroupTreasury            @relation(fields: [treasuryId], references: [id], onDelete: Cascade)
+  type                  TreasuryTransactionType
+  amount                Int                      // cents
+  description           String
+  contributorId         String?
+  contributor           User?                    @relation("TreasuryContributor", fields: [contributorId], references: [id], onDelete: SetNull)
+  pollId                String?
+  poll                  Poll?                    @relation(fields: [pollId], references: [id], onDelete: SetNull)
+  stripePaymentIntentId String?
+  createdAt             DateTime                 @default(now())
+
+  @@index([treasuryId])
+  @@index([type])
 }
 

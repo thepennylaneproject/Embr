@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { gigsApi } from '@shared/api/gigs.api';
-import { Gig, GigCategory, GigSearchParams } from '@embr/types';
+import { Gig, GigCategory, GigBudgetType, GigSearchParams } from '@embr/types';
 
 const CATEGORIES = [
   { value: '', label: 'All Categories' },
@@ -73,13 +73,27 @@ export const GigDiscovery: React.FC = () => {
   };
 
   const handleCategoryChange = (category: string) => {
-    setFilters({ ...filters, category: category || undefined });
+    setFilters({ ...filters, category: (category || undefined) as GigCategory | undefined });
     setCurrentPage(1);
   };
 
   const handleSortChange = (sortBy: string) => {
-    setFilters({ ...filters, sortBy });
+    setFilters({ ...filters, sortBy: sortBy as GigSearchParams['sortBy'] });
     setCurrentPage(1);
+  };
+
+  const formatBudget = (gig: Gig) => {
+    const { budgetType, budgetMin, budgetMax, currency } = gig;
+    const symbol = currency === 'USD' ? '$' : currency;
+    if (budgetType === GigBudgetType.FIXED) {
+      return budgetMin === budgetMax
+        ? `${symbol}${budgetMin.toLocaleString()}`
+        : `${symbol}${budgetMin.toLocaleString()} - ${symbol}${budgetMax.toLocaleString()}`;
+    }
+    if (budgetType === GigBudgetType.HOURLY) {
+      return `${symbol}${budgetMin}-${budgetMax}/hr`;
+    }
+    return `${symbol}${budgetMin.toLocaleString()} - ${symbol}${budgetMax.toLocaleString()}`;
   };
 
   const clearFilters = () => {
@@ -232,15 +246,15 @@ export const GigDiscovery: React.FC = () => {
                       {gig.title}
                     </h3>
                     <p style={{ fontSize: '14px', color: '#999', margin: 0 }}>
-                      {gig.clientName || 'Creator'} • {gig.category}
+                      {gig.creator?.displayName || 'Creator'} • {gig.category}
                     </p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <p style={{ fontSize: '20px', fontWeight: 700, color: '#000', margin: 0 }}>
-                      ${gig.budget}
+                      {formatBudget(gig)}
                     </p>
                     <p style={{ fontSize: '12px', color: '#999', margin: '4px 0 0 0' }}>
-                      {gig.budgetType === 'hourly' ? '/hr' : 'fixed'}
+                      {gig.budgetType === GigBudgetType.HOURLY ? '/hr' : gig.budgetType === GigBudgetType.MILESTONE ? 'Milestone' : 'Fixed'}
                     </p>
                   </div>
                 </div>

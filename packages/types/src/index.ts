@@ -6,3 +6,8 @@ export * from './messaging.types';
 export * from './monetization.types';
 export * from './safety.types';
 export * from './social.types';
+export * from './groups.types';
+export * from './mutual-aid.types';
+export * from './marketplace.types';
+export * from './events.types';
+export * from './organizing.types';

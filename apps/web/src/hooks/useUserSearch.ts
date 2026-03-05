@@ -9,24 +9,6 @@ import type {
   GetTrendingCreatorsRequest
 } from '@shared/types/social.types';
 
-/**
- * Debounce helper to delay function execution
- */
-function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout;
-  return function executedFunction(...args: Parameters<T>) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
 export const useUserSearch = () => {
   const [users, setUsers] = useState<SearchUser[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -185,14 +167,14 @@ export const useTrendingCreators = (
     try {
       const response = await socialApi.getTrendingCreators(params);
       setCreators(response.creators);
-      setTimeframe(response.timeframe);
-      setCategory(response.category);
+      setTimeframe(response.timeframe ?? defaultTimeframe);
+      setCategory(response.category ?? 'all');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load trending creators');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [defaultTimeframe]);
 
   useEffect(() => {
     if (autoLoad) {

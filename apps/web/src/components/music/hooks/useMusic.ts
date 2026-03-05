@@ -1,6 +1,43 @@
 import { useState, useCallback, useEffect } from 'react';
 
 // ============================================
+// TYPES FOR MUSIC API RESPONSES
+// ============================================
+
+export interface ArtistProfile {
+  id?: string;
+  profileImage?: string;
+  stageName?: string;
+  isVerified?: boolean;
+  bio?: string;
+  [key: string]: unknown;
+}
+
+export interface ArtistStats {
+  totalTracks?: number;
+  totalStreams?: number;
+  totalUsages?: number;
+  [key: string]: unknown;
+}
+
+export interface ArtistRevenueData {
+  totalRevenue?: number;
+  usages?: number;
+  topUsages?: Array<{ creatorShare?: number; [key: string]: unknown }>;
+  [key: string]: unknown;
+}
+
+export interface LicensingCheckResult {
+  allowed?: boolean;
+  reason?: string;
+  licensingModel?: string;
+  allowRemix?: boolean;
+  allowMonetize?: boolean;
+  attributionRequired?: boolean;
+  [key: string]: unknown;
+}
+
+// ============================================
 // CUSTOM HOOKS FOR MUSIC API
 // ============================================
 
@@ -8,8 +45,8 @@ import { useState, useCallback, useEffect } from 'react';
  * Hook for managing artist profile
  */
 export const useArtist = (artistId: string) => {
-  const [artist, setArtist] = useState(null);
-  const [stats, setStats] = useState(null);
+  const [artist, setArtist] = useState<ArtistProfile | null>(null);
+  const [stats, setStats] = useState<ArtistStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,27 +128,23 @@ export const useTrack = (trackId: string) => {
 };
 
 /**
- * Hook for searching tracks
+ * Hook for searching tracks (or loading featured tracks when no query is provided)
  */
 export const useSearchTracks = (query: string, limit = 20) => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const search = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim()) {
-      setResults([]);
-      return;
-    }
-
+  const fetchTracks = useCallback(async (searchQuery: string) => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `/api/music/search?q=${encodeURIComponent(searchQuery)}&limit=${limit}`
-      );
-      if (!response.ok) throw new Error('Search failed');
+      const url = searchQuery.trim()
+        ? `/api/music/search?q=${encodeURIComponent(searchQuery)}&limit=${limit}`
+        : `/api/music/tracks?limit=${limit}&sort=popular`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch tracks');
       const data = await response.json();
-      setResults(data);
+      setResults(Array.isArray(data) ? data : data.data || data.tracks || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -120,17 +153,17 @@ export const useSearchTracks = (query: string, limit = 20) => {
   }, [limit]);
 
   useEffect(() => {
-    search(query);
-  }, [query, search]);
+    fetchTracks(query);
+  }, [query, fetchTracks]);
 
-  return { results, loading, error, search };
+  return { results, loading, error, search: fetchTracks };
 };
 
 /**
  * Hook for checking licensing
  */
 export const useLicensing = (trackId: string, creatorId: string) => {
-  const [licensing, setLicensing] = useState(null);
+  const [licensing, setLicensing] = useState<LicensingCheckResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -260,7 +293,7 @@ export const useTrackUsageHistory = (trackId: string) => {
  * Hook for revenue reports
  */
 export const useArtistRevenue = (artistId: string, period: 'daily' | 'weekly' | 'monthly' = 'monthly') => {
-  const [revenue, setRevenue] = useState(null);
+  const [revenue, setRevenue] = useState<ArtistRevenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -293,7 +326,7 @@ export const useCreatorRevenue = (
   creatorId: string,
   period: 'daily' | 'weekly' | 'monthly' = 'monthly'
 ) => {
-  const [revenue, setRevenue] = useState(null);
+  const [revenue, setRevenue] = useState<ArtistRevenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

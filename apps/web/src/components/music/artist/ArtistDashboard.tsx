@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRouter } from 'next/router';
 import { Upload, BarChart3, TrendingUp, Music, Users, DollarSign } from 'lucide-react';
 import { useArtist, useArtistTracks, useArtistRevenue } from '../hooks/useMusic';
 
@@ -11,6 +12,7 @@ interface ArtistDashboardProps {
  * Manage tracks, view analytics, and track revenue
  */
 export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artistId }) => {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'overview' | 'tracks' | 'analytics' | 'revenue'>('overview');
   const { artist, stats, loading: artistLoading } = useArtist(artistId);
   const { tracks, loading: tracksLoading } = useArtistTracks(artistId);
@@ -47,7 +49,10 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artistId }) =>
             )}
           </div>
           <p className="text-embr-accent-600 mb-4">{artist?.bio}</p>
-          <button className="bg-embr-primary-400 hover:bg-embr-primary-500 text-white px-6 py-2 rounded-lg font-semibold transition">
+          <button
+            onClick={() => router.push('/music/upload')}
+            className="bg-embr-primary-400 hover:bg-embr-primary-500 text-white px-6 py-2 rounded-lg font-semibold transition"
+          >
             <Upload size={16} className="inline mr-2" />
             Upload New Track
           </button>
@@ -183,7 +188,10 @@ export const ArtistDashboard: React.FC<ArtistDashboardProps> = ({ artistId }) =>
                       </span>
                     </div>
                   </div>
-                  <button className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg transition">
+                  <button
+                    onClick={() => router.push(`/music/upload?trackId=${track.id}`)}
+                    className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg transition"
+                  >
                     Edit
                   </button>
                 </div>

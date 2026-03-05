@@ -1,40 +1,45 @@
-// apps/web/src/lib/api/users.ts
 import apiClient from './client';
-import { User, UpdateProfileData, UpdateSettingsData } from '@/types/auth';
+
+export interface UpdateSettingsPayload {
+  isCreator?: boolean;
+  isPrivate?: boolean;
+  allowTips?: boolean;
+  emailNotifications?: boolean;
+  pushNotifications?: boolean;
+  notificationPreference?: 'all' | 'mentions' | 'none';
+}
+
+export interface UpdateProfilePayload {
+  displayName?: string;
+  bio?: string;
+  website?: string;
+  location?: string;
+  socialLinks?: string[];
+}
 
 export const usersApi = {
-  getProfile: async (): Promise<User> => {
-    const response = await apiClient.get('/users/profile');
-    return response.data;
+  updateSettings: async (payload: UpdateSettingsPayload) => {
+    const { data } = await apiClient.patch('/users/settings', payload);
+    return data;
   },
 
-  updateProfile: async (data: UpdateProfileData): Promise<User> => {
-    const response = await apiClient.patch('/users/profile', data);
-    return response.data;
+  updateProfile: async (payload: UpdateProfilePayload) => {
+    const { data } = await apiClient.patch('/users/profile', payload);
+    return data;
   },
 
-  updateAvatar: async (file: File): Promise<{ avatarUrl: string }> => {
+  updateAvatar: async (file: File) => {
     const formData = new FormData();
-    formData.append('file', file);
-    const response = await apiClient.patch('/users/profile/avatar', formData, {
+    formData.append('avatar', file);
+    const { data } = await apiClient.patch('/users/profile/avatar', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return response.data;
+    return data;
   },
 
-  updateSettings: async (data: UpdateSettingsData): Promise<{ message: string }> => {
-    const response = await apiClient.patch('/users/settings', data);
-    return response.data;
-  },
-
-  getUserByUsername: async (username: string): Promise<User> => {
-    const response = await apiClient.get(`/users/${username}`);
-    return response.data;
-  },
-
-  deleteAccount: async (): Promise<{ message: string }> => {
-    const response = await apiClient.delete('/users/account');
-    return response.data;
+  deleteAccount: async () => {
+    const { data } = await apiClient.delete('/users/account');
+    return data;
   },
 };
 

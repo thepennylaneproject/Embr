@@ -3,7 +3,8 @@
  * Handles posts, comments, likes, shares, and feed endpoints
  */
 
-import axios, { AxiosInstance, AxiosProgressEvent } from "axios";
+import axios, { AxiosProgressEvent } from "axios";
+import { apiClient } from "@/lib/api/client";
 import {
   Post,
   PostType,
@@ -23,28 +24,9 @@ import {
 } from "@shared/types/content.types";
 
 class ContentApiClient {
-  private client: AxiosInstance;
+  private client = apiClient;
 
-  constructor(
-    baseURL: string = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3003"}/api`,
-  ) {
-    this.client = axios.create({
-      baseURL,
-      timeout: 30040,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    // Add auth token interceptor
-    this.client.interceptors.request.use((config) => {
-      const token = localStorage.getItem("accessToken");
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    });
-  }
+  constructor() {}
 
   private mapPostTypeToApi(type: Post["type"]): string {
     switch (type) {

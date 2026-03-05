@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '@/hooks/useWallet';
-import type { Transaction, TransactionType } from '@shared/types/monetization.types';
+import type { TransactionType } from '@shared/types/monetization.types';
 
 export const TransactionHistory: React.FC = () => {
   const { transactions, isLoading, loadTransactions } = useWallet();

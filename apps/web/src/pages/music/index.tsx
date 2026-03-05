@@ -41,11 +41,18 @@ export default function MusicDiscoveryPage() {
               Become an artist and publish your tracks. Earn money when creators use your music.
             </p>
           </div>
-          <Link href="/music/artist/create">
-            <Button type="button" style={{ whiteSpace: 'nowrap' }}>
-              Create Artist Profile
-            </Button>
-          </Link>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <Link href="/music/upload">
+              <Button type="button" style={{ whiteSpace: 'nowrap' }}>
+                Upload a Track
+              </Button>
+            </Link>
+            <Link href="/music/artist/create">
+              <Button type="button" variant="secondary" style={{ whiteSpace: 'nowrap' }}>
+                Create Artist Profile
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 

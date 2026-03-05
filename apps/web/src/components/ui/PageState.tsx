@@ -1,23 +1,35 @@
 import type { ReactNode } from 'react';
-import { Button } from '@embr/ui/Button';
+import { Button } from '@embr/ui';
 
 interface PageStateProps {
+  type?: 'loading' | 'empty' | 'error';
   title: string;
   description?: string;
   actionLabel?: string;
   onAction?: () => void;
   icon?: ReactNode;
   isLoading?: boolean;
+  hint?: string;
 }
 
 export function PageState({
+  type = 'empty',
   title,
   description,
   actionLabel,
   onAction,
   icon,
   isLoading = false,
+  hint,
 }: PageStateProps) {
+  const defaultDescription =
+    description ||
+    (type === 'loading'
+      ? 'This can take a few seconds.'
+      : type === 'error'
+        ? 'Something went wrong. Please retry.'
+        : undefined);
+
   return (
     <section className="ui-page-state" role={isLoading ? 'status' : undefined} aria-busy={isLoading}>
       {icon ? (
@@ -26,12 +38,17 @@ export function PageState({
         </div>
       ) : null}
       <h3>{title}</h3>
-      {description ? <p>{description}</p> : null}
+      {defaultDescription ? <p>{defaultDescription}</p> : null}
       {isLoading && (
         <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', fontStyle: 'italic' }}>
           Please wait...
         </p>
       )}
+      {hint ? (
+        <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--embr-muted-text)' }}>
+          {hint}
+        </p>
+      ) : null}
       {actionLabel && onAction ? (
         <div style={{ marginTop: '1rem' }}>
           <Button

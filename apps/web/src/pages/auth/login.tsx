@@ -20,7 +20,8 @@ export default function LoginPage() {
 
     try {
       await login(formData.email, formData.password);
-      await router.push('/feed');
+      const nextPath = typeof router.query.next === 'string' ? router.query.next : '/feed';
+      await router.push(nextPath);
     } catch (err: any) {
       setError(getApiErrorMessage(err, 'Invalid credentials.'));
     } finally {

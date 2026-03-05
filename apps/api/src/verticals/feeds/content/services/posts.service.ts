@@ -96,11 +96,15 @@ export class PostsService {
       },
     });
 
-    // Increment user's post count
-    await this.prisma.profile.update({
-      where: { userId },
-      data: { postCount: { increment: 1 } },
-    });
+    // Keep profile stats best-effort. Some legacy/seeded users may not have a profile row.
+    try {
+      await this.prisma.profile.updateMany({
+        where: { userId },
+        data: { postCount: { increment: 1 } },
+      });
+    } catch {
+      // Non-blocking: post creation should still succeed even if profile stats cannot update.
+    }
 
     // Emit event for notifications
     this.eventEmitter.emit('post.created', { post, userId });
@@ -570,11 +574,15 @@ export class PostsService {
       data: { deletedAt: new Date() },
     });
 
-    // Decrement user's post count
-    await this.prisma.profile.update({
-      where: { userId },
-      data: { postCount: { decrement: 1 } },
-    });
+    // Keep profile stats best-effort. Do not fail deletion if profile row is missing.
+    try {
+      await this.prisma.profile.updateMany({
+        where: { userId },
+        data: { postCount: { decrement: 1 } },
+      });
+    } catch {
+      // Non-blocking: deletion should still succeed even if profile stats cannot update.
+    }
 
     this.eventEmitter.emit('post.deleted', { postId, userId });
 

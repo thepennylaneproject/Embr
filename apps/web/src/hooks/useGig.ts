@@ -1,16 +1,11 @@
 import { useState, useCallback } from 'react';
-import { gigsApi, applicationsApi, escrowApi, milestonesApi } from '@shared/api/gigs.api';
+import { gigsApi, applicationsApi, milestonesApi } from '@shared/api/gigs.api';
 import type {
-  Gig,
   GigWithDetails,
-  Application,
   ApplicationWithDetails,
-  Escrow,
   GigMilestone,
-  CreateGigData,
   UpdateGigData,
   CreateApplicationData,
-  GigSearchParams,
 } from '@embr/types';
 
 interface UseGigResult {

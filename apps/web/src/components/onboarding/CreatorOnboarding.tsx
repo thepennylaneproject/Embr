@@ -28,7 +28,7 @@ export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, on
   const router = useRouter();
   const analytics = useAnalytics();
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [_currentStep, _setCurrentStep] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, on
     }
   };
 
-  const handleStepComplete = (stepId: string) => {
+  const _handleStepComplete = (stepId: string) => {
     setSteps(steps.map(s => s.id === stepId ? { ...s, completed: true } : s));
 
     // If all steps done, show celebration
@@ -126,7 +126,7 @@ export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, on
           {/* PROGRESS BAR */}
           <div style={{ marginTop: '16px' }}>
             <div style={{ display: 'flex', gap: '4px' }}>
-              {steps.map((step, idx) => (
+              {steps.map((step, _idx) => (
                 <div
                   key={step.id}
                   style={{
@@ -149,7 +149,7 @@ export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, on
       {/* STEPS LIST */}
       {!allComplete && (
         <div style={{ display: 'grid', gap: '16px', marginBottom: '32px' }}>
-          {steps.map((step, idx) => (
+          {steps.map((step, _idx) => (
             <div
               key={step.id}
               style={{
@@ -160,7 +160,12 @@ export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, on
                 cursor: 'pointer',
                 transition: 'all 200ms',
               }}
-              onClick={() => !step.completed && step.ctaAction()}
+              onClick={() => {
+                if (!step.completed) {
+                  _handleStepComplete(step.id);
+                  step.ctaAction();
+                }
+              }}
               onMouseEnter={(e) => {
                 if (!step.completed) {
                   e.currentTarget.style.backgroundColor = '#ffffff';

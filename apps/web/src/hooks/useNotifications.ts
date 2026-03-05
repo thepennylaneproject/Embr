@@ -55,7 +55,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      const { notification } = await notificationsApi.markAsRead(notificationId);
+      await notificationsApi.markAsRead(notificationId);
       setNotifications((prev) =>
         prev.map((item) => (item.id === notificationId ? { ...item, isRead: true } : item)),
       );

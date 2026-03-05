@@ -14,6 +14,8 @@ interface MusicPlayerProps {
   licensingModel?: 'free' | 'commercial' | 'exclusive' | 'restricted';
   creatorId?: string;
   onDownloadClick?: () => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
 }
 
 /**
@@ -30,8 +32,10 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
   isPlaying = false,
   onPlayStatusChange,
   licensingModel = 'free',
-  creatorId,
+  creatorId: _creatorId,
   onDownloadClick,
+  onPrevious,
+  onNext,
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(isPlaying);
@@ -112,6 +116,17 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
     }
   };
 
+  // Seek on progress bar click
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!progressBarRef.current || !audioRef.current || !duration) return;
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const newTime = ratio * duration;
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
   // Format time
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -119,7 +134,7 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const progressPercent = (currentTime / duration) * 100;
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
     <div className="w-full bg-gradient-to-br from-embr-neutral-50 to-embr-neutral-100 rounded-lg p-6 text-embr-accent-900 shadow-lg border border-embr-neutral-200">
@@ -162,7 +177,13 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
       {/* Progress Bar */}
       <div className="mb-4">
-        <div className="w-full bg-embr-neutral-300 h-1 rounded-full overflow-hidden cursor-pointer">
+        <div
+          ref={progressBarRef}
+          onClick={handleSeek}
+          className="w-full bg-embr-neutral-300 h-2 rounded-full overflow-hidden cursor-pointer"
+          title="Click to seek"
+          style={{ position: 'relative' }}
+        >
           <div
             className="bg-gradient-to-r from-embr-primary-400 to-embr-primary-300 h-full transition-all"
             style={{ width: `${progressPercent}%` }}
@@ -176,7 +197,12 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
       {/* Controls */}
       <div className="flex items-center justify-center gap-6 mb-6">
-        <button className="hover:text-embr-primary-400 transition" title="Previous">
+        <button
+          onClick={onPrevious}
+          disabled={!onPrevious}
+          className="hover:text-embr-primary-400 transition disabled:opacity-30"
+          title="Previous"
+        >
           <SkipBack size={24} className="text-embr-accent-700" />
         </button>
 
@@ -188,7 +214,12 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({
           {playing ? <Pause size={32} fill="white" /> : <Play size={32} fill="white" />}
         </button>
 
-        <button className="hover:text-embr-primary-400 transition" title="Next">
+        <button
+          onClick={onNext}
+          disabled={!onNext}
+          className="hover:text-embr-primary-400 transition disabled:opacity-30"
+          title="Next"
+        >
           <SkipForward size={24} className="text-embr-accent-700" />
         </button>
       </div>

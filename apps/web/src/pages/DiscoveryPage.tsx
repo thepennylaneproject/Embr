@@ -12,17 +12,11 @@ type Tab = 'trending' | 'suggested' | 'search';
 const DiscoveryPage: React.FC = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('trending');
-  const { users, loading, searchUsers, hasMore, loadMore } = useUserSearch();
+  const { users, loading, hasMore, loadMore } = useUserSearch();
 
   const handleUserClick = (user: SearchUser | TrendingCreator | RecommendedUser) => {
     // Navigate to user profile using Next.js router for client-side navigation
     router.push(`/profile/${user.username}`);
-  };
-
-  const handleSearch = (query: string) => {
-    if (query.trim()) {
-      setActiveTab('search');
-    }
   };
 
   return (

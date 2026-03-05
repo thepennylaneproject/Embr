@@ -38,7 +38,7 @@ export const GigCard: React.FC<GigCardProps> = ({ gig, onClick }) => {
     return `${symbol}${budgetMin.toLocaleString()} - ${symbol}${budgetMax.toLocaleString()}`;
   };
 
-  const formatTimeAgo = (date: Date) => {
+  const formatTimeAgo = (date: Date | string) => {
     const now = new Date();
     const diffMs = now.getTime() - new Date(date).getTime();
     const diffMins = Math.floor(diffMs / 60000);

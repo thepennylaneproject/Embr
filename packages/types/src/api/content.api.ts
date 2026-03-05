@@ -1,5 +1,3 @@
-<<<<<<< Current (Your changes)
-=======
 /**
  * API Client for Content Operations
  * Handles posts, comments, likes, shares, and feed endpoints
@@ -280,4 +278,3 @@ class ContentApiClient {
 // Export singleton instance
 export const contentApi = new ContentApiClient();
 export default contentApi;
->>>>>>> Incoming (Background Agent changes)

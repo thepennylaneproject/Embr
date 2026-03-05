@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Play, Music } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Music } from 'lucide-react';
 import { Post } from '@shared/types/content.types';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
