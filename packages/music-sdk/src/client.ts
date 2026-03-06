@@ -165,6 +165,15 @@ export class EmbrtMusicClient {
       async (error: AxiosError<ApiError>) => {
         const config = error.config;
 
+        if (!config) {
+          const apiError = error.response?.data;
+          if (apiError) {
+            throw new MusicApiError(apiError.code, apiError.message, apiError.details);
+          }
+
+          throw error;
+        }
+
         // Only retry on transient failures (network errors, 429, 503, 504)
         const isTransient =
           !error.response ||
