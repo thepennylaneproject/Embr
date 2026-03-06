@@ -1,0 +1,230 @@
+{
+  "kind": "agent_output",
+  "run_id": "security-20260306-065000",
+  "suite": "security",
+  "agent": {
+    "name": "security-privacy-auditor",
+    "version": "1.1.0",
+    "lyra_suite_version": "v1.1"
+  },
+  "metadata": {
+    "timestamp": "2026-03-06T06:51:16Z",
+    "app_description": "Embr: creator-focused social media and freelance marketplace monorepo. NestJS API (port 3003) + Next.js frontend (port 3004). PostgreSQL 16 + Redis 7 via Docker Compose.",
+    "threat_model_summary": "Embr handles user PII (email, full name, location), financial data (wallet balances, Stripe Connect IDs, payout history, tip amounts), and user-generated content. Three privilege tiers: anonymous visitors, authenticated users (USER/CREATOR), and privileged staff (MODERATOR/ADMIN). Highest-value targets are auth tokens, creator financial accounts, and admin moderation functions. Most likely attack vectors: XSS-based token exfiltration (mitigated by new CSP), IDOR on financial and appeal endpoints (fixed), privilege escalation through role manipulation (fixed isCreator).",
+    "prior_open_findings_filtered": 20,
+    "stop_condition_triggered": false,
+    "stop_condition_note": "All identified P0/P1/P2 security findings from the previous audit have been remediated in this implementation pass."
+  },
+  "findings": [
+    {
+      "id": "F-004-fix",
+      "category": "auth-bypass",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "Suspension checks added to login(), googleLogin(), and validateUser()",
+      "affected_files": [
+        "apps/api/src/core/auth/auth.service.ts"
+      ],
+      "fix_applied": "Added `if (user.suspended || (user.suspendedUntil && user.suspendedUntil > new Date()))` check in all three authentication paths."
+    },
+    {
+      "id": "F-005-fix",
+      "category": "data-leakage",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "Refresh tokens now stored as SHA-256 hashes in the database",
+      "affected_files": [
+        "apps/api/src/core/auth/auth.service.ts"
+      ],
+      "fix_applied": "generateTokens() now stores createHash('sha256').update(token).digest('hex') in the DB. refreshTokens() and logout() hash the incoming token before DB lookup."
+    },
+    {
+      "id": "F-007-fix",
+      "category": "data-leakage",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "Wallet data removed from non-owner profile responses",
+      "affected_files": [
+        "apps/api/src/core/users/users.service.ts"
+      ],
+      "fix_applied": "sanitizeUser() now accepts includeFinancial flag. getProfile() passes true (owner context); getUserByUsername() passes isOwner check."
+    },
+    {
+      "id": "F-008-fix",
+      "category": "missing-validation",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "isCreator removed from UpdateUserSettingsDto",
+      "affected_files": [
+        "apps/api/src/core/users/dto/update-user-settings.dto.ts"
+      ],
+      "fix_applied": "Removed isCreator field from DTO. Creator status must be assigned via admin endpoint."
+    },
+    {
+      "id": "F-009-fix",
+      "category": "auth-bypass",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "Stripe webhook controller decorated with @Public()",
+      "affected_files": [
+        "apps/api/src/core/monetization/webhooks/stripe-webhook.controller.ts"
+      ],
+      "fix_applied": "Added @Public() class decorator. Webhook already verifies Stripe signature via stripe.webhooks.constructEvent."
+    },
+    {
+      "id": "F-010-fix",
+      "category": "data-leakage",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "Tip endpoints restricted to resource owners",
+      "affected_files": [
+        "apps/api/src/core/monetization/controllers/tip.controller.ts"
+      ],
+      "fix_applied": "getTipsReceivedByUser() now checks req.user.id === userId. getTipsByPost() now uses req.user.id as the caller context."
+    },
+    {
+      "id": "F-011-fix",
+      "category": "secrets-exposure",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "Hardcoded 'dev-secret' removed from notifications module",
+      "affected_files": [
+        "apps/api/src/core/notifications/notifications.module.ts"
+      ],
+      "fix_applied": "Replaced JwtModule.register({secret: ... || 'dev-secret'}) with JwtModule.registerAsync using ConfigService. Throws if JWT_SECRET is not set."
+    },
+    {
+      "id": "F-012-fix",
+      "category": "data-leakage",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "changePassword and verifyEmail set tokens as httpOnly cookies",
+      "affected_files": [
+        "apps/api/src/core/auth/auth.controller.ts"
+      ],
+      "fix_applied": "Both handlers now accept @Res() and set tokens via res.cookie() with httpOnly=true, then return only user data in the JSON body."
+    },
+    {
+      "id": "F-013-fix",
+      "category": "data-leakage",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "localStorage token references removed from web client",
+      "affected_files": [
+        "apps/web/src/lib/api/client.ts"
+      ],
+      "fix_applied": "Removed clearAuthStorage() helper that called localStorage.removeItem() for token keys."
+    },
+    {
+      "id": "F-014-fix",
+      "category": "missing-validation",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "Token lookups scoped to userId via prefixed token format",
+      "affected_files": [
+        "apps/api/src/core/auth/auth.service.ts"
+      ],
+      "fix_applied": "Tokens are now generated as userId.randomHex. resetPassword() and verifyEmail() extract userId prefix and scope DB lookups to that user."
+    },
+    {
+      "id": "F-015-fix",
+      "category": "cors-misconfiguration",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "CORS throws in production if ALLOWED_ORIGINS is unset",
+      "affected_files": [
+        "apps/api/src/main.ts"
+      ],
+      "fix_applied": "Added startup check: if NODE_ENV=production and ALLOWED_ORIGINS is unset, throws Error rather than falling back to localhost."
+    },
+    {
+      "id": "F-016-fix",
+      "category": "data-leakage",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "Restriction status endpoint restricted to owner or admin/moderator",
+      "affected_files": [
+        "apps/api/src/core/safety/controllers/safety.controller.ts"
+      ],
+      "fix_applied": "checkUserRestriction() now checks req.user.id === userId || role is ADMIN/MODERATOR, throws ForbiddenException otherwise."
+    },
+    {
+      "id": "F-017-fix",
+      "category": "data-leakage",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "Appeal IDOR fixed: ownership check added",
+      "affected_files": [
+        "apps/api/src/core/safety/controllers/safety.controller.ts"
+      ],
+      "fix_applied": "getAppealById() now verifies appeal.userId === req.user.id or role is ADMIN/MODERATOR before returning the appeal."
+    },
+    {
+      "id": "F-018-fix",
+      "category": "secrets-exposure",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "Actual Redis password removed from apps/api/.env.example",
+      "affected_files": [
+        "apps/api/.env.example"
+      ],
+      "fix_applied": "Replaced embr_redis_password with your_redis_password placeholder."
+    },
+    {
+      "id": "F-019-fix",
+      "category": "missing-validation",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "Auth cookies now use sameSite=strict and COOKIE_SECURE env var",
+      "affected_files": [
+        "apps/api/src/core/auth/auth.controller.ts"
+      ],
+      "fix_applied": "Changed sameSite from 'lax' to 'strict'. Changed secure from NODE_ENV=production check to process.env.COOKIE_SECURE === 'true'. Added COOKIE_SECURE=false to .env.example."
+    },
+    {
+      "id": "F-020-fix",
+      "category": "secrets-exposure",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "ENABLE_DETAILED_ERRORS and ENABLE_SWAGGER default to false in .env.example",
+      "affected_files": [
+        ".env.example"
+      ],
+      "fix_applied": "Changed ENABLE_SWAGGER, ENABLE_REQUEST_LOGGING, and ENABLE_DETAILED_ERRORS defaults to false in .env.example."
+    },
+    {
+      "id": "F-021-fix",
+      "category": "missing-validation",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "Content-Security-Policy and HSTS headers added to Next.js",
+      "affected_files": [
+        "apps/web/next.config.js"
+      ],
+      "fix_applied": "Added CSP header restricting script-src, connect-src, frame-src. Added Strict-Transport-Security header. Removed deprecated X-XSS-Protection."
+    },
+    {
+      "id": "F-022-fix",
+      "category": "missing-validation",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "FRONTEND_URL validated before OAuth redirect",
+      "affected_files": [
+        "apps/api/src/core/auth/auth.controller.ts"
+      ],
+      "fix_applied": "googleAuthCallback() now checks that FRONTEND_URL is set and returns 500 if not, preventing open redirect potential."
+    },
+    {
+      "id": "F-023-fix",
+      "category": "data-leakage",
+      "severity": "resolved",
+      "label": "resolved",
+      "title": "paymentIntentId removed from sessionStorage",
+      "affected_files": [
+        "apps/web/src/pages/gigs/booking/[gigId].tsx",
+        "apps/web/src/pages/music/licensing/[trackId].tsx"
+      ],
+      "fix_applied": "Removed sessionStorage.setItem('paymentIntentId', ...) calls. State is managed in React component state only."
+    }
+  ]
+}
