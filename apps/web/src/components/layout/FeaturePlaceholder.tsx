@@ -24,16 +24,16 @@ export function FeaturePlaceholder({
 
   const stateContent = {
     loading: {
-      title: 'Loading state',
-      description: `${title} data is loading. TODO: ${issueId}`,
+      title: 'Loading',
+      description: `${title} is loading. Please wait.`,
     },
     empty: {
-      title: 'Empty state',
-      description: `No ${title.toLowerCase()} data yet. TODO: ${issueId}`,
+      title: 'Nothing here yet',
+      description: `No ${title.toLowerCase()} to show right now. Check back soon.`,
     },
     error: {
-      title: 'Error state',
-      description: `Request failed. Retry behavior will be implemented in ${issueId}.`,
+      title: 'Something went wrong',
+      description: `We couldn't load ${title.toLowerCase()}. Please try again.`,
     },
   }[state];
 
@@ -54,10 +54,6 @@ export function FeaturePlaceholder({
           </div>
 
           <PageState title={stateContent.title} description={stateContent.description} />
-
-          <p className="ui-help-text" style={{ textAlign: 'center' }}>
-            Tracking note: <code>{issuePath}</code>
-          </p>
         </Card>
       </AppShell>
     </ProtectedRoute>

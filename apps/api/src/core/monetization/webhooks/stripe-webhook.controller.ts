@@ -9,6 +9,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import Stripe from 'stripe';
+import { Prisma } from '@prisma/client';
 import { TipService } from '../services/tip.service';
 import { PayoutService } from '../services/payout.service';
 import { StripeConnectService } from '../services/stripe-connect.service';
@@ -65,6 +66,15 @@ export class StripeWebhookController {
 
     this.logger.log(`Received webhook: ${event.type}`);
 
+    // Idempotency guard: skip events that have already been processed
+    const alreadyProcessed = await this.prisma.webhookEvent.findUnique({
+      where: { eventId: event.id },
+    });
+    if (alreadyProcessed) {
+      this.logger.log(`Stripe webhook event ${event.id} already processed, skipping`);
+      return { received: true };
+    }
+
     try {
       // Handle the event
       switch (event.type) {
@@ -90,6 +100,25 @@ export class StripeWebhookController {
 
         default:
           this.logger.log(`Unhandled event type: ${event.type}`);
+      }
+
+      // Mark event as processed to prevent duplicate handling on Stripe retries
+      try {
+        await this.prisma.webhookEvent.create({
+          data: {
+            eventId: event.id,
+            eventType: event.type,
+            sourceId: (event.data?.object as any)?.id || '',
+          },
+        });
+      } catch (err) {
+        // Swallow unique-constraint violations from rare concurrent deliveries;
+        // rethrow all other errors so the event is not silently lost.
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+          this.logger.warn(`Stripe webhook event ${event.id} already persisted (race condition)`);
+        } else {
+          throw err;
+        }
       }
 
       return { received: true };
@@ -202,6 +231,9 @@ export class StripeWebhookController {
    */
   private async handleAccountUpdated(account: Stripe.Account): Promise<void> {
     this.logger.log(`Account updated: ${account.id}`);
+
+    // Invalidate stale cached account data so next request fetches fresh state
+    this.stripeConnectService.invalidateAccountCache(account.id);
 
     try {
       await this.stripeConnectService.handleAccountUpdate(account.id);

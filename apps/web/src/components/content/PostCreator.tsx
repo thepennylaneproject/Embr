@@ -7,14 +7,20 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { usePost } from '@/hooks/usePost';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { PostType, PostVisibility, CreatePostInput } from '@shared/types/content.types';
-import { MusicSelectorModal } from '@/components/music/MusicSelectorModal';
 import { AnalyticsEvent } from '@/lib/analytics';
 import { clearDraft, readDraft, writeDraft } from '@/lib/draft';
 import { trackReliabilityEvent } from '@/lib/reliability';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
+
+// Lazy-load the music selector modal so it does not bloat the initial bundle
+const MusicSelectorModal = dynamic(
+  () => import('@/components/music/MusicSelectorModal').then((m) => m.MusicSelectorModal),
+  { ssr: false },
+);
 
 interface PostCreatorProps {
   onPostCreated?: (postId: string) => void;

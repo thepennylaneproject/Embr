@@ -6,7 +6,7 @@ import { contentApi } from '@shared/api/content.api';
 import { Post } from '@shared/types/content.types';
 import { PostCard } from '@/components/content';
 import { ProtectedPageShell } from '@/components/layout';
-import { Button } from '@embr/ui';
+import { Button, PageState } from '@embr/ui';
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
@@ -46,7 +46,7 @@ export default function ProfilePage() {
   if (!user || loading) {
     return (
       <ProtectedPageShell breadcrumbs={[{ label: 'Profile' }]}>
-        <p className="text-gray-600">Loading profile...</p>
+        <PageState title="Loading profile" description="Please wait while we load your profile." />
       </ProtectedPageShell>
     );
   }

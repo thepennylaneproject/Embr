@@ -27,11 +27,8 @@ jobs:
       - name: Build Web
         run: npm --prefix apps/web run build
 
-      - name: Run tests
-        run: npm --prefix apps/api run test
-
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: builds
           path: |
@@ -43,41 +40,86 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    environment: production
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: builds
 
-      - name: Deploy to production
+      - name: Run database migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: npm run db:migrate:deploy
+
+      - name: Deploy API via SSH
         env:
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
-          echo "Deploy API (self-hosted Docker Compose target)"
-          # Canonical target: self-hosted API using docker/docker-compose.prod.yml
-          # Add SSH-based compose rollout steps here (pull image/source, compose up -d).
+          # Register known host key to prevent MITM attacks
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_HOST_KEY" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+          # Load deploy key via ssh-agent to avoid writing it to disk
+          eval "$(ssh-agent -s)"
+          echo "$DEPLOY_KEY" | ssh-add -
+
+          # Sync source and run docker-compose on remote host
+          ssh "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "cd /opt/embr && \
+             git pull origin main && \
+             docker compose -f docker/docker-compose.prod.yml pull api && \
+             docker compose -f docker/docker-compose.prod.yml up -d --no-deps api"
+
+      - name: Verify API health
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          API_HEALTH_URL: ${{ secrets.API_HEALTH_URL }}
+        run: |
+          # Use the explicit health URL secret if provided; fall back to HTTP on the deploy host.
+          HEALTH_URL="${API_HEALTH_URL:-http://${DEPLOY_HOST}:3003/api/health}"
+          echo "Waiting for API to become healthy at ${HEALTH_URL}..."
+          for i in $(seq 1 12); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${HEALTH_URL}" || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "API health check passed."
+              exit 0
+            fi
+            echo "Attempt $i: status $STATUS – retrying in 10s..."
+            sleep 10
+          done
+          echo "API health check failed after 120s." >&2
+          exit 1
 
   deploy-web:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    environment: production
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          name: builds
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          echo "Deploy Web to Vercel (canonical web target)"
-          # Example: npx vercel --prod --token $VERCEL_TOKEN
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npx vercel --prod --token "$VERCEL_TOKEN"

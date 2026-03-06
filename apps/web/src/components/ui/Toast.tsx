@@ -1,6 +1,6 @@
 import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react';
 
-export type ToastKind = 'info' | 'error';
+export type ToastKind = 'info' | 'error' | 'success' | 'warning';
 
 interface ToastMessage {
   id: number;
@@ -50,7 +50,7 @@ export function ToastProvider({ children }: PropsWithChildren) {
                 borderWidth: 0,
               }}
             >
-              {toast.kind === 'error' ? 'Error notification: ' : 'Information notification: '}
+              {{ error: 'Error notification: ', success: 'Success notification: ', warning: 'Warning notification: ', info: 'Information notification: ' }[toast.kind]}
             </span>
             <strong>{toast.title}</strong>
             {toast.description ? <div style={{ marginTop: 4, color: 'var(--embr-muted-text)' }}>{toast.description}</div> : null}

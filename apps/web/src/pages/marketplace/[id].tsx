@@ -5,6 +5,7 @@ import { ProtectedPageShell } from '@/components/layout';
 import { useMarketplace } from '@/hooks/useMarketplace';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageState } from '@/components/ui/PageState';
+import { useToast } from '@embr/ui';
 import type { MarketplaceListing } from '@embr/types';
 import { LISTING_CONDITION_LABELS } from '@embr/types';
 
@@ -13,6 +14,7 @@ export default function ListingDetailPage() {
   const { id } = router.query;
   const { user } = useAuth();
   const { getListing, createOrder, makeOffer, loading } = useMarketplace();
+  const { showToast } = useToast();
 
   const [listing, setListing] = useState<MarketplaceListing | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
@@ -24,6 +26,8 @@ export default function ListingDetailPage() {
   const [offerMessage, setOfferMessage] = useState('');
   const [orderLoading, setOrderLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [buyError, setBuyError] = useState('');
+  const [offerError, setOfferError] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -32,13 +36,14 @@ export default function ListingDetailPage() {
 
   const handleBuy = async () => {
     if (!listing) return;
+    setBuyError('');
     setOrderLoading(true);
     try {
       await createOrder({ listingId: listing.id });
       setShowBuyModal(false);
       setOrderSuccess(true);
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Order failed');
+      setBuyError(e.response?.data?.message || 'Order failed. Please try again or contact support.');
     } finally {
       setOrderLoading(false);
     }
@@ -46,13 +51,14 @@ export default function ListingDetailPage() {
 
   const handleOffer = async () => {
     if (!listing || !offerAmount) return;
+    setOfferError('');
     setOrderLoading(true);
     try {
       await makeOffer(listing.id, Math.round(parseFloat(offerAmount) * 100), offerMessage);
       setShowOfferModal(false);
-      alert('Offer sent!');
+      showToast({ title: 'Offer sent!', description: 'The seller will be notified of your offer.', kind: 'success' });
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Offer failed');
+      setOfferError(e.response?.data?.message || 'Failed to send offer. Please try again.');
     } finally {
       setOrderLoading(false);
     }
@@ -197,10 +203,10 @@ export default function ListingDetailPage() {
 
       {/* Buy modal */}
       {showBuyModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowBuyModal(false)} />
+        <div role="dialog" aria-modal="true" aria-labelledby="buy-modal-title" style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowBuyModal(false)} aria-hidden="true" />
           <div style={{ position: 'relative', background: 'var(--embr-surface)', borderRadius: 'var(--embr-radius-lg)', padding: '1.5rem', width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
-            <h2 style={{ margin: '0 0 1rem', fontSize: '1.125rem', fontWeight: '700' }}>Confirm Purchase</h2>
+            <h2 id="buy-modal-title" style={{ margin: '0 0 1rem', fontSize: '1.125rem', fontWeight: '700' }}>Confirm Purchase</h2>
             <div style={{ background: 'var(--embr-bg)', borderRadius: 'var(--embr-radius-md)', padding: '0.875rem', marginBottom: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
                 <span style={{ fontSize: '0.875rem', color: 'var(--embr-muted-text)' }}>Item</span>
@@ -220,8 +226,13 @@ export default function ListingDetailPage() {
             <p style={{ margin: '0 0 1.25rem', fontSize: '0.82rem', color: 'var(--embr-muted-text)' }}>
               Payment processing coming soon. This will create a pending order.
             </p>
+            {buyError && (
+              <p style={{ margin: '0 0 1rem', fontSize: '0.875rem', color: 'var(--embr-error)', padding: '0.625rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-error)', background: 'color-mix(in srgb, var(--embr-error) 10%, white)' }}>
+                {buyError}
+              </p>
+            )}
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowBuyModal(false)} style={{ padding: '0.5rem 1.25rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'transparent', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
+              <button onClick={() => { setShowBuyModal(false); setBuyError(''); }} style={{ padding: '0.5rem 1.25rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'transparent', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
               <button onClick={handleBuy} disabled={orderLoading} style={{ padding: '0.5rem 1.5rem', borderRadius: 'var(--embr-radius-md)', border: 'none', background: 'var(--embr-accent)', color: '#fff', cursor: 'pointer', fontWeight: '700', opacity: orderLoading ? 0.7 : 1 }}>
                 {orderLoading ? 'Placing...' : 'Place Order'}
               </button>
@@ -232,26 +243,31 @@ export default function ListingDetailPage() {
 
       {/* Offer modal */}
       {showOfferModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowOfferModal(false)} />
+        <div role="dialog" aria-modal="true" aria-labelledby="offer-modal-title" style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} onClick={() => { setShowOfferModal(false); setOfferError(''); }} aria-hidden="true" />
           <div style={{ position: 'relative', background: 'var(--embr-surface)', borderRadius: 'var(--embr-radius-lg)', padding: '1.5rem', width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
-            <h2 style={{ margin: '0 0 1rem', fontSize: '1.125rem', fontWeight: '700' }}>Make an Offer</h2>
+            <h2 id="offer-modal-title" style={{ margin: '0 0 1rem', fontSize: '1.125rem', fontWeight: '700' }}>Make an Offer</h2>
             <p style={{ margin: '0 0 1rem', fontSize: '0.875rem', color: 'var(--embr-muted-text)' }}>
               Listed at {price}. Your offer will be sent to the seller.
             </p>
             <div style={{ marginBottom: '0.875rem' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.375rem' }}>Offer Amount (USD)</label>
+              <label htmlFor="offer-amount" style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.375rem' }}>Offer Amount (USD)</label>
               <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', fontWeight: '700', color: 'var(--embr-muted-text)' }}>$</span>
-                <input type="number" value={offerAmount} onChange={(e) => setOfferAmount(e.target.value)} min="0.01" step="0.01" style={{ width: '100%', padding: '0.625rem 0.75rem 0.625rem 1.5rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'var(--embr-bg)', fontSize: '0.9rem', boxSizing: 'border-box' }} />
+                <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', fontWeight: '700', color: 'var(--embr-muted-text)' }} aria-hidden="true">$</span>
+                <input id="offer-amount" type="number" value={offerAmount} onChange={(e) => setOfferAmount(e.target.value)} min="0.01" step="0.01" style={{ width: '100%', padding: '0.625rem 0.75rem 0.625rem 1.5rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'var(--embr-bg)', fontSize: '0.9rem', boxSizing: 'border-box' }} />
               </div>
             </div>
             <div style={{ marginBottom: '1.25rem' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.375rem' }}>Message (optional)</label>
-              <textarea value={offerMessage} onChange={(e) => setOfferMessage(e.target.value)} rows={3} placeholder="Why are you making this offer?" style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'var(--embr-bg)', fontSize: '0.9rem', resize: 'vertical', boxSizing: 'border-box' }} />
+              <label htmlFor="offer-message" style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.375rem' }}>Message (optional)</label>
+              <textarea id="offer-message" value={offerMessage} onChange={(e) => setOfferMessage(e.target.value)} rows={3} placeholder="Why are you making this offer?" style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'var(--embr-bg)', fontSize: '0.9rem', resize: 'vertical', boxSizing: 'border-box' }} />
             </div>
+            {offerError && (
+              <p style={{ margin: '0 0 1rem', fontSize: '0.875rem', color: 'var(--embr-error)', padding: '0.625rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-error)', background: 'color-mix(in srgb, var(--embr-error) 10%, white)' }}>
+                {offerError}
+              </p>
+            )}
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowOfferModal(false)} style={{ padding: '0.5rem 1.25rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'transparent', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
+              <button onClick={() => { setShowOfferModal(false); setOfferError(''); }} style={{ padding: '0.5rem 1.25rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'transparent', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
               <button onClick={handleOffer} disabled={orderLoading || !offerAmount} style={{ padding: '0.5rem 1.5rem', borderRadius: 'var(--embr-radius-md)', border: 'none', background: 'var(--embr-accent)', color: '#fff', cursor: 'pointer', fontWeight: '700', opacity: (orderLoading || !offerAmount) ? 0.7 : 1 }}>
                 {orderLoading ? 'Sending...' : 'Send Offer'}
               </button>

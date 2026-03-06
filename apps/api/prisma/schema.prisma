@@ -1510,6 +1510,7 @@ model Group {
   @@index([slug])
   @@index([type])
   @@index([category])
+  @@index([memberCount])
   @@index([createdAt])
   @@index([deletedAt])
 }

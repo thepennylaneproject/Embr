@@ -22,6 +22,20 @@ export const DMInbox: React.FC<DMInboxProps> = ({
   initialConversationId,
   onConversationSelect,
 }) => {
+  // Stable callback references so useMessaging's connection effect doesn't re-run
+  const handleMessage = useCallback((message: any, _conversation: any) => {
+    console.log('New message received:', message);
+    // Handle new message notification
+  }, []);
+
+  const handleMessageRead = useCallback((data: any) => {
+    console.log('Message read:', data);
+  }, []);
+
+  const handleTypingIndicator = useCallback((indicator: any) => {
+    console.log('Typing indicator:', indicator);
+  }, []);
+
   const {
     conversations,
     messages,
@@ -38,16 +52,9 @@ export const DMInbox: React.FC<DMInboxProps> = ({
     uploadMedia,
   } = useMessaging({
     autoConnect: true,
-    onMessage: (message, _conversation) => {
-      console.log('New message received:', message);
-      // Handle new message notification
-    },
-    onMessageRead: (data) => {
-      console.log('Message read:', data);
-    },
-    onTypingIndicator: (indicator) => {
-      console.log('Typing indicator:', indicator);
-    },
+    onMessage: handleMessage,
+    onMessageRead: handleMessageRead,
+    onTypingIndicator: handleTypingIndicator,
   });
 
   const [selectedConversation, setSelectedConversation] =
