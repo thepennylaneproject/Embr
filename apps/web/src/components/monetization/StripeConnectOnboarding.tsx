@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 
 interface StripeConnectOnboardingProps {
@@ -18,6 +18,9 @@ export const StripeConnectOnboarding: React.FC<StripeConnectOnboardingProps> = (
     completeOnboarding,
     refetchStatus,
   } = useStripeConnect();
+  const [emailInput, setEmailInput] = useState('');
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [emailError, setEmailError] = useState('');
 
   // Check if returning from Stripe onboarding
   useEffect(() => {
@@ -37,11 +40,18 @@ export const StripeConnectOnboarding: React.FC<StripeConnectOnboardingProps> = (
   };
 
   const handleStartOnboarding = async () => {
-    try {
-      const email = prompt('Enter your email for payment account:');
-      if (!email) return;
+    setShowEmailForm(true);
+  };
 
-      const onboardingUrl = await createAccount(email);
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailError('');
+    if (!emailInput.trim() || !emailInput.includes('@')) {
+      setEmailError('Please enter a valid email address.');
+      return;
+    }
+    try {
+      const onboardingUrl = await createAccount(emailInput.trim());
       if (onboardingUrl) {
         window.location.href = onboardingUrl;
       }
@@ -231,13 +241,48 @@ export const StripeConnectOnboarding: React.FC<StripeConnectOnboardingProps> = (
         </div>
 
         <div className="pt-6 border-t border-gray-200">
-          <button
-            onClick={handleStartOnboarding}
-            className="w-full px-6 py-3 bg-[#E8998D] text-white rounded-lg font-semibold
-                     hover:bg-[#d88578] transition-colors"
-          >
-            Get Started
-          </button>
+          {!showEmailForm ? (
+            <button
+              onClick={handleStartOnboarding}
+              className="w-full px-6 py-3 bg-[#E8998D] text-white rounded-lg font-semibold
+                       hover:bg-[#d88578] transition-colors"
+            >
+              Get Started
+            </button>
+          ) : (
+            <form onSubmit={handleEmailSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <label htmlFor="stripe-email" style={{ fontSize: '0.875rem', fontWeight: '600', color: '#111827' }}>
+                Email for payment account
+              </label>
+              <input
+                id="stripe-email"
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="you@example.com"
+                required
+                style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.9rem', boxSizing: 'border-box' }}
+              />
+              {emailError && (
+                <p style={{ margin: 0, fontSize: '0.8rem', color: '#dc2626' }}>{emailError}</p>
+              )}
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => { setShowEmailForm(false); setEmailError(''); setEmailInput(''); }}
+                  style={{ flex: 1, padding: '0.625rem', borderRadius: '8px', border: '1px solid #d1d5db', background: 'transparent', cursor: 'pointer', fontWeight: '600', fontSize: '0.875rem' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-6 py-2 bg-[#E8998D] text-white rounded-lg font-semibold hover:bg-[#d88578] transition-colors"
+                >
+                  Continue
+                </button>
+              </div>
+            </form>
+          )}
         </div>
 
         {error && (

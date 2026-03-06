@@ -23,6 +23,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [fileError, setFileError] = useState<string>('');
+  const [sendError, setSendError] = useState<string>('');
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,9 +62,10 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setFileError('');
 
     if (file.size > 50 * 1024 * 1024) {
-      alert('File size must be less than 50MB');
+      setFileError('File size must be less than 50 MB. Please choose a smaller file.');
       return;
     }
 
@@ -74,7 +77,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      alert('Invalid file type. Please select an image, video, or document.');
+      setFileError('Unsupported file type. Please select an image (JPG, PNG, GIF, WebP), video (MP4, MOV, WebM), or document (PDF, Word).');
       return;
     }
 
@@ -108,11 +111,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     try {
       await onSendMessage(message.trim(), selectedFile || undefined);
       setMessage('');
+      setSendError('');
       handleRemoveFile();
       if (textareaRef.current) textareaRef.current.style.height = 'auto';
     } catch (error) {
       console.error('Failed to send message:', error);
-      alert('Failed to send message. Please try again.');
+      setSendError('Failed to send message. Please check your connection and try again.');
     } finally {
       setIsSending(false);
     }
@@ -136,6 +140,18 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         background: 'var(--embr-bg)',
       }}
     >
+      {/* File error */}
+      {fileError && (
+        <div style={{ marginBottom: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: 'var(--embr-radius-md)', background: 'color-mix(in srgb, var(--embr-error) 10%, white)', border: '1px solid var(--embr-error)', fontSize: '0.82rem', color: 'var(--embr-error)' }}>
+          {fileError}
+        </div>
+      )}
+      {/* Send error */}
+      {sendError && (
+        <div style={{ marginBottom: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: 'var(--embr-radius-md)', background: 'color-mix(in srgb, var(--embr-error) 10%, white)', border: '1px solid var(--embr-error)', fontSize: '0.82rem', color: 'var(--embr-error)' }}>
+          {sendError}
+        </div>
+      )}
       {/* File preview */}
       {selectedFile && (
         <div style={{

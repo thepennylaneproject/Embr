@@ -47,7 +47,7 @@ export default function SafetyPage() {
             <h3 style={{ fontSize: '0.95rem', fontWeight: '600' }}>Block a user</h3>
             <Input
               id="block-user-id"
-              placeholder="Enter user ID"
+              placeholder="Enter username"
               value={targetUserId}
               onChange={(e) => setTargetUserId(e.target.value)}
             />
@@ -64,7 +64,7 @@ export default function SafetyPage() {
             <h3 style={{ fontSize: '0.95rem', fontWeight: '600' }}>Mute a user</h3>
             <Input
               id="mute-user-id"
-              placeholder="Enter user ID"
+              placeholder="Enter username"
               value={muteTargetUserId}
               onChange={(e) => setMuteTargetUserId(e.target.value)}
             />
@@ -112,7 +112,7 @@ export default function SafetyPage() {
           </select>
           <Input
             id="report-entity-id"
-            placeholder="Entity ID"
+            placeholder="Content URL or ID"
             value={reportEntityId}
             onChange={(e) => setReportEntityId(e.target.value)}
             style={{ flex: 1 }}
