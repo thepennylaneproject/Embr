@@ -32,6 +32,9 @@
     "build:api": "npm --prefix apps/api run build",
     "build:web": "npm --prefix apps/web run build",
     "build": "npm run build:api && npm run build:web",
+    "audit:precheck": "node scripts/audit-precheck.js",
+    "audit:release-gate": "node scripts/audit-release-gate.js",
+    "audit:workflow": "echo \"Run: npm run audit:precheck -> triage -> validate -> npm run audit:release-gate\"",
     "clean": "npm run docker:down && rm -rf node_modules package-lock.json",
     "backup": "chmod +x scripts/migrate.sh && ./scripts/migrate.sh backup",
     "migrate": "chmod +x scripts/migrate.sh && ./scripts/migrate.sh"
