@@ -110,6 +110,7 @@ export const TipModal: React.FC<TipModalProps> = ({
   const [customAmount, setCustomAmount] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [validationError, setValidationError] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,14 +121,15 @@ export const TipModal: React.FC<TipModalProps> = ({
         : TIP_PRESET_AMOUNTS[selectedPreset];
 
     if (amount < 0.5) {
-      alert('Minimum tip amount is $0.50');
+      setValidationError('Minimum tip amount is $0.50.');
       return;
     }
 
     if (amount > 1000) {
-      alert('Maximum tip amount is $1,000');
+      setValidationError('Maximum tip amount is $1,000.');
       return;
     }
+    setValidationError('');
 
     try {
       await createTip({
@@ -261,9 +263,9 @@ export const TipModal: React.FC<TipModalProps> = ({
           </div>
 
           {/* Error Message */}
-          {error && (
+          {(validationError || error) && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{error}</p>
+              <p className="text-sm text-red-600">{validationError || error}</p>
             </div>
           )}
 
