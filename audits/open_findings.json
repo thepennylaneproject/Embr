@@ -767,7 +767,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -787,6 +787,12 @@
           "actor": "schema-auditor",
           "event": "re_reported",
           "notes": "Re-reported by schema-auditor in run synthesized-20260306-183901 with no changes."
+        },
+        {
+          "timestamp": "2026-03-06T19:39:01Z",
+          "actor": "copilot-agent",
+          "event": "resolved",
+          "notes": "Created reconciliation migration 20260306191939_add_groups_mutual_aid_marketplace_events adding Group/MutualAid/Marketplace/Event/Poll/Treasury tables and enums. Migration verified with prisma migrate status on clean DB."
         }
       ],
       "artifacts": []
@@ -3011,7 +3017,7 @@
         ]
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -3019,6 +3025,12 @@
           "actor": "build-deploy-auditor",
           "event": "created",
           "notes": "Placeholder deployment logic confirmed in workflow."
+        },
+        {
+          "timestamp": "2026-03-06T19:39:01Z",
+          "actor": "copilot-agent",
+          "event": "resolved",
+          "notes": "Verified deploy.yml already contains real deployment steps: SSH-based docker-compose deploy for API with health check gate, and Vercel CLI deploy for web. Placeholder echo commands were replaced in a prior session. No code changes needed."
         }
       ],
       "artifacts": []
