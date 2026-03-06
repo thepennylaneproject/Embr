@@ -61,13 +61,15 @@ async function bootstrap() {
   app.useGlobalFilters(new GlobalExceptionFilter());
   
   // CORS configuration
+  const allowedOrigins = process.env.ALLOWED_ORIGINS;
+  if (process.env.NODE_ENV === 'production' && !allowedOrigins) {
+    throw new Error('ALLOWED_ORIGINS must be explicitly set in production');
+  }
+  const origins = (allowedOrigins || 'http://localhost:3000,http://localhost:3001,http://localhost:3004')
+    .split(',')
+    .filter(Boolean);
   app.enableCors({
-    origin: (
-      process.env.ALLOWED_ORIGINS ||
-      'http://localhost:3000,http://localhost:3001,http://localhost:3004'
-    )
-      .split(',')
-      .filter(Boolean),
+    origin: origins,
     credentials: true,
   });
   

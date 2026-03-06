@@ -14,7 +14,9 @@ import { TipService } from '../services/tip.service';
 import { PayoutService } from '../services/payout.service';
 import { StripeConnectService } from '../services/stripe-connect.service';
 import { PrismaService } from '../../database/prisma.service';
+import { Public } from '../../auth/decorators/public.decorator';
 
+@Public()
 @Controller('webhooks/stripe')
 export class StripeWebhookController {
   private readonly logger = new Logger(StripeWebhookController.name);

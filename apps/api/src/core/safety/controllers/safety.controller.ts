@@ -11,6 +11,7 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -148,7 +149,11 @@ export class SafetyController {
   }
 
   @Get('moderation/users/:userId/restriction')
-  async checkUserRestriction(@Param('userId') userId: string) {
+  async checkUserRestriction(@Param('userId') userId: string, @Req() req) {
+    // Users can only check their own restriction status; admins/moderators can check anyone (F-016)
+    if (req.user.id !== userId && req.user.role !== 'ADMIN' && req.user.role !== 'MODERATOR') {
+      throw new ForbiddenException('Insufficient permissions');
+    }
     return this.moderationActionsService.checkUserRestriction(userId);
   }
 
@@ -257,8 +262,13 @@ export class SafetyController {
   }
 
   @Get('appeals/:id')
-  async getAppealById(@Param('id') id: string) {
-    return this.appealsService.getAppealById(id);
+  async getAppealById(@Param('id') id: string, @Req() req) {
+    const appeal = await this.appealsService.getAppealById(id);
+    // Only the appeal owner or admins/moderators can read the appeal (F-017)
+    if (appeal.userId !== req.user.id && req.user.role !== 'ADMIN' && req.user.role !== 'MODERATOR') {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+    return appeal;
   }
 
   @Put('appeals/:id')

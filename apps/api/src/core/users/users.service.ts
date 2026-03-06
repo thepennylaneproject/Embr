@@ -27,7 +27,8 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    return this.sanitizeUser(user);
+    // Owner sees their own wallet data (F-007)
+    return this.sanitizeUser(user, true);
   }
 
   async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
@@ -101,8 +102,8 @@ export class UsersService {
     }
 
     // Creators must allow tips if they want to monetize
-    if (updateSettingsDto.allowTips === false && updateSettingsDto.isCreator === true) {
-      throw new BadRequestException('Creators must allow tips to receive payments');
+    if (updateSettingsDto.allowTips === false && user.profile?.isCreator) {
+      throw new BadRequestException('Creators must keep tips enabled to receive payments');
     }
 
     // Update settings
@@ -154,7 +155,8 @@ export class UsersService {
       };
     }
 
-    return this.sanitizeUser(user);
+    const isOwner = currentUserId === user.id;
+    return this.sanitizeUser(user, isOwner);
   }
 
   async deleteAccount(userId: string) {
@@ -171,8 +173,12 @@ export class UsersService {
     });
   }
 
-  private sanitizeUser(user: any) {
-    const { passwordHash, googleId, ...sanitized } = user;
+  private sanitizeUser(user: any, includeFinancial = false) {
+    const { passwordHash, googleId, wallet, ...sanitized } = user;
+    // Only include wallet data for the account owner (F-007)
+    if (includeFinancial && wallet) {
+      return { ...sanitized, wallet };
+    }
     return sanitized;
   }
 }

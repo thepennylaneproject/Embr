@@ -49,15 +49,15 @@ export class AuthController {
     // Set tokens as secure httpOnly cookies
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: process.env.COOKIE_SECURE === 'true',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: process.env.COOKIE_SECURE === 'true',
+      sameSite: 'strict',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
@@ -83,20 +83,24 @@ export class AuthController {
     // Set tokens as secure httpOnly cookies instead of URL params
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: process.env.COOKIE_SECURE === 'true',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: process.env.COOKIE_SECURE === 'true',
+      sameSite: 'strict',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
-    // Redirect to frontend callback without tokens in URL
-    const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback`;
+    // Validate FRONTEND_URL before redirecting (F-022)
+    const frontendUrl = process.env.FRONTEND_URL;
+    if (!frontendUrl) {
+      return res.status(503).json({ error: 'Authentication service temporarily unavailable' });
+    }
+    const redirectUrl = `${frontendUrl}/auth/callback`;
     return res.redirect(redirectUrl);
   }
 
@@ -155,24 +159,55 @@ export class AuthController {
   async changePassword(
     @GetUser('id') userId: string,
     @Body() changePasswordDto: ChangePasswordDto,
+    @Res() res: Response,
   ) {
     const result = await this.authService.changePassword(
       userId,
       changePasswordDto.currentPassword,
       changePasswordDto.newPassword,
     );
-    return {
-      ...result,
-      message: 'Password successfully changed.',
-    };
+
+    // Set new tokens as httpOnly cookies instead of exposing them in the body (F-012)
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE === 'true',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE === 'true',
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({ user: result.user, message: 'Password successfully changed.' });
   }
 
   @Public()
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 requests per minute
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
-  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
-    return this.authService.verifyEmail(verifyEmailDto.token);
+  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto, @Res() res: Response) {
+    const result = await this.authService.verifyEmail(verifyEmailDto.token);
+
+    // Set tokens as httpOnly cookies instead of exposing them in the body (F-012)
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE === 'true',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE === 'true',
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({ user: result.user, message: 'Email verified successfully.' });
   }
 
   @Public()
