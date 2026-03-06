@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
@@ -31,6 +32,9 @@ export default function LoginPage() {
 
   return (
     <ProtectedRoute requireAuth={false} redirectAuthenticated={false}>
+      <Head>
+        <title>Sign in — Embr</title>
+      </Head>
       <main className="embr-page" style={{ display: 'grid', placeItems: 'center', padding: '1rem' }}>
         <Card padding="lg" style={{ width: 'min(460px, 100%)' }}>
           <h1 className="ui-page-title" style={{ marginBottom: '0.3rem' }}>

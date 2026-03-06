@@ -164,7 +164,7 @@ export function AppShell({
                   onClick={logout}
                   className="embr-dropdown-item embr-dropdown-button embr-dropdown-danger"
                 >
-                  Sign Out
+                  Sign out
                 </button>
               </div>
             )}
