@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
+import { envValidationSchema } from './config/env.validation';
 import { PrismaModule } from './core/database/prisma.module';
 import { EmailModule } from './core/email/email.module';
 import { AuthModule } from './core/auth/auth.module';
@@ -31,6 +32,10 @@ import { HealthController } from './health.controller';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env', '../../.env'],  // root .env works from both apps/api and monorepo root
+      validationSchema: envValidationSchema,
+      validationOptions: {
+        abortEarly: false, // Report all validation errors at once
+      },
     }),
     
     // Rate limiting - relaxed for development
