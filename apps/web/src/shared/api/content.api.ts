@@ -184,9 +184,14 @@ class ContentApiClient {
   // ============================================
 
   async getFeed(params?: FeedParams): Promise<FeedResponse> {
-    const { feedType = FeedType.FOR_YOU, ...rest } = params || {};
-    const response = await this.client.get(`/posts/feed`, {
+    const { feedType = FeedType.FOR_YOU, signal, ...rest } = params || {};
+
+    const endpoint =
+      feedType === FeedType.FOLLOWING ? '/posts/following' : '/posts/feed';
+
+    const response = await this.client.get(endpoint, {
       params: rest,
+      signal,
     });
     return this.normalizeFeedResponse(response.data);
   }

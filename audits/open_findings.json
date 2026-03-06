@@ -767,7 +767,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -787,6 +787,12 @@
           "actor": "schema-auditor",
           "event": "re_reported",
           "notes": "Re-reported by schema-auditor in run synthesized-20260306-183901 with no changes."
+        },
+        {
+          "timestamp": "2026-03-06T19:39:01Z",
+          "actor": "copilot-agent",
+          "event": "resolved",
+          "notes": "Created reconciliation migration 20260306191939_add_groups_mutual_aid_marketplace_events adding Group/MutualAid/Marketplace/Event/Poll/Treasury tables and enums. Migration verified with prisma migrate status on clean DB."
         }
       ],
       "artifacts": []
@@ -2349,7 +2355,7 @@
         ]
       },
       "owner": "unassigned",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [
         "f-0d7c9a12"
       ],
@@ -2359,6 +2365,12 @@
           "actor": "runtime-bug-hunter",
           "event": "created",
           "notes": "Pattern-matched sibling lifecycle bug to useFeed."
+        },
+        {
+          "timestamp": "2026-03-06T19:45:00Z",
+          "actor": "copilot-agent",
+          "event": "resolved",
+          "notes": "Added isMountedRef.current = true at effect start in useComments.ts so subsequent remounts do not permanently lock out state updates."
         }
       ],
       "artifacts": []
@@ -2401,7 +2413,7 @@
         ]
       },
       "owner": "unassigned",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [
         "f-2e4f71b3"
       ],
@@ -2411,6 +2423,12 @@
           "actor": "runtime-bug-hunter",
           "event": "created",
           "notes": "Direct logic defect in pagination implementation."
+        },
+        {
+          "timestamp": "2026-03-06T19:45:00Z",
+          "actor": "copilot-agent",
+          "event": "resolved",
+          "notes": "Added skip = (page-1)*limit and passed it to Prisma findMany when no cursor params (before/after) are provided in messaging.service.ts getMessages()."
         }
       ],
       "artifacts": []
@@ -2573,7 +2591,7 @@
         ]
       },
       "owner": "unassigned",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [
         "f-0d7c9a12"
       ],
@@ -2583,6 +2601,12 @@
           "actor": "runtime-bug-hunter",
           "event": "created",
           "notes": "Dead cancellation path confirmed by code flow."
+        },
+        {
+          "timestamp": "2026-03-06T19:45:00Z",
+          "actor": "copilot-agent",
+          "event": "resolved",
+          "notes": "Passed abortControllerRef.current.signal to contentApi.getFeed() in useFeed.ts. Also added CanceledError guard alongside AbortError."
         }
       ],
       "artifacts": []
@@ -2634,7 +2658,7 @@
         ]
       },
       "owner": "unassigned",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -2642,6 +2666,12 @@
           "actor": "runtime-bug-hunter",
           "event": "created",
           "notes": "Direct mismatch between API abstraction and backend routing."
+        },
+        {
+          "timestamp": "2026-03-06T19:45:00Z",
+          "actor": "copilot-agent",
+          "event": "resolved",
+          "notes": "Updated content.api.ts getFeed to route FOLLOWING feedType to /posts/following endpoint; all others remain on /posts/feed."
         }
       ],
       "artifacts": []
@@ -2685,7 +2715,7 @@
         ]
       },
       "owner": "unassigned",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -2693,6 +2723,12 @@
           "actor": "runtime-bug-hunter",
           "event": "created",
           "notes": "Logic bug in cache hit detection."
+        },
+        {
+          "timestamp": "2026-03-06T19:45:00Z",
+          "actor": "copilot-agent",
+          "event": "resolved",
+          "notes": "Changed CacheService.getOrSet() cache-hit check from `if (cached)` to `if (cached !== null && cached !== undefined)` so falsy values (0, false, empty string) are correctly treated as cache hits and not recomputed."
         }
       ],
       "artifacts": []
@@ -3011,7 +3047,7 @@
         ]
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -3019,6 +3055,12 @@
           "actor": "build-deploy-auditor",
           "event": "created",
           "notes": "Placeholder deployment logic confirmed in workflow."
+        },
+        {
+          "timestamp": "2026-03-06T19:39:01Z",
+          "actor": "copilot-agent",
+          "event": "resolved",
+          "notes": "Verified deploy.yml already contains real deployment steps: SSH-based docker-compose deploy for API with health check gate, and Vercel CLI deploy for web. Placeholder echo commands were replaced in a prior session. No code changes needed."
         }
       ],
       "artifacts": []
