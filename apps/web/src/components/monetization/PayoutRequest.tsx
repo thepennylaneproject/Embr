@@ -20,6 +20,7 @@ export const PayoutRequest: React.FC = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [recentPayouts, setRecentPayouts] = useState<Payout[]>([]);
   const [isLoadingPayouts, setIsLoadingPayouts] = useState(true);
+  const [validationError, setValidationError] = useState<string>('');
 
   useEffect(() => {
     loadRecentPayouts();
@@ -43,14 +44,15 @@ export const PayoutRequest: React.FC = () => {
     const amountValue = parseFloat(amount);
 
     if (isNaN(amountValue) || amountValue < 10) {
-      alert('Minimum payout amount is $10');
+      setValidationError('Minimum payout amount is $10.');
       return;
     }
 
     if (!balance || amountValue > balance.available) {
-      alert('Insufficient available balance');
+      setValidationError('Amount exceeds your available balance.');
       return;
     }
+    setValidationError('');
 
     try {
       await createPayoutRequest(amountValue, note.trim() || undefined);
@@ -262,9 +264,9 @@ export const PayoutRequest: React.FC = () => {
           </div>
 
           {/* ERROR */}
-          {payoutError && (
+          {(validationError || payoutError) && (
             <div style={{ padding: '12px 16px', backgroundColor: '#fee2e2', border: '1px solid #fecaca', borderRadius: '4px' }}>
-              <p style={{ fontSize: '14px', color: '#991b1b', margin: 0 }}>{payoutError}</p>
+              <p style={{ fontSize: '14px', color: '#991b1b', margin: 0 }}>{validationError || payoutError}</p>
             </div>
           )}
 

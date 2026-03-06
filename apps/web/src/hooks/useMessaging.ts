@@ -65,6 +65,18 @@ export function useMessaging(options: UseMessagingOptions = {}) {
   const socketRef = useRef<Socket | null>(null);
   const typingTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
 
+  // Stable refs for caller-provided callbacks so that reconnect doesn't happen
+  // when a caller passes new inline function references on re-render.
+  const onMessageRef = useRef(onMessage);
+  const onMessageReadRef = useRef(onMessageRead);
+  const onTypingIndicatorRef = useRef(onTypingIndicator);
+  const onErrorRef = useRef(onError);
+  // Keep refs current without triggering re-renders
+  onMessageRef.current = onMessage;
+  onMessageReadRef.current = onMessageRead;
+  onTypingIndicatorRef.current = onTypingIndicator;
+  onErrorRef.current = onError;
+
   // ============================================================
   // WEBSOCKET CONNECTION
   // ============================================================
@@ -95,7 +107,7 @@ export function useMessaging(options: UseMessagingOptions = {}) {
     newSocket.on("connect_error", (err) => {
       console.error("WebSocket connection error:", err);
       setError(err);
-      onError?.(err);
+      onErrorRef.current?.(err);
     });
 
     // Message events
@@ -133,7 +145,7 @@ export function useMessaging(options: UseMessagingOptions = {}) {
         // Update unread count
         setUnreadCount((prev) => prev + 1);
 
-        onMessage?.(message, conversation);
+        onMessageRef.current?.(message, conversation);
       },
     );
 
@@ -153,7 +165,7 @@ export function useMessaging(options: UseMessagingOptions = {}) {
         });
       }
 
-      onMessageRead?.(data);
+      onMessageReadRef.current?.(data);
     });
 
     // Typing indicator events
@@ -192,7 +204,7 @@ export function useMessaging(options: UseMessagingOptions = {}) {
           }
         }
 
-        onTypingIndicator?.(indicator);
+        onTypingIndicatorRef.current?.(indicator);
       },
     );
 
@@ -200,12 +212,14 @@ export function useMessaging(options: UseMessagingOptions = {}) {
     newSocket.on(WebSocketEvent.ERROR, (err) => {
       console.error("WebSocket error:", err);
       setError(err);
-      onError?.(err);
+      onErrorRef.current?.(err);
     });
 
     socketRef.current = newSocket;
     setSocket(newSocket);
-  }, [onMessage, onMessageRead, onTypingIndicator, onError]);
+  // Callback refs are stable so `connect` identity doesn't change on re-renders
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const disconnect = useCallback(() => {
     if (socketRef.current) {

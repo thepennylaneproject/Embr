@@ -874,21 +874,23 @@ export class MessagingService {
   // ============================================================
 
   async getUnreadCount(userId: string): Promise<GetUnreadCountResponse> {
-    // Get all conversations for user
-    const conversations = await this.prisma.conversation.findMany({
+    // Single grouped query: count unread messages per conversation for this user
+    const groups = await this.prisma.message.groupBy({
+      by: ['conversationId'],
       where: {
-        OR: [{ participant1Id: userId }, { participant2Id: userId }],
+        conversation: {
+          OR: [{ participant1Id: userId }, { participant2Id: userId }],
+        },
+        senderId: { not: userId },
+        status: { not: MessageStatus.READ },
       },
-      select: { id: true },
+      _count: { id: true },
     });
 
-    // Get unread counts for each conversation
-    const conversationCounts = await Promise.all(
-      conversations.map(async (conv) => ({
-        conversationId: conv.id,
-        unreadCount: await this.getUnreadCountForConversation(conv.id, userId),
-      })),
-    );
+    const conversationCounts = groups.map((g) => ({
+      conversationId: g.conversationId,
+      unreadCount: g._count.id,
+    }));
 
     const totalUnread = conversationCounts.reduce(
       (sum, conv) => sum + conv.unreadCount,
@@ -897,20 +899,7 @@ export class MessagingService {
 
     return {
       totalUnread,
-      conversationCounts: conversationCounts.filter((c) => c.unreadCount > 0),
+      conversationCounts,
     };
-  }
-
-  private async getUnreadCountForConversation(
-    conversationId: string,
-    userId: string,
-  ): Promise<number> {
-    return await this.prisma.message.count({
-      where: {
-        conversationId,
-        senderId: { not: userId },
-        status: { not: MessageStatus.READ },
-      },
-    });
   }
 }

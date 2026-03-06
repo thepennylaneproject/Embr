@@ -100,7 +100,7 @@
         ]
       },
       "owner": "backend",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [
         "f-perf-001"
       ],
@@ -153,7 +153,7 @@
         ]
       },
       "owner": "backend",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -210,7 +210,7 @@
         ]
       },
       "owner": "payments",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -265,7 +265,7 @@
         ]
       },
       "owner": "payments",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -316,7 +316,7 @@
         ]
       },
       "owner": "media",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -373,7 +373,7 @@
         ]
       },
       "owner": "frontend",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -436,7 +436,7 @@
         ]
       },
       "owner": "frontend",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -508,7 +508,7 @@
         ]
       },
       "owner": "frontend",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -585,7 +585,7 @@
         ]
       },
       "owner": "frontend",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -640,7 +640,7 @@
         ]
       },
       "owner": "backend",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [
         "f-perf-012"
       ],
@@ -3498,7 +3498,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3506,6 +3506,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3538,7 +3544,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3546,6 +3552,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3576,7 +3588,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3584,6 +3596,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3616,7 +3634,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3624,6 +3642,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3656,7 +3680,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3664,6 +3688,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3696,7 +3726,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3704,6 +3734,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3736,7 +3772,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3744,6 +3780,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3774,7 +3816,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3782,6 +3824,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3814,7 +3862,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3822,6 +3870,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3854,7 +3908,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3862,6 +3916,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3894,7 +3954,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3902,6 +3962,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3934,7 +4000,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3942,6 +4008,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3974,7 +4046,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3982,6 +4054,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -4014,7 +4092,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "in_progress",
       "related_ids": [],
       "history": [
         {
@@ -4022,6 +4100,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "in_progress",
+          "notes": "Partial fix: page wrapper uses CSS variables. Sub-components still use Tailwind hardcoded colors."
         }
       ],
       "artifacts": []
@@ -4100,7 +4184,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -4108,6 +4192,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -4272,6 +4362,76 @@
           "actor": "synthesizer",
           "event": "created",
           "notes": "Auto-created due to schema validation errors in source output."
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "finding_id": "f-ux-q-001",
+      "type": "question",
+      "category": "copy-mismatch",
+      "severity": "minor",
+      "priority": "P3",
+      "confidence": "inference",
+      "title": "Product voice guide is undefined \u2014 inconsistent tone across the app",
+      "description": "The app mixes formal and casual registers. No product voice guide exists.",
+      "proof_hooks": [],
+      "repro_steps": [],
+      "impact": "Without a defined voice, copy inconsistencies will recur as the app grows.",
+      "suggested_fix": {
+        "approach": "Create a style-scope-voice.md product voice guide.",
+        "affected_files": [
+          "style-scope-voice.md"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "",
+        "tests_needed": []
+      },
+      "owner": "solo-dev",
+      "status": "open",
+      "related_ids": [],
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "created",
+          "notes": "New finding from second audit pass."
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "finding_id": "f-ux-n-001",
+      "type": "enhancement",
+      "category": "a11y-gap",
+      "severity": "minor",
+      "priority": "P3",
+      "confidence": "inference",
+      "title": "Page titles missing from ~30 remaining pages",
+      "description": "Titles were added to 5 key pages and a global default. The remaining ~30+ pages still lack individual <title> tags.",
+      "proof_hooks": [],
+      "repro_steps": [],
+      "impact": "Screen reader users navigating to secondary pages will hear only \"Embr\" rather than a descriptive page name.",
+      "suggested_fix": {
+        "approach": "Add <Head><title>PageName \u2014 Embr</title></Head> to each remaining page.",
+        "affected_files": [
+          "apps/web/src/pages/**/*.tsx"
+        ],
+        "estimated_effort": "medium",
+        "risk_notes": "",
+        "tests_needed": []
+      },
+      "owner": "solo-dev",
+      "status": "open",
+      "related_ids": [
+        "f-ux-f-005"
+      ],
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "created",
+          "notes": "New finding from second audit pass."
         }
       ],
       "artifacts": []

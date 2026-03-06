@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { ProtectedPageShell } from '@/components/layout';
 import { ListingCard } from '@/components/marketplace/ListingCard';
 import { useMarketplace } from '@/hooks/useMarketplace';
+import { useDebounce } from '@/hooks/useDebounce';
 import type { PaginatedListings, ListingType } from '@embr/types';
 import { LISTING_CATEGORIES } from '@embr/types';
 
@@ -19,9 +20,12 @@ export default function MarketplacePage() {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
 
+  // Debounce the free-text query to avoid a fetch on every keystroke
+  const debouncedQuery = useDebounce(query, 300);
+
   const load = async (reset = true) => {
     const params: any = {};
-    if (query) params.q = query;
+    if (debouncedQuery) params.q = debouncedQuery;
     if (typeFilter) params.type = typeFilter;
     if (category) params.category = category;
     if (minPrice) params.minPrice = parseFloat(minPrice) * 100;
@@ -33,7 +37,7 @@ export default function MarketplacePage() {
     setResult(reset ? data : { ...data, items: [...result.items, ...data.items] });
   };
 
-  useEffect(() => { load(true); }, [query, typeFilter, category, minPrice, maxPrice, groupId]);
+  useEffect(() => { load(true); }, [debouncedQuery, typeFilter, category, minPrice, maxPrice, groupId]);
 
   return (
     <ProtectedPageShell>

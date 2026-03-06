@@ -16,10 +16,32 @@ export class StripeConnectService {
   private readonly logger = new Logger(StripeConnectService.name);
   private stripe: Stripe;
 
+  /** Short-lived in-memory cache for Stripe account data (keyed by account ID) */
+  private readonly accountCache = new Map<string, { data: Stripe.Account; expiresAt: number }>();
+  private readonly ACCOUNT_CACHE_TTL_MS = 60_000; // 60 seconds
+
   constructor(private prisma: PrismaService) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
       apiVersion: '2023-10-16',
     });
+  }
+
+  /** Return cached Stripe account data, or null if absent / expired */
+  private getCachedAccount(accountId: string): Stripe.Account | null {
+    const entry = this.accountCache.get(accountId);
+    if (entry && entry.expiresAt > Date.now()) return entry.data;
+    this.accountCache.delete(accountId);
+    return null;
+  }
+
+  /** Store Stripe account data with a TTL */
+  private setCachedAccount(accountId: string, data: Stripe.Account): void {
+    this.accountCache.set(accountId, { data, expiresAt: Date.now() + this.ACCOUNT_CACHE_TTL_MS });
+  }
+
+  /** Evict a specific account from the cache (e.g. after account.updated webhook) */
+  invalidateAccountCache(accountId: string): void {
+    this.accountCache.delete(accountId);
   }
 
   /**
@@ -231,9 +253,12 @@ export class StripeConnectService {
     }
 
     try {
-      const account = await this.stripe.accounts.retrieve(
-        wallet.stripeConnectAccountId,
-      );
+      // Use cached account data if still fresh (avoids a metered Stripe API call)
+      let account = this.getCachedAccount(wallet.stripeConnectAccountId);
+      if (!account) {
+        account = await this.stripe.accounts.retrieve(wallet.stripeConnectAccountId);
+        this.setCachedAccount(wallet.stripeConnectAccountId, account);
+      }
 
       const isOnboarded = account.details_submitted || false;
       const chargesEnabled = account.charges_enabled || false;
@@ -281,9 +306,12 @@ export class StripeConnectService {
       throw new NotFoundException('No Stripe Connect account found');
     }
 
-    const account = await this.stripe.accounts.retrieve(
-      wallet.stripeConnectAccountId,
-    );
+    // Use cached account data if still fresh
+    let account = this.getCachedAccount(wallet.stripeConnectAccountId);
+    if (!account) {
+      account = await this.stripe.accounts.retrieve(wallet.stripeConnectAccountId);
+      this.setCachedAccount(wallet.stripeConnectAccountId, account);
+    }
 
     return {
       id: account.id,

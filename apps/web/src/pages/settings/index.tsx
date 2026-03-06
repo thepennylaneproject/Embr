@@ -214,7 +214,11 @@ export default function SettingsPage() {
               }}
             >
               <div
+                role="button"
+                tabIndex={0}
                 onClick={() => avatarInputRef.current?.click()}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); avatarInputRef.current?.click(); } }}
+                aria-label="Change profile photo"
                 style={{
                   width: '64px',
                   height: '64px',
@@ -225,7 +229,6 @@ export default function SettingsPage() {
                   flexShrink: 0,
                   position: 'relative',
                 }}
-                title="Change profile photo"
               >
                 {avatarUrl ? (
                   <img

@@ -153,8 +153,21 @@ export class CommentsService {
       this.prisma.comment.count({ where }),
     ]);
 
+    // Prefetch all liked comment IDs for the current user in a single query
+    let likedIds: Set<string> | undefined;
+    if (userId && comments.length > 0) {
+      const likes = await this.prisma.like.findMany({
+        where: {
+          userId,
+          commentId: { in: comments.map((c) => c.id) },
+        },
+        select: { commentId: true },
+      });
+      likedIds = new Set(likes.map((l) => l.commentId as string));
+    }
+
     const formattedComments = await Promise.all(
-      comments.map((comment) => this.formatComment(comment, userId)),
+      comments.map((comment) => this.formatComment(comment, userId, likedIds)),
     );
 
     return {
@@ -432,7 +445,7 @@ export class CommentsService {
     return depth;
   }
 
-  private async formatComment(comment: any, userId?: string) {
+  private async formatComment(comment: any, userId?: string, likedIds?: Set<string>) {
     // If comment is deleted, return tombstone (preserve thread structure)
     if (comment.deletedAt) {
       return {
@@ -451,16 +464,25 @@ export class CommentsService {
       };
     }
 
-    const isLiked = userId
-      ? await this.prisma.like.findUnique({
-          where: {
-            userId_commentId: {
-              userId,
-              commentId: comment.id,
+    let isLiked = false;
+    if (userId) {
+      if (likedIds !== undefined) {
+        // Use pre-fetched set (batch path — no extra query)
+        isLiked = likedIds.has(comment.id);
+      } else {
+        // Single-comment path — fall back to individual query
+        isLiked = await this.prisma.like
+          .findUnique({
+            where: {
+              userId_commentId: {
+                userId,
+                commentId: comment.id,
+              },
             },
-          },
-        }).then(Boolean)
-      : false;
+          })
+          .then(Boolean);
+      }
+    }
 
     return {
       id: comment.id,
