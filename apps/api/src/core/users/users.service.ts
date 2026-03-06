@@ -102,8 +102,8 @@ export class UsersService {
     }
 
     // Creators must allow tips if they want to monetize
-    if (updateSettingsDto.allowTips === false) {
-      throw new BadRequestException('Tips cannot be disabled');
+    if (updateSettingsDto.allowTips === false && user.profile?.isCreator) {
+      throw new BadRequestException('Creators must keep tips enabled to receive payments');
     }
 
     // Update settings
