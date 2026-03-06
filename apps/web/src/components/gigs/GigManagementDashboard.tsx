@@ -9,11 +9,13 @@ import {
   ApplicationStatus,
   MilestoneStatus,
 } from '@embr/types';
+import { useToast } from '@embr/ui';
 
 type DashboardView = 'my-gigs' | 'my-applications' | 'active-work';
 
 export const GigManagementDashboard: React.FC = () => {
   const router = useRouter();
+  const { showToast } = useToast();
   const [activeView, setActiveView] = useState<DashboardView>('my-gigs');
   const [myGigs, setMyGigs] = useState<Gig[]>([]);
   const [myApplications, setMyApplications] = useState<Application[]>([]);
@@ -57,13 +59,12 @@ export const GigManagementDashboard: React.FC = () => {
   };
 
   const handleCancelGig = async (gigId: string) => {
-    if (!confirm('Are you sure you want to cancel this gig?')) return;
-
     try {
       await gigsApi.cancel(gigId);
       loadData();
+      showToast({ title: 'Gig cancelled', kind: 'info' });
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to cancel gig');
+      showToast({ title: 'Could not cancel gig', description: err.response?.data?.message || 'Please try again.', kind: 'error' });
     }
   };
 
@@ -71,19 +72,19 @@ export const GigManagementDashboard: React.FC = () => {
     try {
       await gigsApi.complete(gigId);
       loadData();
+      showToast({ title: 'Gig marked as complete', kind: 'success' });
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to complete gig');
+      showToast({ title: 'Could not complete gig', description: err.response?.data?.message || 'Please try again.', kind: 'error' });
     }
   };
 
   const handleWithdrawApplication = async (applicationId: string) => {
-    if (!confirm('Are you sure you want to withdraw this application?')) return;
-
     try {
       await applicationsApi.withdraw(applicationId);
       loadData();
+      showToast({ title: 'Application withdrawn', kind: 'info' });
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to withdraw application');
+      showToast({ title: 'Could not withdraw application', description: err.response?.data?.message || 'Please try again.', kind: 'error' });
     }
   };
 
@@ -91,8 +92,9 @@ export const GigManagementDashboard: React.FC = () => {
     try {
       await milestonesApi.submit(milestoneId);
       loadData();
+      showToast({ title: 'Milestone submitted', kind: 'success' });
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to submit milestone');
+      showToast({ title: 'Could not submit milestone', description: err.response?.data?.message || 'Please try again.', kind: 'error' });
     }
   };
 

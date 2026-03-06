@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-03-06T06:01:28Z",
-  "last_run_id": "data-20260306-060128",
+  "last_updated": "2026-03-06T06:20:09Z",
+  "last_run_id": "ux-20260306-062009",
   "findings": [
     {
       "finding_id": "f-perf-001",
@@ -3498,7 +3498,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3506,6 +3506,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3538,7 +3544,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3546,6 +3552,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3576,7 +3588,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3584,6 +3596,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3616,7 +3634,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3624,6 +3642,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3656,7 +3680,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3664,6 +3688,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3696,7 +3726,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3704,6 +3734,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3736,7 +3772,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3744,6 +3780,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3774,7 +3816,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3782,6 +3824,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3814,7 +3862,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3822,6 +3870,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3854,7 +3908,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3862,6 +3916,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3894,7 +3954,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3902,6 +3962,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3934,7 +4000,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3942,6 +4008,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -3974,7 +4046,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3982,6 +4054,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -4014,7 +4092,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "in_progress",
       "related_ids": [],
       "history": [
         {
@@ -4022,6 +4100,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "in_progress",
+          "notes": "Partial fix: page wrapper uses CSS variables. Sub-components still use Tailwind hardcoded colors."
         }
       ],
       "artifacts": []
@@ -4100,7 +4184,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -4108,6 +4192,12 @@
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "fixed_verified",
+          "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
       "artifacts": []
@@ -4277,172 +4367,71 @@
       "artifacts": []
     },
     {
-      "finding_id": "f-data-data-f012",
-      "type": "bug",
-      "category": "type-drift",
-      "severity": "major",
-      "priority": "P1",
-      "confidence": "evidence",
-      "title": "revenueService.recordStream() stores a USD float as TrackPlay.royaltyAmount which is declared Int (cents) in Prisma schema",
-      "description": "revenueService.recordStream() computes royaltyAmount = isValidStream ? 0.003 : 0 (USD float) and persists it to TrackPlay.royaltyAmount (Int/cents). Prisma silently truncates to 0, making all royalty revenue zero.",
-      "proof_hooks": [
-        {
-          "hook_type": "code_ref",
-          "summary": "royaltyAmount computed as USD float 0.003",
-          "file": "apps/api/src/music/services/musicService.ts"
-        },
-        {
-          "hook_type": "code_ref",
-          "summary": "TrackPlay.royaltyAmount declared as Int (cents)",
-          "file": "apps/api/prisma/schema.prisma"
-        }
-      ],
-      "repro_steps": [
-        "POST a valid stream play event with durationPlayed >= 30",
-        "Query TrackPlay.royaltyAmount for the resulting record",
-        "Observe stored value is 0 instead of expected royalty amount"
-      ],
-      "impact": "Every stream play persisted via recordStream will have royaltyAmount = 0, silently zeroing all artist royalty earnings.",
+      "finding_id": "f-ux-q-001",
+      "type": "question",
+      "category": "copy-mismatch",
+      "severity": "minor",
+      "priority": "P3",
+      "confidence": "inference",
+      "title": "Product voice guide is undefined \u2014 inconsistent tone across the app",
+      "description": "The app mixes formal and casual registers. No product voice guide exists.",
+      "proof_hooks": [],
+      "repro_steps": [],
+      "impact": "Without a defined voice, copy inconsistencies will recur as the app grows.",
       "suggested_fix": {
-        "approach": "Two fixes required: (1) store royaltyAmount in integer cents consistently with the schema (multiply by 100). (2) Note that $0.003/stream = 0.3 cents which truncates to 0 even in cents \u2014 the royalty rate must be raised to at least $0.01/stream, or the schema must store millicents (Int) with documentation.",
+        "approach": "Create a style-scope-voice.md product voice guide.",
         "affected_files": [
-          "apps/api/src/music/services/musicService.ts"
+          "style-scope-voice.md"
         ],
-        "estimated_effort": "low",
-        "risk_notes": "Existing TrackPlay rows will need a backfill migration to correct zero royaltyAmount values.",
-        "tests_needed": [
-          "Unit test: verify recordStream stores royaltyAmount in integer cents",
-          "Unit test: verify royaltyAmount = 0 when durationPlayed < 30"
-        ]
+        "estimated_effort": "small",
+        "risk_notes": "",
+        "tests_needed": []
       },
       "owner": "solo-dev",
       "status": "open",
-      "related_ids": [
-        "f-data-data-f006",
-        "f-data-data-f014"
-      ],
+      "related_ids": [],
       "history": [
         {
-          "timestamp": "2026-03-06T06:01:28Z",
-          "actor": "schema-auditor",
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
           "event": "created",
-          "notes": "New finding from data audit run data-20260306-060128"
+          "notes": "New finding from second audit pass."
         }
       ],
       "artifacts": []
     },
     {
-      "finding_id": "f-data-data-f013",
-      "type": "bug",
-      "category": "type-drift",
-      "severity": "major",
-      "priority": "P1",
-      "confidence": "evidence",
-      "title": "Music AudioQuality type uses lowercase/mismatched values vs. Prisma enum; service writes unvalidated string with `as any` cast",
-      "description": "The music module's TypeScript AudioQuality interface defines quality as 'low'|'standard'|'high'|'lossless' while the Prisma enum uses LOW|STANDARD|HIGH|HIRES. The value 'lossless' has no DB equivalent. recordStream() accepts quality as a raw string and passes it as `quality as any`, bypassing all enum validation.",
-      "proof_hooks": [
-        {
-          "hook_type": "code_ref",
-          "summary": "AudioQuality interface uses lowercase + 'lossless'",
-          "file": "apps/api/src/music/types/index.ts"
-        },
-        {
-          "hook_type": "code_ref",
-          "summary": "Prisma AudioQuality enum uses uppercase + HIRES",
-          "file": "apps/api/prisma/schema.prisma"
-        },
-        {
-          "hook_type": "code_ref",
-          "summary": "quality: quality as any unsafe cast in recordStream",
-          "file": "apps/api/src/music/services/musicService.ts"
-        }
-      ],
-      "repro_steps": [
-        "Call revenueService.recordStream(trackId, userId, 60, 'lossless')",
-        "Observe a Prisma/DB runtime error (invalid enum input value for type AudioQuality)"
-      ],
-      "impact": "Invalid enum values cause runtime DB errors for any stream record where the caller uses the music-module TypeScript type values. The `as any` cast removes all compile-time protection.",
+      "finding_id": "f-ux-n-001",
+      "type": "enhancement",
+      "category": "a11y-gap",
+      "severity": "minor",
+      "priority": "P3",
+      "confidence": "inference",
+      "title": "Page titles missing from ~30 remaining pages",
+      "description": "Titles were added to 5 key pages and a global default. The remaining ~30+ pages still lack individual <title> tags.",
+      "proof_hooks": [],
+      "repro_steps": [],
+      "impact": "Screen reader users navigating to secondary pages will hear only \"Embr\" rather than a descriptive page name.",
       "suggested_fix": {
-        "approach": "Reconcile the TypeScript type with the Prisma enum: rename 'lossless' to 'HIRES' and use uppercase. Replace the untyped string parameter with the Prisma-generated AudioQuality enum type. Remove the `as any` cast.",
+        "approach": "Add <Head><title>PageName \u2014 Embr</title></Head> to each remaining page.",
         "affected_files": [
-          "apps/api/src/music/services/musicService.ts",
-          "apps/api/src/music/types/index.ts"
-        ],
-        "estimated_effort": "low",
-        "risk_notes": "All callers using old lowercase string values will need to be updated.",
-        "tests_needed": [
-          "Unit test: recordStream rejects invalid quality string values",
-          "Unit test: recordStream accepts all four valid Prisma AudioQuality values"
-        ]
-      },
-      "owner": "solo-dev",
-      "status": "open",
-      "related_ids": [
-        "f-data-data-f005"
-      ],
-      "history": [
-        {
-          "timestamp": "2026-03-06T06:01:28Z",
-          "actor": "schema-auditor",
-          "event": "created",
-          "notes": "New finding from data audit run data-20260306-060128"
-        }
-      ],
-      "artifacts": []
-    },
-    {
-      "finding_id": "f-data-data-f014",
-      "type": "bug",
-      "category": "schema-mismatch",
-      "severity": "major",
-      "priority": "P1",
-      "confidence": "evidence",
-      "title": "ArtistStat.revenue and Track.price use Float (USD) while the rest of the platform uses Int (integer cents) for all monetary values",
-      "description": "The music vertical introduced ArtistStat.revenue (Float, USD) and Track.price (Float, USD). All other monetary fields in the schema use Int (cents). VideoUsage.totalRevenue/splits are also Int (cents), making revenue aggregation across domains a 100x scaling error. Inconsistent units make financial correctness unverifiable.",
-      "proof_hooks": [
-        {
-          "hook_type": "code_ref",
-          "summary": "ArtistStat.revenue Float and Track.price Float declared as USD",
-          "file": "apps/api/prisma/schema.prisma"
-        },
-        {
-          "hook_type": "code_ref",
-          "summary": "VideoUsage.totalRevenue and splits are Int (cents) in same schema",
-          "file": "apps/api/prisma/schema.prisma"
-        }
-      ],
-      "repro_steps": [
-        "Record a VideoUsage revenue split (totalRevenue = 500 = $5.00 cents)",
-        "Read ArtistStat.revenue for the same artist (revenue = 5.0 = $5.00 USD float)",
-        "Any code summing these two fields produces a 100x error"
-      ],
-      "impact": "Cross-domain revenue aggregation produces incorrect totals. Float storage introduces rounding errors. Inconsistent units make financial auditing impossible without field-level unit annotations.",
-      "suggested_fix": {
-        "approach": "Convert Track.price and ArtistStat.revenue to Int (cents) via migration (multiply by 100). Update all service code to use cents. Document the canonical unit in a shared money-handling convention.",
-        "affected_files": [
-          "apps/api/prisma/schema.prisma",
-          "apps/api/src/music/services/musicService.ts"
+          "apps/web/src/pages/**/*.tsx"
         ],
         "estimated_effort": "medium",
-        "risk_notes": "Requires a data migration multiplying existing Float values by 100. Rollback must preserve original values.",
-        "tests_needed": [
-          "Verify Track.price = 0 (free) still reads as 0 after migration",
-          "Verify ArtistStat.revenue aggregation from VideoUsage cents is consistent"
-        ]
+        "risk_notes": "",
+        "tests_needed": []
       },
       "owner": "solo-dev",
       "status": "open",
       "related_ids": [
-        "f-data-data-f003",
-        "f-data-data-f006",
-        "f-data-data-f012"
+        "f-ux-f-005"
       ],
       "history": [
         {
-          "timestamp": "2026-03-06T06:01:28Z",
-          "actor": "schema-auditor",
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
           "event": "created",
-          "notes": "New finding from data audit run data-20260306-060128"
+          "notes": "New finding from second audit pass."
         }
       ],
       "artifacts": []

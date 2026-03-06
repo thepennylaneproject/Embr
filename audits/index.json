@@ -76,6 +76,19 @@
       "question_count": 4,
       "coverage_gaps": [],
       "diff_summary_short": "0 new, 1 resolved, 0 changed"
+    },
+    {
+      "run_id": "ux-20260306-062009",
+      "timestamp": "2026-03-06T06:20:09Z",
+      "agents": [
+        "ux-flow-auditor"
+      ],
+      "finding_count": 17,
+      "blocker_count": 0,
+      "major_count": 5,
+      "question_count": 2,
+      "coverage_gaps": [],
+      "diff_summary_short": "14 fixed, 2 new, 1 in_progress"
     }
   ]
 }

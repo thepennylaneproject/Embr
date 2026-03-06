@@ -20,12 +20,12 @@ const DiscoveryPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F1F1]">
+    <div className="min-h-screen" style={{ background: 'var(--embr-bg)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Discover</h1>
-          <p className="text-gray-600">Find amazing creators and connect with the community</p>
+          <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--embr-text)' }}>Discover</h1>
+          <p style={{ color: 'var(--embr-muted-text)' }}>Find amazing creators and connect with the community</p>
         </div>
 
         {/* Search Bar */}

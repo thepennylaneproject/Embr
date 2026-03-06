@@ -6,7 +6,7 @@ import { ArtistDashboard } from '@/components/music/artist/ArtistDashboard';
 export default function ArtistProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [error, _setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const artistId = useMemo(() => {
     if (typeof router.query.id !== 'string') return '';
@@ -16,8 +16,11 @@ export default function ArtistProfilePage() {
   useEffect(() => {
     if (artistId) {
       setLoading(false);
+    } else if (typeof router.query.id !== 'undefined') {
+      setError('Artist not found.');
+      setLoading(false);
     }
-  }, [artistId]);
+  }, [artistId, router.query.id]);
 
   if (loading || !artistId) {
     return (

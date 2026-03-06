@@ -5,6 +5,7 @@ import { ProtectedPageShell } from '@/components/layout';
 import { useGroups } from '@/hooks/useGroups';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageState } from '@/components/ui/PageState';
+import { useToast } from '@embr/ui';
 import type { Group } from '@embr/types';
 import { groupsApi } from '@shared/api/groups.api';
 
@@ -13,12 +14,15 @@ export default function GroupSettingsPage() {
   const { id } = router.query;
   const { user } = useAuth();
   const { updateGroup, deleteGroup, loading } = useGroups();
+  const { showToast } = useToast();
 
   const [group, setGroup] = useState<Group | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
   const [form, setForm] = useState({ name: '', description: '', type: '', category: '' });
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -46,12 +50,14 @@ export default function GroupSettingsPage() {
   };
 
   const handleDelete = async () => {
-    if (!group || !confirm(`Delete "${group.name}" permanently? This cannot be undone.`)) return;
+    if (!group) return;
+    setDeleteError('');
     try {
       await deleteGroup(group.id);
       router.push('/groups');
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Failed to delete group');
+      setDeleteError(e.response?.data?.message || 'Failed to delete group. Please try again or contact support.');
+      showToast({ title: 'Could not delete group', description: 'Please try again.', kind: 'error' });
     }
   };
 
@@ -101,9 +107,28 @@ export default function GroupSettingsPage() {
           <p style={{ margin: '0 0 1rem', fontSize: '0.875rem', color: 'var(--embr-muted-text)' }}>
             Permanently delete this group and all its content. This cannot be undone.
           </p>
-          <button onClick={handleDelete} style={{ padding: '0.5rem 1.25rem', borderRadius: 'var(--embr-radius-md)', border: '2px solid #ef4444', background: 'transparent', color: '#ef4444', cursor: 'pointer', fontWeight: '700', fontSize: '0.875rem' }}>
-            Delete Group
-          </button>
+          {!showDeleteConfirm ? (
+            <button onClick={() => setShowDeleteConfirm(true)} style={{ padding: '0.5rem 1.25rem', borderRadius: 'var(--embr-radius-md)', border: '2px solid #ef4444', background: 'transparent', color: '#ef4444', cursor: 'pointer', fontWeight: '700', fontSize: '0.875rem' }}>
+              Delete Group
+            </button>
+          ) : (
+            <div style={{ padding: '1rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid #ef4444', background: '#fef2f2' }}>
+              <p style={{ margin: '0 0 1rem', fontSize: '0.875rem', color: '#dc2626', fontWeight: '600' }}>
+                Are you sure you want to delete "{group.name}" permanently? This cannot be undone.
+              </p>
+              {deleteError && (
+                <p style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', color: '#dc2626' }}>{deleteError}</p>
+              )}
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button onClick={() => { setShowDeleteConfirm(false); setDeleteError(''); }} style={{ padding: '0.5rem 1.25rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'transparent', cursor: 'pointer', fontWeight: '600', fontSize: '0.875rem' }}>
+                  Cancel
+                </button>
+                <button onClick={handleDelete} style={{ padding: '0.5rem 1.25rem', borderRadius: 'var(--embr-radius-md)', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontWeight: '700', fontSize: '0.875rem' }}>
+                  Yes, Delete Group
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </ProtectedPageShell>
