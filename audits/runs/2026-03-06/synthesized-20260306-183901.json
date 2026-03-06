@@ -39,8 +39,9 @@
       "enhancement": 5
     },
     "by_status": {
-      "open": 39,
-      "in_progress": 1
+      "open": 37,
+      "in_progress": 1,
+      "resolved": 2
     },
     "by_category": {
       "missing-index": 1,
@@ -1018,7 +1019,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -1038,6 +1039,12 @@
           "actor": "schema-auditor",
           "event": "re_reported",
           "notes": "Re-reported by schema-auditor in run synthesized-20260306-183901 with no changes."
+        },
+        {
+          "timestamp": "2026-03-06T19:39:01Z",
+          "actor": "copilot-agent",
+          "event": "resolved",
+          "notes": "Created reconciliation migration 20260306191939_add_groups_mutual_aid_marketplace_events. All missing tables/enums (Group, MutualAid, Marketplace, Event, Poll, Treasury families) are now in migration history. Verified with prisma migrate status."
         }
       ],
       "artifacts": []
@@ -3262,7 +3269,7 @@
         ]
       },
       "owner": "solo-dev",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [],
       "history": [
         {
@@ -3270,6 +3277,12 @@
           "actor": "build-deploy-auditor",
           "event": "created",
           "notes": "Placeholder deployment logic confirmed in workflow."
+        },
+        {
+          "timestamp": "2026-03-06T19:39:01Z",
+          "actor": "copilot-agent",
+          "event": "resolved",
+          "notes": "Verified that deploy.yml already contains real deployment steps (SSH deploy for API, Vercel for web, health check gate). Placeholder commands were replaced in a prior session."
         }
       ],
       "artifacts": []
