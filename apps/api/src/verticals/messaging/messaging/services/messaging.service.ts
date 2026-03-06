@@ -533,6 +533,8 @@ export class MessagingService {
     dto: GetMessagesDto,
   ): Promise<GetMessagesResponse> {
     const { conversationId, page = 1, limit = 50, before, after } = dto;
+    // Use page-based offset only when no cursor params are provided
+    const skip = !before && !after ? (page - 1) * limit : undefined;
 
     // Check if user is a participant
     const conversation = await this.prisma.conversation.findUnique({
@@ -588,6 +590,7 @@ export class MessagingService {
       },
       orderBy: { createdAt: 'desc' },
       take: limit,
+      ...(skip !== undefined ? { skip } : {}),
     });
 
     // Transform messages

@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import axios from 'axios';
 import { contentApi } from '@shared/api/content.api';
 import { Post, FeedType, FeedResponse } from '@shared/types/content.types';
 
@@ -83,6 +84,7 @@ export const useFeed = (params?: UseFeedParams): UseFeedReturn => {
         feedType,
         page: 1,
         limit,
+        signal: abortControllerRef.current.signal,
       });
 
       if (isMountedRef.current) {
@@ -91,8 +93,8 @@ export const useFeed = (params?: UseFeedParams): UseFeedReturn => {
         setPage(1);
       }
     } catch (err: any) {
-      if (err.name === 'AbortError') return;
-      
+      if (axios.isCancel(err)) return;
+
       const errorMessage = err.response?.data?.message || 'Failed to load feed';
       if (isMountedRef.current) {
         setError(errorMessage);
