@@ -9,6 +9,7 @@ import {
   Request,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -87,25 +88,30 @@ export class TipController {
 
   /**
    * GET /tips/post/:postId
-   * Get all tips for a specific post
+   * Get all tips for a specific post — restricted to the post author
    */
   @Get('post/:postId')
   async getTipsByPost(
+    @Request() req,
     @Param('postId') postId: string,
     @Query() query: GetTipsQueryDto,
   ) {
-    return this.tipService.getTips('', { ...query, postId });
+    return this.tipService.getTips(req.user.id, { ...query, postId });
   }
 
   /**
    * GET /tips/user/:userId/received
-   * Get tips received by a user
+   * Get tips received by a user — restricted to the user themselves
    */
   @Get('user/:userId/received')
   async getTipsReceivedByUser(
+    @Request() req,
     @Param('userId') userId: string,
     @Query() query: GetTipsQueryDto,
   ) {
+    if (req.user.id !== userId) {
+      throw new ForbiddenException('You can only view your own received tips');
+    }
     return this.tipService.getTips(userId, { ...query, type: 'received' });
   }
 }

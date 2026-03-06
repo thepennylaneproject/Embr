@@ -9,7 +9,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
-import { randomBytes } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 
 import { EmailService } from '../email/email.service';
 import { SignUpDto, LoginDto } from './dto';
@@ -124,6 +124,11 @@ export class AuthService {
       throw new UnauthorizedException('Account has been deactivated');
     }
 
+    // Check if account is suspended
+    if (user.suspended || (user.suspendedUntil && user.suspendedUntil > new Date())) {
+      throw new UnauthorizedException('Account is suspended');
+    }
+
     // Update last login
     await this.prisma.user.update({
       where: { id: user.id },
@@ -211,6 +216,15 @@ export class AuthService {
       });
     }
 
+    // Check if account is active or suspended
+    if (user.deletedAt) {
+      throw new UnauthorizedException('Account has been deactivated');
+    }
+
+    if (user.suspended || (user.suspendedUntil && user.suspendedUntil > new Date())) {
+      throw new UnauthorizedException('Account is suspended');
+    }
+
     // Update last login
     await this.prisma.user.update({
       where: { id: user.id },
@@ -256,11 +270,14 @@ export class AuthService {
       expiresIn: refreshExpiresIn,
     });
 
+    // Store SHA-256 hash of the refresh token in the database (F-005)
+    const tokenHash = createHash('sha256').update(refreshTokenValue).digest('hex');
+
     // Store refresh token in database with matching expiry and device info
     await this.prisma.refreshToken.create({
       data: {
         userId: user.id,
-        token: refreshTokenValue,
+        token: tokenHash,
         expiresAt: new Date(Date.now() + refreshTokenExpiresMs),
         userAgent: userAgent || null,
         ipAddress: ipAddress || null,
@@ -295,11 +312,14 @@ export class AuthService {
   }
 
   async refreshTokens(userId: string, refreshToken: string): Promise<TokenResponse> {
+    // Hash the incoming token to compare against the stored hash (F-005)
+    const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
+
     // Verify refresh token exists and is not expired
     const storedToken = await this.prisma.refreshToken.findFirst({
       where: {
         userId,
-        token: refreshToken,
+        token: tokenHash,
         isRevoked: false,
         expiresAt: { gt: new Date() },
       },
@@ -336,9 +356,11 @@ export class AuthService {
   }
 
   async logout(userId: string, refreshToken: string): Promise<void> {
+    // Hash the token before looking it up (F-005)
+    const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
     // Revoke the specific refresh token
     await this.prisma.refreshToken.updateMany({
-      where: { userId, token: refreshToken },
+      where: { userId, token: tokenHash },
       data: { isRevoked: true },
     });
   }
@@ -429,7 +451,9 @@ export class AuthService {
     });
 
     // Generate actual password reset token (longer TTL - 1 hour)
-    const resetToken = randomBytes(32).toString('hex');
+    // Prefix the token with the userId so it can be used to scope the DB lookup (F-014)
+    const rawToken = randomBytes(32).toString('hex');
+    const resetToken = `${user.id}.${rawToken}`;
     const hashedResetToken = await bcrypt.hash(resetToken, 10);
 
     // Create actual reset token
@@ -446,16 +470,19 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    // Find all non-expired, non-used tokens and verify each one
-    // Note: This still requires iterating through tokens due to bcrypt hashes,
-    // but we limit to recent tokens only for performance
+    // Extract userId from the token prefix (format: userId.randomHex) (F-014)
+    const dotIndex = token.indexOf('.');
+    const userId = dotIndex !== -1 ? token.substring(0, dotIndex) : null;
+
+    // Scope the DB lookup to the specific user's tokens for efficiency and security
     const storedTokens = await this.prisma.passwordResetToken.findMany({
       where: {
+        ...(userId ? { userId } : {}),
         isUsed: false,
         expiresAt: { gt: new Date() },
       },
       orderBy: { createdAt: 'desc' },
-      take: 100, // Limit to recent 100 tokens
+      take: 10, // Limit to recent tokens per user
     });
 
     // Find matching token using constant-time comparison
@@ -541,7 +568,9 @@ export class AuthService {
   // =====================
 
   private async sendVerificationEmail(user: any): Promise<void> {
-    const verificationToken = randomBytes(32).toString('hex');
+    // Prefix token with userId to allow scoped DB lookup (F-014)
+    const rawToken = randomBytes(32).toString('hex');
+    const verificationToken = `${user.id}.${rawToken}`;
     const hashedToken = await bcrypt.hash(verificationToken, 10);
 
     // Store token
@@ -558,14 +587,19 @@ export class AuthService {
   }
 
   async verifyEmail(token: string): Promise<TokenResponse> {
-    // Find non-expired, non-used tokens (limit to recent for performance)
+    // Extract userId from the token prefix (format: userId.randomHex) (F-014)
+    const dotIndex = token.indexOf('.');
+    const userId = dotIndex !== -1 ? token.substring(0, dotIndex) : null;
+
+    // Scope the DB lookup to the specific user's tokens for efficiency and security
     const storedTokens = await this.prisma.emailVerificationToken.findMany({
       where: {
+        ...(userId ? { userId } : {}),
         isUsed: false,
         expiresAt: { gt: new Date() },
       },
       orderBy: { createdAt: 'desc' },
-      take: 100, // Limit to recent 100 tokens
+      take: 10, // Limit to recent tokens per user
     });
 
     // Find matching token using constant-time comparison
@@ -677,6 +711,11 @@ export class AuthService {
 
     if (!user || user.deletedAt) {
       throw new UnauthorizedException('Invalid user');
+    }
+
+    // Check if account is suspended (F-004)
+    if (user.suspended || (user.suspendedUntil && user.suspendedUntil > new Date())) {
+      throw new UnauthorizedException('Account is suspended');
     }
 
     return user;

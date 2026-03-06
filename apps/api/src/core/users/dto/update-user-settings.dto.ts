@@ -10,10 +10,6 @@ enum NotificationPreference {
 export class UpdateUserSettingsDto {
   @IsOptional()
   @IsBoolean()
-  isCreator?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
   isPrivate?: boolean;
 
   @IsOptional()

@@ -65,9 +65,8 @@ export default function GigBookingPage() {
         artistId: gig.id,
       });
 
-      sessionStorage.setItem('paymentIntentId', data.paymentIntentId);
-      sessionStorage.setItem('gigId', gig.id);
       setBookingId(data.paymentIntentId);
+      // paymentIntentId is kept in component state, not sessionStorage (F-023)
 
       // In production, integrate Stripe.js for full payment form
       // For now, show success (immediate for demo)

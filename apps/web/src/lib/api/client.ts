@@ -3,13 +3,6 @@ import { trackReliabilityEvent } from '@/lib/reliability';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003/api';
 
-function clearAuthStorage() {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-  }
-}
-
 function buildLoginRedirectPath() {
   if (typeof window === 'undefined') {
     return '/auth/login';
@@ -60,8 +53,6 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         trackReliabilityEvent('auth_401_retry_failed');
-        // Clear any client-side storage
-        clearAuthStorage();
         // Only redirect to login if not already on an auth page (avoids refresh loop on /auth/login)
         if (typeof window !== 'undefined') {
           const path = window.location.pathname || '';
