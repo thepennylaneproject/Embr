@@ -16,6 +16,17 @@ interface State {
   errorInfo: React.ErrorInfo | null;
 }
 
+/**
+ * Report an error to an external sink.
+ * When NEXT_PUBLIC_SENTRY_DSN is configured and @sentry/nextjs is installed
+ * this function should call `Sentry.captureException(error, { extra: { componentStack } })`.
+ * Without Sentry the error is surfaced via console.error so it appears in log
+ * aggregators (Vercel logs, CloudWatch, etc.) and is not silently swallowed.
+ */
+function reportError(error: Error, extra?: Record<string, unknown>): void {
+  console.error('[ErrorBoundary] Unhandled render error:', error, extra);
+}
+
 export class ErrorBoundary extends React.Component<Props, State> {
   public constructor(props: Props) {
     super(props);
@@ -27,11 +38,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-    this.setState({
-      error,
-      errorInfo,
-    });
+    this.setState({ error, errorInfo });
+    reportError(error, { componentStack: errorInfo.componentStack });
   }
 
   public render(): ReactElement {
