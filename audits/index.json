@@ -89,6 +89,21 @@
       "question_count": 0,
       "coverage_gaps": [],
       "diff_summary_short": "0 new, 20 resolved, 0 changed"
+    },
+    {
+      "run_id": "synthesized-20260306-183901",
+      "timestamp": "2026-03-06T18:39:01Z",
+      "agents": [
+        "schema-auditor",
+        "ux-flow-auditor",
+        "security-privacy-auditor"
+      ],
+      "finding_count": 40,
+      "blocker_count": 1,
+      "major_count": 33,
+      "question_count": 4,
+      "coverage_gaps": [],
+      "diff_summary_short": "3 new, 0 resolved, 0 changed"
     }
   ]
 }

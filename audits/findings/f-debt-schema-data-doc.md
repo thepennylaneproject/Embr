@@ -16,6 +16,10 @@ Source agent output failed one or more required schema checks.
 
 - Artifact: `audits/runs/2025-03-05/data-20260305-131933.json`
 
+### [artifact_ref] run_metadata missing
+
+- Artifact: `audits/runs/2026-03-06/data-20260306-060128.json`
+
 
 ## Reproduction Steps
 
@@ -51,6 +55,7 @@ _(none)_
 ## Timeline
 
 - 2026-03-05T19:44:51.494026Z | synthesizer | created | Auto-created due to schema validation errors in source output.
+- 2026-03-06T18:39:01Z | synthesizer | re_reported | Schema violation persists in 2026-03-06 run. Issues: run_metadata missing
 
 
 ## Artifacts

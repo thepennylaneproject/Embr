@@ -16,6 +16,10 @@ Source agent output failed one or more required schema checks.
 
 - Artifact: `audits/runs/2025-03-05/security-20260305-143000.json`
 
+### [artifact_ref] schema_version is 'None' (expected '1.1.0'); run_metadata missing; agent.role missing; coverage object missing
+
+- Artifact: `audits/runs/2026-03-06/security-20260306-065000.json`
+
 
 ## Reproduction Steps
 
@@ -51,6 +55,7 @@ _(none)_
 ## Timeline
 
 - 2026-03-05T19:44:51.494026Z | synthesizer | created | Auto-created due to schema validation errors in source output.
+- 2026-03-06T18:39:01Z | synthesizer | re_reported | Schema violation persists in 2026-03-06 run. Issues: schema_version is 'None' (expected '1.1.0'); run_metadata missing; agent.role missing; coverage object missing
 
 
 ## Artifacts

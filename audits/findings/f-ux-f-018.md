@@ -1,6 +1,6 @@
 # Finding: f-ux-f-018
 
-> **Status:** open | **Severity:** minor | **Priority:** P2 | **Type:** bug | **Confidence:** inference
+> **Status:** in_progress | **Severity:** minor | **Priority:** P3 | **Type:** bug | **Confidence:** inference
 
 ## Title
 
@@ -53,6 +53,8 @@ _(none)_
 ## Timeline
 
 - 2026-03-05T19:44:51.494026Z | ux-flow-auditor | created | Imported from agent output during synthesis
+- 2026-03-06T06:20:09Z | ux-flow-auditor | in_progress | Partial fix: page wrapper uses CSS variables. Sub-components still use Tailwind hardcoded colors.
+- 2026-03-06T18:39:01Z | ux-flow-auditor | updated | Changes: priority: P2 -> P3
 
 
 ## Artifacts
