@@ -98,7 +98,7 @@ export class AuthController {
     // Validate FRONTEND_URL before redirecting (F-022)
     const frontendUrl = process.env.FRONTEND_URL;
     if (!frontendUrl) {
-      return res.status(500).json({ error: 'FRONTEND_URL is not configured' });
+      return res.status(503).json({ error: 'Authentication service temporarily unavailable' });
     }
     const redirectUrl = `${frontendUrl}/auth/callback`;
     return res.redirect(redirectUrl);

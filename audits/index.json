@@ -76,6 +76,19 @@
       "question_count": 4,
       "coverage_gaps": [],
       "diff_summary_short": "0 new, 1 resolved, 0 changed"
+    },
+    {
+      "run_id": "security-20260306-065000",
+      "timestamp": "2026-03-06T06:51:27Z",
+      "agents": [
+        "security-privacy-auditor"
+      ],
+      "finding_count": 19,
+      "blocker_count": 0,
+      "major_count": 0,
+      "question_count": 0,
+      "coverage_gaps": [],
+      "diff_summary_short": "0 new, 20 resolved, 0 changed"
     }
   ]
 }
