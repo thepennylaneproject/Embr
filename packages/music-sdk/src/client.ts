@@ -126,6 +126,21 @@ export class MusicApiError extends Error {
   }
 }
 
+function toMusicApiError(apiError: unknown): MusicApiError | null {
+  if (!apiError || typeof apiError !== 'object') {
+    return null;
+  }
+
+  const errorData = apiError as ApiError;
+  const code = typeof errorData.code === 'string' ? errorData.code : 'MUSIC_API_ERROR';
+  const message = typeof errorData.message === 'string' ? errorData.message : 'Music API request failed';
+  const details = typeof errorData.details === 'object' && errorData.details !== null
+    ? errorData.details
+    : undefined;
+
+  return new MusicApiError(code, message, details);
+}
+
 // ============================================================================
 // Client
 // ============================================================================
@@ -165,6 +180,15 @@ export class EmbrtMusicClient {
       async (error: AxiosError<ApiError>) => {
         const config = error.config;
 
+        if (!config) {
+          const apiError = toMusicApiError(error.response?.data);
+          if (apiError) {
+            throw apiError;
+          }
+
+          throw error;
+        }
+
         // Only retry on transient failures (network errors, 429, 503, 504)
         const isTransient =
           !error.response ||
@@ -188,9 +212,9 @@ export class EmbrtMusicClient {
         }
 
         // Handle API errors
-        const apiError = error.response?.data;
+        const apiError = toMusicApiError(error.response?.data);
         if (apiError) {
-          throw new MusicApiError(apiError.code, apiError.message, apiError.details);
+          throw apiError;
         }
 
         throw error;
