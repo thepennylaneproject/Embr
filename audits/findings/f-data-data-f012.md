@@ -4,65 +4,58 @@
 
 ## Title
 
-`revenueService.recordStream()` stores a USD float as `TrackPlay.royaltyAmount` which is declared Int (cents) in Prisma schema
+revenueService.recordStream() stores a USD float as TrackPlay.royaltyAmount which is declared Int (cents) in Prisma schema
 
 ## Description
 
-`revenueService.recordStream()` in the music module computes `royaltyAmount = isValidStream ? 0.003 : 0` (a USD dollar amount as a floating-point value) and then persists it directly to `TrackPlay.royaltyAmount`. The Prisma schema declares that column as `Int` (integer cents). Prisma will silently truncate the float to `0`, meaning every recorded stream will show zero royalty earnings regardless of playback.
+revenueService.recordStream() computes royaltyAmount = isValidStream ? 0.003 : 0 (a USD dollar float) and persists it to TrackPlay.royaltyAmount. The Prisma schema declares TrackPlay.royaltyAmount as Int (integer cents). Prisma silently truncates the float to 0, making all stream royalty earnings zero regardless of playback.
 
 ## Proof Hooks
 
-### [code_ref] royaltyAmount computed as USD float 0.003
+### [code_ref] royaltyAmount computed as USD float 0.003 and stored via TrackPlay.create
 
 - File: `apps/api/src/music/services/musicService.ts`
 
-### [code_ref] TrackPlay.royaltyAmount is Int (cents)
+### [code_ref] TrackPlay.royaltyAmount is Int — amount artist earned from this play (in cents)
 
 - File: `apps/api/prisma/schema.prisma`
 
 
 ## Reproduction Steps
 
-1. POST a valid stream play event with `durationPlayed >= 30` to the music streaming endpoint
-2. Query `TrackPlay.royaltyAmount` for the resulting record
-3. Observe the stored value is `0` — Prisma truncates the float `0.003` to the integer `0` when writing to the `Int` column
+_(Optional for enhancements, debt, and questions.)_
 
 
 ## Impact
 
-Every stream play persisted via `recordStream` will have `royaltyAmount = 0`, causing all royalty reports and artist revenue calculations to be wrong. This silently corrupts the financial ledger for every track stream.
+Every stream play will have royaltyAmount = 0, silently zeroing all artist royalty earnings from streaming.
 
 
 ## Suggested Fix
 
-**Approach:** Two complementary fixes are required:
-1. Store `royaltyAmount` in integer cents consistently with the Prisma schema declaration (e.g., `royaltyAmount = isValidStream ? Math.round(rate * 100) : 0`).
-2. The current rate of `$0.003/stream` equals `0.3` cents, which truncates to `0` even in cents. The royalty rate must be raised to at least `$0.01/stream` (= 1 cent) to produce a non-zero integer amount, **or** the schema should be changed to store in millicents (thousandths of a cent) as an `Int` with appropriate documentation.
+**Approach:** Two fixes required: (1) store royaltyAmount in integer cents consistently with the schema (multiply by 100). (2) Note that $0.003/stream = 0.3 cents, which truncates to 0 even in cents — the royalty rate must be raised to at least $0.01/stream, or the schema must use millicents (Int) with documentation.
 
 **Affected files:** `apps/api/src/music/services/musicService.ts`
 
-**Effort:** low
+**Effort:** 
 
-**Risk:** Data already in `TrackPlay` will have wrong (zero) royaltyAmount values — a one-time backfill migration will be needed for existing rows.
+**Risk:** 
 
 
 ## Tests Needed
 
-- [ ] Unit test: verify `recordStream()` stores royaltyAmount in integer cents
-- [ ] Unit test: verify `royaltyAmount = 0` when `durationPlayed < 30`
+- [ ] Add targeted verification tests/checks
 
 
 ## Related Findings
 
-| ID | Relationship |
-|----|-------------|
-| f-data-data-f006 | Same root cause — float vs. Int money fields misuse |
-| f-data-data-f014 | Companion finding: monetary Float inconsistency in new music models |
+_(none)_
 
 
 ## Timeline
 
-- 2026-03-06T06:01:28Z | schema-auditor | created | New finding from data audit run data-20260306-060128
+- 2026-03-06T18:39:01Z | schema-auditor | created | History synthesized by SYNTHESIZER due to missing history field. Validation issues: history is empty or missing
+- 2026-03-06T18:39:01Z | schema-auditor | created | New finding from schema-auditor in run synthesized-20260306-183901. Original agent ID: data-f012
 
 
 ## Artifacts

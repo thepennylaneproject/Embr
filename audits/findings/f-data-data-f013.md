@@ -4,70 +4,62 @@
 
 ## Title
 
-Music `AudioQuality` type uses lowercase/mismatched values vs. Prisma enum; service writes unvalidated string with `as any` cast
+Music AudioQuality type uses lowercase/mismatched values vs. Prisma enum; service writes unvalidated string with `as any` cast
 
 ## Description
 
-The music vertical's TypeScript `AudioQuality` interface defines quality values as `'low' | 'standard' | 'high' | 'lossless'` (lowercase). The Prisma schema defines the `AudioQuality` enum with uppercase values `LOW | STANDARD | HIGH | HIRES`. The value `'lossless'` has no equivalent at all — the DB enum uses `'HIRES'` for the highest quality tier.
-
-`revenueService.recordStream()` accepts `quality` as an untyped `string` parameter and writes it to Prisma via `quality: quality as any`, bypassing all enum validation. Any caller can pass an invalid quality string (e.g., `"lossless"`, `"high"`, or an arbitrary value) which Prisma will reject at the DB layer with a runtime error, or in some configurations silently corrupt the row.
+The music module's TypeScript AudioQuality interface defines quality as 'low'|'standard'|'high'|'lossless' while the Prisma enum uses LOW|STANDARD|HIGH|HIRES. The value 'lossless' has no DB equivalent (HIRES is the closest). revenueService.recordStream() accepts quality as a raw string and writes quality: quality as any, bypassing all enum validation. Any caller using the TypeScript type values directly will get runtime DB errors.
 
 ## Proof Hooks
 
-### [code_ref] AudioQuality interface uses lowercase + 'lossless'
+### [code_ref] AudioQuality interface uses lowercase values including 'lossless'
 
 - File: `apps/api/src/music/types/index.ts`
 
-### [code_ref] Prisma AudioQuality enum uses uppercase + HIRES
+### [code_ref] AudioQuality enum uses uppercase: LOW, STANDARD, HIGH, HIRES
 
 - File: `apps/api/prisma/schema.prisma`
 
-### [code_ref] `quality: quality as any` unsafe cast in recordStream
+### [code_ref] quality: quality as any unsafe cast bypasses enum validation
 
 - File: `apps/api/src/music/services/musicService.ts`
 
 
 ## Reproduction Steps
 
-1. Call `revenueService.recordStream(trackId, userId, 60, 'lossless')` — `'lossless'` is a valid music types value but is not a valid Prisma enum value
-2. Observe a Prisma/DB runtime error (invalid enum input value for type `AudioQuality`)
+_(Optional for enhancements, debt, and questions.)_
 
 
 ## Impact
 
-Invalid enum values can cause runtime DB errors or silent data corruption for any stream record where the caller uses the music-module TypeScript type values directly. The `as any` cast means TypeScript provides no compile-time protection.
+Invalid enum values cause runtime DB errors for stream records where the caller uses lowercase string values. The `as any` cast eliminates compile-time protection.
 
 
 ## Suggested Fix
 
-**Approach:** 
-1. Reconcile the TypeScript type and Prisma enum: rename `'lossless'` → `'HIRES'` and make all values uppercase (matching the Prisma enum).
-2. Replace the untyped `string` parameter with the Prisma-generated `AudioQuality` enum type.
-3. Remove the `as any` cast — if the types are aligned it becomes unnecessary.
+**Approach:** Reconcile the TypeScript type with the Prisma enum: rename 'lossless' to 'HIRES', use uppercase for all values. Replace the untyped string parameter with the Prisma-generated AudioQuality enum type and remove the `as any` cast.
 
-**Affected files:** `apps/api/src/music/services/musicService.ts` `apps/api/src/music/types/index.ts`
+**Affected files:** `apps/api/src/music/services/musicService.ts`, `apps/api/src/music/types/index.ts`
 
-**Effort:** low
+**Effort:** 
 
-**Risk:** Any existing callers using the old lowercase string values will need to be updated.
+**Risk:** 
 
 
 ## Tests Needed
 
-- [ ] Unit test: `recordStream` rejects invalid quality string values
-- [ ] Unit test: `recordStream` accepts all four valid Prisma AudioQuality values
+- [ ] Add targeted verification tests/checks
 
 
 ## Related Findings
 
-| ID | Relationship |
-|----|-------------|
-| f-data-data-f005 | Same pattern: lowercase DTO enum values vs uppercase Prisma enums |
+_(none)_
 
 
 ## Timeline
 
-- 2026-03-06T06:01:28Z | schema-auditor | created | New finding from data audit run data-20260306-060128
+- 2026-03-06T18:39:01Z | schema-auditor | created | History synthesized by SYNTHESIZER due to missing history field. Validation issues: history is empty or missing
+- 2026-03-06T18:39:01Z | schema-auditor | created | New finding from schema-auditor in run synthesized-20260306-183901. Original agent ID: data-f013
 
 
 ## Artifacts
