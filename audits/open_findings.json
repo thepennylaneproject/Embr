@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-03-05T22:55:21Z",
-  "last_run_id": "synthesized-20260305-225521",
+  "last_updated": "2026-03-06T00:05:30Z",
+  "last_run_id": "synthesized-20260306-000530",
   "findings": [
     {
       "finding_id": "f-perf-001",
@@ -47,7 +47,7 @@
         ]
       },
       "owner": "backend",
-      "status": "open",
+      "status": "resolved",
       "related_ids": [
         "f-perf-002"
       ],
@@ -1347,6 +1347,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T00:05:30Z",
+          "actor": "solo-dev",
+          "event": "resolved",
+          "notes": "Replaced no-op middleware with JWT verification + user lookup; protected music routes now enforce authentication."
         }
       ],
       "artifacts": []
