@@ -261,6 +261,8 @@ export const useComments = (params: UseCommentsParams): UseCommentsReturn => {
 
   // Auto-load on mount
   useEffect(() => {
+    isMountedRef.current = true;
+
     if (autoLoad) {
       loadComments();
     }

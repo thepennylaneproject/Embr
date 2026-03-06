@@ -145,6 +145,7 @@ export interface FeedParams {
   limit?: number;
   cursor?: string;
   feedType?: FeedType;
+  signal?: AbortSignal;
 }
 
 export interface FeedResponse {

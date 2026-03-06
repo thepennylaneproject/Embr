@@ -104,6 +104,20 @@
       "question_count": 4,
       "coverage_gaps": [],
       "diff_summary_short": "3 new, 0 resolved, 0 changed"
+    },
+    {
+      "run_id": "triage-20260306-193901",
+      "timestamp": "2026-03-06T19:39:01Z",
+      "agents": [
+        "copilot-agent"
+      ],
+      "finding_count": 0,
+      "blocker_count": 0,
+      "major_count": 0,
+      "question_count": 0,
+      "coverage_gaps": [],
+      "diff_summary_short": "0 new, 2 resolved (f-data-data-f001, f-dpl-0004), 0 changed",
+      "notes": "Triage session: created reconciliation migration for missing schema models; verified deploy workflow fix."
     }
   ]
 }

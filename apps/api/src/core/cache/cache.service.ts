@@ -171,7 +171,7 @@ export class CacheService {
     options?: CacheOptions,
   ): Promise<T> {
     const cached = await this.get<T>(key);
-    if (cached) return cached;
+    if (cached !== null && cached !== undefined) return cached;
 
     const value = await fn();
     await this.set(key, value, options);
