@@ -163,19 +163,20 @@ export class S3MultipartService {
     const estimatedUploadSeconds = Math.max(300, fileSize / (10 * 1024 * 1024));
     const expiresIn = Math.min(estimatedUploadSeconds + 600, 3600); // Max 1 hour for multipart
 
-    const partUrls: { partNumber: number; url: string }[] = [];
-
-    for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
-      const command = new UploadPartCommand({
-        Bucket: this.bucket,
-        Key: fileKey,
-        UploadId: uploadId,
-        PartNumber: partNumber,
-      });
-
-      const url = await getSignedUrl(this.s3Client, command, { expiresIn });
-      partUrls.push({ partNumber, url });
-    }
+    // Generate all part URLs concurrently (bounded only by the signer client)
+    const partUrls = await Promise.all(
+      Array.from({ length: totalParts }, async (_, i) => {
+        const partNumber = i + 1;
+        const command = new UploadPartCommand({
+          Bucket: this.bucket,
+          Key: fileKey,
+          UploadId: uploadId,
+          PartNumber: partNumber,
+        });
+        const url = await getSignedUrl(this.s3Client, command, { expiresIn });
+        return { partNumber, url };
+      }),
+    );
 
     this.logger.log(
       `Generated ${totalParts} presigned part URLs for ${fileKey} (expires in ${expiresIn}s)`,

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 
 // ============================================
 // TYPES FOR MUSIC API RESPONSES
@@ -135,6 +136,9 @@ export const useSearchTracks = (query: string, limit = 20) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Debounce the query so we don't fire a fetch on every keystroke
+  const debouncedQuery = useDebounce(query, 300);
+
   const fetchTracks = useCallback(async (searchQuery: string) => {
     setLoading(true);
     try {
@@ -153,8 +157,8 @@ export const useSearchTracks = (query: string, limit = 20) => {
   }, [limit]);
 
   useEffect(() => {
-    fetchTracks(query);
-  }, [query, fetchTracks]);
+    fetchTracks(debouncedQuery);
+  }, [debouncedQuery, fetchTracks]);
 
   return { results, loading, error, search: fetchTracks };
 };

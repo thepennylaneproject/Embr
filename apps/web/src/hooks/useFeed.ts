@@ -181,84 +181,88 @@ export const useFeed = (params?: UseFeedParams): UseFeedReturn => {
   }, []);
 
   // Engagement actions with optimistic updates
+  // Using functional setState form so these callbacks never close over `posts`,
+  // giving them stable identity and preventing PostCard rerenders.
   const likePost = useCallback(
     async (postId: string) => {
-      // Optimistic update
-      const currentPost = posts.find((p) => p.id === postId);
-      if (!currentPost) return;
+      let prevLiked = false;
+      let prevCount = 0;
 
-      optimisticUpdatePost(postId, {
-        isLiked: true,
-        likeCount: currentPost.likeCount + 1,
-      });
+      // Optimistic update — single pass to read previous state and apply update
+      setPosts((prev) =>
+        prev.map((post) => {
+          if (post.id !== postId) return post;
+          prevLiked = post.isLiked ?? false;
+          prevCount = post.likeCount;
+          return { ...post, isLiked: true, likeCount: post.likeCount + 1 };
+        })
+      );
 
       try {
         await contentApi.likePost(postId);
       } catch (err) {
         // Revert on error
-        const post = posts.find((p) => p.id === postId);
-        if (post) {
-          optimisticUpdatePost(postId, {
-            isLiked: false,
-            likeCount: post.likeCount - 1,
-          });
-        }
+        setPosts((prev) =>
+          prev.map((post) =>
+            post.id === postId ? { ...post, isLiked: prevLiked, likeCount: prevCount } : post
+          )
+        );
         throw err;
       }
     },
-    [posts, optimisticUpdatePost]
+    [] // No dep on `posts` — reads state via functional updater
   );
 
   const unlikePost = useCallback(
     async (postId: string) => {
-      // Optimistic update
-      const currentPost = posts.find((p) => p.id === postId);
-      if (!currentPost) return;
+      let prevLiked = true;
+      let prevCount = 0;
 
-      optimisticUpdatePost(postId, {
-        isLiked: false,
-        likeCount: currentPost.likeCount - 1,
-      });
+      // Optimistic update — single pass to read previous state and apply update
+      setPosts((prev) =>
+        prev.map((post) => {
+          if (post.id !== postId) return post;
+          prevLiked = post.isLiked ?? true;
+          prevCount = post.likeCount;
+          return { ...post, isLiked: false, likeCount: post.likeCount - 1 };
+        })
+      );
 
       try {
         await contentApi.unlikePost(postId);
       } catch (err) {
         // Revert on error
-        const post = posts.find((p) => p.id === postId);
-        if (post) {
-          optimisticUpdatePost(postId, {
-            isLiked: true,
-            likeCount: post.likeCount + 1,
-          });
-        }
+        setPosts((prev) =>
+          prev.map((post) =>
+            post.id === postId ? { ...post, isLiked: prevLiked, likeCount: prevCount } : post
+          )
+        );
         throw err;
       }
     },
-    [posts, optimisticUpdatePost]
+    [] // No dep on `posts`
   );
 
   const incrementCommentCount = useCallback(
     (postId: string) => {
-      const post = posts.find((p) => p.id === postId);
-      if (post) {
-        optimisticUpdatePost(postId, {
-          commentCount: post.commentCount + 1,
-        });
-      }
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId ? { ...post, commentCount: post.commentCount + 1 } : post
+        )
+      );
     },
-    [posts, optimisticUpdatePost]
+    [] // No dep on `posts`
   );
 
   const incrementShareCount = useCallback(
     (postId: string) => {
-      const post = posts.find((p) => p.id === postId);
-      if (post) {
-        optimisticUpdatePost(postId, {
-          shareCount: post.shareCount + 1,
-        });
-      }
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId ? { ...post, shareCount: post.shareCount + 1 } : post
+        )
+      );
     },
-    [posts, optimisticUpdatePost]
+    [] // No dep on `posts`
   );
 
   // Auto-load on mount and when feed type/limit changes

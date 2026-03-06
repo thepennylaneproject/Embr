@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import Image from 'next/image';
 import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Music } from 'lucide-react';
 import { Post } from '@shared/types/content.types';
 import { formatDistanceToNow } from 'date-fns';
@@ -22,7 +23,7 @@ interface PostCardProps {
   showActions?: boolean;
 }
 
-export const PostCard: React.FC<PostCardProps> = ({
+export const PostCard: React.FC<PostCardProps> = React.memo(({
   post,
   onLike,
   onUnlike,
@@ -81,9 +82,11 @@ export const PostCard: React.FC<PostCardProps> = ({
           href={`/@${post.author.username}`}
           className="flex items-center gap-3 hover:opacity-80 transition-opacity"
         >
-          <img
+          <Image
             src={post.author.profile.avatarUrl || '/default-avatar.png'}
             alt={post.author.profile.displayName}
+            width={40}
+            height={40}
             className="w-10 h-10 rounded-full object-cover"
           />
           <div>
@@ -146,11 +149,15 @@ export const PostCard: React.FC<PostCardProps> = ({
               )}
             </div>
           ) : (
-            <img
-              src={post.mediaUrl}
-              alt="Post media"
-              className="w-full max-h-[600px] object-contain bg-gray-50"
-            />
+            <div className="relative w-full max-h-[600px] min-h-[200px] bg-gray-50">
+              <Image
+                src={post.mediaUrl}
+                alt="Post media"
+                fill
+                sizes="(max-width: 768px) 100vw, 680px"
+                className="object-contain"
+              />
+            </div>
           )}
           {post.isProcessing && (
             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -244,6 +251,8 @@ export const PostCard: React.FC<PostCardProps> = ({
       )}
     </article>
   );
-};
+});
+
+PostCard.displayName = 'PostCard';
 
 export default PostCard;

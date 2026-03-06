@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useUserSearch } from '@/hooks/useUserSearch';
-import { useDebounce } from '@/hooks/useDebounce';
 import { FollowButtonCompact } from './FollowButton';
 import type { SearchUser } from '@shared/types/social.types';
 
@@ -26,15 +25,14 @@ export const UserSearchBar: React.FC<UserSearchBarProps> = ({
     availability: undefined as 'available' | 'busy' | undefined,
   });
   
-  const debouncedQuery = useDebounce(query, 300);
   const { users, loading, searchUsers, reset } = useUserSearch();
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Perform search when debounced query changes
+  // Perform search — debouncing is handled inside useUserSearch.searchUsers
   useEffect(() => {
-    if (debouncedQuery.trim()) {
+    if (query.trim()) {
       searchUsers({
-        query: debouncedQuery,
+        query,
         ...filters,
       }, true);
       setIsOpen(true);
@@ -42,7 +40,7 @@ export const UserSearchBar: React.FC<UserSearchBarProps> = ({
       reset();
       setIsOpen(false);
     }
-  }, [debouncedQuery, filters, searchUsers, reset]);
+  }, [query, filters, searchUsers, reset]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
