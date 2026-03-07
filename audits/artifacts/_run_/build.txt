@@ -1,7 +1,25 @@
-Unknown command: "build"
+ WARN  The "workspaces" field in package.json is not supported by pnpm. Create a "pnpm-workspace.yaml" file instead.
+
+> embr-infrastructure@1.0.0 build /Users/sarahsahl/Desktop/embr
+> npm run build:api && npm run build:web
 
 
-Did you mean this?
-  npm run build # run the "build" package script
-To see a list of supported npm commands, run:
-  npm help
+> embr-infrastructure@1.0.0 build:api
+> npm --prefix apps/api run build
+
+
+> embr-api@0.1.0 build
+> nest build
+
+[96msrc/verticals/messaging/messaging/services/messaging.service.ts[0m:[93m508[0m:[93m36[0m - [91merror[0m[90m TS2339: [0mProperty 'getUnreadCountForConversation' does not exist on type 'MessagingService'.
+
+[7m508[0m     const unreadCount = await this.getUnreadCountForConversation(
+[7m   [0m [91m                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/verticals/messaging/messaging/services/messaging.service.ts[0m:[93m715[0m:[93m36[0m - [91merror[0m[90m TS2339: [0mProperty 'getUnreadCountForConversation' does not exist on type 'MessagingService'.
+
+[7m715[0m     const unreadCount = await this.getUnreadCountForConversation(
+[7m   [0m [91m                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+Found 2 error(s).
+
+ ELIFECYCLE  Command failed with exit code 1.

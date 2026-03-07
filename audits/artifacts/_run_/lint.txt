@@ -1,7 +1,4 @@
-Unknown command: "lint"
+ WARN  The "workspaces" field in package.json is not supported by pnpm. Create a "pnpm-workspace.yaml" file instead.
+ ERR_PNPM_NO_SCRIPT  Missing script: lint
 
-
-Did you mean this?
-  npm link # Symlink a package folder
-To see a list of supported npm commands, run:
-  npm help
+Command "lint" not found.
