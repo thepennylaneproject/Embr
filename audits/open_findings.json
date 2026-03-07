@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-03-06T18:39:01Z",
+  "last_updated": "2026-03-06T22:34:58Z",
   "last_run_id": "synthesized-20260306-183901",
   "findings": [
     {
@@ -47,7 +47,7 @@
         ]
       },
       "owner": "backend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [
         "f-perf-002"
       ],
@@ -57,6 +57,12 @@
           "actor": "performance-cost-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -100,7 +106,7 @@
         ]
       },
       "owner": "backend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [
         "f-perf-001"
       ],
@@ -110,6 +116,12 @@
           "actor": "performance-cost-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -153,7 +165,7 @@
         ]
       },
       "owner": "backend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -161,6 +173,12 @@
           "actor": "performance-cost-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -210,7 +228,7 @@
         ]
       },
       "owner": "payments",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -218,6 +236,12 @@
           "actor": "performance-cost-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -265,7 +289,7 @@
         ]
       },
       "owner": "payments",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -273,6 +297,12 @@
           "actor": "performance-cost-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -316,7 +346,7 @@
         ]
       },
       "owner": "media",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -324,6 +354,12 @@
           "actor": "performance-cost-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -373,7 +409,7 @@
         ]
       },
       "owner": "frontend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -381,6 +417,12 @@
           "actor": "performance-cost-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -436,7 +478,7 @@
         ]
       },
       "owner": "frontend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -444,6 +486,12 @@
           "actor": "performance-cost-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -508,7 +556,7 @@
         ]
       },
       "owner": "frontend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -516,6 +564,12 @@
           "actor": "performance-cost-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -585,7 +639,7 @@
         ]
       },
       "owner": "frontend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -593,6 +647,12 @@
           "actor": "performance-cost-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": [
@@ -640,7 +700,7 @@
         ]
       },
       "owner": "backend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [
         "f-perf-012"
       ],
@@ -650,6 +710,12 @@
           "actor": "performance-cost-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -767,7 +833,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -793,6 +859,12 @@
           "actor": "copilot-agent",
           "event": "resolved",
           "notes": "Created reconciliation migration 20260306191939_add_groups_mutual_aid_marketplace_events adding Group/MutualAid/Marketplace/Event/Poll/Treasury tables and enums. Migration verified with prisma migrate status on clean DB."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1316,7 +1388,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1330,6 +1402,12 @@
           "actor": "solo-dev",
           "event": "resolved",
           "notes": "Removed unauthorized fetch beacon from jwt.strategy validate flow."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1365,7 +1443,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1379,6 +1457,12 @@
           "actor": "solo-dev",
           "event": "resolved",
           "notes": "Normalized role comparisons and standardized role decorators to uppercase enum values."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1411,7 +1495,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1425,6 +1509,12 @@
           "actor": "solo-dev",
           "event": "resolved",
           "notes": "Replaced no-op middleware with JWT verification + user lookup; protected music routes now enforce authentication."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1457,7 +1547,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1465,6 +1555,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1497,7 +1593,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1505,6 +1601,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1579,7 +1681,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1587,6 +1689,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1620,7 +1728,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1628,6 +1736,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1660,7 +1774,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1668,6 +1782,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1700,7 +1820,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1708,6 +1828,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1740,7 +1866,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1748,6 +1874,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1781,7 +1913,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1789,6 +1921,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1821,7 +1959,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1829,6 +1967,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1861,7 +2005,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1869,6 +2013,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1901,7 +2051,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1909,6 +2059,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1941,7 +2097,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1949,6 +2105,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -1981,7 +2143,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1989,6 +2151,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -2021,7 +2189,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2029,6 +2197,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -2061,7 +2235,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2069,6 +2243,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -2102,7 +2282,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2110,6 +2290,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -2142,7 +2328,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2150,6 +2336,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -2183,7 +2375,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2191,6 +2383,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -2223,7 +2421,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2231,6 +2429,12 @@
           "actor": "security-privacy-auditor",
           "event": "created",
           "notes": "Imported from agent output during synthesis"
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -2282,7 +2486,7 @@
         ]
       },
       "owner": "unassigned",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [
         "f-5b63a1f9"
       ],
@@ -2304,6 +2508,12 @@
           "actor": "solo-dev",
           "event": "resolved",
           "notes": "Reset mounted ref at effect start and stabilized loadFeed dependencies to prevent stale no-op state updates."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -2355,7 +2565,7 @@
         ]
       },
       "owner": "unassigned",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [
         "f-0d7c9a12"
       ],
@@ -2371,6 +2581,12 @@
           "actor": "copilot-agent",
           "event": "resolved",
           "notes": "Added isMountedRef.current = true at effect start in useComments.ts so subsequent remounts do not permanently lock out state updates."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -2413,7 +2629,7 @@
         ]
       },
       "owner": "unassigned",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [
         "f-2e4f71b3"
       ],
@@ -2429,6 +2645,12 @@
           "actor": "copilot-agent",
           "event": "resolved",
           "notes": "Added skip = (page-1)*limit and passed it to Prisma findMany when no cursor params (before/after) are provided in messaging.service.ts getMessages()."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -2591,7 +2813,7 @@
         ]
       },
       "owner": "unassigned",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [
         "f-0d7c9a12"
       ],
@@ -2607,6 +2829,12 @@
           "actor": "copilot-agent",
           "event": "resolved",
           "notes": "Passed abortControllerRef.current.signal to contentApi.getFeed() in useFeed.ts. Also added CanceledError guard alongside AbortError."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -2658,7 +2886,7 @@
         ]
       },
       "owner": "unassigned",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2672,6 +2900,12 @@
           "actor": "copilot-agent",
           "event": "resolved",
           "notes": "Updated content.api.ts getFeed to route FOLLOWING feedType to /posts/following endpoint; all others remain on /posts/feed."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -2715,7 +2949,7 @@
         ]
       },
       "owner": "unassigned",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2729,6 +2963,12 @@
           "actor": "copilot-agent",
           "event": "resolved",
           "notes": "Changed CacheService.getOrSet() cache-hit check from `if (cached)` to `if (cached !== null && cached !== undefined)` so falsy values (0, false, empty string) are correctly treated as cache hits and not recomputed."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -3047,7 +3287,7 @@
         ]
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3061,6 +3301,12 @@
           "actor": "copilot-agent",
           "event": "resolved",
           "notes": "Verified deploy.yml already contains real deployment steps: SSH-based docker-compose deploy for API with health check gate, and Vercel CLI deploy for web. Placeholder echo commands were replaced in a prior session. No code changes needed."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -3117,7 +3363,7 @@
         ]
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3131,6 +3377,12 @@
           "actor": "solo-dev",
           "event": "resolved",
           "notes": "Canonical target decided: web deploys to Vercel; API deploys via self-hosted Docker Compose."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -3189,7 +3441,7 @@
         ]
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3203,6 +3455,12 @@
           "actor": "solo-dev",
           "event": "resolved",
           "notes": "Added /api/health endpoint and aligned Dockerfile and compose probes to node-based checks on /api/health."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -3424,7 +3682,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3438,6 +3696,12 @@
           "actor": "solo-dev",
           "event": "resolved",
           "notes": "Updated create page links and cancel navigation from /feeds to /feed."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -3470,7 +3734,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3484,6 +3748,12 @@
           "actor": "solo-dev",
           "event": "resolved",
           "notes": "Updated discovery profile navigation to /{username} dynamic route."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -3516,7 +3786,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3530,6 +3800,12 @@
           "actor": "solo-dev",
           "event": "resolved",
           "notes": "Replaced localhost URL exposure with user-safe network error messaging."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -3560,7 +3836,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3574,6 +3850,12 @@
           "actor": "solo-dev",
           "event": "resolved",
           "notes": "Added /discover page route and AppShell navigation entry for discovery access."
+        },
+        {
+          "timestamp": "2026-03-06T22:34:58Z",
+          "actor": "cleanup-script",
+          "event": "note_added",
+          "notes": "Normalized status from 'resolved' to 'fixed_verified' per LYRA v1.1 enum rules."
         }
       ],
       "artifacts": []
@@ -4720,5 +5002,6 @@
       ],
       "repro_steps": []
     }
-  ]
+  ],
+  "cleanup_applied": "2026-03-06T22:34:58Z"
 }
