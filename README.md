@@ -1,46 +1,47 @@
-# Embr Monorepo (Assembled)
+# Embr — Creator-focused social media and freelance marketplace
 
-This repo has been assembled from the module packages you provided. The source module folders are still present for reference, and the integrated structure now lives under `apps/`, `packages/`, and the infrastructure folders at repo root.
+> Part of <a href="https://thepennylaneproject.org">The Penny Lane Project</a> — technology that serves the individual.
 
-## Structure
+## What This Is
 
+Embr is a platform built for independent creators: a social media layer, a freelance gig marketplace, and a monetization stack in one place. It lets creators post content, find paid gigs, manage direct messaging, and receive tips and payments — without the middleman taking the majority cut.
+
+## Current Status
+
+**Alpha** — Core auth, content feed, media upload, direct messaging, and payments (Stripe + MUX) are functional end-to-end. Gig marketplace and safety moderation features are actively in development.
+
+## Technical Overview
+
+- **Frontend:** Next.js 14 (App Router), TypeScript, Tailwind CSS
+- **Backend:** NestJS 10, REST + WebSocket (Socket.io)
+- **Database:** PostgreSQL 16 via Prisma ORM
+- **Media:** AWS S3 (file storage) + MUX (video processing)
+- **Payments:** Stripe Connect (tips, payouts, escrow)
+- **Deployment:** Web → Vercel; API → Docker Compose (self-hosted)
+
+## Architecture
+
+Turborepo monorepo with npm workspaces. Two main applications (`apps/api`, `apps/web`) share code through internal packages (`packages/types`, `packages/utils`, `packages/music-sdk`, etc.). The API is modular NestJS with vertical slices for auth, content, media, monetization, gigs, social-graph, messaging, and safety. Infrastructure (PostgreSQL 16, Redis 7) runs via Docker Compose.
+
+## Development
+
+```bash
+# Prerequisites: Docker must be running (for PostgreSQL + Redis)
+npm install
+cp .env.example .env   # fill in values
+
+# Start infrastructure
+docker compose -f docker/docker-compose.yml up -d postgres redis
+
+# Start API (transpile-only — strict TS errors are a known WIP)
+cd apps/api
+npx ts-node --transpile-only -r tsconfig-paths/register src/main.ts
+
+# Start web (in a separate terminal)
+npm run dev:web
 ```
-apps/
-  api/
-    src/modules/        # Backend module code (NestJS-style)
-  web/
-    src/                # Frontend components/hooks/pages (Next.js-style)
-packages/
-  shared/               # Cross-module types + API clients
-prisma/                 # Prisma schema (from infrastructure)
-docker/                 # Docker dev/prod setup (from infrastructure)
-env/                    # Environment templates
-scripts/                # DB scripts + seed
-```
 
-## Where Things Landed
+## License
 
-- **Auth**: `apps/api/src/modules/auth`, `apps/api/src/modules/users`, `apps/web/src/contexts`, `apps/web/src/pages`, `apps/web/src/components/auth`, `apps/web/src/lib`, `apps/web/src/types`
-- **Content Core**: `apps/api/src/modules/content`, `apps/web/src/components/content`, `apps/web/src/hooks`, `packages/shared`
-- **Media Pipeline**: `apps/api/src/modules/media`, `apps/web/src/components/media`, `apps/web/src/hooks`, `packages/shared`
-- **Monetization**: `apps/api/src/modules/monetization`, `apps/web/src/components/monetization`, `apps/web/src/hooks`, `packages/shared`
-- **Gigs**: `apps/api/src/modules/gigs`, `apps/web/src/components/gigs`, `apps/web/src/hooks`, `packages/shared`
-- **Social Graph**: `apps/api/src/modules/social-graph`, `apps/web/src/components/social`, `apps/web/src/hooks`, `apps/web/src/pages`, `packages/shared`
-- **Direct Messaging**: `apps/api/src/modules/messaging`, `apps/web/src/components/messaging`, `apps/web/src/hooks`, `packages/shared`
-- **Safety**: `apps/api/src/modules/safety`, `apps/web/src/components/safety`, `apps/web/src/hooks`, `packages/shared`
+All rights reserved — © The Penny Lane Project
 
-Detailed integration notes are in `docs/ASSEMBLY_NOTES.md`.
-
-## Production Deployment Targets
-
-- Web: Vercel (`deploy-web` workflow path).
-- API: self-hosted Docker Compose using `docker/docker-compose.prod.yml`.
-
-These targets are the canonical production direction unless explicitly superseded.
-
-## UI Constitution Checklist
-- [ ] Page has title + orientation line (no redundancy)
-- [ ] One primary CTA (btn--primary)
-- [ ] PageProfileProvider explicit (ledger/form/marketing)
-- [ ] Stack/Typo primitives (no raw p-4/text-3xl)
-- [ ] 8px rhythm (--space-2/4/6/8)
