@@ -68,8 +68,12 @@ temp/
 *.tmp
 *.temp
 
-# Archive folder (optional - uncomment if you don't want to track archived files)
-# .archive/
+# Archive folder (historical reference — not needed in working tree)
+.archive/
+
+# Build output logs
+build_output.txt
+build_web_output.txt
 
 # Debug
 *.pem
@@ -90,3 +94,6 @@ next-env.d.ts
 # Misc
 *.bak
 *.backup
+
+# pnpm lock file (this repo uses npm)
+pnpm-lock.yaml
