@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-LYRA open_findings.json Cleanup Script v1.1
+Embr open_findings.json Cleanup Script v1.1
 
 Normalizes:
   - severity, priority, type, status enums to schema-valid values
