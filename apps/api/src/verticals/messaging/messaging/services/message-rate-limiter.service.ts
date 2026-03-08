@@ -3,7 +3,7 @@
  * Implements token bucket algorithm for rate limiting message sends
  */
 
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 
 interface TokenBucket {
   tokens: number;
@@ -20,6 +20,7 @@ interface RateLimitConfig {
 export class MessageRateLimiterService {
   private buckets: Map<string, TokenBucket> = new Map();
   private rateLimitEnabled: boolean = process.env.MESSAGING_RATE_LIMIT_ENABLED !== 'false';
+  private readonly logger = new Logger(MessageRateLimiterService.name);
 
   private readonly DEFAULT_LIMITS = {
     // Per-user per-conversation limits
@@ -39,7 +40,7 @@ export class MessageRateLimiterService {
   constructor() {
     // Allow disabling rate limiting via environment variable
     if (!this.rateLimitEnabled) {
-      console.log('[MessageRateLimiterService] Rate limiting is disabled');
+      this.logger.warn('Rate limiting is disabled');
     }
   }
 
