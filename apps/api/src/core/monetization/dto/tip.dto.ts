@@ -1,6 +1,6 @@
 import {
   IsString,
-  IsNumber,
+  IsInt,
   IsOptional,
   IsUUID,
   IsEnum,
@@ -25,7 +25,7 @@ export class CreateTipDto {
   @IsOptional()
   postId?: string;
 
-  @IsNumber()
+  @IsInt()
   @Min(50) // Minimum $0.50 (50 cents)
   @Max(100000) // Maximum $1000 (100000 cents)
   amountCents: number; // Amount in integer cents (e.g., 500 = $5.00)
@@ -57,12 +57,12 @@ export class GetTipsQueryDto {
   postId?: string;
 
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(1)
   page?: number = 1;
 
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(1)
   @Max(100)
   limit?: number = 20;

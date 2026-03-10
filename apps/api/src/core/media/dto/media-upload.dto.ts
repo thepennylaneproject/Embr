@@ -3,7 +3,7 @@
  * Data transfer objects for media upload endpoints
  */
 
-import { IsString, IsNumber, IsEnum, IsArray, ValidateNested, IsOptional, Min, Max } from 'class-validator';
+import { IsString, IsNumber, IsInt, IsEnum, IsArray, ValidateNested, IsOptional, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -47,7 +47,7 @@ export class InitiateUploadDto {
     minimum: 1,
     maximum: 1073741824, // 1GB
   })
-  @IsNumber()
+  @IsInt()
   @Min(1)
   @Max(1073741824) // 1GB max per file
   fileSize: number;
@@ -105,7 +105,7 @@ export class UploadPartDto {
     minimum: 1,
     maximum: 10000,
   })
-  @IsNumber()
+  @IsInt()
   @Min(1)
   @Max(10000)
   PartNumber: number;
@@ -208,7 +208,7 @@ export class GenerateThumbnailDto {
     maximum: 4096,
   })
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(100)
   @Max(4096)
   width?: number;
@@ -221,7 +221,7 @@ export class GenerateThumbnailDto {
     maximum: 4096,
   })
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(100)
   @Max(4096)
   height?: number;
@@ -233,7 +233,7 @@ export class GenerateThumbnailDto {
     minimum: 0,
   })
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(0)
   time?: number;
 }
@@ -250,7 +250,7 @@ export class GetSignedUrlDto {
     maximum: 604800,
   })
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(60)
   @Max(604800)
   expiresIn?: number;

@@ -43,7 +43,7 @@ export interface TrackMetadata {
   allowRemix: boolean;
   allowMonetize: boolean;
   attributionRequired: boolean;
-  price: number; // USD
+  price: number; // cents
   streams: bigint;
   downloads: number;
   likeCount: number;
@@ -53,7 +53,7 @@ export interface TrackMetadata {
 }
 
 export interface AudioQuality {
-  quality: 'low' | 'standard' | 'high' | 'lossless';
+  quality: 'LOW' | 'STANDARD' | 'HIGH' | 'HIRES';
   bitrate: number; // kbps
   format: string; // mp3, flac, wav
 }

@@ -285,25 +285,23 @@ export class CommentsService {
       throw new ForbiddenException('Not authorized to delete this comment');
     }
 
-    // Count all descendant comments (replies and their replies)
-    const descendantComments = await this.countDescendants(commentId);
-    const totalDeleted = descendantComments + 1; // +1 for the parent comment
+    // Collect full subtree so soft-delete and count decrement stay consistent.
+    const descendantIds = await this.collectDescendantIds(commentId);
+    const idsToDelete = [commentId, ...descendantIds];
 
-    // Soft delete this comment and all replies (cascade)
+    // Soft delete this comment and all descendants.
     await this.prisma.comment.updateMany({
       where: {
-        OR: [
-          { id: commentId },
-          { parentId: commentId, deletedAt: null },
-        ],
+        id: { in: idsToDelete },
+        deletedAt: null,
       },
       data: { deletedAt: new Date() },
     });
 
-    // Decrement post comment count by total deleted
+    // Decrement post comment count by total subtree size.
     await this.prisma.post.update({
       where: { id: comment.postId },
-      data: { commentCount: { decrement: totalDeleted } },
+      data: { commentCount: { decrement: idsToDelete.length } },
     });
 
     // Emit event
@@ -311,27 +309,32 @@ export class CommentsService {
       commentId,
       postId: comment.postId,
       authorId: userId,
-      cascadedCount: descendantComments,
+      cascadedCount: descendantIds.length,
     });
   }
 
-  /**
-   * Recursively count all descendant comments
-   */
-  private async countDescendants(parentId: string): Promise<number> {
-    const replies = await this.prisma.comment.findMany({
-      where: { parentId, deletedAt: null },
-      select: { id: true },
-    });
+  private async collectDescendantIds(parentId: string): Promise<string[]> {
+    const descendants: string[] = [];
+    const queue: string[] = [parentId];
 
-    let total = replies.length;
+    while (queue.length > 0) {
+      const currentId = queue.shift();
+      if (!currentId) {
+        continue;
+      }
 
-    // Recursively count descendants of replies
-    for (const reply of replies) {
-      total += await this.countDescendants(reply.id);
+      const replies = await this.prisma.comment.findMany({
+        where: { parentId: currentId, deletedAt: null },
+        select: { id: true },
+      });
+
+      for (const reply of replies) {
+        descendants.push(reply.id);
+        queue.push(reply.id);
+      }
     }
 
-    return total;
+    return descendants;
   }
 
   async likeComment(commentId: string, userId: string) {

@@ -18,21 +18,21 @@ import { Type } from 'class-transformer';
 // ============================================
 
 export enum ReportReason {
-  SPAM = 'spam',
-  HARASSMENT = 'harassment',
-  ILLEGAL = 'illegal',
-  NSFW_UNLABELED = 'nsfw_unlabeled',
-  COPYRIGHT = 'copyright',
-  IMPERSONATION = 'impersonation',
-  SELF_HARM = 'self_harm',
-  OTHER = 'other',
+  SPAM = 'SPAM',
+  HARASSMENT = 'HARASSMENT',
+  ILLEGAL = 'ILLEGAL',
+  NSFW_UNLABELED = 'NSFW_UNLABELED',
+  COPYRIGHT = 'COPYRIGHT',
+  IMPERSONATION = 'IMPERSONATION',
+  SELF_HARM = 'SELF_HARM',
+  OTHER = 'OTHER',
 }
 
 export enum ReportStatus {
-  PENDING = 'pending',
-  UNDER_REVIEW = 'under_review',
-  ACTION_TAKEN = 'action_taken',
-  DISMISSED = 'dismissed',
+  PENDING = 'PENDING',
+  UNDER_REVIEW = 'UNDER_REVIEW',
+  ACTION_TAKEN = 'ACTION_TAKEN',
+  DISMISSED = 'DISMISSED',
 }
 
 export enum ReportEntityType {
@@ -118,10 +118,10 @@ export class QueryReportsDto {
 // ============================================
 
 export enum ActionType {
-  WARNING = 'warning',
-  CONTENT_REMOVAL = 'content_removal',
-  SUSPENSION = 'suspension',
-  BAN = 'ban',
+  WARNING = 'WARNING',
+  CONTENT_REMOVAL = 'CONTENT_REMOVAL',
+  SUSPENSION = 'SUSPENSION',
+  BAN = 'BAN',
 }
 
 export class CreateModerationActionDto {
@@ -225,10 +225,10 @@ export class MuteKeywordDto {
 // ============================================
 
 export enum AppealStatus {
-  PENDING = 'pending',
-  UNDER_REVIEW = 'under_review',
-  APPROVED = 'approved',
-  DENIED = 'denied',
+  PENDING = 'PENDING',
+  UNDER_REVIEW = 'UNDER_REVIEW',
+  APPROVED = 'APPROVED',
+  DENIED = 'DENIED',
 }
 
 export class CreateAppealDto {

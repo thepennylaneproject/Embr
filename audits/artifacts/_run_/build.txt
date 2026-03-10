@@ -1,6 +1,5 @@
- WARN  The "workspaces" field in package.json is not supported by pnpm. Create a "pnpm-workspace.yaml" file instead.
 
-> embr-infrastructure@1.0.0 build /Users/sarahsahl/Desktop/embr
+> embr-infrastructure@1.0.0 build
 > npm run build:api && npm run build:web
 
 
@@ -15,11 +14,10 @@
 
 [7m508[0m     const unreadCount = await this.getUnreadCountForConversation(
 [7m   [0m [91m                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
-[96msrc/verticals/messaging/messaging/services/messaging.service.ts[0m:[93m715[0m:[93m36[0m - [91merror[0m[90m TS2339: [0mProperty 'getUnreadCountForConversation' does not exist on type 'MessagingService'.
+[96msrc/verticals/messaging/messaging/services/messaging.service.ts[0m:[93m721[0m:[93m36[0m - [91merror[0m[90m TS2339: [0mProperty 'getUnreadCountForConversation' does not exist on type 'MessagingService'.
 
-[7m715[0m     const unreadCount = await this.getUnreadCountForConversation(
+[7m721[0m     const unreadCount = await this.getUnreadCountForConversation(
 [7m   [0m [91m                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
 
 Found 2 error(s).
 
- ELIFECYCLE  Command failed with exit code 1.

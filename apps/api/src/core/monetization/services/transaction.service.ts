@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { TransactionType } from '../dto/wallet.dto';
-import { TransactionType as PrismaTransactionType } from '@prisma/client';
+import { Prisma, TransactionType as PrismaTransactionType } from '@prisma/client';
 
 interface CreateTransactionParams {
   userId: string;
@@ -19,42 +19,48 @@ export class TransactionService {
 
   constructor(private prisma: PrismaService) {}
 
+  private getPrismaClient(tx?: Prisma.TransactionClient): PrismaService | Prisma.TransactionClient {
+    return tx ?? this.prisma;
+  }
+
   /**
    * Record a transaction entry and update wallet balance
    */
-  private async recordTransaction(params: CreateTransactionParams): Promise<void> {
+  private async recordTransaction(
+    params: CreateTransactionParams,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
     const { userId, type, amount, description, referenceId, referenceType, metadata } = params;
+    const db = this.getPrismaClient(tx);
 
-    await this.prisma.$transaction(async (tx) => {
-      const wallet = await tx.wallet.upsert({
-        where: { userId },
-        create: {
-          userId,
-          balance: amount,
-          pendingBalance: 0,
-          totalEarned: 0,
-          totalWithdrawn: 0,
-          currency: 'USD',
+    const wallet = await db.wallet.upsert({
+      where: { userId },
+      create: {
+        userId,
+        balance: amount,
+        pendingBalance: 0,
+        totalEarned: 0,
+        totalWithdrawn: 0,
+        currency: 'USD',
+      },
+      update: {
+        balance: {
+          increment: amount,
         },
-        update: {
-          balance: {
-            increment: amount,
-          },
-        },
-      });
+      },
+    });
 
-      await tx.transaction.create({
-        data: {
-          wallet: { connect: { id: wallet.id } },
-          user: { connect: { id: userId } },
-          type,
-          amount,
-          description,
-          referenceId,
-          referenceType,
-          metadata: metadata || {},
-        },
-      });
+    await db.transaction.create({
+      data: {
+        wallet: { connect: { id: wallet.id } },
+        user: { connect: { id: userId } },
+        type,
+        amount,
+        description,
+        referenceId,
+        referenceType,
+        metadata: metadata || {},
+      },
     });
   }
 
@@ -69,6 +75,7 @@ export class TransactionService {
     recipientId: string,
     amountCents: number, // Amount in cents, e.g., 500 = $5.00
     tipId: string,
+    tx?: Prisma.TransactionClient,
   ): Promise<void> {
     // Calculate 5% platform fee in cents (rounded to nearest cent)
     const platformFeeCents = Math.round(amountCents * 0.05);
@@ -87,7 +94,7 @@ export class TransactionService {
         platformFeeCents,
         netAmountCents,
       },
-    });
+    }, tx);
 
     // Record recipient's credit (positive, net of fees)
     await this.recordTransaction({
@@ -102,7 +109,7 @@ export class TransactionService {
         platformFeeCents,
         netAmountCents,
       },
-    });
+    }, tx);
 
     // Record platform fee separately
     if (platformFeeCents > 0) {
@@ -118,7 +125,7 @@ export class TransactionService {
           platformFeeCents,
           netAmountCents,
         },
-      });
+      }, tx);
     }
   }
   /**

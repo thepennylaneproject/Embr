@@ -30,6 +30,9 @@ import { GetUser } from './decorators/get-user.decorator';
 import { Public } from './decorators/public.decorator';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 
+const ACCESS_TOKEN_COOKIE_MAX_AGE_MS = 15 * 60 * 1000;
+const REFRESH_TOKEN_COOKIE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -51,14 +54,14 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: ACCESS_TOKEN_COOKIE_MAX_AGE_MS,
     });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_MS,
     });
 
     // Return user data but not tokens (they're in cookies)
@@ -85,14 +88,14 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: ACCESS_TOKEN_COOKIE_MAX_AGE_MS,
     });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_MS,
     });
 
     // Validate FRONTEND_URL before redirecting (F-022)
@@ -172,14 +175,14 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: ACCESS_TOKEN_COOKIE_MAX_AGE_MS,
     });
 
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
       secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
+      maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_MS,
     });
 
     return res.json({ user: result.user, message: 'Password successfully changed.' });
@@ -197,14 +200,14 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: ACCESS_TOKEN_COOKIE_MAX_AGE_MS,
     });
 
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
       secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
+      maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_MS,
     });
 
     return res.json({ user: result.user, message: 'Email verified successfully.' });

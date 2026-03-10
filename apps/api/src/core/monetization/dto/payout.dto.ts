@@ -1,6 +1,5 @@
 import {
   IsString,
-  IsNumber,
   IsOptional,
   IsUUID,
   IsEnum,
@@ -8,6 +7,7 @@ import {
   Max,
   IsNotEmpty,
   IsBoolean,
+  IsInt,
 } from 'class-validator';
 
 export enum PayoutStatus {
@@ -20,8 +20,8 @@ export enum PayoutStatus {
 }
 
 export class CreatePayoutRequestDto {
-  @IsNumber()
-  @Min(10) // Minimum $10 payout
+  @IsInt()
+  @Min(1000) // Minimum $10 payout in cents
   amount: number;
 
   @IsString()
@@ -53,12 +53,12 @@ export class GetPayoutsQueryDto {
   userId?: string;
 
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(1)
   page?: number = 1;
 
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(1)
   @Max(100)
   limit?: number = 20;
