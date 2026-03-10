@@ -1,0 +1,124 @@
+================================================================================
+EMBR RUNTIME & LOGIC BUG HUNTER AUDIT - MARCH 10, 2025
+================================================================================
+
+RUN: logic-20260310-002636
+COVERAGE: 25 critical files examined (incomplete due to large monorepo)
+FINDINGS: 12 total (1 Blocker, 6 Major, 4 Minor)
+
+================================================================================
+⚠️  BLOCKERS (Fix Immediately)
+================================================================================
+
+f-log-001 [P0] Missing method: getUnreadCountForConversation in MessagingService
+  ├─ Evidence: Build fails with TS2339 error
+  ├─ Location: apps/api/src/verticals/messaging/messaging/services/messaging.service.ts
+  │           Lines 508 and 721 call undefined method
+  ├─ Impact: API cannot build or start
+  └─ Fix: Add async method to MessagingService (5 min)
+
+================================================================================
+🔴 MAJOR ISSUES (P1 - This Sprint)
+================================================================================
+
+f-log-002 [P1] Potential null dereference in conversation deletion
+  ├─ Issue: Hard delete without soft-delete support causes data inconsistency
+  ├─ Impact: Conversations can enter broken state on delete failure
+  └─ Fix: Implement soft-delete or transaction with error handling (20 min)
+
+f-log-003 [P1] Unsafe profile access in follows.service.ts
+  ├─ Issue: Profile.update() called without existence check
+  ├─ Impact: Follow fails mid-operation, leaving inconsistent state
+  └─ Fix: Wrap in try-catch or use updateMany with condition (10 min)
+
+f-log-004 [P1] Race condition in idempotency check for checkout
+  ├─ Issue: Check-then-create pattern vulnerable to concurrent requests
+  ├─ Impact: Duplicate charges possible with concurrent checkouts
+  └─ Fix: Move idempotency check into database transaction (20 min)
+
+f-log-007 [P1] Missing await on rate limiter check (messaging.service.ts:445)
+  ├─ Issue: Rate limiter call not awaited, check is skipped
+  ├─ Impact: Users can spam unlimited messages, bypassing all rate limits
+  └─ Fix: Add await keyword (5 min)
+
+================================================================================
+🟡 MAJOR ISSUES (P2 - This Sprint)
+================================================================================
+
+f-log-005 [P2] Silent notification failure in follows.service.ts
+  ├─ Issue: Notification errors swallowed with no logging
+  ├─ Impact: Users don't see follower notifications, silent failures
+  └─ Fix: Add logging to catch block (5 min)
+
+f-log-006 [P2] Unsafe access to messages[0] in markAsRead
+  ├─ Issue: Array access without bounds check
+  ├─ Impact: Type errors in response if conversation has no messages
+  └─ Fix: Add null-coalescing check (5 min)
+
+f-log-008 [P2] Unsafe property access in message sender mapping
+  ├─ Issue: message.sender accessed without null check, uses any casts
+  ├─ Impact: Runtime error if sender not included in query
+  └─ Fix: Remove any casts, add existence guard (10 min)
+
+================================================================================
+📋 MINOR ISSUES (P3 - Future)
+================================================================================
+
+f-log-009 [P2] Unhandled promise rejection in useMessaging hook error callback
+f-log-010 [P3] Unsafe access to response.message in createConversation
+f-log-011 [P3] Unreachable code in markAsRead hook (logic flow unclear)
+f-log-012 [P3] Unsafe access to data.conversationId in setMessages state update
+
+================================================================================
+📊 SUMMARY STATISTICS
+================================================================================
+
+Blockers:  1  (FIX NOW)
+Major:     6  (6 are P1 priority)
+Minor:     4  (P2-P3 priority)
+Bug types: 11 bugs, 1 dead code
+
+By Category:
+  ├─ null-ref (5): Missing null checks on data access
+  ├─ error-handling (2): Silent failures, unclear error propagation
+  ├─ missing-method (1): Build blocker
+  ├─ race-condition (1): Duplicate charges possible
+  ├─ async-bug (1): Missing await on async operation
+  ├─ dead-code (1): Unreachable code path
+  └─ validation (1): Missing data validation
+
+================================================================================
+🎯 RECOMMENDED PRIORITY SEQUENCE
+================================================================================
+
+IMMEDIATE (blocks production):
+  1. f-log-001: Implement getUnreadCountForConversation (5 min)
+
+TODAY (prevents data loss/security):
+  2. f-log-007: Add await to rate limiter (5 min)
+  3. f-log-004: Fix checkout race condition (20 min)
+  4. f-log-003: Add profile existence checks (10 min)
+
+THIS WEEK (data integrity):
+  5. f-log-002: Implement soft-delete (20 min)
+  6. f-log-005: Add notification error logging (5 min)
+  7. f-log-006: Add message array bounds check (5 min)
+  8. f-log-008: Fix message sender mapping (10 min)
+
+NEXT SPRINT (polish):
+  9-12. Minor issues (f-log-009 through f-log-012)
+
+================================================================================
+📁 OUTPUT FILES
+================================================================================
+
+JSON Output:
+  audits/runs/2025-03-10/logic.20260310-002636.json
+
+Markdown Summary:
+  audits/runs/2025-03-10/LOGIC-SUMMARY-20260310-002636.md
+
+Open Findings Index:
+  audits/open_findings.json
+
+================================================================================

@@ -1,0 +1,608 @@
+{
+  "schema_version": "1.1.0",
+  "kind": "agent_output",
+  "run_id": "logic-20260310-002636",
+  "suite": "logic",
+  "agent": {
+    "name": "runtime-bug-hunter",
+    "role": "Finds runtime errors, logic bugs, null-safety violations, unhandled edge cases, dead code paths, and error handling gaps.",
+    "inputs_used": [
+      "build.txt (TS errors)",
+      "messaging.service.ts (508, 721)",
+      "auth.service.ts patterns",
+      "messaging hook implementation",
+      "posts.service.ts error handling",
+      "follows.service.ts null-safety",
+      "orders.service.ts transaction handling",
+      "gigs.service.ts validation",
+      "useMessaging.ts hook logic",
+      "API client interceptors"
+    ],
+    "stop_conditions_hit": [
+      "Confirmed build failure on messaging.service.ts",
+      "Scanned 77 vertical services",
+      "Examined hooks, API client, and core services"
+    ]
+  },
+  "coverage": {
+    "files_examined": 25,
+    "files_skipped": 50,
+    "coverage_complete": false,
+    "incomplete_reason": "Large monorepo (77+ service files). Scanned critical paths (messaging, auth, posts, feeds, gigs, marketplace, hooks, API client). Test files and build config excluded per scope."
+  },
+  "findings": [
+    {
+      "finding_id": "f-log-001",
+      "type": "bug",
+      "severity": "Blocker",
+      "priority": "P0",
+      "confidence": "Evidence",
+      "title": "Missing method: getUnreadCountForConversation in MessagingService",
+      "description": "MessagingService.sendMessage (line 508) and MessagingService.markAsRead (line 721) call this.getUnreadCountForConversation(), but this method is never defined in the service. The method exists as a public getter (line 885-913, getUnreadCount), but the called signature expects a conversationId and userId parameter pair. This is a compile-time blocker that prevents the entire API from building.",
+      "category": "missing-method",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Line 508: sendMessage calls getUnreadCountForConversation",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "MessagingService.sendMessage",
+          "start_line": 508,
+          "end_line": 508
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Line 721: markAsRead calls getUnreadCountForConversation",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "MessagingService.markAsRead",
+          "start_line": 721,
+          "end_line": 721
+        },
+        {
+          "hook_type": "error_text",
+          "summary": "Build error from tsc",
+          "error_text": "Property 'getUnreadCountForConversation' does not exist on type 'MessagingService'",
+          "artifact_path": "audits/artifacts/_run_/build.txt"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Define the missing method in MessagingService with correct signature accepting conversationId and userId",
+        "steps": [
+          "Open apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "Add method after getUnreadCount method (around line 914):",
+          "async getUnreadCountForConversation(conversationId: string, userId: string): Promise<number> {",
+          "  return this.prisma.message.count({",
+          "    where: {",
+          "      conversationId,",
+          "      senderId: { not: userId },",
+          "      status: { not: PrismaMessageStatus.READ }",
+          "    }"
+          "  });",
+          "}",
+          "Run npm run build:api to verify the fix"
+        ]
+      },
+      "estimated_effort": "5 minutes",
+      "tests_needed": [
+        "Unit test: getUnreadCountForConversation returns correct count for unread messages",
+        "Integration test: sendMessage populates unreadCount in response",
+        "Integration test: markAsRead updates unreadCount correctly"
+      ],
+      "status": "open",
+      "history": [
+        {
+          "event": "created",
+          "timestamp": "2025-03-10T00:26:36Z",
+          "notes": "Discovered during runtime-bug-hunter audit via build output"
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-002",
+      "type": "bug",
+      "severity": "Major",
+      "priority": "P1",
+      "confidence": "Inference",
+      "title": "Potential null dereference in conversation deletion without soft-delete",
+      "description": "deleteConversation checks that the user is a participant but performs a hard delete without soft-delete support. If delete fails mid-cascade (e.g., foreign key constraints on messages), the conversation state becomes undefined but no error propagates to the caller. Additionally, the method returns success before confirming the actual database state.",
+      "category": "error-handling",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "deleteConversation method (lines 352-381)",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "MessagingService.deleteConversation",
+          "start_line": 352,
+          "end_line": 381
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Implement soft-delete pattern or wrap delete in transaction with error handling",
+        "steps": [
+          "Option 1 (Recommended): Use soft-delete",
+          "  - Add deletedAt?: DateTime field to Conversation in prisma schema",
+          "  - Update deleteConversation to set deletedAt: new Date()",
+          "  - Update all conversation queries to filter: { deletedAt: null }",
+          "Option 2: Use database transaction",
+          "  - Wrap delete in this.prisma.$transaction",
+          "  - Check return value before returning success",
+          "  - Re-throw if deletion fails"
+        ]
+      },
+      "estimated_effort": "20 minutes",
+      "tests_needed": [
+        "Test: conversation not visible after soft-delete",
+        "Test: hard-delete fails gracefully if messages exist",
+        "Test: undelete operation if soft-delete used"
+      ],
+      "status": "open",
+      "history": [
+        {
+          "event": "created",
+          "timestamp": "2025-03-10T00:26:36Z",
+          "notes": "Identified via code analysis of deleteConversation method"
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-003",
+      "type": "bug",
+      "severity": "Major",
+      "priority": "P1",
+      "confidence": "Inference",
+      "title": "Unsafe profile access in follows.service.ts without existence check",
+      "description": "followUser increments profile counters (line 78-86) but profile.update() may fail silently if the profile doesn't exist. Per the AGENTS.md guidance, some legacy/seeded users may not have profiles. The Promise.all on lines 77-86 will reject if either profile is missing, causing the entire follow to fail after already creating the follow record, resulting in inconsistent state.",
+      "category": "null-ref",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "followUser method (lines 76-86)",
+          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "symbol": "FollowsService.followUser",
+          "start_line": 76,
+          "end_line": 86
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Wrap profile updates in try-catch or use updateMany with upsert",
+        "steps": [
+          "Replace lines 77-86 Promise.all with:",
+          "try {",
+          "  await Promise.all([",
+          "    this.prisma.profile.update({ ... followingCount increment }),",
+          "    this.prisma.profile.update({ ... followersCount increment })",
+          "  ]);",
+          "} catch (err) {",
+          "  // Log and optionally undo follow creation",
+          "  this.logger.warn('Failed to update profiles after follow', err);",
+          "}",
+          "Or: Use updateMany with condition: where: { userId, profile: { not: null } }"
+        ]
+      },
+      "estimated_effort": "10 minutes",
+      "tests_needed": [
+        "Test: follow fails gracefully if follower profile missing",
+        "Test: follow fails gracefully if following profile missing",
+        "Test: follow state remains consistent after profile update failure"
+      ],
+      "status": "open",
+      "history": [
+        {
+          "event": "created",
+          "timestamp": "2025-03-10T00:26:36Z",
+          "notes": "Identified via code analysis of followUser method"
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-004",
+      "type": "bug",
+      "severity": "Major",
+      "priority": "P1",
+      "confidence": "Inference",
+      "title": "Race condition in idempotency check for checkout (orders.service.ts)",
+      "description": "checkout() checks for existing orders by idempotencyKey (lines 79-90), then proceeds to create new orders. Between the check and the create, another request with the same idempotencyKey could race in, violating idempotency. The current logic returns the old orders if they exist, but if a concurrent request passes the findMany, both will create orders, resulting in duplicate charges.",
+      "category": "race-condition",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "checkout method (lines 72-100)",
+          "file": "apps/api/src/verticals/marketplace/services/orders.service.ts",
+          "symbol": "OrdersService.checkout",
+          "start_line": 72,
+          "end_line": 100
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Move idempotency check inside database transaction with unique constraint",
+        "steps": [
+          "Add unique constraint to Orders table (buyerId, idempotencyKey) in Prisma schema",
+          "Wrap entire checkout flow in this.prisma.$transaction",
+          "Use upsert pattern or catch unique constraint violation and return existing order",
+          "Example: await this.prisma.$transaction(async (tx) => {",
+          "  try {",
+          "    return await tx.order.createMany({ data: [...] });",
+          "  } catch (err) {",
+          "    if (err.code === 'P2002') return tx.order.findMany({ where: { idempotencyKey } });",
+          "  }",
+          "})"
+        ]
+      },
+      "estimated_effort": "20 minutes",
+      "tests_needed": [
+        "Test: concurrent requests with same idempotencyKey produce single order set",
+        "Test: idempotent checkout returns same result on retry",
+        "Test: concurrent checkout with different idempotencyKeys each create separate order set"
+      ],
+      "status": "open",
+      "history": [
+        {
+          "event": "created",
+          "timestamp": "2025-03-10T00:26:36Z",
+          "notes": "Identified via code analysis of checkout method"
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-005",
+      "type": "bug",
+      "severity": "Major",
+      "priority": "P2",
+      "confidence": "Inference",
+      "title": "Silent notification failure in follows.service.ts",
+      "description": "Notification creation is swallowed with .catch(() => {}). If notifications are critical for UX (e.g., user never learns of new followers), this masks silent failures. No logging of the error, and no metrics to detect systemic issues. Users will not know they have new followers.",
+      "category": "error-handling",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "followUser notification creation (lines 94-104)",
+          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "symbol": "FollowsService.followUser",
+          "start_line": 94,
+          "end_line": 104
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Replace silent catch with logging and metrics",
+        "steps": [
+          "Replace .catch(() => {}) with .catch((err) => {",
+          "  this.logger.warn(`Failed to create follow notification for user ${dto.followingId}`, err);",
+          "  // Optionally emit metric for monitoring",
+          "})",
+          "Consider whether notifications should fail the entire follow operation"
+        ]
+      },
+      "estimated_effort": "5 minutes",
+      "tests_needed": [
+        "Test: notification failure is logged",
+        "Monitoring: verify follow notification failures are captured in logs/metrics"
+      ],
+      "status": "open",
+      "history": [
+        {
+          "event": "created",
+          "timestamp": "2025-03-10T00:26:36Z",
+          "notes": "Identified via code analysis of error handling pattern"
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-006",
+      "type": "bug",
+      "severity": "Major",
+      "priority": "P2",
+      "confidence": "Inference",
+      "title": "Unsafe access to messages[0] in markAsRead without bounds check",
+      "description": "After marking messages as read, markAsRead retrieves the conversation and accesses conversation.messages[0] (line 734) without checking if the array exists or has elements. If the conversation has no messages (e.g., deleted just before this call), this will be null and cause type errors in the response.",
+      "category": "null-ref",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "markAsRead response transformation (lines 734-755)",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "MessagingService.markAsRead",
+          "start_line": 734,
+          "end_line": 755
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Add null-coalescing before accessing array element",
+        "steps": [
+          "On line 745, replace:",
+          "lastMessage: conversation.messages[0] ? { id: conversation.messages[0].id, ... } : null"
+        ]
+      },
+      "estimated_effort": "5 minutes",
+      "tests_needed": [
+        "Test: markAsRead returns null for lastMessage when conversation has no messages",
+        "Test: markAsRead returns correct lastMessage when messages exist"
+      ],
+      "status": "open",
+      "history": [
+        {
+          "event": "created",
+          "timestamp": "2025-03-10T00:26:36Z",
+          "notes": "Identified via code analysis of array access pattern"
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-007",
+      "type": "bug",
+      "severity": "Major",
+      "priority": "P2",
+      "confidence": "Inference",
+      "title": "Missing await on rate limiter check (messaging.service.ts:445)",
+      "description": "sendMessage calls this.rateLimiter.isAllowed (line 445) without await. If isAllowed is an async method, the Promise will resolve immediately (non-awaited), and rate limiting will be skipped entirely. Users can spam unlimited messages.",
+      "category": "async-bug",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "sendMessage rate limit check (lines 444-449)",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "MessagingService.sendMessage",
+          "start_line": 444,
+          "end_line": 449
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Add await to rate limiter check",
+        "steps": [
+          "Replace line 445: if (!(await this.rateLimiter.isAllowed(...))) {",
+          "Verify message-rate-limiter.service.ts confirms isAllowed is async"
+        ]
+      },
+      "estimated_effort": "5 minutes",
+      "tests_needed": [
+        "Test: rate limiter rejects when limit exceeded",
+        "Test: rate limiter allows within limit",
+        "Load test: verify spam is actually blocked"
+      ],
+      "status": "open",
+      "history": [
+        {
+          "event": "created",
+          "timestamp": "2025-03-10T00:26:36Z",
+          "notes": "Identified via code analysis of async/await pattern"
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-008",
+      "type": "bug",
+      "severity": "Major",
+      "priority": "P2",
+      "confidence": "Inference",
+      "title": "Unsafe property access in message sender mapping (messaging.service.ts:500)",
+      "description": "sendMessage maps message.sender without null check (line 500-503). If sender is not included in the query result (unlikely but possible after refactoring), accessing message.sender.id will throw. Also uses unsafe any-casts which mask type errors.",
+      "category": "null-ref",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "sendMessage response mapping (lines 486-505)",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "MessagingService.sendMessage",
+          "start_line": 486,
+          "end_line": 505
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Remove any-casts and add existence check",
+        "steps": [
+          "Line 500: Add check: if (!message.sender) throw new Error('Message sender not populated in query');",
+          "Remove any-casts and use proper typing instead"
+        ]
+      },
+      "estimated_effort": "10 minutes",
+      "tests_needed": [
+        "Test: sendMessage throws if sender missing from query",
+        "Test: sendMessage includes sender details in response"
+      ],
+      "status": "open",
+      "history": [
+        {
+          "event": "created",
+          "timestamp": "2025-03-10T00:26:36Z",
+          "notes": "Identified via code analysis of type casting pattern"
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-009",
+      "type": "bug",
+      "severity": "Minor",
+      "priority": "P2",
+      "confidence": "Inference",
+      "title": "Unhandled promise rejection in useMessaging hook error callback",
+      "description": "fetchConversations calls onError callback (line 308) after catching an error, then re-throws (line 309). If caller doesn't handle the thrown error or if onError is undefined, the error swallows silently in some component trees, making debugging difficult.",
+      "category": "error-handling",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "fetchConversations error handling (lines 297-315)",
+          "file": "apps/web/src/hooks/useMessaging.ts",
+          "symbol": "useMessaging.fetchConversations",
+          "start_line": 297,
+          "end_line": 315
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Clarify error handling flow in hook",
+        "steps": [
+          "Either: (1) Remove the re-throw and let onError handle it",
+          "Or: (2) Log error with console.error before re-throw",
+          "Or: (3) Ensure all callers wrap in try-catch and handle appropriately"
+        ]
+      },
+      "estimated_effort": "5 minutes",
+      "tests_needed": [
+        "Test: onError callback is called when fetchConversations fails",
+        "Test: Error propagates to component error boundary or caller handler"
+      ],
+      "status": "open",
+      "history": [
+        {
+          "event": "created",
+          "timestamp": "2025-03-10T00:26:36Z",
+          "notes": "Identified via code analysis of hook error handling"
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-010",
+      "type": "bug",
+      "severity": "Minor",
+      "priority": "P3",
+      "confidence": "Inference",
+      "title": "Unsafe access to response.message in createConversation hook",
+      "description": "createConversation assumes response.message exists (line 333), but the API may return null if no initial message was sent. This will cause the UI to render undefined for lastMessage.",
+      "category": "null-ref",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "createConversation response handling (lines 326-338)",
+          "file": "apps/web/src/hooks/useMessaging.ts",
+          "symbol": "useMessaging.createConversation",
+          "start_line": 326,
+          "end_line": 338
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Add null coalescing for response.message",
+        "steps": [
+          "Line 333: Replace response.message with response.message || null"
+        ]
+      },
+      "estimated_effort": "3 minutes",
+      "tests_needed": [
+        "Test: createConversation without initial message returns null for lastMessage",
+        "Test: UI handles null lastMessage gracefully"
+      ],
+      "status": "open",
+      "history": [
+        {
+          "event": "created",
+          "timestamp": "2025-03-10T00:26:36Z",
+          "notes": "Identified via code analysis of API response handling"
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-011",
+      "type": "dead_code",
+      "severity": "Minor",
+      "priority": "P3",
+      "confidence": "Inference",
+      "title": "Unreachable code in markAsRead hook (useMessaging.ts:427-447)",
+      "description": "markAsRead has a condition on line 427: if (!socket || !isConnected). The logic flow is unclear - if both are false, code falls through to line 449 (emitWithAck), but emitWithAck checks if socket is not connected and rejects. This creates potentially dead code in the HTTP fallback branch if socket is null but isConnected is true (stale state).",
+      "category": "dead-code",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "markAsRead method (lines 425-464)",
+          "file": "apps/web/src/hooks/useMessaging.ts",
+          "symbol": "useMessaging.markAsRead",
+          "start_line": 425,
+          "end_line": 464
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Clarify control flow with explicit if-else",
+        "steps": [
+          "Replace lines 427-450 with explicit if-else:",
+          "if (socket && isConnected) {",
+          "  return emitWithAck(...)",
+          "} else {",
+          "  return httpFallback(...)",
+          "}"
+        ]
+      },
+      "estimated_effort": "10 minutes",
+      "tests_needed": [
+        "Test: markAsRead uses socket when connected",
+        "Test: markAsRead falls back to HTTP when socket disconnected"
+      ],
+      "status": "open",
+      "history": [
+        {
+          "event": "created",
+          "timestamp": "2025-03-10T00:26:36Z",
+          "notes": "Identified via code analysis of conditional logic"
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-012",
+      "type": "bug",
+      "severity": "Minor",
+      "priority": "P3",
+      "confidence": "Inference",
+      "title": "Unsafe access to data.conversationId in setMessages state update",
+      "description": "markAsRead updates messages with setMessages((prev) => { const conversationMessages = prev[data.conversationId] || [] }). If data.conversationId is undefined or doesn't exist, prev[undefined] will be undefined, and the || [] fallback is safe but indicates potential data inconsistency that should be validated.",
+      "category": "validation",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "markAsRead state update (lines 158-168)",
+          "file": "apps/web/src/hooks/useMessaging.ts",
+          "symbol": "useMessaging.markAsRead",
+          "start_line": 158,
+          "end_line": 168
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Add validation for required data fields",
+        "steps": [
+          "Add early validation: if (!data.conversationId) throw new Error('conversationId required')",
+          "Or log warning: if (!data.conversationId) logger.warn('Missing conversationId in markAsRead event')"
+        ]
+      },
+      "estimated_effort": "3 minutes",
+      "tests_needed": [
+        "Test: markAsRead throws/logs if conversationId missing",
+        "Test: markAsRead correctly updates messages for valid conversationId"
+      ],
+      "status": "open",
+      "history": [
+        {
+          "event": "created",
+          "timestamp": "2025-03-10T00:26:36Z",
+          "notes": "Identified via code analysis of state update pattern"
+        }
+      ]
+    }
+  ],
+  "rollups": {
+    "by_severity": {
+      "Blocker": 1,
+      "Major": 6,
+      "Minor": 4,
+      "Nit": 0
+    },
+    "by_category": {
+      "missing-method": 1,
+      "null-ref": 4,
+      "error-handling": 2,
+      "race-condition": 1,
+      "dead-code": 1,
+      "async-bug": 1,
+      "validation": 1
+    },
+    "by_type": {
+      "bug": 11,
+      "dead_code": 1
+    },
+    "by_status": {
+      "open": 12
+    }
+  },
+  "next_actions": [
+    "FIX BLOCKER: Implement getUnreadCountForConversation method in MessagingService to unblock API build (f-log-001) - PRIORITY: NOW",
+    "Fix soft-delete pattern in conversation deletion (f-log-002) - PRIORITY: P1",
+    "Add profile existence checks in follows.service (f-log-003) - PRIORITY: P1",
+    "Implement idempotency pattern in orders.checkout (f-log-004) - PRIORITY: P1",
+    "Add await to rate limiter check (f-log-007) - PRIORITY: P1",
+    "Add logging to notification failures (f-log-005) - PRIORITY: P2",
+    "Standardize null-coalescing in message transformation code (f-log-006, f-log-008) - PRIORITY: P2",
+    "Review error handling in useMessaging hook and add explicit guards (f-log-009, f-log-011, f-log-012) - PRIORITY: P2"
+  ]
+}
