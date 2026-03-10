@@ -1,4 +1,32 @@
 {
   "schema_version": "1.1.0",
-  "runs": []
+  "runs": [
+    {
+      "run_id": "synthesizer-20260310-004646",
+      "timestamp": "2026-03-10T00:46:46.891679",
+      "agents": [
+        "build-deploy",
+        "runtime-bug-hunter",
+        "security",
+        "perf",
+        "ux"
+      ],
+      "finding_count": 71,
+      "blocker_count": 2,
+      "critical_count": 1,
+      "major_count": 36,
+      "summary": "59 new, 0 resolved"
+    },
+    {
+      "run_id": "synthesizer-v2-20260310-011114",
+      "timestamp": "2026-03-10T01:11:14.258608",
+      "agents": [
+        "schema-auditor",
+        "synthesizer",
+        "ux-flow-auditor"
+      ],
+      "finding_count": 78,
+      "summary": "Blockers: 3, Critical: 1, High: 4"
+    }
+  ]
 }

@@ -5,4 +5,4 @@ npm error   npm link # Symlink a package folder
 npm error
 npm error To see a list of scripts, run:
 npm error   npm run
-npm error A complete log of this run can be found in: /Users/sarahsahl/.npm/_logs/2026-03-10T05_12_49_883Z-debug-0.log
+npm error A complete log of this run can be found in: /var/folders/nm/dvsqxcqj6dx77bk1_37bt1sr0000gn/T/cursor-sandbox-cache/969058a0b4aecefd2759116c62327d0a/npm/_logs/2026-03-10T05_31_44_214Z-debug-0.log

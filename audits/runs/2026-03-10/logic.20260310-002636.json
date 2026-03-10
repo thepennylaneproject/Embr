@@ -75,7 +75,7 @@
           "      conversationId,",
           "      senderId: { not: userId },",
           "      status: { not: PrismaMessageStatus.READ }",
-          "    }"
+          "    }",
           "  });",
           "}",
           "Run npm run build:api to verify the fix"

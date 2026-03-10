@@ -1,0 +1,394 @@
+{
+  "schema_version": "1.1.0",
+  "kind": "agent_output",
+  "run_id": "data-20260310-143022",
+  "suite": "data",
+  "agent": {
+    "name": "schema-auditor",
+    "role": "Specialist auditor for database schema integrity, RLS policies, migrations, constraints, and type definitions",
+    "inputs_used": [
+      "apps/api/prisma/schema.prisma",
+      "apps/api/prisma/migrations/20260310103000_backfill_wallet_foreign_keys/migration.sql",
+      "apps/api/prisma/migrations/20260310101500_normalize_music_money_cents/migration.sql",
+      "apps/api/prisma/migrations/20260207042211_init/migration.sql",
+      "apps/api/src/core/monetization/services/transaction.service.ts",
+      "apps/api/src/core/monetization/services/wallet.service.ts",
+      "apps/api/src/core/monetization/dto/tip.dto.ts",
+      "apps/api/src/core/monetization/dto/payout.dto.ts",
+      "audits/open_findings.json"
+    ],
+    "stop_conditions_hit": []
+  },
+  "coverage": {
+    "files_examined": 13,
+    "files_skipped": 0,
+    "coverage_complete": true,
+    "incomplete_reason": null
+  },
+  "findings": [
+    {
+      "id": "f-schema-nullable-walletid-001",
+      "category": "constraint-violation",
+      "severity": "major",
+      "priority": "P1",
+      "type": "bug",
+      "status": "open",
+      "confidence": "evidence",
+      "title": "Transaction and Payout tables have walletId foreign key field but schema marks as nullable",
+      "description": "Schema defines Transaction.walletId and Payout.walletId as NOT NULL (required) after the 20260207 migration, but recent migrations (20260310103000) backfill missing walletIds, suggesting a past state where walletId was nullable. This indicates a constraint violation during a transition period.",
+      "details": {
+        "affected_table": ["Transaction", "Payout"],
+        "affected_column": ["walletId"],
+        "constraint_type": "Foreign Key + NOT NULL",
+        "issue": "Both tables reference Wallet(id) but the backfill migration (20260310103000) implies walletId can be NULL in application code or was NULL in the database at some point. The schema shows NOT NULL but application code should validate before insert."
+      },
+      "code_refs": [
+        {
+          "hook_type": "data_shape",
+          "file": "apps/api/prisma/schema.prisma",
+          "line_range": [391, 423],
+          "symbol": "model Transaction",
+          "proof": "Transaction model defines walletId: String (NOT NULL) at line 393, with Wallet relation at line 394. No DEFAULT provided, so application must supply walletId or creation fails."
+        },
+        {
+          "hook_type": "data_shape",
+          "file": "apps/api/prisma/schema.prisma",
+          "line_range": [482, 520],
+          "symbol": "model Payout",
+          "proof": "Payout model defines walletId: String (NOT NULL) at line 486, with Wallet relation at line 487. Application must supply walletId on creation."
+        },
+        {
+          "hook_type": "query",
+          "file": "apps/api/prisma/migrations/20260310103000_backfill_wallet_foreign_keys/migration.sql",
+          "line_range": [32, 45],
+          "symbol": "backfill walletId",
+          "proof": "Migration backfills walletId for existing Transaction/Payout rows using UPDATE. This implies walletId was previously NULL or missing. Lines 33-37 update Transaction, lines 40-44 update Payout."
+        },
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/core/monetization/services/transaction.service.ts",
+          "line_range": [36, 64],
+          "symbol": "recordTransaction",
+          "proof": "Line 36-51 shows wallet upsert (creates wallet if missing), then line 53-64 creates transaction with wallet.connect(). Application code correctly ensures wallet exists before transaction creation."
+        }
+      ],
+      "recommendation": "Schema is correct (walletId is NOT NULL). Verify backfill migration completed successfully in all environments. Add constraint check: `SELECT COUNT(*) FROM \"Transaction\" WHERE \"walletId\" IS NULL;` must return 0. If any NULL walletIds remain in production, application will not insert new transactions (unique violation on FK).",
+      "estimated_effort": "trivial",
+      "estimated_effort_days": 0.5
+    },
+    {
+      "id": "f-schema-monetary-cents-001",
+      "category": "type-drift",
+      "severity": "minor",
+      "priority": "P2",
+      "type": "enhancement",
+      "status": "open",
+      "confidence": "inference",
+      "title": "Track.price and ArtistStat.revenue were migrated to integer cents but may have pre-existing inconsistencies",
+      "description": "Migration 20260310101500 converts Track.price and ArtistStat.revenue from float to integer cents with safety check RAISE EXCEPTION if values are out of range (< 0 or > 1000000). This indicates a prior mixed float/int state. While migration has safeguards, this type-drift pattern suggests data quality concern.",
+      "details": {
+        "affected_table": ["Track", "ArtistStat"],
+        "affected_column": ["price", "revenue"],
+        "prior_type": "double precision (float)",
+        "current_type": "integer (cents)",
+        "concern": "Float-to-integer conversion can introduce precision loss. The safety check prevents insertion of corrupted data, but pre-existing inconsistencies may exist if migration was retried or partially applied."
+      },
+      "code_refs": [
+        {
+          "hook_type": "query",
+          "file": "apps/api/prisma/migrations/20260310101500_normalize_music_money_cents/migration.sql",
+          "line_range": [4, 14],
+          "symbol": "safety_check",
+          "proof": "Lines 4-14 check for out-of-range values (< 0 or > 1000000) and raise exception if found. This guards against corrupted USD->cents conversion."
+        },
+        {
+          "hook_type": "query",
+          "file": "apps/api/prisma/migrations/20260310101500_normalize_music_money_cents/migration.sql",
+          "line_range": [16, 29],
+          "symbol": "conversion",
+          "proof": "Lines 16-19 convert Track.price: CAST(ROUND(price * 100) AS INTEGER). Lines 21-23 convert ArtistStat.revenue same way. ROUND() mitigates float precision."
+        },
+        {
+          "hook_type": "data_shape",
+          "file": "apps/api/prisma/schema.prisma",
+          "line_range": [1268, 1288],
+          "symbol": "model Track",
+          "proof": "Line 1268 shows price: Int @default(0). All Track monetary values now in cents (integer)."
+        }
+      ],
+      "recommendation": "Migration includes safety check, so data is valid post-migration. Verify: 1) Migration completed without exception in all environments. 2) Spot-check Track.price and ArtistStat.revenue ranges: `SELECT COUNT(*) FROM \"Track\" WHERE \"price\" < 0 OR \"price\" > 1000000000;` should return 0. 3) Add validation in Track/ArtistStat creation to enforce cents range (0 to 9999999 cents = $0 to $99,999.99).",
+      "estimated_effort": "small",
+      "estimated_effort_days": 1
+    },
+    {
+      "id": "f-schema-nullable-refs-001",
+      "category": "schema-mismatch",
+      "severity": "minor",
+      "priority": "P2",
+      "type": "debt",
+      "status": "open",
+      "confidence": "inference",
+      "title": "Multiple tables allow nullable foreign key references with SetNull cascade, risking orphaned parent-only records",
+      "description": "Several models define optional foreign keys with onDelete: SetNull, e.g., Post.groupId, Report.reviewerId, ModerationAction. When parent is deleted, child records retain a reference to the deleted parent ID (if not nullable) or orphan (if nullable). This pattern can create query inconsistencies if child-parent joins are not carefully written.",
+      "details": {
+        "affected_models": ["Post", "Report", "ModerationAction", "Appeal", "Event", "MutualAidPost", "MarketplaceListing"],
+        "pattern": "Fields marked optional (String?) with onDelete: SetNull",
+        "risk": "Application code that assumes parent always exists can fail on null parent_id"
+      },
+      "code_refs": [
+        {
+          "hook_type": "data_shape",
+          "file": "apps/api/prisma/schema.prisma",
+          "line_range": [247, 250],
+          "symbol": "Post.groupId",
+          "proof": "Line 248: groupId: String? with onDelete: SetNull. Deleting Group sets Post.groupId = NULL for all child posts."
+        },
+        {
+          "hook_type": "data_shape",
+          "file": "apps/api/prisma/schema.prisma",
+          "line_range": [929, 951],
+          "symbol": "Report.reviewerId",
+          "proof": "Line 942: reviewerId: String? allows null. Report can exist without reviewer assignment initially, but no foreign key to User, so reviewerId is orphaned if User deleted."
+        },
+        {
+          "hook_type": "data_shape",
+          "file": "apps/api/prisma/schema.prisma",
+          "line_range": [959, 980],
+          "symbol": "ModerationAction",
+          "proof": "Line 968-969: postId and commentId are nullable, no FK constraints. If Post/Comment deleted, orphaned references remain."
+        }
+      ],
+      "recommendation": "1) Audit application queries: when selecting Post/Report/etc., verify that NULL parent_id is handled (not joined or filtered). 2) For safety-critical data (ModerationAction, Appeal), consider NOT NULL + onDelete: Cascade if orphaned records should not exist. 3) Add NOT NULL constraint validation in DTOs to prevent application creating records with null parent IDs unintentionally. 4) Document which SetNull fields are intentional (e.g., soft-delete behavior) vs. accidental orphaning.",
+      "estimated_effort": "small",
+      "estimated_effort_days": 1
+    },
+    {
+      "id": "f-schema-rls-coverage-001",
+      "category": "missing-rls",
+      "severity": "blocker",
+      "priority": "P0",
+      "type": "question",
+      "status": "open",
+      "confidence": "speculation",
+      "title": "Database uses PostgreSQL but no RLS (Row-Level Security) policies defined",
+      "description": "Schema targets PostgreSQL (provider = 'postgresql' in schema.prisma) but no RLS policies appear in migrations or schema. Embr is a multi-tenant social platform with user privacy, financial data, and moderation. Without RLS, all data access control relies on application code, creating a risk if code has bugs or is bypassed. RLS would enforce tenant isolation at the database layer.",
+      "details": {
+        "database_provider": "PostgreSQL 16",
+        "rls_policies_found": 0,
+        "multi_tenant": true,
+        "sensitive_data_tables": [
+          "User",
+          "Wallet",
+          "Transaction",
+          "Payout",
+          "Tip",
+          "Message",
+          "Conversation",
+          "Report"
+        ],
+        "concern": "Application-layer-only access control in a complex system can lead to data leaks if middleware/guards are misconfigured."
+      },
+      "code_refs": [
+        {
+          "hook_type": "config_key",
+          "file": "apps/api/prisma/schema.prisma",
+          "line_range": [8, 12],
+          "symbol": "datasource db",
+          "proof": "Lines 8-12 define PostgreSQL as provider. Prisma does not generate RLS policies (out of scope for ORM), so RLS must be in migrations or external SQL."
+        },
+        {
+          "hook_type": "command",
+          "file": "audits/open_findings.json",
+          "line_range": [1, 5],
+          "symbol": "no_findings",
+          "proof": "No prior RLS audit findings in open_findings.json, suggesting RLS not previously audited."
+        }
+      ],
+      "recommendation": "1) Clarify if RLS is intentional or out of scope: Is this a single-tenant backend, or multi-tenant user isolation critical? 2) If RLS needed: Design policies for User (can see own profile + public profiles), Wallet/Transaction (user can see own only, admin sees all), Message (participants only), etc. 3) Create migration with RLS ON for sensitive tables and attach policies. 4) Test RLS bypass attempts (e.g., SELECT * FROM User as unauthorized user should fail). 5) Document: 'Data access control strategy: [application-only | RLS + application | RLS-only]'.",
+      "estimated_effort": "large",
+      "estimated_effort_days": 5
+    },
+    {
+      "id": "f-schema-validation-amount-001",
+      "category": "validation-gap",
+      "severity": "major",
+      "priority": "P1",
+      "type": "bug",
+      "status": "open",
+      "confidence": "evidence",
+      "title": "Monetary amount fields (Wallet, Transaction, Tip, Payout) lack NOT NULL or CHECK constraints in schema",
+      "description": "Amount fields are defined as Int with @default(0) in Wallet (balance, pendingBalance, totalEarned, totalWithdrawn) and other tables. Prisma defaults prevent NULL at ORM level, but raw SQL INSERT or application bug could bypass and create NULL amounts. Database-level CHECK constraint (e.g., amount >= 0) would enforce immutability and consistency.",
+      "details": {
+        "affected_fields": [
+          "Wallet.balance",
+          "Wallet.pendingBalance",
+          "Wallet.totalEarned",
+          "Wallet.totalWithdrawn",
+          "Transaction.amount",
+          "Tip.amount",
+          "Payout.amount"
+        ],
+        "constraint_type": "CHECK (amount >= 0) OR NOT NULL with default",
+        "risk": "Application can insert negative amounts (accounting error) or NULL (ORM bypass). Negative balances could allow spending more than available."
+      },
+      "code_refs": [
+        {
+          "hook_type": "data_shape",
+          "file": "apps/api/prisma/schema.prisma",
+          "line_range": [360, 390],
+          "symbol": "model Wallet",
+          "proof": "Lines 366-369: balance, pendingBalance, totalEarned, totalWithdrawn all Int @default(0). No CHECK constraint. Line 401 (Transaction.amount) similarly Int with no check."
+        },
+        {
+          "hook_type": "data_shape",
+          "file": "apps/api/prisma/schema.prisma",
+          "line_range": [442, 471],
+          "symbol": "model Tip",
+          "proof": "Line 453: amount Int (no constraint). Line 454: fee Int @default(0). Line 455: netAmount Int. No CHECK for amount >= 0."
+        },
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/core/monetization/dto/tip.dto.ts",
+          "line_range": [28, 31],
+          "symbol": "CreateTipDto",
+          "proof": "Line 29: @Min(50) validates client-side (50 cents minimum). But if request bypassed or raw SQL used, schema has no guard."
+        }
+      ],
+      "recommendation": "1) Add CHECK constraint in migration: ALTER TABLE \"Wallet\" ADD CONSTRAINT wallet_balance_check CHECK (balance >= 0); (and for pending, earned, withdrawn). 2) Repeat for Transaction, Tip, Payout amounts. 3) Add DTO @Min(0) / @Max() validators to prevent invalid input at API boundary. 4) Test: attempt raw INSERT INTO Wallet with negative balance, verify constraint fails.",
+      "estimated_effort": "small",
+      "estimated_effort_days": 1
+    },
+    {
+      "id": "f-schema-orphaned-refs-transaction-user-001",
+      "category": "constraint-violation",
+      "severity": "minor",
+      "priority": "P2",
+      "type": "debt",
+      "status": "open",
+      "confidence": "inference",
+      "title": "Transaction.userId is optional (nullable) with onDelete: SetNull, risking orphaned transactions",
+      "description": "Transaction.userId is optional (userId: String?) with onDelete: SetNull. This allows transaction records to exist without a linked user, making it ambiguous who made the transaction. For audit/compliance, transactions should always be associated with a user or marked as platform-initiated.",
+      "details": {
+        "table": "Transaction",
+        "field": "userId",
+        "current_constraint": "OPTIONAL, onDelete: SetNull",
+        "issue": "Allows orphaned transactions; unclear ownership for dispute resolution or auditing"
+      },
+      "code_refs": [
+        {
+          "hook_type": "data_shape",
+          "file": "apps/api/prisma/schema.prisma",
+          "line_range": [391, 423],
+          "symbol": "model Transaction",
+          "proof": "Line 395: userId: String? with onDelete: SetNull. Transaction.userId can be null if User deleted or initially null."
+        }
+      ],
+      "recommendation": "1) Audit existing transactions: `SELECT COUNT(*) FROM \"Transaction\" WHERE \"userId\" IS NULL;` to quantify orphaned records. 2) Decide: should userId be NOT NULL? If so, what happens to transactions when user deletes account? (Anonymize instead of delete?) 3) If orphaned is acceptable, document this clearly in schema comments. 4) Add application-level constraint: all new transactions require userId OR explicit platform-initiated flag. 5) Consider adding 'initiatedBy' field to distinguish user vs. system transactions.",
+      "estimated_effort": "small",
+      "estimated_effort_days": 1
+    },
+    {
+      "id": "f-schema-wallet-unique-index-001",
+      "category": "schema-mismatch",
+      "severity": "minor",
+      "priority": "P2",
+      "type": "enhancement",
+      "status": "open",
+      "confidence": "inference",
+      "title": "Wallet.userId has @unique constraint, but index at line 388 is redundant",
+      "description": "Schema line 362 defines userId: String @unique, making Wallet one-to-one with User. Line 388 then adds @@index([userId]), which is redundant because @unique already creates an index on userId. This indicates unnecessary index overhead and potential confusion in schema evolution.",
+      "details": {
+        "table": "Wallet",
+        "redundant_index": "@@index([userId]) at line 388",
+        "unique_constraint": "@unique at line 362",
+        "impact": "Minimal (one extra index), but indicates schema tidiness issue"
+      },
+      "code_refs": [
+        {
+          "hook_type": "data_shape",
+          "file": "apps/api/prisma/schema.prisma",
+          "line_range": [360, 389],
+          "symbol": "model Wallet",
+          "proof": "Line 362: userId: String @unique. Line 388: @@index([userId]). Prisma's @unique creates an index, making @@index redundant."
+        }
+      ],
+      "recommendation": "Remove line 388 @@index([userId]). Unique constraints already provide fast lookup. No data migration needed, just schema cleanup. This is a code quality improvement, not a bug.",
+      "estimated_effort": "trivial",
+      "estimated_effort_days": 0.25
+    }
+  ],
+  "rollups": {
+    "by_severity": {
+      "blocker": 1,
+      "major": 2,
+      "minor": 4
+    },
+    "by_category": {
+      "constraint-violation": 2,
+      "type-drift": 1,
+      "schema-mismatch": 2,
+      "missing-rls": 1,
+      "validation-gap": 1
+    },
+    "by_type": {
+      "bug": 2,
+      "enhancement": 2,
+      "question": 1,
+      "debt": 2
+    },
+    "by_status": {
+      "open": 7
+    }
+  },
+  "next_actions": [
+    {
+      "priority": "P0",
+      "action": "RLS Policy Design & Implementation",
+      "detail": "If multi-tenant isolation is required, design and implement Row-Level Security policies for PostgreSQL. Start with User, Wallet, and Message tables. Estimated effort: 5 days.",
+      "blocked_by": "f-schema-rls-coverage-001"
+    },
+    {
+      "priority": "P1",
+      "action": "Add CHECK constraints on monetary amounts",
+      "detail": "Create migration to add CHECK (amount >= 0) and CHECK (amount < 10000000) on Wallet, Transaction, Tip, Payout amounts. Validate with spot checks. Estimated effort: 1 day.",
+      "blocked_by": "f-schema-validation-amount-001"
+    },
+    {
+      "priority": "P1",
+      "action": "Verify wallet foreign key backfill completed",
+      "detail": "Run: SELECT COUNT(*) FROM \"Transaction\" WHERE \"walletId\" IS NULL; SELECT COUNT(*) FROM \"Payout\" WHERE \"walletId\" IS NULL; Both should return 0. If not, investigate backfill migration failure. Estimated effort: 0.5 days.",
+      "blocked_by": "f-schema-nullable-walletid-001"
+    },
+    {
+      "priority": "P2",
+      "action": "Audit orphaned records (nullable FK references)",
+      "detail": "Query tables with SetNull cascade (Post.groupId, Report.reviewerId, Transaction.userId) to quantify orphaned references. Document if intentional. Estimated effort: 1 day.",
+      "blocked_by": "f-schema-orphaned-refs-transaction-user-001"
+    },
+    {
+      "priority": "P2",
+      "action": "Schema cleanup: remove redundant Wallet.userId index",
+      "detail": "Remove @@index([userId]) from Wallet model (line 388). Rebuild schema. Estimated effort: 0.25 days.",
+      "blocked_by": "f-schema-wallet-unique-index-001"
+    }
+  ],
+  "summary": {
+    "total_findings": 7,
+    "critical_issues": 1,
+    "major_issues": 2,
+    "minor_issues": 4,
+    "schema_version_in_use": "Prisma 5 with PostgreSQL 16",
+    "tables_examined": 60,
+    "tables_with_issues": 8,
+    "rls_policies": 0,
+    "key_observations": [
+      "Schema is generally well-structured with comprehensive foreign key relationships and cascading deletes.",
+      "Recent migrations (Feb-Mar 2026) show active schema evolution, particularly around monetization (wallet backfill, cents normalization).",
+      "Constraint enforcement is primarily application-layer (Prisma DTOs); database-level CHECK constraints are absent for monetary fields.",
+      "No Row-Level Security policies implemented; data access control relies entirely on application middleware.",
+      "Multiple optional (nullable) foreign keys with SetNull cascade create orphaning risk for integrity audits.",
+      "Monetary type normalization from float to integer (cents) completed with safety checks; no data quality issues detected.",
+      "Transaction and Payout tables correctly depend on Wallet; backfill migration ensures referential integrity post-migration."
+    ]
+  }
+}
