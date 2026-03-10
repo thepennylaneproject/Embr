@@ -911,4 +911,19 @@ export class MessagingService {
       conversationCounts,
     };
   }
+
+  async getUnreadCountForConversation(
+    conversationId: string,
+    userId: string,
+  ): Promise<number> {
+    const count = await this.prisma.message.count({
+      where: {
+        conversationId,
+        senderId: { not: userId },
+        status: { not: MessageStatus.READ },
+      },
+    });
+
+    return count;
+  }
 }
