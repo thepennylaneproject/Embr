@@ -1,0 +1,9 @@
+{
+  "project_name": "embr",
+  "expectations_path": "audits/expectations.md",
+  "rule_counts": {
+    "critical": 12,
+    "warning": 5,
+    "suggestion": 0
+  }
+}
