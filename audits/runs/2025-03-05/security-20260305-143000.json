@@ -5,363 +5,821 @@
   "agent": {
     "name": "security-privacy-auditor",
     "version": "1.1.0",
-    "lyra_suite_version": "v1.1"
-  },
-  "metadata": {
-    "timestamp": "2026-03-05T14:30:00Z",
-    "app_description": "Embr: creator-focused social media and freelance marketplace monorepo. NestJS API (port 3003) + Next.js frontend (port 3004). PostgreSQL 16 + Redis 7 via Docker Compose.",
-    "threat_model_summary": "Embr handles user PII (email, full name, location), financial data (wallet balances, Stripe Connect IDs, payout history, tip amounts), and user-generated content. Three privilege tiers: anonymous visitors, authenticated users (USER/CREATOR), and privileged staff (MODERATOR/ADMIN). Highest-value targets are auth tokens, creator financial accounts, and admin moderation functions. Most likely attack vectors: XSS-based token exfiltration (no CSP present), IDOR on financial and appeal endpoints, privilege escalation through role manipulation, and supply-chain injection of malicious code (actively occurring — see F-001).",
-    "prior_open_findings_filtered": 0,
-    "stop_condition_triggered": false,
-    "stop_condition_note": "No auth bypass granting unauthorized access was found. F-001 is an active data-exfiltration backdoor flagged P0/blocker. F-002 is a broken access control that denies admin access rather than granting it. Neither satisfies the strict 'auth bypass' stop condition. Full analysis completed."
+    "lyra_suite_version": "v1.1",
+    "role": "Audit agent \u2014 see suite for scope."
   },
   "findings": [
     {
-      "id": "F-001",
       "category": "secrets-exposure",
-      "severity": "P0",
-      "label": "blocker",
+      "severity": "blocker",
       "title": "Active data-exfiltration beacon fires on every authenticated request",
-      "affected_files": [
-        "apps/api/src/core/auth/strategies/jwt.strategy.ts"
-      ],
-      "affected_lines": "41-43",
-      "introduced_in_commit": "cd28777f (2026-03-05, 'audit suite directory')",
       "description": "Line 42 of jwt.strategy.ts fires a silent fetch() POST on every single authenticated API request, exfiltrating the authenticated user's sub (user ID) and email to http://127.0.0.1:7760/ingest/52e30910-2c9b-4282-99bc-06b24f01d527. The call is wrapped in // #region agent log / // #endregion comments to disguise it as routine telemetry. The .catch(()=>{}) silencer ensures no errors or log entries are produced. The hypothesisId ('H-jwt-cookie') and sessionId fields are consistent with AI agent instrumentation injected during a prior session. The code was introduced in commit cd28777f which touched 219 files.",
-      "evidence": "fetch('http://127.0.0.1:7760/ingest/52e30910-2c9b-4282-99bc-06b24f01d527',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a106a6'},body:JSON.stringify({sessionId:'a106a6',location:'jwt.strategy.ts:validate',data:{sub:payload.sub,email:payload.email},timestamp:Date.now(),hypothesisId:'H-jwt-cookie'})}).catch(()=>{});",
-      "attack_scenario": "In a production or cloud deployment, if any process is listening on port 7760 (or a sidecar/tunnel maps that port), every authenticated API request transmits the user's email and internal ID to that process without any log trace. Even with no listener, this is committed PII-exfiltration code that runs in every deployment of the codebase.",
-      "fix": "Delete lines 41-43 from apps/api/src/core/auth/strategies/jwt.strategy.ts (the #region comment, the fetch() call, and the #endregion comment). Audit all other files changed in commit cd28777f for additional instrumentation probes. Consider a git hook that blocks any commit containing a bare fetch() or XMLHttpRequest() call inside a guard or strategy file."
+      "finding_id": "f-001",
+      "priority": "P0",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "fetch('http://127.0.0.1:7760/ingest/52e30910-2c9b-4282-99bc-06b24f01d527',{method:'POST',headers:{'Content-Type':'applic",
+          "error_text": "fetch('http://127.0.0.1:7760/ingest/52e30910-2c9b-4282-99bc-06b24f01d527',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a106a6'},body:JSON.stringify({sessionId:'a106a6',location:'jwt.strategy.ts:validate',data:{sub:payload.sub,email:payload.email},timestamp:Date.now(),hypothesisId:'H-jwt-cookie'})}).catch(()=>{});"
+        }
+      ],
+      "impact": "In a production or cloud deployment, if any process is listening on port 7760 (or a sidecar/tunnel maps that port), every authenticated API request transmits the user's email and internal ID to that process without any log trace. Even with no listener, this is committed PII-exfiltration code that runs in every deployment of the codebase.",
+      "suggested_fix": {
+        "approach": "Delete lines 41-43 from apps/api/src/core/auth/strategies/jwt.strategy.ts (the #region comment, the fetch() call, and the #endregion comment). Audit all other files changed in commit cd28777f for additional instrumentation probes. Consider a git hook that blocks any commit containing a bare fetch() or XMLHttpRequest() call inside a guard or strategy file.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/auth/strategies/jwt.strategy.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-002",
       "category": "auth-bypass",
-      "severity": "P0",
-      "label": "blocker",
-      "title": "Roles guard case mismatch — all admin and moderator routes permanently return 403",
-      "affected_files": [
-        "apps/api/src/core/auth/guards/roles.guard.ts",
-        "apps/api/src/core/safety/guards/roles.guard.ts",
-        "apps/api/src/core/safety/controllers/safety.controller.ts",
-        "apps/api/src/core/monetization/controllers/wallet.controller.ts"
-      ],
+      "severity": "blocker",
+      "title": "Roles guard case mismatch \u2014 all admin and moderator routes permanently return 403",
       "description": "Controllers apply @Roles('admin') and @Roles('moderator') using lowercase strings. The RolesGuard compares these against user.role from the database, which stores the Prisma UserRole enum values as uppercase: USER, CREATOR, MODERATOR, ADMIN. The comparison 'admin' === 'ADMIN' is always false. Every admin-gated route returns 403 for everyone including actual admins. Affected functionality includes payout approvals, moderation actions, user restriction management, and wallet admin operations.",
-      "attack_scenario": "The immediate impact is denial of admin functionality, not unauthorized access. The secondary risk is that developers may work around the broken guard by removing or weakening it, creating real auth bypasses in the process.",
-      "fix": "Standardize all @Roles() decorator arguments to use uppercase values matching the Prisma enum: @Roles('ADMIN'), @Roles('MODERATOR'). Alternatively, normalize the comparison in RolesGuard: requiredRoles.includes(user.role?.toUpperCase()). Option A is preferred for explicitness. Add a unit test that fails if any @Roles() call uses lowercase strings."
+      "finding_id": "f-002",
+      "priority": "P0",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: Controllers apply @Roles('admin') and @Roles('moderator') using lowercase strings. The RolesGuard compares these against",
+          "file": "apps/api/src/core/auth/guards/roles.guard.ts"
+        }
+      ],
+      "impact": "The immediate impact is denial of admin functionality, not unauthorized access. The secondary risk is that developers may work around the broken guard by removing or weakening it, creating real auth bypasses in the process.",
+      "suggested_fix": {
+        "approach": "Standardize all @Roles() decorator arguments to use uppercase values matching the Prisma enum: @Roles('ADMIN'), @Roles('MODERATOR'). Alternatively, normalize the comparison in RolesGuard: requiredRoles.includes(user.role?.toUpperCase()). Option A is preferred for explicitness. Add a unit test that fails if any @Roles() call uses lowercase strings.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/auth/guards/roles.guard.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-003",
       "category": "auth-bypass",
-      "severity": "P1",
-      "label": "high",
+      "severity": "major",
       "title": "No-op authentication middleware unconditionally calls next()",
-      "affected_files": [
-        "apps/api/src/middleware/auth.ts"
+      "description": "apps/api/src/middleware/auth.ts exports requireAuth as (req, res, next) => next() \u2014 a complete pass-through providing zero authentication. If this middleware is registered via configure() in any NestJS module or app.use() in main.ts, routes covered by it receive no authentication enforcement regardless of the global JwtAuthGuard.",
+      "finding_id": "f-003",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: apps/api/src/middleware/auth.ts exports requireAuth as (req, res, next) => next() \u2014 a complete pass-through providing ze",
+          "file": "apps/api/src/middleware/auth.ts"
+        }
       ],
-      "description": "apps/api/src/middleware/auth.ts exports requireAuth as (req, res, next) => next() — a complete pass-through providing zero authentication. If this middleware is registered via configure() in any NestJS module or app.use() in main.ts, routes covered by it receive no authentication enforcement regardless of the global JwtAuthGuard.",
-      "attack_scenario": "A developer registers this middleware for a new module expecting it to provide auth coverage. Unauthenticated requests pass through freely to whatever handlers are behind it.",
-      "fix": "Remove apps/api/src/middleware/auth.ts entirely. Rely exclusively on JwtAuthGuard (global APP_GUARD) and per-route @UseGuards() decorators. For public routes, use the @Public() decorator."
+      "impact": "A developer registers this middleware for a new module expecting it to provide auth coverage. Unauthenticated requests pass through freely to whatever handlers are behind it.",
+      "suggested_fix": {
+        "approach": "Remove apps/api/src/middleware/auth.ts entirely. Rely exclusively on JwtAuthGuard (global APP_GUARD) and per-route @UseGuards() decorators. For public routes, use the @Public() decorator.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/middleware/auth.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-004",
       "category": "auth-bypass",
-      "severity": "P1",
-      "label": "high",
+      "severity": "major",
       "title": "Suspended users can obtain valid JWT tokens via password and Google OAuth login",
-      "affected_files": [
-        "apps/api/src/core/auth/auth.service.ts"
-      ],
-      "affected_lines": "95-130",
       "description": "The login() method checks user.deletedAt but does not check a suspended or banned status field. The googleLogin() method performs no deletion or suspension check at all. A suspended user can authenticate via either path and receive fully valid tokens (access: 7 days, refresh: 30 days).",
-      "attack_scenario": "A user suspended for harassment logs in via Google OAuth, receives a valid JWT, and continues posting, messaging, or tipping until the token expires.",
-      "fix": "Add a suspension check in both login() and googleLogin(): if (user.isSuspended || (user.suspendedUntil && user.suspendedUntil > new Date())) throw new UnauthorizedException('Account is suspended'). Also add the check in JwtStrategy.validate() to invalidate tokens for users suspended after initial login."
+      "finding_id": "f-004",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: The login() method checks user.deletedAt but does not check a suspended or banned status field. The googleLogin() method",
+          "file": "apps/api/src/core/auth/auth.service.ts"
+        }
+      ],
+      "impact": "A user suspended for harassment logs in via Google OAuth, receives a valid JWT, and continues posting, messaging, or tipping until the token expires.",
+      "suggested_fix": {
+        "approach": "Add a suspension check in both login() and googleLogin(): if (user.isSuspended || (user.suspendedUntil && user.suspendedUntil > new Date())) throw new UnauthorizedException('Account is suspended'). Also add the check in JwtStrategy.validate() to invalidate tokens for users suspended after initial login.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/auth/auth.service.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-005",
       "category": "data-leakage",
-      "severity": "P1",
-      "label": "high",
+      "severity": "major",
       "title": "Refresh tokens stored as plaintext JWTs in the database",
-      "affected_files": [
-        "apps/api/src/core/auth/auth.service.ts"
-      ],
-      "affected_lines": "260-268",
       "description": "generateTokens() stores the full signed JWT refresh token string in the RefreshToken table with no hashing. A database dump, compromised backup, or future SQL injection exposes every active refresh token. Each is valid for 30 days and can impersonate any logged-in user.",
-      "attack_scenario": "An attacker gains read access to the database via a compromised backup or cloud storage misconfiguration. They extract all rows from the RefreshToken table where isRevoked=false and expiresAt > now. They POST each token value to /api/auth/refresh, receiving fresh 7-day access tokens for every active user.",
-      "fix": "Store SHA-256(refreshToken) in the database instead of the raw value. On refresh, hash the incoming token before the database lookup: const hashed = crypto.createHash('sha256').update(token).digest('hex'). Query WHERE token = hashed."
+      "finding_id": "f-005",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: generateTokens() stores the full signed JWT refresh token string in the RefreshToken table with no hashing. A database d",
+          "file": "apps/api/src/core/auth/auth.service.ts"
+        }
+      ],
+      "impact": "An attacker gains read access to the database via a compromised backup or cloud storage misconfiguration. They extract all rows from the RefreshToken table where isRevoked=false and expiresAt > now. They POST each token value to /api/auth/refresh, receiving fresh 7-day access tokens for every active user.",
+      "suggested_fix": {
+        "approach": "Store SHA-256(refreshToken) in the database instead of the raw value. On refresh, hash the incoming token before the database lookup: const hashed = crypto.createHash('sha256').update(token).digest('hex'). Query WHERE token = hashed.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/auth/auth.service.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-006",
       "category": "auth-bypass",
-      "severity": "P1",
-      "label": "high",
-      "title": "Access tokens have a 7-day lifetime — stolen tokens cannot be invalidated",
-      "affected_files": [
-        "apps/api/src/core/auth/auth.service.ts",
-        "apps/api/src/core/auth/auth.controller.ts"
-      ],
+      "severity": "major",
+      "title": "Access tokens have a 7-day lifetime \u2014 stolen tokens cannot be invalidated",
       "description": "Access tokens are signed JWTs with expiresIn defaulting to '7d'. They are stateless and not tracked in the database, so logout, password change, and account suspension cannot invalidate them. A stolen access token is valid for 7 days with no revocation path. The refresh rotation mechanism provides no meaningful benefit when access tokens outlast typical session durations.",
-      "attack_scenario": "An attacker extracts a user's accessToken cookie via XSS or a network interception on a non-HTTPS staging environment. The user changes their password and logs out. The attacker continues making authenticated API calls for up to 7 more days.",
-      "fix": "Reduce JWT_EXPIRES_IN to '15m'. Reduce cookie maxAge to 15 * 60 * 1000. The existing refresh token mechanism will silently renew the access token. If immediate revocation is required (for logout/suspension), implement a Redis-backed JWT denylist keyed by the jti claim."
+      "finding_id": "f-006",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: Access tokens are signed JWTs with expiresIn defaulting to '7d'. They are stateless and not tracked in the database, so ",
+          "file": "apps/api/src/core/auth/auth.service.ts"
+        }
+      ],
+      "impact": "An attacker extracts a user's accessToken cookie via XSS or a network interception on a non-HTTPS staging environment. The user changes their password and logs out. The attacker continues making authenticated API calls for up to 7 more days.",
+      "suggested_fix": {
+        "approach": "Reduce JWT_EXPIRES_IN to '15m'. Reduce cookie maxAge to 15 * 60 * 1000. The existing refresh token mechanism will silently renew the access token. If immediate revocation is required (for logout/suspension), implement a Redis-backed JWT denylist keyed by the jti claim.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/auth/auth.service.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-007",
       "category": "data-leakage",
-      "severity": "P1",
-      "label": "high",
+      "severity": "major",
       "title": "Full wallet and financial data returned in all user profile responses",
-      "affected_files": [
-        "apps/api/src/core/auth/auth.service.ts",
-        "apps/api/src/core/users/users.service.ts"
+      "description": "sanitizeUser() removes only passwordHash and googleId. All wallet relation data \u2014 balance, pendingBalance, totalEarned, totalWithdrawn, stripeConnectAccountId, kycStatus \u2014 is included in every response that embeds a user object. This affects /api/auth/me, /api/users/:username, profile pages, and all auth flow responses.",
+      "finding_id": "f-007",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: sanitizeUser() removes only passwordHash and googleId. All wallet relation data \u2014 balance, pendingBalance, totalEarned, ",
+          "file": "apps/api/src/core/auth/auth.service.ts"
+        }
       ],
-      "description": "sanitizeUser() removes only passwordHash and googleId. All wallet relation data — balance, pendingBalance, totalEarned, totalWithdrawn, stripeConnectAccountId, kycStatus — is included in every response that embeds a user object. This affects /api/auth/me, /api/users/:username, profile pages, and all auth flow responses.",
-      "attack_scenario": "User A visits User B's public profile. The frontend fetches GET /api/users/b_username. The response includes User B's wallet balance, total lifetime earnings, Stripe Connect account ID, and KYC status. This enables targeted social engineering and exposes internal account identifiers.",
-      "fix": "Define separate response shapes: PublicProfileResponse (display name, avatar, bio, social links, follower counts), PrivateUserResponse (adds email and verification status for the account owner), and OwnerFinancialResponse (adds wallet data, visible only to the owner and admins). Apply the appropriate type by comparing the requester's ID against the profile owner's ID. Never include stripeConnectAccountId or kycStatus in non-owner, non-admin responses."
+      "impact": "User A visits User B's public profile. The frontend fetches GET /api/users/b_username. The response includes User B's wallet balance, total lifetime earnings, Stripe Connect account ID, and KYC status. This enables targeted social engineering and exposes internal account identifiers.",
+      "suggested_fix": {
+        "approach": "Define separate response shapes: PublicProfileResponse (display name, avatar, bio, social links, follower counts), PrivateUserResponse (adds email and verification status for the account owner), and OwnerFinancialResponse (adds wallet data, visible only to the owner and admins). Apply the appropriate type by comparing the requester's ID against the profile owner's ID. Never include stripeConnectAccountId or kycStatus in non-owner, non-admin responses.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/auth/auth.service.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-008",
       "category": "missing-validation",
-      "severity": "P1",
-      "label": "high",
+      "severity": "major",
       "title": "Any authenticated user can self-assign creator role via PATCH /users/settings",
-      "affected_files": [
-        "apps/api/src/core/users/dto/update-user-settings.dto.ts",
-        "apps/api/src/core/users/users.service.ts"
-      ],
       "description": "UpdateUserSettingsDto exposes an @IsOptional() @IsBoolean() isCreator field with no role-based access control. Any user with role USER can call PATCH /api/users/settings with { \"isCreator\": true } and immediately gain creator access to monetization features without any approval workflow.",
-      "attack_scenario": "An authenticated user with role USER sends PATCH /api/users/settings with body {\"isCreator\": true}. Their isCreator flag is set to true. They access Stripe Connect onboarding, configure payout accounts, and begin receiving tips — bypassing any creator vetting, terms acceptance, or KYC process.",
-      "fix": "Remove isCreator from UpdateUserSettingsDto. Creator status must be granted only via an admin-controlled endpoint: POST /api/admin/users/:id/grant-creator protected by @Roles('ADMIN')."
+      "finding_id": "f-008",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: UpdateUserSettingsDto exposes an @IsOptional() @IsBoolean() isCreator field with no role-based access control. Any user ",
+          "file": "apps/api/src/core/users/dto/update-user-settings.dto.ts"
+        }
+      ],
+      "impact": "An authenticated user with role USER sends PATCH /api/users/settings with body {\"isCreator\": true}. Their isCreator flag is set to true. They access Stripe Connect onboarding, configure payout accounts, and begin receiving tips \u2014 bypassing any creator vetting, terms acceptance, or KYC process.",
+      "suggested_fix": {
+        "approach": "Remove isCreator from UpdateUserSettingsDto. Creator status must be granted only via an admin-controlled endpoint: POST /api/admin/users/:id/grant-creator protected by @Roles('ADMIN').",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/users/dto/update-user-settings.dto.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-009",
       "category": "auth-bypass",
-      "severity": "P1",
-      "label": "high",
-      "title": "Stripe webhook endpoint is blocked by the global JWT guard — payment events silently dropped",
-      "affected_files": [
-        "apps/api/src/core/monetization/webhooks/stripe-webhook.controller.ts"
-      ],
+      "severity": "major",
+      "title": "Stripe webhook endpoint is blocked by the global JWT guard \u2014 payment events silently dropped",
       "description": "The global JwtAuthGuard registered as APP_GUARD intercepts all requests including POST /api/webhooks/stripe. Stripe webhook calls carry a Stripe-Signature header, not a JWT. The endpoint returns 401 for every Stripe delivery. Payment success, payout completion, account update, and dispute events are silently dropped with no error logged on the Stripe dashboard side until retries are exhausted.",
-      "attack_scenario": "A creator completes a payout. Stripe sends transfer.completed to /api/webhooks/stripe. The endpoint returns 401. The payout status in the database is never updated. The creator's pendingBalance is never cleared. Financial state becomes permanently inconsistent and requires manual reconciliation.",
-      "fix": "Add @Public() to the StripeWebhookController class or the handleWebhook handler. The endpoint already performs Stripe signature verification via stripe.webhooks.constructEvent with the webhook secret, which is the correct authentication mechanism for this endpoint."
+      "finding_id": "f-009",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: The global JwtAuthGuard registered as APP_GUARD intercepts all requests including POST /api/webhooks/stripe. Stripe webh",
+          "file": "apps/api/src/core/monetization/webhooks/stripe-webhook.controller.ts"
+        }
+      ],
+      "impact": "A creator completes a payout. Stripe sends transfer.completed to /api/webhooks/stripe. The endpoint returns 401. The payout status in the database is never updated. The creator's pendingBalance is never cleared. Financial state becomes permanently inconsistent and requires manual reconciliation.",
+      "suggested_fix": {
+        "approach": "Add @Public() to the StripeWebhookController class or the handleWebhook handler. The endpoint already performs Stripe signature verification via stripe.webhooks.constructEvent with the webhook secret, which is the correct authentication mechanism for this endpoint.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/monetization/webhooks/stripe-webhook.controller.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-010",
       "category": "data-leakage",
-      "severity": "P1",
-      "label": "high",
+      "severity": "major",
       "title": "Tip financial amounts and sender details exposed to any authenticated user",
-      "affected_files": [
-        "apps/api/src/core/monetization/controllers/tip.controller.ts"
-      ],
       "description": "GET /api/tips/post/:postId and GET /api/tips/user/:userId/received return full tip transaction records including amounts, sender IDs, and timestamps. getTipsByPost passes an empty string as the userId parameter. No ownership check verifies that the requesting user is a party to the transactions or an admin.",
-      "attack_scenario": "An authenticated user calls GET /api/tips/user/any_user_id/received and receives a complete list of all tips a target user has received, including exact amounts and sender identities. This leaks private financial transaction data about third parties.",
-      "fix": "Add authorization checks: only the transaction recipient (or an admin) may view tips received. For post tips, restrict to the post author. Extract the requesting user's ID via @GetUser('id') and compare against the target userId parameter before returning data."
+      "finding_id": "f-010",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: GET /api/tips/post/:postId and GET /api/tips/user/:userId/received return full tip transaction records including amounts",
+          "file": "apps/api/src/core/monetization/controllers/tip.controller.ts"
+        }
+      ],
+      "impact": "An authenticated user calls GET /api/tips/user/any_user_id/received and receives a complete list of all tips a target user has received, including exact amounts and sender identities. This leaks private financial transaction data about third parties.",
+      "suggested_fix": {
+        "approach": "Add authorization checks: only the transaction recipient (or an admin) may view tips received. For post tips, restrict to the post author. Extract the requesting user's ID via @GetUser('id') and compare against the target userId parameter before returning data.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/monetization/controllers/tip.controller.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-011",
       "category": "secrets-exposure",
-      "severity": "P1",
-      "label": "high",
+      "severity": "major",
       "title": "Notifications module uses hardcoded 'dev-secret' as JWT fallback",
-      "affected_files": [
-        "apps/api/src/core/notifications/notifications.module.ts"
+      "description": "JwtModule.register({ secret: process.env.JWT_SECRET || 'dev-secret' }) uses the literal string 'dev-secret' if JWT_SECRET is not set. Any JWT signed with this well-known fallback is accepted as valid by the notifications module. The main auth module fails hard if JWT_SECRET is missing \u2014 this module silently falls back.",
+      "finding_id": "f-011",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: JwtModule.register({ secret: process.env.JWT_SECRET || 'dev-secret' }) uses the literal string 'dev-secret' if JWT_SECRE",
+          "file": "apps/api/src/core/notifications/notifications.module.ts"
+        }
       ],
-      "affected_lines": "16",
-      "description": "JwtModule.register({ secret: process.env.JWT_SECRET || 'dev-secret' }) uses the literal string 'dev-secret' if JWT_SECRET is not set. Any JWT signed with this well-known fallback is accepted as valid by the notifications module. The main auth module fails hard if JWT_SECRET is missing — this module silently falls back.",
-      "attack_scenario": "In a deployment where JWT_SECRET is accidentally unset, an attacker constructs a JWT signed with 'dev-secret' for any sub claim and uses it to authenticate against notification endpoints, subscribing to or reading any user's notification stream.",
-      "fix": "Replace the || 'dev-secret' fallback with: const secret = configService.get<string>('JWT_SECRET'); if (!secret) throw new Error('JWT_SECRET is required'). Inject ConfigService into the module. Alternatively, extract JwtModule configuration into a shared auth module used by all modules that need JWT validation."
+      "impact": "In a deployment where JWT_SECRET is accidentally unset, an attacker constructs a JWT signed with 'dev-secret' for any sub claim and uses it to authenticate against notification endpoints, subscribing to or reading any user's notification stream.",
+      "suggested_fix": {
+        "approach": "Replace the || 'dev-secret' fallback with: const secret = configService.get<string>('JWT_SECRET'); if (!secret) throw new Error('JWT_SECRET is required'). Inject ConfigService into the module. Alternatively, extract JwtModule configuration into a shared auth module used by all modules that need JWT validation.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/notifications/notifications.module.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-012",
       "category": "data-leakage",
-      "severity": "P1",
-      "label": "high",
+      "severity": "major",
       "title": "Auth tokens returned in JSON response body for changePassword and verifyEmail",
-      "affected_files": [
-        "apps/api/src/core/auth/auth.service.ts",
-        "apps/web/src/lib/api/auth.ts"
+      "description": "changePassword() and verifyEmail() in auth.service.ts return a TokenResponse containing accessToken and refreshToken in the JSON body. The web client type annotations confirm this \u2014 Promise<{ user: User; accessToken: string; refreshToken: string }>. A comment acknowledges this is intentional 'for backward compatibility'. Tokens in the response body are accessible to JavaScript (unlike httpOnly cookies) and can be read by any XSS payload present on the page at the time these operations complete.",
+      "finding_id": "f-012",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: changePassword() and verifyEmail() in auth.service.ts return a TokenResponse containing accessToken and refreshToken in ",
+          "file": "apps/api/src/core/auth/auth.service.ts"
+        }
       ],
-      "description": "changePassword() and verifyEmail() in auth.service.ts return a TokenResponse containing accessToken and refreshToken in the JSON body. The web client type annotations confirm this — Promise<{ user: User; accessToken: string; refreshToken: string }>. A comment acknowledges this is intentional 'for backward compatibility'. Tokens in the response body are accessible to JavaScript (unlike httpOnly cookies) and can be read by any XSS payload present on the page at the time these operations complete.",
-      "attack_scenario": "An XSS payload on any page intercepts the fetch() response when a user changes their password or verifies their email, extracts accessToken and refreshToken from the JSON body, and exfiltrates them to an attacker-controlled server — enabling full account takeover.",
-      "fix": "Remove accessToken and refreshToken from the JSON body of changePassword and verifyEmail responses. Set them exclusively via httpOnly cookies, consistent with the login endpoint. Update the web client response type annotations to remove token fields."
+      "impact": "An XSS payload on any page intercepts the fetch() response when a user changes their password or verifies their email, extracts accessToken and refreshToken from the JSON body, and exfiltrates them to an attacker-controlled server \u2014 enabling full account takeover.",
+      "suggested_fix": {
+        "approach": "Remove accessToken and refreshToken from the JSON body of changePassword and verifyEmail responses. Set them exclusively via httpOnly cookies, consistent with the login endpoint. Update the web client response type annotations to remove token fields.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/auth/auth.service.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-013",
       "category": "data-leakage",
-      "severity": "P1",
-      "label": "high",
+      "severity": "major",
       "title": "Evidence of auth tokens previously or currently stored in localStorage",
-      "affected_files": [
-        "apps/web/src/lib/api/client.ts"
-      ],
       "description": "clearAuthStorage() in the API client calls localStorage.removeItem('accessToken') and localStorage.removeItem('refreshToken'). This cleanup code would be unnecessary if tokens were never stored in localStorage. The function's existence confirms that at least one code path writes auth tokens to localStorage, where they are accessible to any JavaScript on the same origin.",
-      "attack_scenario": "If any code path writes accessToken or refreshToken to localStorage and an XSS vulnerability exists anywhere on the domain, an attacker's injected script calls localStorage.getItem('accessToken') and exfiltrates the token, enabling full account takeover for the duration of the 7-day token lifetime.",
-      "fix": "Search the entire codebase for localStorage.setItem('accessToken') and localStorage.setItem('refreshToken'). Remove every such call. Tokens must only be set as httpOnly cookies by the server. Remove clearAuthStorage() after confirming no setItem calls remain."
+      "finding_id": "f-013",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: clearAuthStorage() in the API client calls localStorage.removeItem('accessToken') and localStorage.removeItem('refreshTo",
+          "file": "apps/web/src/lib/api/client.ts"
+        }
+      ],
+      "impact": "If any code path writes accessToken or refreshToken to localStorage and an XSS vulnerability exists anywhere on the domain, an attacker's injected script calls localStorage.getItem('accessToken') and exfiltrates the token, enabling full account takeover for the duration of the 7-day token lifetime.",
+      "suggested_fix": {
+        "approach": "Search the entire codebase for localStorage.setItem('accessToken') and localStorage.setItem('refreshToken'). Remove every such call. Tokens must only be set as httpOnly cookies by the server. Remove clearAuthStorage() after confirming no setItem calls remain.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/web/src/lib/api/client.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-014",
       "category": "missing-validation",
-      "severity": "P2",
-      "label": "medium",
+      "severity": "minor",
       "title": "resetPassword and verifyEmail scan all active tokens globally without user filter",
-      "affected_files": [
-        "apps/api/src/core/auth/auth.service.ts"
-      ],
-      "affected_lines": "452-472",
       "description": "resetPassword() fetches the last 100 non-expired non-used PasswordResetTokens with no userId filter, then iterates them all with bcrypt.compare. An attacker triggering many reset requests from multiple IPs can fill the 100-token window, pushing legitimate tokens out. The same pattern exists in verifyEmail(). The architecture also violates isolation: a valid token for user A is compared against every reset attempt in the window.",
-      "attack_scenario": "An attacker triggers password reset requests for 100+ accounts from multiple IPs, filling the recent token list. A legitimate user's reset token is pushed out of the top-100 window. Their reset attempt fails with 'Invalid or expired token' even though the token is valid and unexpired.",
-      "fix": "Add userId to both query filters: where: { userId: targetUserId, isUsed: false, expiresAt: { gt: new Date() } }. For resetPassword, encode userId in the reset token (e.g., as a JWT sub claim or prepended in the token value) so the userId is recoverable without an extra email parameter."
+      "finding_id": "f-014",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: resetPassword() fetches the last 100 non-expired non-used PasswordResetTokens with no userId filter, then iterates them ",
+          "file": "apps/api/src/core/auth/auth.service.ts"
+        }
+      ],
+      "impact": "An attacker triggers password reset requests for 100+ accounts from multiple IPs, filling the recent token list. A legitimate user's reset token is pushed out of the top-100 window. Their reset attempt fails with 'Invalid or expired token' even though the token is valid and unexpired.",
+      "suggested_fix": {
+        "approach": "Add userId to both query filters: where: { userId: targetUserId, isUsed: false, expiresAt: { gt: new Date() } }. For resetPassword, encode userId in the reset token (e.g., as a JWT sub claim or prepended in the token value) so the userId is recoverable without an extra email parameter.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/auth/auth.service.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-015",
       "category": "cors-misconfiguration",
-      "severity": "P2",
-      "label": "medium",
+      "severity": "minor",
       "title": "CORS falls back to localhost origins if ALLOWED_ORIGINS is unset in production",
-      "affected_files": [
-        "apps/api/src/main.ts"
+      "description": "The CORS origin whitelist defaults to 'http://localhost:3000,http://localhost:3001,http://app.example.com' if ALLOWED_ORIGINS is not set. In a production deployment where this env var is absent, legitimate production-domain requests are blocked while localhost origins are permitted.",
+      "finding_id": "f-015",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: The CORS origin whitelist defaults to 'http://localhost:3000,http://localhost:3001,http://app.example.com' if ALLOWED_ORI",
+          "file": "apps/api/src/main.ts"
+        }
       ],
-      "affected_lines": "33-42",
-      "description": "The CORS origin whitelist defaults to 'http://localhost:3000,http://localhost:3001,http://localhost:3004' if ALLOWED_ORIGINS is not set. In a production deployment where this env var is absent, legitimate production-domain requests are blocked while localhost origins are permitted.",
-      "attack_scenario": "A developer deploys to production without setting ALLOWED_ORIGINS. Frontend requests fail. They work around the issue by temporarily setting a permissive value or disabling CORS, creating a window of broad access.",
-      "fix": "At startup, validate that ALLOWED_ORIGINS is set in production: if (process.env.NODE_ENV === 'production' && !process.env.ALLOWED_ORIGINS) { throw new Error('ALLOWED_ORIGINS must be explicitly set in production'); }. Remove localhost origins from any fallback default."
+      "impact": "A developer deploys to production without setting ALLOWED_ORIGINS. Frontend requests fail. They work around the issue by temporarily setting a permissive value or disabling CORS, creating a window of broad access.",
+      "suggested_fix": {
+        "approach": "At startup, validate that ALLOWED_ORIGINS is set in production: if (process.env.NODE_ENV === 'production' && !process.env.ALLOWED_ORIGINS) { throw new Error('ALLOWED_ORIGINS must be explicitly set in production'); }. Remove localhost origins from any fallback default.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/main.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-016",
       "category": "data-leakage",
-      "severity": "P2",
-      "label": "medium",
+      "severity": "minor",
       "title": "Moderation restriction status leaks to any authenticated user",
-      "affected_files": [
-        "apps/api/src/core/safety/controllers/safety.controller.ts"
-      ],
       "description": "GET /api/safety/moderation/users/:userId/restriction has no @Roles() guard. Any authenticated user can check whether any other user is under a moderation restriction, leaking internal moderation state.",
-      "attack_scenario": "A user who has been reported for harassment calls this endpoint repeatedly to monitor whether their reports on others have resulted in action, enabling them to time renewed harassment attempts.",
-      "fix": "Add @Roles('ADMIN', 'MODERATOR') to the endpoint, or restrict it to the user checking their own status by comparing userId param against the authenticated user's ID and throwing ForbiddenException for mismatches from non-admin callers."
+      "finding_id": "f-016",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: GET /api/safety/moderation/users/:userId/restriction has no @Roles() guard. Any authenticated user can check whether any",
+          "file": "apps/api/src/core/safety/controllers/safety.controller.ts"
+        }
+      ],
+      "impact": "A user who has been reported for harassment calls this endpoint repeatedly to monitor whether their reports on others have resulted in action, enabling them to time renewed harassment attempts.",
+      "suggested_fix": {
+        "approach": "Add @Roles('ADMIN', 'MODERATOR') to the endpoint, or restrict it to the user checking their own status by comparing userId param against the authenticated user's ID and throwing ForbiddenException for mismatches from non-admin callers.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/safety/controllers/safety.controller.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-017",
       "category": "data-leakage",
-      "severity": "P2",
-      "label": "medium",
+      "severity": "minor",
       "title": "Any authenticated user can read any moderation appeal by ID",
-      "affected_files": [
-        "apps/api/src/core/safety/controllers/safety.controller.ts"
-      ],
       "description": "GET /api/safety/appeals/:id has no ownership or role check. Any authenticated user with a valid appeal UUID can read the full appeal contents including the appealed user's statement and the moderation decision.",
-      "attack_scenario": "An attacker obtains an appeal UUID (via predictable IDs, a data leak, or an insider tip) and reads the private moderation context about any user, including the specific statements made against them.",
-      "fix": "In getAppealById(), verify that the requesting user is either the appeal owner (appeal.userId === req.user.id) or a moderator/admin. Throw ForbiddenException otherwise."
+      "finding_id": "f-017",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: GET /api/safety/appeals/:id has no ownership or role check. Any authenticated user with a valid appeal UUID can read the",
+          "file": "apps/api/src/core/safety/controllers/safety.controller.ts"
+        }
+      ],
+      "impact": "An attacker obtains an appeal UUID (via predictable IDs, a data leak, or an insider tip) and reads the private moderation context about any user, including the specific statements made against them.",
+      "suggested_fix": {
+        "approach": "In getAppealById(), verify that the requesting user is either the appeal owner (appeal.userId === req.user.id) or a moderator/admin. Throw ForbiddenException otherwise.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/safety/controllers/safety.controller.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-018",
       "category": "secrets-exposure",
-      "severity": "P2",
-      "label": "medium",
+      "severity": "minor",
       "title": "Actual default Redis password committed in .env.example",
-      "affected_files": [
-        "apps/api/.env.example"
+      "description": "apps/api/.env.example sets REDIS_PASSWORD=embr_redis_password \u2014 a real password value, not a placeholder. Any developer who copies .env.example to .env without changing this value deploys with a publicly known credential.",
+      "finding_id": "f-018",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: apps/api/.env.example sets REDIS_PASSWORD=embr_redis_password \u2014 a real password value, not a placeholder. Any developer ",
+          "file": "apps/api/.env.example"
+        }
       ],
-      "description": "apps/api/.env.example sets REDIS_PASSWORD=embr_redis_password — a real password value, not a placeholder. Any developer who copies .env.example to .env without changing this value deploys with a publicly known credential.",
-      "attack_scenario": "A developer deploys to a cloud environment without changing the Redis password. The Redis container is accidentally bound to a public interface. An attacker with knowledge of the repository authenticates with 'embr_redis_password' and reads or poisons cache data.",
-      "fix": "Replace REDIS_PASSWORD=embr_redis_password with REDIS_PASSWORD=CHANGE_ME_BEFORE_DEPLOY in both .env.example files. Add a startup check: if (process.env.REDIS_PASSWORD === 'CHANGE_ME_BEFORE_DEPLOY') throw new Error('Default Redis password must be changed before deployment')."
+      "impact": "A developer deploys to a cloud environment without changing the Redis password. The Redis container is accidentally bound to a public interface. An attacker with knowledge of the repository authenticates with 'embr_redis_password' and reads or poisons cache data.",
+      "suggested_fix": {
+        "approach": "Replace REDIS_PASSWORD=embr_redis_password with REDIS_PASSWORD=CHANGE_ME_BEFORE_DEPLOY in both .env.example files. Add a startup check: if (process.env.REDIS_PASSWORD === 'CHANGE_ME_BEFORE_DEPLOY') throw new Error('Default Redis password must be changed before deployment').",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/.env.example"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-019",
       "category": "missing-validation",
-      "severity": "P2",
-      "label": "medium",
+      "severity": "minor",
       "title": "Auth cookies use sameSite: 'lax' and secure flag depends on NODE_ENV",
-      "affected_files": [
-        "apps/api/src/core/auth/auth.controller.ts"
-      ],
       "description": "Both accessToken and refreshToken cookies are set with sameSite: 'lax' and secure: process.env.NODE_ENV === 'production'. The 'lax' setting is weaker than 'strict' for auth-specific cookies. The secure flag is absent in any environment where NODE_ENV is not explicitly set to 'production', meaning cookies are transmitted without the Secure attribute in staging deployments that use HTTP.",
-      "attack_scenario": "In a staging environment accessed over HTTP where NODE_ENV is set to 'staging' or is unset, auth cookies are transmitted in plaintext. An attacker on the same network performs a passive intercept and obtains valid tokens.",
-      "fix": "Change sameSite to 'strict'. Replace secure: process.env.NODE_ENV === 'production' with a dedicated env var: secure: process.env.COOKIE_SECURE === 'true'. Set COOKIE_SECURE=true in all non-local environments. Add a startup validation that COOKIE_SECURE is explicitly set."
+      "finding_id": "f-019",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: Both accessToken and refreshToken cookies are set with sameSite: 'lax' and secure: process.env.NODE_ENV === 'production'",
+          "file": "apps/api/src/core/auth/auth.controller.ts"
+        }
+      ],
+      "impact": "In a staging environment accessed over HTTP where NODE_ENV is set to 'staging' or is unset, auth cookies are transmitted in plaintext. An attacker on the same network performs a passive intercept and obtains valid tokens.",
+      "suggested_fix": {
+        "approach": "Change sameSite to 'strict'. Replace secure: process.env.NODE_ENV === 'production' with a dedicated env var: secure: process.env.COOKIE_SECURE === 'true'. Set COOKIE_SECURE=true in all non-local environments. Add a startup validation that COOKIE_SECURE is explicitly set.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/auth/auth.controller.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-020",
       "category": "secrets-exposure",
-      "severity": "P2",
-      "label": "medium",
+      "severity": "minor",
       "title": "ENABLE_DETAILED_ERRORS and ENABLE_SWAGGER default to true in example configs",
-      "affected_files": [
-        ".env.example",
-        "apps/api/.env.example"
-      ],
       "description": "Both example files set ENABLE_SWAGGER=true and ENABLE_DETAILED_ERRORS=true with no production warning. If these values are copied to production .env files without review, the API exposes full stack traces in 500 responses and a publicly accessible Swagger UI at /docs.",
-      "attack_scenario": "A production deployment inherits ENABLE_DETAILED_ERRORS=true. An attacker fuzzes API endpoints. 500 error responses include database error messages and stack traces, revealing the internal schema, query structure, and code layout.",
-      "fix": "Change the example file defaults to ENABLE_SWAGGER=false and ENABLE_DETAILED_ERRORS=false with comments: # MUST be false in production. Add startup validation: if (process.env.NODE_ENV === 'production' && process.env.ENABLE_DETAILED_ERRORS === 'true') throw new Error('ENABLE_DETAILED_ERRORS must be false in production')."
+      "finding_id": "f-020",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: Both example files set ENABLE_SWAGGER=true and ENABLE_DETAILED_ERRORS=true with no production warning. If these values a",
+          "file": ".env.example"
+        }
+      ],
+      "impact": "A production deployment inherits ENABLE_DETAILED_ERRORS=true. An attacker fuzzes API endpoints. 500 error responses include database error messages and stack traces, revealing the internal schema, query structure, and code layout.",
+      "suggested_fix": {
+        "approach": "Change the example file defaults to ENABLE_SWAGGER=false and ENABLE_DETAILED_ERRORS=false with comments: # MUST be false in production. Add startup validation: if (process.env.NODE_ENV === 'production' && process.env.ENABLE_DETAILED_ERRORS === 'true') throw new Error('ENABLE_DETAILED_ERRORS must be false in production').",
+        "estimated_effort": "small",
+        "affected_files": [
+          ".env.example"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-021",
       "category": "missing-validation",
-      "severity": "P2",
-      "label": "medium",
+      "severity": "minor",
       "title": "No Content-Security-Policy header in Next.js frontend",
-      "affected_files": [
-        "apps/web/next.config.js"
-      ],
       "description": "The Next.js security headers configuration includes X-Content-Type-Options, X-Frame-Options, Referrer-Policy, and Permissions-Policy, but no Content-Security-Policy. Without a CSP there is no browser-enforced defense against injected scripts reading DOM content, intercepting fetch() responses containing tokens (F-012), or exfiltrating data. The deprecated X-XSS-Protection: 1; mode=block header is also present. No Strict-Transport-Security header is configured.",
-      "attack_scenario": "An XSS payload injected through a user-generated content field (profile bio, post body) executes in any visitor's browser, reads the JSON response of a changePassword or verifyEmail call containing raw tokens (F-012), and exfiltrates them.",
-      "fix": "Add a Content-Security-Policy header restricting script-src to 'self' and explicitly whitelisted CDN origins. Add Strict-Transport-Security: max-age=31536000; includeSubDomains. Remove the deprecated X-XSS-Protection header (it provides no protection in modern browsers and can cause issues in older ones)."
+      "finding_id": "f-021",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: The Next.js security headers configuration includes X-Content-Type-Options, X-Frame-Options, Referrer-Policy, and Permis",
+          "file": "apps/web/next.config.js"
+        }
+      ],
+      "impact": "An XSS payload injected through a user-generated content field (profile bio, post body) executes in any visitor's browser, reads the JSON response of a changePassword or verifyEmail call containing raw tokens (F-012), and exfiltrates them.",
+      "suggested_fix": {
+        "approach": "Add a Content-Security-Policy header restricting script-src to 'self' and explicitly whitelisted CDN origins. Add Strict-Transport-Security: max-age=31536000; includeSubDomains. Remove the deprecated X-XSS-Protection header (it provides no protection in modern browsers and can cause issues in older ones).",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/web/next.config.js"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-022",
       "category": "missing-validation",
-      "severity": "P3",
-      "label": "low",
+      "severity": "nit",
       "title": "Google OAuth callback uses unchecked FRONTEND_URL; web client points to wrong OAuth endpoint",
-      "affected_files": [
-        "apps/api/src/core/auth/auth.controller.ts",
-        "apps/web/src/lib/api/auth.ts"
+      "description": "The Google OAuth callback redirects to `${process.env.FRONTEND_URL}/auth/callback` without validating FRONTEND_URL is set \u2014 if unset, the redirect target is 'undefined/auth/callback'. Separately, the web client's googleLogin() function redirects users directly to /auth/google/callback instead of /auth/google, skipping the OAuth state initiation step which provides CSRF protection in the OAuth handshake.",
+      "finding_id": "f-022",
+      "priority": "P3",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: The Google OAuth callback redirects to `${process.env.FRONTEND_URL}/auth/callback` without validating FRONTEND_URL is se",
+          "file": "apps/api/src/core/auth/auth.controller.ts"
+        }
       ],
-      "description": "The Google OAuth callback redirects to `${process.env.FRONTEND_URL}/auth/callback` without validating FRONTEND_URL is set — if unset, the redirect target is 'undefined/auth/callback'. Separately, the web client's googleLogin() function redirects users directly to /auth/google/callback instead of /auth/google, skipping the OAuth state initiation step which provides CSRF protection in the OAuth handshake.",
-      "attack_scenario": "If FRONTEND_URL is misconfigured in production, all Google OAuth logins fail silently. The incorrect callback URL in the web client may weaken state-based CSRF protection in the OAuth flow depending on Passport configuration.",
-      "fix": "Validate FRONTEND_URL at startup. In the web client's googleLogin(), change the redirect target from /auth/google/callback to /auth/google."
+      "impact": "If FRONTEND_URL is misconfigured in production, all Google OAuth logins fail silently. The incorrect callback URL in the web client may weaken state-based CSRF protection in the OAuth flow depending on Passport configuration.",
+      "suggested_fix": {
+        "approach": "Validate FRONTEND_URL at startup. In the web client's googleLogin(), change the redirect target from /auth/google/callback to /auth/google.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/src/core/auth/auth.controller.ts"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-023",
       "category": "data-leakage",
-      "severity": "P3",
-      "label": "low",
+      "severity": "nit",
       "title": "paymentIntentId stored in sessionStorage",
-      "affected_files": [
-        "apps/web/src/pages/gigs/booking/[gigId].tsx"
-      ],
       "description": "sessionStorage.setItem('paymentIntentId', data.paymentIntentId) stores a Stripe Payment Intent ID in client-side sessionStorage. While sessionStorage is tab-scoped and does not persist across sessions, it is fully accessible to any JavaScript executing on the same origin.",
-      "attack_scenario": "An XSS payload on the booking page reads sessionStorage.getItem('paymentIntentId') and uses the value to query Stripe's API for payment status or attempt replay attacks against the booking confirmation endpoint.",
-      "fix": "Pass paymentIntentId as React component state or a URL parameter rather than writing it to sessionStorage. If persistence across navigation within the same session is required, encode it in a server-side session or signed cookie."
+      "finding_id": "f-023",
+      "priority": "P3",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: sessionStorage.setItem('paymentIntentId', data.paymentIntentId) stores a Stripe Payment Intent ID in client-side session",
+          "file": "apps/web/src/pages/gigs/booking/[gigId].tsx"
+        }
+      ],
+      "impact": "An XSS payload on the booking page reads sessionStorage.getItem('paymentIntentId') and uses the value to query Stripe's API for payment status or attempt replay attacks against the booking confirmation endpoint.",
+      "suggested_fix": {
+        "approach": "Pass paymentIntentId as React component state or a URL parameter rather than writing it to sessionStorage. If persistence across navigation within the same session is required, encode it in a server-side session or signed cookie.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/web/src/pages/gigs/booking/[gigId].tsx"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T14:30:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     }
   ],
-  "summary": {
-    "total_findings": 23,
+  "schema_version": "1.1.0",
+  "run_metadata": {
+    "timestamp": "2026-03-05T14:30:00Z",
+    "branch": "main",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "claude-sonnet-4-5"
+  },
+  "rollups": {
     "by_severity": {
-      "P0_blocker": 2,
-      "P1_high": 11,
-      "P2_medium": 7,
-      "P3_low": 3
+      "blocker": 2,
+      "major": 11,
+      "minor": 8,
+      "nit": 2
     },
     "by_category": {
-      "auth-bypass": 5,
-      "data-leakage": 7,
       "secrets-exposure": 4,
+      "auth-bypass": 5,
+      "data-leakage": 8,
       "missing-validation": 5,
-      "cors-misconfiguration": 1,
-      "xss": 0,
-      "injection": 0,
-      "dependency-vuln": 0
+      "cors-misconfiguration": 1
     },
-    "dependency_note": "No known critical CVEs in declared dependency versions: NestJS 10.x, Next.js 14.2.5, bcryptjs 2.4.3, passport-jwt 4.0.1, Stripe 14.x, Prisma 5.8.0. passport-google-oauth20 2.0.0 is current. Prisma 5.8.0 is behind 5.22.0 (declared in apps/api/package.json) — the root package.json pins 5.8.0. Recommend running npm audit for transitive dependency vulnerabilities not visible from declared dependencies alone.",
-    "top_priorities": [
-      "F-001: Remove the data-exfiltration fetch() beacon from jwt.strategy.ts immediately and audit all files in commit cd28777f",
-      "F-002: Fix roles guard case mismatch (lowercase vs uppercase enum values) to restore admin functionality",
-      "F-006: Reduce JWT_EXPIRES_IN from 7d to 15m",
-      "F-007: Restrict wallet and financial data from public user profile responses",
-      "F-008: Remove isCreator from UpdateUserSettingsDto and gate creator status behind an admin endpoint",
-      "F-009: Add @Public() to the Stripe webhook controller",
-      "F-011: Remove the 'dev-secret' JWT fallback in notifications.module.ts",
-      "F-012: Remove auth tokens from changePassword and verifyEmail JSON response bodies",
-      "F-013: Audit and remove any localStorage writes of auth tokens"
-    ]
-  }
+    "by_type": {
+      "bug": 23
+    },
+    "by_status": {
+      "open": 23
+    }
+  },
+  "next_actions": []
 }
