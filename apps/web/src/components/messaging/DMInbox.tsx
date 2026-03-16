@@ -23,17 +23,16 @@ export const DMInbox: React.FC<DMInboxProps> = ({
   onConversationSelect,
 }) => {
   // Stable callback references so useMessaging's connection effect doesn't re-run
-  const handleMessage = useCallback((message: any, _conversation: any) => {
-    console.log('New message received:', message);
-    // Handle new message notification
+  const handleMessage = useCallback((_message: any, _conversation: any) => {
+    // new message notification handling
   }, []);
 
-  const handleMessageRead = useCallback((data: any) => {
-    console.log('Message read:', data);
+  const handleMessageRead = useCallback((_data: any) => {
+    // mark-as-read callback
   }, []);
 
-  const handleTypingIndicator = useCallback((indicator: any) => {
-    console.log('Typing indicator:', indicator);
+  const handleTypingIndicator = useCallback((_indicator: any) => {
+    // typing indicator update
   }, []);
 
   const {
@@ -122,12 +121,13 @@ export const DMInbox: React.FC<DMInboxProps> = ({
       const conv = await messagingAPI.createConversation({ participantId: userId });
       setComposeOpen(false);
       await fetchConversations();
-      const fresh = conversations.find((c) => c.id === conv.id) ?? ({
-        id: conv.id,
-        otherUser: (conv as any).otherUser,
+      const convId = conv.conversation.id;
+      const fresh = conversations.find((c) => c.id === convId) ?? ({
+        id: convId,
+        otherUser: (conv.conversation as unknown as { otherUser: ConversationPreview['otherUser'] }).otherUser,
         unreadCount: 0,
         lastMessage: null,
-        updatedAt: new Date().toISOString(),
+        lastMessageAt: new Date().toISOString(),
       } as ConversationPreview);
       handleConversationSelect(fresh);
     } catch (err) {

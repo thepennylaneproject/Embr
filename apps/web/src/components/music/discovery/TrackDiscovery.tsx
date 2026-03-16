@@ -193,8 +193,8 @@ export const TrackDiscovery: React.FC<TrackDiscoveryProps> = ({ onTrackSelect, o
           boxShadow: '0 -4px 24px rgba(0,0,0,0.15)',
         }}>
           <MusicPlayer
-            trackId={playingTrack.id}
-            trackTitle={playingTrack.title}
+            trackId={playingTrack.id as string}
+            trackTitle={playingTrack.title as string}
             artistName={(playingTrack as any).artist?.stageName || 'Unknown Artist'}
             audioUrl={(playingTrack as any).audioUrl}
             duration={(playingTrack as any).duration || 0}

@@ -41,6 +41,11 @@ export const usersApi = {
     const { data } = await apiClient.delete('/users/account');
     return data;
   },
+
+  getUserByUsername: async (username: string) => {
+    const { data } = await apiClient.get(`/users/by-username/${encodeURIComponent(username)}`);
+    return data;
+  },
 };
 
 export default usersApi;

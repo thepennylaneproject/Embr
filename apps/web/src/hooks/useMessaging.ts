@@ -96,13 +96,11 @@ export function useMessaging(options: UseMessagingOptions = {}) {
 
     // Connection events
     newSocket.on("connect", () => {
-      console.log("WebSocket connected");
       setIsConnected(true);
       setError(null);
     });
 
     newSocket.on("disconnect", () => {
-      console.log("WebSocket disconnected");
       setIsConnected(false);
     });
 
@@ -116,7 +114,6 @@ export function useMessaging(options: UseMessagingOptions = {}) {
     newSocket.on(
       WebSocketEvent.MESSAGE_RECEIVE,
       ({ message, conversation }) => {
-        console.log("Message received:", message);
 
         // Add message to local state
         setMessages((prev) => ({
@@ -152,7 +149,6 @@ export function useMessaging(options: UseMessagingOptions = {}) {
     );
 
     newSocket.on(WebSocketEvent.MESSAGE_READ, (data) => {
-      console.log("Messages marked as read:", data);
 
       // Update message statuses
       if (data.messageIds) {
@@ -174,8 +170,6 @@ export function useMessaging(options: UseMessagingOptions = {}) {
     newSocket.on(
       WebSocketEvent.TYPING_INDICATOR,
       (indicator: TypingIndicator) => {
-        console.log("Typing indicator:", indicator);
-
         const key = `${indicator.conversationId}-${indicator.userId}`;
 
         if (indicator.isTyping) {

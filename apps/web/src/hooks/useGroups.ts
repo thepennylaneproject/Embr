@@ -4,7 +4,6 @@ import { getApiErrorMessage } from '@/lib/api/error';
 import type {
   Group,
   GroupMember,
-  GroupJoinRequest,
   CreateGroupInput,
   UpdateGroupInput,
   GroupSearchParams,

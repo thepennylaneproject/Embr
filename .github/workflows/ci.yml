@@ -61,6 +61,9 @@ jobs:
       - name: Validate API Prisma schema
         run: npm --prefix apps/api run db:validate
 
+      - name: Build shared packages
+        run: npm run build:types
+
       - name: Typecheck Web
         run: npx tsc --noEmit --project apps/web/tsconfig.json
 
