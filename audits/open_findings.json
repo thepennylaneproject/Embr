@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-03-16T20:57:21Z",
+  "last_updated": "2026-03-16T22:46:47Z",
   "run_id": "synthesizer-v2-20260310-011114",
   "open_findings": [
     {
@@ -8,9 +8,17 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Transaction and Payout tables have walletId foreign key field but schema marks as nullable",
-      "agent": "schema-auditor"
+      "agent": "schema-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-75): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-schema-monetary-cents-001",
@@ -52,9 +60,17 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Monetary amount fields (Wallet, Transaction, Tip, Payout) lack NOT NULL or CHECK constraints in schema",
-      "agent": "schema-auditor"
+      "agent": "schema-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-79): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-schema-orphaned-refs-transaction-user-001",
@@ -96,45 +112,85 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "CI/CD pipeline does not build or test the API; only web typecheck and build are validated",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-83): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-deploy-typescript-strict-api-001",
       "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "API TypeScript strict mode enabled but hundreds of pre-existing type errors prevent clean builds",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-84): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-deploy-error-boundary-web-001",
       "type": "enhancement",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Web frontend has global _error page but no React Error Boundary component for client-side crashes",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-85): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-deploy-health-check-api-001",
       "type": "enhancement",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "API health check endpoint referenced in deploy.yml but may not be implemented in NestJS app",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-86): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-deploy-env-validation-startup-001",
       "type": "enhancement",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Environment variables are not validated at startup; missing or invalid vars could cause runtime crashes hours after boot",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-87): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-deploy-web-env-validation-001",
@@ -221,27 +277,51 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Potential null dereference in conversation deletion without soft-delete",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-96): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-log-003",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Unsafe profile access in follows.service.ts without existence check",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-97): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-log-004",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Race condition in idempotency check for checkout (orders.service.ts)",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-98): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-log-005",
@@ -320,27 +400,51 @@
       "type": "performance",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Potential N+1 query in messaging.service.getConversations with nested includes",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-107): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-perf-002",
       "type": "performance",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing indexes on frequently-used WHERE columns in messaging and follows tables",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-108): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-perf-003",
       "type": "performance",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Messaging service N+1: follows.service calls blockingService.isBlocked() and extra findUnique in loop",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-109): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-perf-004",
@@ -374,9 +478,17 @@
       "type": "performance",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Wallet.service queries all transactions without pagination or filtering",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-113): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-perf-008",
@@ -392,9 +504,17 @@
       "type": "performance",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Frontend: Marketplace page creates new hooks with unfetched dependencies on every render",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-115): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-perf-010",
@@ -428,9 +548,17 @@
       "type": "performance",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "follows.service denormalizes follower/following counts but no transaction atomicity on update",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-119): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-perf-014",
@@ -446,9 +574,17 @@
       "type": "performance",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing database indexes on post.authorId, message.senderId, comment.postId (common JOINs)",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-121): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-perf-016",
@@ -482,9 +618,17 @@
       "type": "performance",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Query: scheduling unknown frequency of scheduled posts processor",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-125): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-perf-020",
@@ -517,36 +661,68 @@
       "type": "bug",
       "severity": "high",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "SQL Injection in $queryRaw without parameterization",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-128): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "sec-003",
       "type": "bug",
       "severity": "high",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing COOKIE_SECURE environment variable allows cookie transmission over HTTP",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-129): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "sec-004",
       "type": "bug",
       "severity": "high",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Over-exposed user data in API responses leaks private fields",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-130): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "sec-005",
       "type": "bug",
       "severity": "high",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "IDOR in wallet endpoints\u2014no ownership verification",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-131): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "sec-006",
@@ -607,27 +783,51 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Inconsistent authentication terminology",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-138): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-flow-001",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Broken navigation flow: No back button or escape route on auth pages",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-139): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-state-001",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing loading state on profile page",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-140): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-state-002",
@@ -643,18 +843,34 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing alt text on decorative images and avatars",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-142): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-flow-002",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Dead-end page: Marketplace checkout flow incomplete",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-143): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-flow-003",
@@ -670,9 +886,17 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Generic error messages don't guide user action",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-145): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-a11y-002",
@@ -688,9 +912,17 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing route: Gigs booking page doesn't display gig detail",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-147): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-copy-002",
@@ -706,9 +938,17 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "No visible onboarding or feature discovery for new users",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-149): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-state-003",
