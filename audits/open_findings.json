@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-03-16T01:26:22Z",
+  "last_updated": "2026-03-16T20:57:21Z",
   "run_id": "synthesizer-v2-20260310-011114",
   "open_findings": [
     {
@@ -35,9 +35,17 @@
       "type": "question",
       "severity": "blocker",
       "priority": "P0",
-      "status": "open",
+      "status": "fixed_verified",
       "title": "Database uses PostgreSQL but no RLS (Row-Level Security) policies defined",
-      "agent": "schema-auditor"
+      "agent": "schema-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-16T20:57:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-78): Done -> fixed_verified"
+        }
+      ]
     },
     {
       "finding_id": "f-schema-validation-amount-001",
@@ -71,9 +79,17 @@
       "type": "bug",
       "severity": "blocker",
       "priority": "P0",
-      "status": "open",
+      "status": "fixed_verified",
       "title": "NestJS API build fails with TypeScript compilation errors in messaging service",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T20:57:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-82): Done -> fixed_verified"
+        }
+      ]
     },
     {
       "finding_id": "f-deploy-ci-build-api-missing-001",
@@ -188,9 +204,17 @@
       "type": "bug",
       "severity": "blocker",
       "priority": "P0",
-      "status": "open",
+      "status": "fixed_verified",
       "title": "Missing method: getUnreadCountForConversation in MessagingService",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T20:57:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-95): Done -> fixed_verified"
+        }
+      ]
     },
     {
       "finding_id": "f-log-002",
@@ -476,9 +500,17 @@
       "type": "bug",
       "severity": "critical",
       "priority": "P0",
-      "status": "open",
+      "status": "fixed_verified",
       "title": "Production secrets committed to git in .env file",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T20:57:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-127): Done -> fixed_verified"
+        }
+      ]
     },
     {
       "finding_id": "sec-002",

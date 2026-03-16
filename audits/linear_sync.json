@@ -28,9 +28,9 @@
       "linear_id": "b3518c69-faac-4c2f-a478-d119ab0ed648",
       "identifier": "PLP-78",
       "url": "https://linear.app/the-penny-lane-project/issue/PLP-78/blocker-database-uses-postgresql-but-no-rls-row-level-security",
-      "lyra_status": "open",
+      "lyra_status": "fixed_verified",
       "created_at": "2026-03-16T01:26:22Z",
-      "last_synced": "2026-03-16T01:26:22Z"
+      "last_synced": "2026-03-16T20:57:21Z"
     },
     "f-schema-validation-amount-001": {
       "linear_id": "3fc34c5e-7154-4f79-9570-f90955362c6a",
@@ -60,9 +60,9 @@
       "linear_id": "86ddb7cd-1f5f-4076-bf9b-fd1bf02139a4",
       "identifier": "PLP-82",
       "url": "https://linear.app/the-penny-lane-project/issue/PLP-82/blocker-nestjs-api-build-fails-with-typescript-compilation-errors-in",
-      "lyra_status": "open",
+      "lyra_status": "fixed_verified",
       "created_at": "2026-03-16T01:26:22Z",
-      "last_synced": "2026-03-16T01:26:22Z"
+      "last_synced": "2026-03-16T20:57:21Z"
     },
     "f-deploy-ci-build-api-missing-001": {
       "linear_id": "b39fbada-5b3b-4684-85b7-87744053ede5",
@@ -164,9 +164,9 @@
       "linear_id": "51110c0b-05a8-4ca2-a913-619604b67cbb",
       "identifier": "PLP-95",
       "url": "https://linear.app/the-penny-lane-project/issue/PLP-95/blocker-missing-method-getunreadcountforconversation-in",
-      "lyra_status": "open",
+      "lyra_status": "fixed_verified",
       "created_at": "2026-03-16T01:26:22Z",
-      "last_synced": "2026-03-16T01:26:22Z"
+      "last_synced": "2026-03-16T20:57:21Z"
     },
     "f-log-002": {
       "linear_id": "17ed856a-c942-4005-9663-369120841c5e",
@@ -420,9 +420,9 @@
       "linear_id": "1b7a7e33-acf2-45f0-8482-ec434d166dae",
       "identifier": "PLP-127",
       "url": "https://linear.app/the-penny-lane-project/issue/PLP-127/production-secrets-committed-to-git-in-env-file",
-      "lyra_status": "open",
+      "lyra_status": "fixed_verified",
       "created_at": "2026-03-16T01:26:22Z",
-      "last_synced": "2026-03-16T01:26:22Z"
+      "last_synced": "2026-03-16T20:57:21Z"
     },
     "sec-002": {
       "linear_id": "887aafef-2c80-4aaf-9688-432c33b35496",
@@ -625,5 +625,5 @@
       "last_synced": "2026-03-16T01:26:22Z"
     }
   },
-  "last_sync": "2026-03-16T01:26:22Z"
+  "last_sync": "2026-03-16T20:57:21Z"
 }
