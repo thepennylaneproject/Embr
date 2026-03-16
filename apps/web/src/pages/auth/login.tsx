@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { Button, Card, Input } from '@embr/ui';
+import { copy } from '@/lib/copy';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function LoginPage() {
       const nextPath = typeof router.query.next === 'string' ? router.query.next : '/feed';
       await router.push(nextPath);
     } catch (err: any) {
-      setError(getApiErrorMessage(err, 'Invalid credentials.'));
+      setError(getApiErrorMessage(err, copy.errors.invalidCredentials));
     } finally {
       setLoading(false);
     }
@@ -33,15 +34,15 @@ export default function LoginPage() {
   return (
     <ProtectedRoute requireAuth={false} redirectAuthenticated={false}>
       <Head>
-        <title>Sign in — Embr</title>
+        <title>{copy.brand.pageTitle(copy.onboarding.signInTitle)}</title>
       </Head>
       <main className="embr-page" style={{ display: 'grid', placeItems: 'center', padding: '1rem' }}>
         <Card padding="lg" style={{ width: 'min(460px, 100%)' }}>
           <h1 className="ui-page-title" style={{ marginBottom: '0.3rem' }}>
-            Sign in
+            {copy.onboarding.signInTitle}
           </h1>
           <p className="ui-page-subtitle" style={{ marginBottom: '1rem' }}>
-            Continue building with Embr.
+            {copy.onboarding.signInSubtitle}
           </p>
 
           <form onSubmit={handleSubmit} noValidate>
@@ -66,17 +67,17 @@ export default function LoginPage() {
               />
               {error ? <p className="ui-error-text">{error}</p> : null}
               <Button type="submit" disabled={loading} fullWidth>
-                {loading ? 'Signing in...' : 'Sign in'}
+                {loading ? copy.onboarding.signingIn : copy.onboarding.signIn}
               </Button>
             </div>
           </form>
 
           <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
             <Link href="/auth/forgot-password" style={{ color: 'var(--embr-muted-text)', textDecoration: 'underline' }}>
-              Forgot password?
+              {copy.onboarding.forgotPassword}
             </Link>
             <Link href="/auth/signup" style={{ color: 'var(--embr-muted-text)', textDecoration: 'underline' }}>
-              Need an account?
+              {copy.onboarding.needAccount}
             </Link>
           </div>
         </Card>

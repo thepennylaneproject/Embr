@@ -6,6 +6,12 @@
 
 import React, { ReactNode, ReactElement } from 'react';
 
+// Evaluated once at module load. Guards against environments (e.g. Vite browser
+// builds) where `process` is not defined at runtime, which would throw a
+// secondary ReferenceError inside the error boundary's own render path.
+const isDevelopment =
+  typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
+
 interface Props {
   children: ReactNode;
 }
@@ -75,7 +81,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
               We're sorry, but something unexpected happened. Please try refreshing the page.
             </p>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {isDevelopment && this.state.error && (
               <details
                 style={{
                   marginTop: '20px',

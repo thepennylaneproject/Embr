@@ -1,13 +1,173 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
+import { RlsContextService } from './rls-context.service';
 
+/**
+ * PrismaService wraps the Prisma client and automatically injects the RLS
+ * session context before every query when the application connects as the
+ * least-privilege `embr_app` role (subject to Row-Level Security).
+ *
+ * How it works
+ * ────────────
+ * A Prisma client extension (`$extends`) intercepts every model operation and
+ * wraps it in a sequential `$transaction` together with a `set_config` call:
+ *
+ *   SELECT set_config('app.current_user_id', '<uuid>', true)   ← SET LOCAL
+ *   <actual query>
+ *
+ * Both operations share the same PostgreSQL connection, so `SET LOCAL` is
+ * scoped to that transaction and automatically reset when it commits.
+ *
+ * For unauthenticated or service-mode contexts the interceptor sets
+ * `app.bypass_rls = 'on'` instead, which matches the service-bypass policy
+ * defined on every table.
+ *
+ * Direct `withUserContext` / `withServiceContext` helpers are also exposed for
+ * service code that needs to manage context explicitly (e.g. background jobs).
+ */
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class PrismaService implements OnModuleInit, OnModuleDestroy {
+  /** Base Prisma client – connects as `embr_app`, subject to RLS. */
+  private readonly base: PrismaClient;
+
+  /**
+   * Extended client that auto-injects the RLS context before every operation.
+   * All model accessors (`this.user`, `this.post`, …) are delegated here via
+   * `Object.assign` in the constructor so that callers can use
+   * `prismaService.user.findMany()` without any changes.
+   */
+  private readonly extended: ReturnType<PrismaClient['$extends']>;
+
+  // Model proxy accessors are dynamically assigned in the constructor.
+  [key: string]: unknown;
+
+  constructor(private readonly rlsContext: RlsContextService) {
+    this.base = new PrismaClient();
+
+    // Keep local references so the closure inside $extends uses `base` (not
+    // the extended client) to avoid recursive middleware invocation.
+    const base = this.base;
+    const rlsCtx = this.rlsContext;
+
+    this.extended = base.$extends({
+      query: {
+        $allModels: {
+          async $allOperations({
+            args,
+            query,
+          }: {
+            args: unknown;
+            query: (args: unknown) => Prisma.PrismaPromise<unknown>;
+          }) {
+            const ctx = rlsCtx.getContext();
+
+            if (ctx?.bypass) {
+              // Service mode – bypass RLS
+              const [, result] = await base.$transaction([
+                base.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`,
+                query(args),
+              ]);
+              return result;
+            }
+
+            if (ctx?.userId) {
+              // Authenticated user – enforce RLS with their ID
+              const [, result] = await base.$transaction([
+                base.$executeRaw`SELECT set_config('app.current_user_id', ${ctx.userId}, true)`,
+                query(args),
+              ]);
+              return result;
+            }
+
+            // No context set (startup, health checks, etc.) – run as service bypass
+            // to avoid breaking existing code paths that don't set context yet.
+            const [, result] = await base.$transaction([
+              base.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`,
+              query(args),
+            ]);
+            return result;
+          },
+        },
+      },
+    });
+
+    // Delegate all Prisma model properties (user, post, wallet, …) to the
+    // extended client so existing service code works without modification.
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    const models = Object.keys(base).filter((k) => !k.startsWith('$') && !k.startsWith('_'));
+    for (const model of models) {
+      Object.defineProperty(self, model, {
+        get() {
+          return (self.extended as Record<string, unknown>)[model];
+        },
+        enumerable: true,
+        configurable: true,
+      });
+    }
+  }
+
   async onModuleInit(): Promise<void> {
-    await this.$connect();
+    await this.base.$connect();
   }
 
   async onModuleDestroy(): Promise<void> {
-    await this.$disconnect();
+    await this.base.$disconnect();
+  }
+
+  // ── Raw query / transaction passthrough ────────────────────────────────────
+
+  get $queryRaw() {
+    return this.base.$queryRaw.bind(this.base);
+  }
+
+  get $executeRaw() {
+    return this.base.$executeRaw.bind(this.base);
+  }
+
+  get $queryRawUnsafe() {
+    return this.base.$queryRawUnsafe.bind(this.base);
+  }
+
+  get $executeRawUnsafe() {
+    return this.base.$executeRawUnsafe.bind(this.base);
+  }
+
+  get $transaction() {
+    return this.base.$transaction.bind(this.base);
+  }
+
+  // ── Explicit context helpers ───────────────────────────────────────────────
+
+  /**
+   * Run `fn` inside a PostgreSQL transaction with `app.current_user_id` set to
+   * `userId`. Use for sensitive multi-step operations where you need both RLS
+   * enforcement and atomicity.
+   *
+   * @example
+   * const result = await this.prisma.withUserContext(userId, (tx) =>
+   *   tx.wallet.update({ where: { userId }, data: { balance: newBalance } }),
+   * );
+   */
+  async withUserContext<T>(
+    userId: string,
+    fn: (tx: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
+    return this.base.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT set_config('app.current_user_id', ${userId}, true)`;
+      return fn(tx);
+    });
+  }
+
+  /**
+   * Run `fn` inside a PostgreSQL transaction with RLS bypassed
+   * (`app.bypass_rls = 'on'`).  Use for administrative or background operations
+   * that must cross user boundaries (e.g. notification fanout, billing jobs).
+   */
+  async withServiceContext<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+    return this.base.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`;
+      return fn(tx);
+    });
   }
 }
