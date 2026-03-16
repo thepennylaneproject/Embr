@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
+import { extractBearerToken } from '../shared/auth-header.util';
 
 const prisma = new PrismaClient();
 
@@ -12,8 +13,7 @@ interface AuthTokenPayload {
 
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const authHeader = req.headers.authorization;
-    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const bearerToken = extractBearerToken(req.headers as Record<string, string | string[] | undefined>) ?? null;
     const cookieToken = (req as any).cookies?.accessToken ?? null;
     const token = bearerToken || cookieToken;
 
