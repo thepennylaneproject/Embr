@@ -178,15 +178,15 @@ A feature slice is “done” when:
 - A UI system that can scale with the product’s breadth
 - A short changelog per PR describing what shipped and how to verify
 
-# AGENTS.md — The Pennylane Project Audit Agent System
+## Copilot specific instructions
 
-## Overview
+### Overview
 
 This repository contains the Copilot audit agent system for **The Pennylane Project**, a portfolio of 11 applications built by Sarah Sahl. The audit agent (`audit-agent`) automatically reviews each app against a curated expectations document, files GitHub Issues for every violation, and posts a summary report when the audit is complete.
 
 ---
 
-## The 11 Applications
+### The 11 Applications
 
 | App | Directory | Expectations Document |
 |---|---|---|
@@ -204,9 +204,9 @@ This repository contains the Copilot audit agent system for **The Pennylane Proj
 
 ---
 
-## How the Audit System Works
+### How the Audit System Works
 
-### Automated Weekly Audits
+#### Automated Weekly Audits
 
 A GitHub Actions workflow (`.github/workflows/scheduled-audit.yml`) runs every **Monday at 9:00 AM UTC** and:
 
@@ -214,11 +214,11 @@ A GitHub Actions workflow (`.github/workflows/scheduled-audit.yml`) runs every *
 2. Assigns the issue to `@copilot` with label `audit`
 3. Instructs the `audit-agent` to read all 11 expectations documents and audit each app
 
-### Manual Trigger
+#### Manual Trigger
 
 Navigate to **Actions → Scheduled Audit** and click **Run workflow** to trigger an audit at any time.
 
-### What the Agent Does
+#### What the Agent Does
 
 1. Reads every file in `/expectations/` before beginning
 2. Audits each app directory against its corresponding expectations document
@@ -228,17 +228,17 @@ Navigate to **Actions → Scheduled Audit** and click **Run workflow** to trigge
 
 ---
 
-## Audit Agent Profile
+### Audit Agent Profile
 
 The full agent profile is at `.github/agents/audit-agent.md`. Global Copilot instructions governing all behavior are at `.github/copilot-instructions.md`.
 
 ---
 
-## Expectations Documents
+### Expectations Documents
 
 All expectations documents live in `/expectations/`. They are derived from the codebase intelligence reports in `the_penny_lane_project/*/` and reflect the **real architecture, stack, and constraints** of each app. Do not use these documents as generic templates — every rule is sourced from the actual codebase.
 
-### Adding a New App
+#### Adding a New App
 
 1. Add an intelligence report to `the_penny_lane_project/<app-name>/`
 2. Create `expectations/<app-name>-expectations.md` following the structure of existing documents
@@ -247,13 +247,13 @@ All expectations documents live in `/expectations/`. They are derived from the c
 
 ---
 
-## Output Location
+### Output Location
 
 Audit summaries and run artifacts are stored in the `audits/` directory at the repo root.
 
 ---
 
-## Important Constraints
+### Important Constraints
 
 - The `audit-agent` **never** modifies expectations documents without explicit human approval
 - The `audit-agent` **never** auto-merges or auto-commits code changes

@@ -397,6 +397,7 @@ Produce ONLY a single JSON object conforming to LYRA audit schema v1.1.0. Includ
 - schema_version: "1.1.0"
 - kind: "agent_output"
 - run_id: logic-<YYYYMMDD>-<HHmmss>
+- run_metadata: { timestamp: "<ISO 8601>", branch: "<git branch>", environment: "local|ci|staging|production", tool_platform: "cursor|github-copilot|claude-code|manual", model: "<model-id>" }
 - suite: "logic"
 - agent: { name: "runtime-bug-hunter", role: "...", inputs_used: [...], stop_conditions_hit: [...] }
 - coverage: { files_examined: [...], files_skipped: [...], coverage_complete: true/false, incomplete_reason: "..." }
@@ -473,6 +474,7 @@ Produce ONLY a single JSON object conforming to LYRA audit schema v1.1.0.
 - schema_version: "1.1.0"
 - kind: "agent_output"
 - run_id: data-<YYYYMMDD>-<HHmmss>
+- run_metadata: { timestamp: "<ISO 8601>", branch: "<git branch>", environment: "local|ci|staging|production", tool_platform: "cursor|github-copilot|claude-code|manual", model: "<model-id>" }
 - suite: "data"
 - agent: { name: "schema-auditor", role: "...", inputs_used: [...], stop_conditions_hit: [...] }
 - coverage object with files_examined, files_skipped, coverage_complete
@@ -547,6 +549,7 @@ OUTPUT FORMAT
 Produce ONLY a single JSON object conforming to LYRA audit schema v1.1.0.
 - kind: "agent_output"
 - run_id: ux-<YYYYMMDD>-<HHmmss>
+- run_metadata: { timestamp: "<ISO 8601>", branch: "<git branch>", environment: "local|ci|staging|production", tool_platform: "cursor|github-copilot|claude-code|manual", model: "<model-id>" }
 - suite: "ux"
 - agent: { name: "ux-flow-auditor", ... }
 - coverage, findings, rollups, next_actions
@@ -611,6 +614,7 @@ OUTPUT FORMAT
 Produce ONLY a single JSON object conforming to LYRA audit schema v1.1.0.
 - kind: "agent_output"
 - run_id: perf-<YYYYMMDD>-<HHmmss>
+- run_metadata: { timestamp: "<ISO 8601>", branch: "<git branch>", environment: "local|ci|staging|production", tool_platform: "cursor|github-copilot|claude-code|manual", model: "<model-id>" }
 - suite: "performance"
 - agent: { name: "performance-cost-auditor", ... }
 No text outside the JSON.
@@ -688,6 +692,7 @@ OUTPUT FORMAT
 Produce ONLY a single JSON object conforming to LYRA audit schema v1.1.0.
 - kind: "agent_output"
 - run_id: security-<YYYYMMDD>-<HHmmss>
+- run_metadata: { timestamp: "<ISO 8601>", branch: "<git branch>", environment: "local|ci|staging|production", tool_platform: "cursor|github-copilot|claude-code|manual", model: "<model-id>" }
 - suite: "security"
 - agent: { name: "security-privacy-auditor", ... }
 No text outside the JSON.
@@ -766,6 +771,7 @@ OUTPUT FORMAT
 Produce ONLY a single JSON object conforming to LYRA audit schema v1.1.0.
 - kind: "agent_output"
 - run_id: deploy-<YYYYMMDD>-<HHmmss>
+- run_metadata: { timestamp: "<ISO 8601>", branch: "<git branch>", environment: "local|ci|staging|production", tool_platform: "cursor|github-copilot|claude-code|manual", model: "<model-id>" }
 - suite: "deploy"
 - agent: { name: "build-deploy-auditor", ... }
 No text outside the JSON.
@@ -802,7 +808,10 @@ c. If neither exists, this is the first run. Initialize both as empty.
 STEP 2: VALIDATE AGENT OUTPUTS
 For each agent JSON:
 a. Verify schema_version is "1.1.0" and kind is "agent_output"
-b. Verify run_metadata has all required fields
+b. Verify run_metadata is present and has all required fields: timestamp, branch, environment, tool_platform, model
+   - environment must be one of: local, ci, staging, production
+   - timestamp must be ISO 8601 format
+   - If run_metadata is missing, flag as a schema-violation debt finding before proceeding
 c. Verify agent object has name and role
 d. Verify coverage object exists (flag as "debt" finding if missing)
 e. Verify each finding has: finding_id, type, severity, priority, confidence, title, proof_hooks (non-empty, each with hook_type and summary), status, history (at least one event)
