@@ -59,6 +59,19 @@ Run 1-6 agents depending on Fast Lane vs Deep Audit:
 
 Save each output to: `audits/runs/<YYYY-MM-DD>/<run_id>.json`
 
+After saving, **validate schema conformance before committing**:
+
+```bash
+python3 audits/validate_output.py audits/runs/<YYYY-MM-DD>/<run_id>.json
+```
+
+Fix any reported violations before running the synthesizer. Common issues to check:
+- `run_metadata` object must be present with `timestamp`, `branch`, `environment`, `tool_platform`, `model`
+- All enum values must be lowercase: `severity`, `confidence`, `type`
+- `proof_hooks` must be an array with at least 1 hook (not `code_refs`)
+- `suggested_fix` must be an object with `approach` field (not a plain string)
+- `history` must be a non-empty array with `timestamp`, `actor`, `event` on each entry
+
 ## 4) Synthesizer
 
 Run `audits/prompts/synthesizer.md` last with all agent outputs.
@@ -72,7 +85,18 @@ The synthesizer updates:
 
 ## 5) Triage gate
 
-Apply the rubric:
+Use the session runner instead of reading JSON manually:
+
+```bash
+python3 audits/session.py              # What to do next
+python3 audits/session.py triage       # Full prioritized list
+python3 audits/session.py fix <id>     # Start a fix
+python3 audits/session.py done <id>    # Mark fix applied
+python3 audits/session.py skip <id>    # Defer
+python3 audits/session.py decide <id> <decision>  # Answer a question
+```
+
+The session runner applies the rubric automatically:
 
 - P0 blockers: fix now.
 - P0/P1 majors with small effort: fix this session.
@@ -83,13 +107,27 @@ Timebox each cycle (recommended: 60-90 minutes).
 
 ## 6) Re-audit scope rule
 
+After applying fixes, determine what to re-audit:
+
+```bash
+python3 audits/session.py reaudit
+```
+
+This reads the files touched by your fixes and tells you exactly which agents to re-run on which scope.
+
 - Re-audit only files touched by fixes.
 - Run full synthesizer once at cycle end.
 - If no qualifying code/runtime changes occurred, record an artifact-only delta and close cycle.
 
 ## 7) Release gate
 
-Before deploying, verify:
+Before deploying, check:
+
+```bash
+python3 audits/session.py canship
+```
+
+This verifies:
 
 - Latest `open_findings.json` run_id matches latest `audits/index.json` entry.
 - No blocker findings remain open from the current cycle.

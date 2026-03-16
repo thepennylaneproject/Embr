@@ -8,7 +8,10 @@ Drop this `audits/` directory into any repo to get a full multi-agent audit syst
 audits/
   LYRA-AUDIT-SUITE.md          # Full reference doc (schema, rubrics, all agent prompts in long form)
   WORKFLOW.md                   # Operational guardrails (gates, triage, release rules)
+  README.md                    # This file
+  session.py                   # Session runner -- the low-cognitive-load workflow
   cleanup_open_findings.py      # Normalizes enum drift and long IDs in open_findings.json
+  setup.sh                     # First-time setup script
 
   schema/
     audit-output.schema.json    # JSON Schema v1.1.0 -- the contract all agents must follow
@@ -80,6 +83,34 @@ mkdir -p audits/runs/$(date +%Y-%m-%d)
 git add audits/
 git commit -m "audit: first LYRA run"
 ```
+
+## Session Runner (the low-cognitive-load workflow)
+
+Instead of reading findings JSON and deciding what to do, just run:
+
+```bash
+python3 audits/session.py          # Tells you exactly what to do next
+```
+
+It walks you through the decision tree automatically: finish in-progress fixes, then verify pending ones, then fix blockers, then decide questions, then work the P1 list. The full command set:
+
+```bash
+python3 audits/session.py              # What should I do next?
+python3 audits/session.py triage       # Show prioritized fix list
+python3 audits/session.py fix <id>     # Start working on a finding
+python3 audits/session.py done <id> [commit]  # Mark fix applied
+python3 audits/session.py skip <id> [reason]  # Defer a finding
+python3 audits/session.py decide <id> <decision>  # Answer a question
+python3 audits/session.py reaudit      # Which agents to re-run after fixes
+python3 audits/session.py canship      # Am I ready to deploy?
+python3 audits/session.py status       # Full dashboard
+```
+
+**Typical session loop:**
+1. `python3 audits/session.py` -- it tells you what to do
+2. Do it
+3. `python3 audits/session.py` -- it tells you the next thing
+4. Repeat until `canship` says you're clear
 
 ## Quick Reference
 

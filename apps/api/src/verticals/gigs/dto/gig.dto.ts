@@ -1,7 +1,6 @@
 import {
   IsString,
   IsEnum,
-  IsNumber,
   IsArray,
   IsOptional,
   Min,
@@ -43,14 +42,14 @@ export class CreateGigDto {
   @IsEnum(GigBudgetType)
   budgetType: GigBudgetType;
 
-  @IsNumber()
+  @IsInt()
   @Min(1)
-  @Max(999999.99)
+  @Max(99999999)
   budgetMin: number;
 
-  @IsNumber()
+  @IsInt()
   @Min(1)
-  @Max(999999.99)
+  @Max(99999999)
   budgetMax: number;
 
   @IsString()
@@ -106,15 +105,15 @@ export class UpdateGigDto {
   @IsOptional()
   budgetType?: GigBudgetType;
 
-  @IsNumber()
+  @IsInt()
   @Min(1)
-  @Max(999999.99)
+  @Max(99999999)
   @IsOptional()
   budgetMin?: number;
 
-  @IsNumber()
+  @IsInt()
   @Min(1)
-  @Max(999999.99)
+  @Max(99999999)
   @IsOptional()
   budgetMax?: number;
 
@@ -161,13 +160,13 @@ export class GigSearchDto {
   @IsOptional()
   category?: GigCategory;
 
-  @IsNumber()
+  @IsInt()
   @Min(0)
   @IsOptional()
   @Type(() => Number)
   budgetMin?: number;
 
-  @IsNumber()
+  @IsInt()
   @Min(0)
   @IsOptional()
   @Type(() => Number)
@@ -219,9 +218,9 @@ export class MilestoneProposalDto {
   @MaxLength(1000)
   description: string;
 
-  @IsNumber()
+  @IsInt()
   @Min(1)
-  @Max(999999.99)
+  @Max(99999999)
   amount: number;
 
   @IsInt()
@@ -239,9 +238,9 @@ export class CreateApplicationDto {
   @MaxLength(2000)
   coverLetter: string;
 
-  @IsNumber()
+  @IsInt()
   @Min(1)
-  @Max(999999.99)
+  @Max(99999999)
   proposedBudget: number;
 
   @IsInt()
@@ -284,9 +283,9 @@ export class CreateMilestoneDto {
   @MaxLength(1000)
   description: string;
 
-  @IsNumber()
+  @IsInt()
   @Min(1)
-  @Max(999999.99)
+  @Max(99999999)
   amount: number;
 
   @IsString()

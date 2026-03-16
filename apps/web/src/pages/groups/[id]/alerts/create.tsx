@@ -10,7 +10,7 @@ export default function CreateAlertPage() {
   const { id: slug } = router.query;
   const { createAlert, loading, error } = useOrganizing();
 
-  const [groupId, setGroupId] = useState('');
+  const [_groupId, _setGroupId] = useState('');
   const [form, setForm] = useState<CreateAlertInput>({ title: '', body: '', urgency: 'NORMAL' });
 
   const inputStyle: React.CSSProperties = {

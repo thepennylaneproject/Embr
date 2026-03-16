@@ -17,14 +17,6 @@ export class UpdateUserSettingsDto {
   allowTips?: boolean;
 
   @IsOptional()
-  @IsBoolean()
-  emailNotifications?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  pushNotifications?: boolean;
-
-  @IsOptional()
   @IsEnum(NotificationPreference)
   notificationPreference?: NotificationPreference;
 }

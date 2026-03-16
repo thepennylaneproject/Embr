@@ -12,14 +12,12 @@ import {
   MilestoneProposal,
 } from '@embr/types';
 import { GigsService } from './gigs.service';
-import { EscrowService } from './escrow.service';
 
 @Injectable()
 export class ApplicationsService {
   constructor(
     private prisma: PrismaService,
     private gigsService: GigsService,
-    private escrowService: EscrowService,
     private eventEmitter: EventEmitter2,
   ) {}
 
@@ -223,51 +221,104 @@ export class ApplicationsService {
       throw new BadRequestException('Only pending applications can be accepted');
     }
 
-    // Get all pending applications to notify rejected applicants
-    const pendingApplications = await this.prisma.application.findMany({
-      where: { gigId: gig.id, status: ApplicationStatus.PENDING },
-      select: { id: true, applicantId: true },
-    });
+    const proposals =
+      (application as any).milestoneProposals as MilestoneProposal[] | undefined;
 
-    // Reject all other pending applications
-    await this.prisma.application.updateMany({
-      where: { gigId: gig.id, status: ApplicationStatus.PENDING },
-      data: { status: ApplicationStatus.REJECTED },
-    });
-
-    const savedApplication = await this.prisma.application.update({
-      where: { id: application.id },
-      data: { status: ApplicationStatus.ACCEPTED },
-    });
-
-    await this.gigsService.markInProgress(gig.id);
-
-    const proposals = (application as any).milestoneProposals as MilestoneProposal[] | undefined;
-
-    if (proposals && proposals.length > 0) {
-      await this.escrowService.create({
-        gigId: gig.id,
-        applicationId: application.id,
-        payerId: gig.creatorId,
-        payeeId: application.applicantId,
-        amount: application.proposedBudget,
-      });
-
-      for (let i = 0; i < proposals.length; i++) {
-        const proposal = proposals[i];
-        await this.prisma.gigMilestone.create({
-          data: {
-            gigId: gig.id,
-            applicationId: application.id,
-            title: proposal.title,
-            description: proposal.description,
-            amount: proposal.amount,
-            dueDate: new Date(Date.now() + proposal.estimatedDays * 24 * 60 * 60 * 1000),
-            order: i,
-            status: 'PENDING',
-          },
+    const { savedApplication, rejectedApplicants } = await this.prisma.$transaction(
+      async (tx) => {
+        // Compare-and-set the gig status to prevent concurrent acceptance races.
+        const gigUpdate = await tx.gig.updateMany({
+          where: { id: gig.id, status: GigStatus.OPEN as any },
+          data: { status: GigStatus.IN_PROGRESS as any },
         });
-      }
+        if (gigUpdate.count !== 1) {
+          throw new BadRequestException('This gig is no longer accepting applications');
+        }
+
+        // Compare-and-set target application.
+        const acceptedUpdate = await tx.application.updateMany({
+          where: {
+            id: application.id,
+            gigId: gig.id,
+            status: ApplicationStatus.PENDING as any,
+          },
+          data: { status: ApplicationStatus.ACCEPTED as any },
+        });
+        if (acceptedUpdate.count !== 1) {
+          throw new BadRequestException('Only pending applications can be accepted');
+        }
+
+        const rejectedApps = await tx.application.findMany({
+          where: {
+            gigId: gig.id,
+            status: ApplicationStatus.PENDING as any,
+            id: { not: application.id },
+          },
+          select: { id: true, applicantId: true },
+        });
+
+        if (rejectedApps.length > 0) {
+          await tx.application.updateMany({
+            where: {
+              gigId: gig.id,
+              status: ApplicationStatus.PENDING as any,
+              id: { not: application.id },
+            },
+            data: { status: ApplicationStatus.REJECTED as any },
+          });
+        }
+
+        if (proposals && proposals.length > 0) {
+          await tx.escrow.create({
+            data: {
+              gigId: gig.id,
+              applicationId: application.id,
+              payerId: gig.creatorId,
+              payeeId: application.applicantId,
+              amount: application.proposedBudget,
+            },
+          });
+
+          await tx.gigMilestone.createMany({
+            data: proposals.map((proposal, index) => ({
+              gigId: gig.id,
+              applicationId: application.id,
+              title: proposal.title,
+              description: proposal.description,
+              amount: proposal.amount,
+              dueDate: new Date(
+                Date.now() + proposal.estimatedDays * 24 * 60 * 60 * 1000,
+              ),
+              order: index,
+              status: 'PENDING',
+            })),
+          });
+        }
+
+        const updatedAccepted = await tx.application.findUniqueOrThrow({
+          where: { id: application.id },
+        });
+
+        return {
+          savedApplication: updatedAccepted,
+          rejectedApplicants: rejectedApps,
+        };
+      },
+      { isolationLevel: 'Serializable' },
+    );
+
+    this.eventEmitter.emit('gig.application.accepted', {
+      applicationId: application.id,
+      gigId: gig.id,
+      applicantId: application.applicantId,
+    });
+
+    for (const rejectedApp of rejectedApplicants) {
+      this.eventEmitter.emit('gig.application.rejected', {
+        applicationId: rejectedApp.id,
+        gigId: gig.id,
+        applicantId: rejectedApp.applicantId,
+      });
     }
 
     // Emit events for notifications

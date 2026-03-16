@@ -132,7 +132,7 @@ export const useTrack = (trackId: string) => {
  * Hook for searching tracks (or loading featured tracks when no query is provided)
  */
 export const useSearchTracks = (query: string, limit = 20) => {
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

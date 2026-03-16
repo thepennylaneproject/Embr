@@ -1,4 +1,8 @@
- WARN  The "workspaces" field in package.json is not supported by pnpm. Create a "pnpm-workspace.yaml" file instead.
- ERR_PNPM_NO_SCRIPT  Missing script: lint
-
-Command "lint" not found.
+npm error Missing script: "lint"
+npm error
+npm error Did you mean this?
+npm error   npm link # Symlink a package folder
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: /Users/sarahsahl/.npm/_logs/2026-03-14T21_47_09_946Z-debug-0.log

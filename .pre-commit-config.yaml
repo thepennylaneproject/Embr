@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.2
+    hooks:
+      - id: gitleaks
+        name: Detect secrets with gitleaks
+        description: Scan files to detect secrets
+        entry: gitleaks detect --verbose --redact --exit-code=1
+        language: system
+        stages: [commit]
+
+  - repo: local
+    hooks:
+      - id: check-env-file
+        name: Prevent .env file commit
+        entry: bash -c 'if git diff --cached --name-only | grep -qE "\.env($|\.)" && ! git diff --cached --name-only | grep -qE "\.env\.(example|template)"; then echo "ERROR: .env file cannot be committed to git. Use .env.example or environment-specific configuration."; exit 1; fi'
+        language: system
+        always_run: false
+        stages: [commit]
+
+      - id: check-secrets-pattern
+        name: Check for common secret patterns
+        entry: bash -c 'files=$(git diff --cached --name-only); if echo "$files" | xargs grep -lE "(sk_live_|sk_test_|pk_live_|whsec_|AKIA|password.*=)" 2>/dev/null | grep -v node_modules | grep -v ".env.example"; then echo "ERROR: Potential secrets detected in staged files"; exit 1; fi'
+        language: system
+        always_run: false
+        stages: [commit]

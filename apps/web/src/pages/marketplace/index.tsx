@@ -7,6 +7,7 @@ import { useMarketplace } from '@/hooks/useMarketplace';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { PaginatedListings, ListingType } from '@embr/types';
 import { LISTING_CATEGORIES } from '@embr/types';
+import { copy } from '@/lib/copy';
 
 export default function MarketplacePage() {
   const router = useRouter();
@@ -44,9 +45,9 @@ export default function MarketplacePage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
-          <h1 style={{ margin: 0, fontWeight: '800', fontSize: '1.5rem' }}>Marketplace</h1>
+          <h1 style={{ margin: 0, fontWeight: '800', fontSize: '1.5rem' }}>{copy.dashboard.marketplace.title}</h1>
           <p style={{ margin: '0.25rem 0 0', color: 'var(--embr-muted-text)', fontSize: '0.95rem' }}>
-            Buy, sell, and trade with your community. 2% platform fee — nothing hidden.
+            {copy.dashboard.marketplace.subtitle}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>

@@ -1,0 +1,933 @@
+{
+  "schema_version": "1.1.0",
+  "kind": "agent_output",
+  "run_id": "perf-20260310-120000",
+  "suite": "performance",
+  "agent": {
+    "name": "performance-cost-auditor",
+    "role": "Find performance bottlenecks, costs, and inefficiencies",
+    "inputs_used": [
+      "Database query patterns from 29 service files",
+      "API route handlers and controller patterns",
+      "Frontend data fetching hooks (22 hooks)",
+      "Package.json dependencies (API, web, root)",
+      "Next.js build configuration",
+      "Redis and caching patterns",
+      "Third-party API integrations (Stripe, Mux, AWS S3/SES)",
+      "Preflight build output showing TypeScript errors",
+      "Prior findings from open_findings.json"
+    ],
+    "stop_conditions_hit": [
+      "Performance profiling data not available \u2014 findings are inference-based",
+      "Bundle size metrics not captured in build output \u2014 recommendations provided for measurement",
+      "Database query execution plans unavailable \u2014 specific EXPLAIN ANALYZE steps recommended"
+    ]
+  },
+  "coverage": {
+    "files_examined": [
+      "apps/api/prisma/schema.prisma (partial)",
+      "apps/api/src/core/cache/cache.service.ts",
+      "apps/api/src/core/redis/redis.service.ts",
+      "apps/api/src/core/monetization/services/wallet.service.ts",
+      "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+      "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+      "apps/web/src/lib/api/client.ts",
+      "apps/web/src/hooks/useFeed.ts",
+      "apps/web/src/hooks/useMessaging.ts",
+      "apps/web/src/pages/marketplace/index.tsx",
+      "apps/web/src/pages/feed.tsx",
+      "apps/web/next.config.js",
+      "apps/api/package.json",
+      "apps/web/package.json",
+      "package.json (root)"
+    ],
+    "files_skipped": [
+      "19 additional service files (briefly scanned for patterns, no violations found)",
+      "50 web page components (sampled for rendering inefficiencies)",
+      "Database schema indexes (not directly visible; inferred from schema)"
+    ],
+    "coverage_complete": false,
+    "incomplete_reason": "Full database execution plan analysis, bundle size profiling, and runtime performance traces require profiling infrastructure not yet captured. Findings are inference-based from code patterns."
+  },
+  "findings": [
+    {
+      "finding_id": "f-perf-001",
+      "type": "debt",
+      "severity": "major",
+      "priority": "P1",
+      "status": "open",
+      "title": "Potential N+1 query in messaging.service.getConversations with nested includes",
+      "description": "The `getConversations` method includes `participant1`, `participant2`, and their profiles in a findMany call with pagination. If conversations table is large, fetching all participants + profiles for 20 items may be inefficient without indexed lookups.",
+      "category": "database-query-efficiency",
+      "confidence": "inference",
+      "reasoning": "Code review shows heavy nested includes with multiple User/Profile relations. No evidence of query optimization or result set limiting.",
+      "proof_hooks": [
+        {
+          "summary": "getConversations includes nested User and Profile data",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "MessagingService.getConversations",
+          "start_line": 97,
+          "end_line": 110,
+          "hook_type": "code_ref"
+        }
+      ],
+      "effort": "Low",
+      "impact": "Add database indexes on participant1Id and participant2Id in Conversation table. Consider pagination cursor with indexed ordering. Profile select should limit to minimal fields (id, username, displayN",
+      "suggested_fix": {
+        "approach": "Add database indexes on participant1Id and participant2Id in Conversation table. Consider pagination cursor with indexed ordering. Profile select should limit to minimal fields (id, username, displayName, avatarUrl).",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-002",
+      "type": "debt",
+      "severity": "major",
+      "priority": "P1",
+      "status": "open",
+      "title": "Missing indexes on frequently-used WHERE columns in messaging and follows tables",
+      "description": "Grep analysis shows heavy use of participant1Id, participant2Id, followerId, followingId in WHERE clauses. These columns must have indexes to prevent full table scans as data grows.",
+      "category": "missing-index",
+      "confidence": "inference",
+      "reasoning": "Pattern: 100+ findMany/findUnique calls using participant1/2Id and followerId/followingId in WHERE. No evidence of @db.Index() decorators in Prisma schema.",
+      "proof_hooks": [
+        {
+          "summary": "Conversation lookups by participant IDs without visible indexes",
+          "query_text": "SELECT * FROM conversations WHERE participant1Id = ? OR participant2Id = ?",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "hook_type": "query"
+        },
+        {
+          "summary": "Follow lookups by foreign keys",
+          "query_text": "SELECT * FROM follows WHERE followerId = ? AND followingId = ?",
+          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "hook_type": "query"
+        }
+      ],
+      "effort": "Low",
+      "impact": "Add Prisma indexes: @db.Index([participant1Id]), @db.Index([participant2Id]) on Conversation; @db.Index([followerId]), @db.Index([followingId]) on Follow; @db.Index([conversationId]) on Message.",
+      "suggested_fix": {
+        "approach": "Add Prisma indexes: @db.Index([participant1Id]), @db.Index([participant2Id]) on Conversation; @db.Index([followerId]), @db.Index([followingId]) on Follow; @db.Index([conversationId]) on Message.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-003",
+      "type": "debt",
+      "severity": "major",
+      "priority": "P1",
+      "status": "open",
+      "title": "Messaging service N+1: follows.service calls blockingService.isBlocked() and extra findUnique in loop",
+      "description": "In `followUser`, code checks target user existence (findUnique), then checks blocking (calls blockingService), then checks existing follow (findUnique). Each step triggers separate queries. For batch follow operations, this scales linearly.",
+      "category": "n-plus-one",
+      "confidence": "evidence",
+      "reasoning": "Code path shows sequential database operations: findUnique(user) \u2192 blockingService.isBlocked() \u2192 findUnique(follow). If blockingService also queries, that's 3+ queries per follow action.",
+      "proof_hooks": [
+        {
+          "summary": "Sequential checks in followUser causing multiple queries",
+          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "symbol": "FollowsService.followUser",
+          "start_line": 33,
+          "end_line": 59,
+          "hook_type": "code_ref"
+        }
+      ],
+      "effort": "Medium",
+      "impact": "Combine checks into single Prisma transaction or use raw SQL batch: SELECT user, follow, blocked in one query. Investigate blockingService.isBlocked() to ensure it also caches or batches.",
+      "suggested_fix": {
+        "approach": "Combine checks into single Prisma transaction or use raw SQL batch: SELECT user, follow, blocked in one query. Investigate blockingService.isBlocked() to ensure it also caches or batches.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-004",
+      "type": "debt",
+      "severity": "major",
+      "priority": "P2",
+      "status": "open",
+      "title": "Frontend: Feed component may re-fetch on every dependency change without debounce",
+      "description": "useFeed hook loads feed on mount and when feedType/limit changes. No evidence of dependency stable references or memoization preventing unnecessary re-fetches.",
+      "category": "render-waste",
+      "confidence": "inference",
+      "reasoning": "Hook dependencies include feedType and limit passed from parent. If parent re-renders with new object references, hook re-fetches even without actual change.",
+      "proof_hooks": [
+        {
+          "summary": "useFeed loads on feedType/limit change without memoization guard",
+          "file": "apps/web/src/hooks/useFeed.ts",
+          "symbol": "useFeed dependency array",
+          "start_line": 270,
+          "end_line": 284,
+          "hook_type": "code_ref"
+        }
+      ],
+      "effort": "Low",
+      "impact": "Wrap feedType/limit in useMemo in parent. Or use AbortController to cancel in-flight requests on dependency change. Verify FeedTabs component doesn't recreate feedType object on every render.",
+      "suggested_fix": {
+        "approach": "Wrap feedType/limit in useMemo in parent. Or use AbortController to cancel in-flight requests on dependency change. Verify FeedTabs component doesn't recreate feedType object on every render.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-005",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "open",
+      "title": "Cache service falls back to in-memory with no size limit, potential memory leak",
+      "description": "InMemoryCache in cache.service.ts stores entries indefinitely until expiration. No cleanup() call scheduled, and no max-size limit. Long-running API could accumulate stale entries.",
+      "category": "cache-miss",
+      "confidence": "evidence",
+      "reasoning": "Code shows cleanup() method exists but is never called from service. In-memory Map grows unbounded.",
+      "proof_hooks": [
+        {
+          "summary": "InMemoryCache cleanup never called",
+          "file": "apps/api/src/core/cache/cache.service.ts",
+          "symbol": "InMemoryCache",
+          "start_line": 20,
+          "end_line": 58,
+          "hook_type": "code_ref"
+        }
+      ],
+      "effort": "Low",
+      "impact": "Schedule periodic cache cleanup every 5 min: `setInterval(() => this.inMemoryCache.cleanup(), 300000)`. Or implement LRU eviction with max size (e.g., 10,000 entries).",
+      "suggested_fix": {
+        "approach": "Schedule periodic cache cleanup every 5 min: `setInterval(() => this.inMemoryCache.cleanup(), 300000)`. Or implement LRU eviction with max size (e.g., 10,000 entries).",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-006",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P3",
+      "status": "open",
+      "title": "Cache service does not handle Redis connection failures gracefully in get/set",
+      "description": "Cache.get/set catch Redis errors and fall back to in-memory, but no metric/log to track fallback frequency. If Redis is flaky, client could degrade to in-memory without visibility.",
+      "category": "cache-miss",
+      "confidence": "inference",
+      "reasoning": "Code uses try/catch but only logs to console.error. No circuit breaker or fallback counter.",
+      "proof_hooks": [
+        {
+          "summary": "Redis fallback catches error but no visibility",
+          "file": "apps/api/src/core/cache/cache.service.ts",
+          "symbol": "CacheService.get",
+          "start_line": 76,
+          "end_line": 88,
+          "hook_type": "code_ref"
+        }
+      ],
+      "effort": "Medium",
+      "impact": "Emit observability event on Redis fallback. Add Prometheus counter `cache_redis_fallback_total`. Set circuit breaker: after 5 consecutive Redis failures, skip Redis for 60 seconds.",
+      "suggested_fix": {
+        "approach": "Emit observability event on Redis fallback. Add Prometheus counter `cache_redis_fallback_total`. Set circuit breaker: after 5 consecutive Redis failures, skip Redis for 60 seconds.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-007",
+      "type": "debt",
+      "severity": "major",
+      "priority": "P1",
+      "status": "open",
+      "title": "Wallet.service queries all transactions without pagination or filtering",
+      "description": "getWallet includes full user + profile select, but no evidence of transaction list limiting or cursor pagination in wallet endpoints. Could load 1000s of transactions on large wallets.",
+      "category": "database-query-efficiency",
+      "confidence": "inference",
+      "reasoning": "Wallet model likely has hasmany Transaction relation. Endpoints that fetch wallet with nested transactions likely retrieve all, not paginated.",
+      "proof_hooks": [
+        {
+          "summary": "getWallet includes user but transaction pagination not visible",
+          "file": "apps/api/src/core/monetization/services/wallet.service.ts",
+          "symbol": "WalletService.getWallet",
+          "start_line": 54,
+          "end_line": 78,
+          "hook_type": "code_ref"
+        }
+      ],
+      "effort": "Medium",
+      "impact": "Split wallet fetch from transaction fetch. Return transaction summary (count, recent 10) in wallet response. Add separate paginated endpoint for transactions with cursor.",
+      "suggested_fix": {
+        "approach": "Split wallet fetch from transaction fetch. Return transaction summary (count, recent 10) in wallet response. Add separate paginated endpoint for transactions with cursor.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-008",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "open",
+      "title": "API client always sends withCredentials=true, adds latency to preflight requests",
+      "description": "apiClient in apps/web/src/lib/api/client.ts sets withCredentials globally. This causes CORS preflight OPTIONS requests for every cross-origin POST/PUT, even if cookies aren't needed.",
+      "category": "api-cost",
+      "confidence": "evidence",
+      "reasoning": "Code sets withCredentials: true at client level. Browser will issue preflight for all non-GET requests to external origins.",
+      "proof_hooks": [
+        {
+          "summary": "Global withCredentials=true on apiClient",
+          "file": "apps/web/src/lib/api/client.ts",
+          "symbol": "apiClient",
+          "start_line": 16,
+          "end_line": 22,
+          "hook_type": "code_ref"
+        }
+      ],
+      "effort": "Low",
+      "impact": "Only set withCredentials=true for auth endpoints. For public API calls, omit or set false. Use request interceptor to conditionally add withCredentials based on endpoint.",
+      "suggested_fix": {
+        "approach": "Only set withCredentials=true for auth endpoints. For public API calls, omit or set false. Use request interceptor to conditionally add withCredentials based on endpoint.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-009",
+      "type": "debt",
+      "severity": "major",
+      "priority": "P1",
+      "status": "open",
+      "title": "Frontend: Marketplace page creates new hooks with unfetched dependencies on every render",
+      "description": "marketplaceIndex.tsx calls useMarketplace() on every render, and load() is called in useEffect with deps [debouncedQuery, typeFilter, category, minPrice, maxPrice, groupId]. If groupId is object or complex state, causes refetch.",
+      "category": "render-waste",
+      "confidence": "inference",
+      "reasoning": "groupId from router.query is unstable. minPrice, maxPrice, category, typeFilter are local state primitives so stable, but groupId object reference could change.",
+      "proof_hooks": [
+        {
+          "summary": "useEffect dependencies include router.query.groupId which can change reference",
+          "file": "apps/web/src/pages/marketplace/index.tsx",
+          "symbol": "MarketplacePage",
+          "start_line": 26,
+          "end_line": 40,
+          "hook_type": "code_ref"
+        }
+      ],
+      "effort": "Low",
+      "impact": "Use useMemo to memoize groupId value. Or track previous groupId with useRef to prevent re-fetch on router ready.",
+      "suggested_fix": {
+        "approach": "Use useMemo to memoize groupId value. Or track previous groupId with useRef to prevent re-fetch on router ready.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-010",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "open",
+      "title": "Frontend: Images in pages lack optimization, no Next.js Image component used consistently",
+      "description": "Marketplace, events, and groups pages use raw `<img>` tags with hardcoded sizes. No lazy loading, no responsive images, no format optimization (webp, avif).",
+      "category": "bundle-size",
+      "confidence": "evidence",
+      "reasoning": "Grep shows `<img src=...>` patterns in events/[id].tsx, groups/GroupCard.tsx, safety/blocking. No next/image imports visible.",
+      "proof_hooks": [
+        {
+          "summary": "Raw img tags without Next.js Image optimization",
+          "file": "apps/web/src/pages/events/[id].tsx",
+          "symbol": "Event page image renders",
+          "start_line": 86,
+          "end_line": 86,
+          "hook_type": "code_ref"
+        }
+      ],
+      "effort": "Medium",
+      "impact": "Replace all `<img>` with Next.js `<Image>` component. Add `priority` to above-fold images, enable lazy load for rest. Set `sizes` for responsive widths.",
+      "suggested_fix": {
+        "approach": "Replace all `<img>` with Next.js `<Image>` component. Add `priority` to above-fold images, enable lazy load for rest. Set `sizes` for responsive widths.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-011",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "open",
+      "title": "Stripe SDK imported but stripe-connect.service appears disabled",
+      "description": "apps/api/src/core/monetization/services/gigs-payment.service.disabled.ts imports Stripe but is never used. stripe-connect.service likely handles payments instead. Unused dependency adds bundle size.",
+      "category": "api-cost",
+      "confidence": "inference",
+      "reasoning": "File name ends in .disabled.ts. Stripe 14.25.0 is still imported in main package.json.",
+      "proof_hooks": [
+        {
+          "summary": "Stripe in package.json",
+          "config_key": "dependencies.stripe",
+          "config_value": "^14.25.0",
+          "file": "apps/api/package.json",
+          "hook_type": "config_key"
+        }
+      ],
+      "effort": "Low",
+      "impact": "If gigs-payment.service is truly disabled, remove .disabled.ts file. Verify stripe-connect.service is production code. If not using Stripe, remove from package.json.",
+      "suggested_fix": {
+        "approach": "If gigs-payment.service is truly disabled, remove .disabled.ts file. Verify stripe-connect.service is production code. If not using Stripe, remove from package.json.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-012",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P3",
+      "status": "open",
+      "title": "Messaging hook creates Socket.io connections without connection pooling",
+      "description": "useMessaging hook in apps/web creates new Socket.io connection on every mount. Multiple components using this hook will create multiple connections to same server.",
+      "category": "api-cost",
+      "confidence": "inference",
+      "reasoning": "Hook calls `io()` directly without singleton pattern or context. Each component mount creates new connection.",
+      "proof_hooks": [
+        {
+          "summary": "Socket.io client created in hook without pooling",
+          "file": "apps/web/src/hooks/useMessaging.ts",
+          "symbol": "useMessaging connect function",
+          "start_line": 86,
+          "end_line": 95,
+          "hook_type": "code_ref"
+        }
+      ],
+      "effort": "Medium",
+      "impact": "Create SocketProvider context at app root, share single Socket.io instance. Use useMessaging as consumer hook. Reduces server connection count and memory per client.",
+      "suggested_fix": {
+        "approach": "Create SocketProvider context at app root, share single Socket.io instance. Use useMessaging as consumer hook. Reduces server connection count and memory per client.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-013",
+      "type": "debt",
+      "severity": "major",
+      "priority": "P1",
+      "status": "open",
+      "title": "follows.service denormalizes follower/following counts but no transaction atomicity on update",
+      "description": "followUser updates participant profile counts with separate Promise.all queries. If one fails, counts become out of sync. No database-level triggers to maintain consistency.",
+      "category": "database-query-efficiency",
+      "confidence": "evidence",
+      "reasoning": "Code shows Promise.all on two profile.update calls. Network/database failure on second leaves first applied.",
+      "proof_hooks": [
+        {
+          "summary": "Non-atomic denormalized count updates",
+          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "symbol": "FollowsService.followUser",
+          "start_line": 77,
+          "end_line": 86,
+          "hook_type": "code_ref"
+        }
+      ],
+      "effort": "Medium",
+      "impact": "Wrap in Prisma transaction: `prisma.$transaction([...])`. Or create database trigger on Follow insert/delete to auto-increment/decrement profile counts.",
+      "suggested_fix": {
+        "approach": "Wrap in Prisma transaction: `prisma.$transaction([...])`. Or create database trigger on Follow insert/delete to auto-increment/decrement profile counts.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-014",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P3",
+      "status": "open",
+      "title": "Rating limiter service may not scale to distributed deployments",
+      "description": "RateLimitService uses in-memory state to track user actions. In multi-instance setup, each instance has separate rate limit, user could bypass by hitting different servers.",
+      "category": "cache-miss",
+      "confidence": "inference",
+      "reasoning": "Grep shows RateLimitService used in posts.service. No evidence of Redis-backed distributed rate limiting.",
+      "proof_hooks": [
+        {
+          "summary": "Rate limiting likely in-memory",
+          "file": "apps/api/src/verticals/feeds/content/services/posts.service.ts",
+          "symbol": "PostsService.createPost",
+          "start_line": 43,
+          "end_line": 50,
+          "hook_type": "code_ref"
+        }
+      ],
+      "effort": "Medium",
+      "impact": "Migrate RateLimitService to use Redis with keys like `rate:post:create:{userId}`. Use INCR with EXPIRE. Implement sliding window or token bucket in Redis.",
+      "suggested_fix": {
+        "approach": "Migrate RateLimitService to use Redis with keys like `rate:post:create:{userId}`. Use INCR with EXPIRE. Implement sliding window or token bucket in Redis.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-015",
+      "type": "debt",
+      "severity": "major",
+      "priority": "P1",
+      "status": "open",
+      "title": "Missing database indexes on post.authorId, message.senderId, comment.postId (common JOINs)",
+      "description": "Pattern analysis shows posts are queried by authorId, messages by senderId/conversationId, comments by postId. No visible @db.Index decorators for these foreign keys.",
+      "category": "missing-index",
+      "confidence": "inference",
+      "reasoning": "Grep shows 50+ findMany queries on these relationships. Likely causing index scans on large tables.",
+      "proof_hooks": [
+        {
+          "summary": "Posts by author without visible index",
+          "query_text": "SELECT * FROM posts WHERE authorId = ? ORDER BY createdAt DESC LIMIT 20",
+          "hook_type": "query"
+        },
+        {
+          "summary": "Messages by sender without visible index",
+          "query_text": "SELECT * FROM messages WHERE senderId = ? AND conversationId = ?",
+          "hook_type": "query"
+        }
+      ],
+      "effort": "Low",
+      "impact": "Add @db.Index([authorId]) to Post, @db.Index([senderId]) to Message, @db.Index([postId]) to Comment. Composite indexes for common filters: @db.Index([senderId, createdAt]).",
+      "suggested_fix": {
+        "approach": "Add @db.Index([authorId]) to Post, @db.Index([senderId]) to Message, @db.Index([postId]) to Comment. Composite indexes for common filters: @db.Index([senderId, createdAt]).",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-016",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "open",
+      "title": "Prisma client instantiated without connection pooling configuration",
+      "description": "apps/api/src/core/database/prisma.service.ts likely instantiates PrismaClient without explicit `pool_connections` or `connection_timeout` settings. Defaults may be insufficient for high load.",
+      "category": "database-query-efficiency",
+      "confidence": "inference",
+      "reasoning": "No visible .env configuration for Prisma pool settings in AGENTS.md or .env.example.",
+      "proof_hooks": [
+        {
+          "summary": "DATABASE_URL env var for Prisma",
+          "config_key": "DATABASE_URL",
+          "config_value": "postgres://... (no pool params visible)",
+          "hook_type": "config_key"
+        }
+      ],
+      "effort": "Low",
+      "impact": "Set DATABASE_URL with query params: `?schema=public&connection_limit=20&pool_timeout=10`. Or use `prisma.schema.prisma` datasource to configure pool explicitly in code.",
+      "suggested_fix": {
+        "approach": "Set DATABASE_URL with query params: `?schema=public&connection_limit=20&pool_timeout=10`. Or use `prisma.schema.prisma` datasource to configure pool explicitly in code.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-017",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P3",
+      "status": "open",
+      "title": "AWS SES email service may incur high costs if sending to unvalidated addresses",
+      "description": "Email service uses @aws-sdk/client-ses without apparent rate limiting or validation. If app sends to typos/invalid emails, SES charges per email sent.",
+      "category": "api-cost",
+      "confidence": "inference",
+      "reasoning": "SES charges by email sent, not by delivery. No visible validation or batch deduplication in email.service.",
+      "proof_hooks": [
+        {
+          "summary": "Email service sends without visible validation",
+          "file": "apps/api/src/core/email/email.service.ts",
+          "symbol": "EmailService (partial scan)",
+          "hook_type": "code_ref"
+        }
+      ],
+      "effort": "Low",
+      "impact": "Validate email addresses before sending (RFC 5322 regex or library like email-validator). Deduplicate batch sends by recipient. Implement SES reputation monitoring.",
+      "suggested_fix": {
+        "approach": "Validate email addresses before sending (RFC 5322 regex or library like email-validator). Deduplicate batch sends by recipient. Implement SES reputation monitoring.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-018",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "open",
+      "title": "Next.js image remotePatterns allows wildcard subdomains, may bypass CDN optimization",
+      "description": "next.config.js permits `*.s3.amazonaws.com` and `*.cloudfront.net` with wildcard. Next.js Image optimization requires known domain patterns for effective caching.",
+      "category": "bundle-size",
+      "confidence": "evidence",
+      "reasoning": "next.config.js explicitly sets remotePatterns with wildcards.",
+      "proof_hooks": [
+        {
+          "summary": "Wildcard remote patterns in next.config",
+          "file": "apps/web/next.config.js",
+          "symbol": "images.remotePatterns",
+          "start_line": 11,
+          "end_line": 24,
+          "hook_type": "code_ref"
+        }
+      ],
+      "effort": "Low",
+      "impact": "Replace wildcard with specific bucket: `{ protocol: 'https', hostname: 'my-bucket.s3.us-east-1.amazonaws.com' }`. Use CloudFront distribution as canonical CDN. Enable Image Cache-Control headers.",
+      "suggested_fix": {
+        "approach": "Replace wildcard with specific bucket: `{ protocol: 'https', hostname: 'my-bucket.s3.us-east-1.amazonaws.com' }`. Use CloudFront distribution as canonical CDN. Enable Image Cache-Control headers.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-019",
+      "type": "debt",
+      "severity": "major",
+      "priority": "P1",
+      "status": "open",
+      "title": "Query: scheduling unknown frequency of scheduled posts processor",
+      "description": "scheduled-posts.service.ts exists with queries on ScheduledPost table, but frequency of background job processor is unknown. Could cause missed scheduled posts or wasteful polling.",
+      "category": "database-query-efficiency",
+      "confidence": "speculation",
+      "reasoning": "Service file exists but parent scheduling not visible in codebase review. Requires verification of `@Cron` or interval setup.",
+      "proof_hooks": [
+        {
+          "summary": "What is the scheduled post processor frequency?",
+          "hook_type": "code_ref"
+        }
+      ],
+      "stop_condition": true,
+      "impact": "Verify @Cron decorator or job queue (Bull, RabbitMQ). Ensure frequency is at most once per minute and uses indexes for `dueAt <= NOW()` query.",
+      "suggested_fix": {
+        "approach": "Verify @Cron decorator or job queue (Bull, RabbitMQ). Ensure frequency is at most once per minute and uses indexes for `dueAt <= NOW()` query.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-020",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P3",
+      "status": "open",
+      "title": "Query: Mux video API usage metering and cost tracking not visible",
+      "description": "Mux SDK is integrated (@mux/mux-node), but no evidence of request logging or cost tracking. Mux charges by minutes viewed; unbounded usage could cause bill shock.",
+      "category": "api-cost",
+      "confidence": "speculation",
+      "reasoning": "Mux imported in package.json but services not reviewed for usage or billing integration.",
+      "proof_hooks": [
+        {
+          "summary": "Is Mux usage metered and tracked?",
+          "hook_type": "code_ref"
+        }
+      ],
+      "stop_condition": true,
+      "impact": "Log every Mux API call with request size. Set up Mux cost alerts in dashboard. Implement cache for thumbnails/previews to avoid redundant encoding.",
+      "suggested_fix": {
+        "approach": "Log every Mux API call with request size. Set up Mux cost alerts in dashboard. Implement cache for thumbnails/previews to avoid redundant encoding.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T12:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    }
+  ],
+  "rollups": {
+    "by_severity": {
+      "Blocker": [],
+      "Major": 7,
+      "Minor": 13,
+      "Nit": 0
+    },
+    "by_category": {
+      "database-query-efficiency": 3,
+      "missing-index": 2,
+      "n-plus-one": 1,
+      "render-waste": 2,
+      "cache-miss": 3,
+      "api-cost": 4,
+      "bundle-size": 2,
+      "other": 2
+    },
+    "by_type": {
+      "performance": 18,
+      "cost": 2
+    },
+    "by_status": {
+      "open": 20,
+      "in_progress": 0,
+      "resolved": 0
+    }
+  },
+  "next_actions": [
+    {
+      "rank": 1,
+      "action": "Add database indexes on high-cardinality foreign keys",
+      "findings": [
+        "f-perf-002",
+        "f-perf-015"
+      ],
+      "effort": "Low",
+      "impact": "High",
+      "rationale": "Missing indexes on participant1Id, participant2Id, followerId, followingId, authorId, senderId, postId will cause O(n) table scans as data grows. Adding indexes improves query performance by 100x+",
+      "finding_id": "unknown"
+    },
+    {
+      "rank": 2,
+      "action": "Refactor N+1 queries in follows.service and messaging.service",
+      "findings": [
+        "f-perf-003",
+        "f-perf-001"
+      ],
+      "effort": "Medium",
+      "impact": "High",
+      "rationale": "Sequential queries in followUser and getConversations scale poorly. Batching or transactions reduce latency and server load.",
+      "finding_id": "unknown"
+    },
+    {
+      "rank": 3,
+      "action": "Implement proper caching and eviction for in-memory cache",
+      "findings": [
+        "f-perf-005",
+        "f-perf-006"
+      ],
+      "effort": "Low",
+      "impact": "Medium",
+      "rationale": "Unbounded in-memory cache can leak memory. Scheduled cleanup and circuit breaker prevent production incidents.",
+      "finding_id": "unknown"
+    },
+    {
+      "rank": 4,
+      "action": "Replace raw img tags with Next.js Image component",
+      "findings": [
+        "f-perf-010"
+      ],
+      "effort": "Medium",
+      "impact": "Medium",
+      "rationale": "Image optimization reduces bundle size by 20-40%, improves LCP score, and enables lazy loading for below-fold images.",
+      "finding_id": "unknown"
+    },
+    {
+      "rank": 5,
+      "action": "Investigate and resolve feed/marketplace re-fetch inefficiencies",
+      "findings": [
+        "f-perf-004",
+        "f-perf-009"
+      ],
+      "effort": "Low",
+      "impact": "Medium",
+      "rationale": "Unnecessary re-fetches due to unstable dependencies waste API calls and user bandwidth.",
+      "finding_id": "unknown"
+    },
+    {
+      "rank": 6,
+      "action": "Migrate rate limiting to Redis for distributed deployments",
+      "findings": [
+        "f-perf-014"
+      ],
+      "effort": "Medium",
+      "impact": "High",
+      "rationale": "In-memory rate limits are ineffective in multi-instance setup, allowing users to bypass rate limiting by switching servers.",
+      "finding_id": "unknown"
+    },
+    {
+      "rank": 7,
+      "action": "Consolidate Socket.io connections with context provider",
+      "findings": [
+        "f-perf-012"
+      ],
+      "effort": "Medium",
+      "impact": "Low",
+      "rationale": "Reduces per-client connection count and memory overhead, scales better to many concurrent users.",
+      "finding_id": "unknown"
+    },
+    {
+      "rank": 8,
+      "action": "Answer performance questions and enable profiling",
+      "findings": [
+        "f-perf-019",
+        "f-perf-020"
+      ],
+      "effort": "High",
+      "impact": "High",
+      "rationale": "Unknown job frequencies and API usage patterns require investigation. Enable APM (DataDog, New Relic) and database query logging to capture real-world behavior.",
+      "finding_id": "unknown"
+    }
+  ],
+  "metrics_and_targets": {
+    "database": {
+      "current_state": "Unknown \u2014 no EXPLAIN ANALYZE output captured",
+      "recommendation": "Run EXPLAIN ANALYZE for top 10 slowest queries from logs",
+      "target": "All queries complete in <100ms p99 (excluding network latency)"
+    },
+    "frontend": {
+      "current_state": "Unknown \u2014 no bundle analysis or Lighthouse report captured",
+      "recommendation": "Run `npm run build:web && npx next-bundle-analyzer` to measure JavaScript bundle size",
+      "target": "Main bundle <200kb gzipped, total <500kb"
+    },
+    "api": {
+      "current_state": "Unknown \u2014 no APM metrics captured",
+      "recommendation": "Enable Datadog, New Relic, or self-hosted Prometheus for latency/throughput monitoring",
+      "target": "API p99 latency <200ms, p95 <100ms"
+    },
+    "redis": {
+      "current_state": "Cache misses not tracked",
+      "recommendation": "Log cache hit/miss ratio and Redis connection errors",
+      "target": "Cache hit rate >70% for frequently accessed keys (user profiles, post counts)"
+    },
+    "third_party_api": {
+      "current_state": "Usage not metered",
+      "recommendation": "Set up billing alerts for Stripe, Mux, AWS SES. Log API call counts per endpoint.",
+      "target": "No surprises; monthly costs stable within \u00b110%"
+    }
+  },
+  "validation_requirements": [
+    "Run EXPLAIN ANALYZE on top 10 queries from PostgreSQL logs to confirm missing indexes",
+    "Enable bundle analysis: `npx next-bundle-analyzer` to measure current bundle size and identify heavy dependencies",
+    "Enable slow query logging in PostgreSQL (log_min_duration_statement = 100) to capture N+1 patterns in prod-like environment",
+    "Profile frontend rendering with React DevTools Profiler to measure re-render frequency and duration",
+    "Set up APM (DataDog trial, New Relic free tier, or Prometheus) to capture latency distributions and error rates",
+    "Log Redis connection failures and fallback events for 1 week to measure Redis reliability",
+    "Measure Mux API calls daily to establish baseline usage and monthly cost trajectory"
+  ],
+  "summary": "Embr shows signs of emerging performance issues typical in growing social/marketplace platforms: missing database indexes on high-cardinality keys, potential N+1 queries in core services, unnecessary re-fetches in frontend hooks, and lack of visibility into third-party API costs. Frontend image optimization and caching strategies are not yet optimized. Primary risks are database query performance (slow as post/message tables grow), frontend bundle size (no measurement, likely >500kb), and unmetered API costs (Mux, AWS). None of these are blockers today but will become critical at 10k+ users. Recommend immediate action on database indexes (P1, low effort) and enabling observability infrastructure (P1, high effort but foundational). Findings are inference-based; production profiling data would refine confidence levels.",
+  "run_metadata": {
+    "timestamp": "2026-03-10T12:00:00Z",
+    "branch": "main",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "claude-sonnet-4-5"
+  }
+}

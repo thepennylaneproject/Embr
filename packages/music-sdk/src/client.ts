@@ -178,15 +178,18 @@ export class EmbrtMusicClient {
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError<ApiError>) => {
-        const config = error.config;
+        const retryConfig = error.config;
 
-        if (!config) {
+        if (!retryConfig) {
           const apiError = toMusicApiError(error.response?.data);
           if (apiError) {
             throw apiError;
           }
 
-          throw error;
+          throw new MusicApiError(
+            'MUSIC_API_RETRY_CONFIG_MISSING',
+            'Music API request cannot be retried because request config is missing.'
+          );
         }
 
         // Only retry on transient failures (network errors, 429, 503, 504)
@@ -197,7 +200,7 @@ export class EmbrtMusicClient {
           error.response.status === 504;   // Gateway Timeout
 
         // Don't retry if we've already retried too many times
-        const retryCount = (config as any)._retryCount || 0;
+        const retryCount = (retryConfig as any)._retryCount || 0;
         const maxRetries = 3;
 
         if (isTransient && retryCount < maxRetries) {
@@ -206,9 +209,9 @@ export class EmbrtMusicClient {
           await new Promise(resolve => setTimeout(resolve, delay));
 
           // Mark that we're retrying
-          (config as any)._retryCount = retryCount + 1;
+          (retryConfig as any)._retryCount = retryCount + 1;
 
-          return this.client(config);
+          return this.client(retryConfig);
         }
 
         // Handle API errors

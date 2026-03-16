@@ -616,23 +616,29 @@ export class MessagingService {
     }));
 
     // Check if there are more messages
-    const hasMoreBefore = before
-      ? (await this.prisma.message.count({
-          where: {
-            conversationId,
-            createdAt: { lt: messages[messages.length - 1]?.createdAt },
-          },
-        })) > 0
-      : false;
+    const oldestMessageCreatedAt =
+      messages.length > 0 ? messages[messages.length - 1].createdAt : null;
+    const newestMessageCreatedAt = messages.length > 0 ? messages[0].createdAt : null;
 
-    const hasMoreAfter = after
-      ? (await this.prisma.message.count({
-          where: {
-            conversationId,
-            createdAt: { gt: messages[0]?.createdAt },
-          },
-        })) > 0
-      : false;
+    const hasMoreBefore =
+      !!before &&
+      !!oldestMessageCreatedAt &&
+      (await this.prisma.message.count({
+        where: {
+          conversationId,
+          createdAt: { lt: oldestMessageCreatedAt },
+        },
+      })) > 0;
+
+    const hasMoreAfter =
+      !!after &&
+      !!newestMessageCreatedAt &&
+      (await this.prisma.message.count({
+        where: {
+          conversationId,
+          createdAt: { gt: newestMessageCreatedAt },
+        },
+      })) > 0;
 
     return {
       messages: transformedMessages,
@@ -904,5 +910,20 @@ export class MessagingService {
       totalUnread,
       conversationCounts,
     };
+  }
+
+  async getUnreadCountForConversation(
+    conversationId: string,
+    userId: string,
+  ): Promise<number> {
+    const count = await this.prisma.message.count({
+      where: {
+        conversationId,
+        senderId: { not: userId },
+        status: { not: MessageStatus.READ },
+      },
+    });
+
+    return count;
   }
 }

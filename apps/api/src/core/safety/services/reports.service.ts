@@ -9,6 +9,8 @@ import {
   UpdateReportDto,
   QueryReportsDto,
   ReportEntityType,
+  ReportReason,
+  ReportStatus,
 } from '../dto/safety.dto';
 import { NotificationsService } from '../../notifications/notifications.service';
 import {
@@ -23,6 +25,14 @@ export class ReportsService {
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
   ) {}
+
+  private toPrismaReportReason(reason: ReportReason): PrismaReportReason {
+    return PrismaReportReason[reason as keyof typeof PrismaReportReason];
+  }
+
+  private toPrismaReportStatus(status: ReportStatus): PrismaReportStatus {
+    return PrismaReportStatus[status as keyof typeof PrismaReportStatus];
+  }
 
   /**
    * Create a new report for content or user
@@ -58,7 +68,7 @@ export class ReportsService {
     const report = await this.prisma.report.create({
       data: {
         reporterId,
-        reason: dto.reason as unknown as PrismaReportReason,
+        reason: this.toPrismaReportReason(dto.reason),
         description: dto.description,
         status: PrismaReportStatus.PENDING,
         ...(dto.entityType === ReportEntityType.POST && {
@@ -115,11 +125,11 @@ export class ReportsService {
     const where: any = {};
 
     if (query.status) {
-      where.status = query.status as unknown as PrismaReportStatus;
+      where.status = this.toPrismaReportStatus(query.status);
     }
 
     if (query.reason) {
-      where.reason = query.reason as unknown as PrismaReportReason;
+      where.reason = this.toPrismaReportReason(query.reason);
     }
 
     if (query.entityType) {
@@ -283,7 +293,9 @@ export class ReportsService {
     const updatedReport = await this.prisma.report.update({
       where: { id: reportId },
       data: {
-        status: dto.status as unknown as PrismaReportStatus,
+        status: dto.status
+          ? this.toPrismaReportStatus(dto.status)
+          : undefined,
         action: dto.action,
         reviewerId: moderatorId,
         reviewedAt: new Date(),
@@ -299,7 +311,9 @@ export class ReportsService {
     });
 
     // Notify reporter about outcome
-    const status = dto.status as unknown as PrismaReportStatus;
+    const status = dto.status
+      ? this.toPrismaReportStatus(dto.status)
+      : undefined;
     if (status === PrismaReportStatus.ACTION_TAKEN || 
         status === PrismaReportStatus.DISMISSED) {
       await this.notificationsService.create({
@@ -330,7 +344,9 @@ export class ReportsService {
         },
       },
       data: {
-        status: dto.status as unknown as PrismaReportStatus,
+        status: dto.status
+          ? this.toPrismaReportStatus(dto.status)
+          : undefined,
         action: dto.action,
         reviewerId: moderatorId,
         reviewedAt: new Date(),

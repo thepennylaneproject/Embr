@@ -49,15 +49,39 @@ Return only one JSON object:
 
 - `schema_version`: `"1.1.0"`
 - `kind`: `"agent_output"`
-- `suite`: `"logic"`
 - `run_id`: `logic-<YYYYMMDD>-<HHmmss>`
-- `agent.name`: `"runtime-bug-hunter"`
-- `agent.role`: one-sentence description
-- `agent.inputs_used`: list of files/artifacts you actually examined
-- `agent.stop_conditions_hit`: list of any stop conditions triggered (or empty)
-- `coverage`: `files_examined`, `files_skipped`, `coverage_complete`, `incomplete_reason`
-- `findings`: array with stable IDs, typed proof hooks, history (min 1 `created` event)
-- `rollups`: `by_severity`, `by_category`, `by_type`, `by_status`
-- `next_actions`: top 3-5 actions with `action`, `finding_id`, `rationale`
+- - `run_metadata` **(required)**:
+  - `timestamp`: ISO 8601 datetime of run start (e.g. `"2026-03-10T14:00:00Z"`)
+  - `branch`: git branch name (e.g. `"main"`)
+  - `environment`: one of `"local"` | `"ci"` | `"staging"` | `"production"`
+  - `tool_platform`: platform used (e.g. `"cursor"`, `"github-copilot"`, `"claude-code"`)
+  - `model`: model identifier (e.g. `"claude-sonnet-4-5"`, `"gpt-4o"`)
+- `suite`: `"logic"`
+- `agent`:
+  - `name`: "runtime-bug-hunter"
+  - `role`: one-sentence description
+  - `inputs_used`: list of files/artifacts you actually examined
+  - `stop_conditions_hit`: list of any stop conditions triggered (or empty array)
+- - `coverage`:
+  - `files_examined`: **array** of file paths (not a count)
+  - `files_skipped`: **array** of skipped paths with reasons (not a count)
+  - `coverage_complete`: boolean
+  - `incomplete_reason`: string (required when `coverage_complete` is false)
+- - `findings`: array of Finding objects — each must have:
+  - `finding_id`, `type`, `category`, `severity`, `priority`, `confidence`
+  - `title`, `description`, `impact`
+  - `proof_hooks`: array with at least one hook, each requiring `hook_type` and `summary`
+  - `suggested_fix`: object with `approach` field (not a string)
+  - `status`, `history` (array with at least one `created` event including `timestamp`, `actor`, `event`)
+- `rollups`: `by_severity`, `by_category`, `by_type`, `by_status` (all required)
+- - `next_actions`: array of `{ action, finding_id, rationale }` objects
 
-No markdown wrapper. No commentary outside JSON.
+**Enum constraints (strict — no substitutions):**
+- `severity`: `blocker` | `major` | `minor` | `nit` (lowercase only)
+- `priority`: `P0` | `P1` | `P2` | `P3`
+- `type`: `bug` | `enhancement` | `debt` | `question`
+- `confidence`: `evidence` | `inference` | `speculation` (lowercase only)
+- `hook_type`: `code_ref` | `error_text` | `command` | `repro_steps` | `ui_path` | `data_shape` | `log_line` | `config_key` | `query` | `artifact_ref`
+- `environment`: `local` | `ci` | `staging` | `production`
+
+No text outside JSON. Validate your output against `audits/schema/audit-output.schema.json` before writing.

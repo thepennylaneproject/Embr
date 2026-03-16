@@ -1,7 +1,9 @@
 {
-  "name": "embr-infrastructure",
-  "version": "1.0.0",
-  "description": "Complete infrastructure setup for Embr platform",
+  "name": "embr",
+  "version": "0.1.0",
+  "description": "Embr — creator monetization platform and social marketplace",
+  "author": "The Penny Lane Project <Sarah@thepennylaneproject.org>",
+  "license": "MIT",
   "private": true,
   "workspaces": [
     "packages/*",
@@ -44,7 +46,8 @@
     "@socket.io/redis-adapter": "^8.3.0",
     "bcrypt": "^5.1.1",
     "isomorphic-dompurify": "^3.0.0",
-    "redis": "^5.11.0"
+    "redis": "^5.11.0",
+    "sharp": "^0.34.5"
   },
   "overrides": {
     "react": "18.3.1",

@@ -4,8 +4,7 @@ import { useRouter } from 'next/router';
 import { ProtectedPageShell } from '@/components/layout';
 import { EventCard } from '@/components/events/EventCard';
 import { useEvents } from '@/hooks/useEvents';
-import type { Event, EventType, PaginatedEvents } from '@embr/types';
-import { EVENT_TYPE_LABELS } from '@embr/types';
+import type { EventType, PaginatedEvents } from '@embr/types';
 
 const TYPES: { val: EventType | ''; label: string }[] = [
   { val: '', label: 'All Types' },

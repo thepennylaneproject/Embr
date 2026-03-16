@@ -1,0 +1,36 @@
+---
+description: Project expectations and boundaries. Loaded for ALL files to prevent agents from violating project constraints.
+globs:
+  - "**/*"
+---
+
+# Project Expectations (read before making any change)
+
+This project has an expectations document at `audits/expectations.md` that defines hard architectural constraints.
+
+## Before suggesting or making ANY code change:
+
+1. Read `audits/expectations.md`
+2. Verify your suggestion does not violate any rule marked `critical`
+3. If unsure, flag the conflict and ask rather than proceeding
+
+## Before running ANY audit agent:
+
+1. Read `audits/expectations.md` first
+2. Read `audits/project.json` for stack info and source directories
+3. Violations of expectations rules are the HIGHEST priority findings
+
+## Key constraint patterns across Penny Lane projects:
+
+- **AI calls:** Must go through server functions, never client-side
+- **Database:** RLS required on all tables. Migrations in canonical location only
+- **Auth:** JWT + CSRF validation on privileged endpoints
+- **Secrets:** Never committed. Never in client bundles. Never in logs
+- **Out-of-scope:** The expectations doc ends with things this project must NOT do. Respect them.
+
+## If you encounter a conflict:
+
+If the best fix for a bug would violate an expectations constraint, DO NOT apply the fix silently. Instead:
+1. Note the expectations rule that conflicts (e.g., "[E-2.1] Supabase RLS required")
+2. Suggest an alternative fix that stays within bounds
+3. If no alternative exists, emit a `question` finding

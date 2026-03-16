@@ -258,7 +258,7 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_EXPIRES_IN') || '7d',
+      expiresIn: this.configService.get<string>('JWT_EXPIRES_IN') || '15m',
     });
 
     // Calculate refresh token expiry from config (default 30 days)

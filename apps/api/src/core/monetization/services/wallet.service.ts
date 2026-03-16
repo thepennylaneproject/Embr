@@ -5,8 +5,10 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { TransactionType as PrismaTransactionType } from '@prisma/client';
-import { TransactionService } from './transaction.service';
+import {
+  Prisma,
+  TransactionType as PrismaTransactionType,
+} from '@prisma/client';
 import { WalletBalanceDto } from '../dto/wallet.dto';
 
 @Injectable()
@@ -32,9 +34,17 @@ export class WalletService {
 
       this.logger.log(`Wallet created for user ${userId}`);
       return wallet;
-    } catch (error) {
-      // Wallet might already exist
-      return this.getWallet(userId);
+    } catch (error: unknown) {
+      const isDuplicateWallet =
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002';
+
+      if (isDuplicateWallet) {
+        return this.getWallet(userId);
+      }
+
+      this.logger.error(`Failed to create wallet for user ${userId}`, error as any);
+      throw error;
     }
   }
 

@@ -38,6 +38,8 @@ interface UseMessagingOptions {
   onError?: (error: any) => void;
 }
 
+const ACK_TIMEOUT_MS = 10000;
+
 export function useMessaging(options: UseMessagingOptions = {}) {
   const {
     autoConnect = true,
@@ -94,13 +96,11 @@ export function useMessaging(options: UseMessagingOptions = {}) {
 
     // Connection events
     newSocket.on("connect", () => {
-      console.log("WebSocket connected");
       setIsConnected(true);
       setError(null);
     });
 
     newSocket.on("disconnect", () => {
-      console.log("WebSocket disconnected");
       setIsConnected(false);
     });
 
@@ -114,7 +114,6 @@ export function useMessaging(options: UseMessagingOptions = {}) {
     newSocket.on(
       WebSocketEvent.MESSAGE_RECEIVE,
       ({ message, conversation }) => {
-        console.log("Message received:", message);
 
         // Add message to local state
         setMessages((prev) => ({
@@ -150,7 +149,6 @@ export function useMessaging(options: UseMessagingOptions = {}) {
     );
 
     newSocket.on(WebSocketEvent.MESSAGE_READ, (data) => {
-      console.log("Messages marked as read:", data);
 
       // Update message statuses
       if (data.messageIds) {
@@ -172,8 +170,6 @@ export function useMessaging(options: UseMessagingOptions = {}) {
     newSocket.on(
       WebSocketEvent.TYPING_INDICATOR,
       (indicator: TypingIndicator) => {
-        console.log("Typing indicator:", indicator);
-
         const key = `${indicator.conversationId}-${indicator.userId}`;
 
         if (indicator.isTyping) {
@@ -229,6 +225,51 @@ export function useMessaging(options: UseMessagingOptions = {}) {
       setIsConnected(false);
     }
   }, []);
+
+  const emitWithAck = useCallback(
+    <TResponse = any>(event: WebSocketEvent, payload: any): Promise<TResponse> => {
+      if (!socketRef.current || !socketRef.current.connected) {
+        return Promise.reject(new Error("WebSocket not connected"));
+      }
+
+      return new Promise<TResponse>((resolve, reject) => {
+        const currentSocket = socketRef.current!;
+
+        const timeoutId = setTimeout(() => {
+          cleanup();
+          reject(new Error("WebSocket acknowledgment timed out"));
+        }, ACK_TIMEOUT_MS);
+
+        const onDisconnect = () => {
+          cleanup();
+          reject(new Error("WebSocket disconnected before acknowledgment"));
+        };
+
+        const onConnectError = (err: any) => {
+          cleanup();
+          reject(err || new Error("WebSocket connection error before acknowledgment"));
+        };
+
+        const cleanup = () => {
+          clearTimeout(timeoutId);
+          currentSocket.off("disconnect", onDisconnect);
+          currentSocket.off("connect_error", onConnectError);
+        };
+
+        currentSocket.on("disconnect", onDisconnect);
+        currentSocket.on("connect_error", onConnectError);
+        currentSocket.emit(event, payload, (response: any) => {
+          cleanup();
+          if (response?.error) {
+            reject(response.error);
+            return;
+          }
+          resolve(response as TResponse);
+        });
+      });
+    },
+    [],
+  );
 
   // Auto-connect on mount
   useEffect(() => {
@@ -337,27 +378,19 @@ export function useMessaging(options: UseMessagingOptions = {}) {
         throw new Error("WebSocket not connected");
       }
 
-      return new Promise<void>((resolve, reject) => {
-        socket.emit(WebSocketEvent.MESSAGE_SEND, payload, (response: any) => {
-          if (response?.error) {
-            reject(response.error);
-          } else {
-            // Optimistically add message to local state
-            if (payload.conversationId && response?.message) {
-              setMessages((prev) => ({
-                ...prev,
-                [payload.conversationId!]: [
-                  ...(prev[payload.conversationId!] || []),
-                  response.message,
-                ],
-              }));
-            }
-            resolve();
-          }
-        });
-      });
+      const response = await emitWithAck<any>(WebSocketEvent.MESSAGE_SEND, payload);
+
+      if (payload.conversationId && response?.message) {
+        setMessages((prev) => ({
+          ...prev,
+          [payload.conversationId!]: [
+            ...(prev[payload.conversationId!] || []),
+            response.message,
+          ],
+        }));
+      }
     },
-    [socket, isConnected],
+    [socket, isConnected, emitWithAck],
   );
 
   const fetchMessages = useCallback(
@@ -407,30 +440,21 @@ export function useMessaging(options: UseMessagingOptions = {}) {
         }
       }
 
-      return new Promise<void>((resolve, reject) => {
-        socket.emit(WebSocketEvent.MESSAGE_READ, payload, (response: any) => {
-          if (response?.error) {
-            reject(response.error);
-          } else {
-            // Update local state
-            setConversations((prev) =>
-              prev.map((c) =>
-                c.id === payload.conversationId ? { ...c, unreadCount: 0 } : c,
-              ),
-            );
+      const response = await emitWithAck<any>(WebSocketEvent.MESSAGE_READ, payload);
 
-            if (response?.updatedCount) {
-              setUnreadCount((prev) =>
-                Math.max(0, prev - response.updatedCount),
-              );
-            }
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === payload.conversationId ? { ...c, unreadCount: 0 } : c,
+        ),
+      );
 
-            resolve();
-          }
-        });
-      });
+      if (response?.updatedCount) {
+        setUnreadCount((prev) => Math.max(0, prev - response.updatedCount));
+      }
+
+      return response;
     },
-    [socket, isConnected, onError],
+    [socket, isConnected, onError, emitWithAck],
   );
 
   const searchMessages = useCallback(

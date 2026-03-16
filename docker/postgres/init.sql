@@ -174,10 +174,35 @@ CREATE INDEX IF NOT EXISTS idx_posts_hashtags_gin ON "Post" USING gin (hashtags)
 CREATE INDEX IF NOT EXISTS idx_profiles_skills_gin ON "Profile" USING gin (skills);
 CREATE INDEX IF NOT EXISTS idx_gigs_skills_gin ON "Gig" USING gin (skills);
 
--- Grant permissions
+-- Grant permissions to superuser role
 GRANT ALL PRIVILEGES ON DATABASE embr TO embr;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO embr;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO embr;
+
+-- Create auth schema for RLS helper functions
+CREATE SCHEMA IF NOT EXISTS auth;
+
+-- Create least-privilege app role (used by the NestJS API)
+-- Password is overridden via APP_DATABASE_URL in production
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'embr_app') THEN
+    CREATE ROLE embr_app WITH LOGIN PASSWORD 'embr_app_dev_password';
+  END IF;
+END
+$$;
+
+GRANT CONNECT ON DATABASE embr TO embr_app;
+GRANT USAGE ON SCHEMA public TO embr_app;
+GRANT USAGE ON SCHEMA auth TO embr_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO embr_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO embr_app;
+
+-- Future tables created by migrations also grant access to embr_app
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO embr_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT USAGE, SELECT ON SEQUENCES TO embr_app;
 
 -- Log initialization
 DO $$

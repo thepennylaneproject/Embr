@@ -30,9 +30,27 @@ import { GetUser } from './decorators/get-user.decorator';
 import { Public } from './decorators/public.decorator';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 
+const ACCESS_TOKEN_COOKIE_MAX_AGE_MS = 15 * 60 * 1000;
+const REFRESH_TOKEN_COOKIE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  /**
+   * Get cookie options for secure token transmission
+   * In production, cookies are always secure (HTTPS only)
+   * In development, secure flag can be controlled via COOKIE_SECURE env var
+   */
+  private getCookieOptions(maxAge: number) {
+    const isSecure = process.env.NODE_ENV === 'production' || process.env.COOKIE_SECURE === 'true';
+    return {
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: 'strict' as const,
+      maxAge,
+    };
+  }
 
   @Public()
   @Post('signup')
@@ -47,19 +65,8 @@ export class AuthController {
     const { accessToken, refreshToken, user } = await this.authService.login(loginDto);
 
     // Set tokens as secure httpOnly cookies
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
-      sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    });
+    res.cookie('accessToken', accessToken, this.getCookieOptions(ACCESS_TOKEN_COOKIE_MAX_AGE_MS));
+    res.cookie('refreshToken', refreshToken, this.getCookieOptions(REFRESH_TOKEN_COOKIE_MAX_AGE_MS));
 
     // Return user data but not tokens (they're in cookies)
     return res.json({ user });
@@ -81,19 +88,8 @@ export class AuthController {
     );
 
     // Set tokens as secure httpOnly cookies instead of URL params
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
-      sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    });
+    res.cookie('accessToken', accessToken, this.getCookieOptions(ACCESS_TOKEN_COOKIE_MAX_AGE_MS));
+    res.cookie('refreshToken', refreshToken, this.getCookieOptions(REFRESH_TOKEN_COOKIE_MAX_AGE_MS));
 
     // Validate FRONTEND_URL before redirecting (F-022)
     const frontendUrl = process.env.FRONTEND_URL;
@@ -168,19 +164,8 @@ export class AuthController {
     );
 
     // Set new tokens as httpOnly cookies instead of exposing them in the body (F-012)
-    res.cookie('accessToken', result.accessToken, {
-      httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
-      sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie('accessToken', result.accessToken, this.getCookieOptions(ACCESS_TOKEN_COOKIE_MAX_AGE_MS));
+    res.cookie('refreshToken', result.refreshToken, this.getCookieOptions(REFRESH_TOKEN_COOKIE_MAX_AGE_MS));
 
     return res.json({ user: result.user, message: 'Password successfully changed.' });
   }
@@ -193,19 +178,8 @@ export class AuthController {
     const result = await this.authService.verifyEmail(verifyEmailDto.token);
 
     // Set tokens as httpOnly cookies instead of exposing them in the body (F-012)
-    res.cookie('accessToken', result.accessToken, {
-      httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
-      sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie('accessToken', result.accessToken, this.getCookieOptions(ACCESS_TOKEN_COOKIE_MAX_AGE_MS));
+    res.cookie('refreshToken', result.refreshToken, this.getCookieOptions(REFRESH_TOKEN_COOKIE_MAX_AGE_MS));
 
     return res.json({ user: result.user, message: 'Email verified successfully.' });
   }

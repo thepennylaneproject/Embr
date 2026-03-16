@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { AudioQuality as PrismaAudioQuality, PrismaClient } from '@prisma/client';
 import { LicensingModel, TrackMetadata, ArtistProfile, VideoUsageRecord, RevenueReport } from '../types';
 
 const prisma = new PrismaClient();
@@ -341,7 +341,12 @@ export const licensingService = {
 // ============================================
 
 export const revenueService = {
-  async recordStream(trackId: string, userId: string | null, durationPlayed: number, quality: string) {
+  async recordStream(
+    trackId: string,
+    userId: string | null,
+    durationPlayed: number,
+    quality: PrismaAudioQuality,
+  ) {
     const track = await prisma.track.findUnique({
       where: { id: trackId },
     });
@@ -380,8 +385,8 @@ export const revenueService = {
     // Only count as a stream if at least 30 seconds played
     const isValidStream = durationPlayed >= 30;
 
-    // Calculate royalty (simplified: $0.003 per stream, adjust to taste)
-    const royaltyAmount = isValidStream ? 0.003 : 0;
+    // Store integer cents to match TrackPlay.royaltyAmount schema.
+    const royaltyAmount = isValidStream ? 1 : 0;
 
     // Record play
     const play = await prisma.trackPlay.create({
@@ -389,7 +394,7 @@ export const revenueService = {
         trackId,
         userId: userId || undefined,
         durationPlayed,
-        quality: quality as any,
+        quality,
         royaltyAmount,
       },
     });

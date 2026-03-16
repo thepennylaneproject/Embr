@@ -16,8 +16,8 @@ interface FeaturePlaceholderProps {
 export function FeaturePlaceholder({
   title,
   subtitle,
-  issueId,
-  issuePath = '.docs/frontend-roadmap.md',
+  issueId: _issueId,
+  issuePath: _issuePath = '.docs/frontend-roadmap.md',
   accent,
 }: FeaturePlaceholderProps) {
   const [state, setState] = useState<PlaceholderState>('empty');

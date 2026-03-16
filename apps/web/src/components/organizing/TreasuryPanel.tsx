@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { GroupTreasury, GroupTreasuryTransaction } from '@embr/types';
+import type { GroupTreasury } from '@embr/types';
 import { TREASURY_TRANSACTION_LABELS } from '@embr/types';
 
 interface TreasuryPanelProps {
@@ -12,7 +12,7 @@ interface TreasuryPanelProps {
   error?: string | null;
 }
 
-export function TreasuryPanel({ treasury, groupId, isAdmin, onContribute, onDisburse, loading, error }: TreasuryPanelProps) {
+export function TreasuryPanel({ treasury, groupId: _groupId, isAdmin, onContribute, onDisburse, loading, error }: TreasuryPanelProps) {
   const [showContribute, setShowContribute] = useState(false);
   const [showDisburse, setShowDisburse] = useState(false);
   const [contributeAmount, setContributeAmount] = useState('');

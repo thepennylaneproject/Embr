@@ -1,0 +1,629 @@
+{
+  "mappings": {
+    "f-schema-nullable-walletid-001": {
+      "linear_id": "cd895590-2b3b-46ed-aa60-32456b13392a",
+      "identifier": "PLP-75",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-75/major-transaction-and-payout-tables-have-walletid-foreign-key-field",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-schema-monetary-cents-001": {
+      "linear_id": "13c7652d-1be8-437e-ac29-78cbcc359454",
+      "identifier": "PLP-76",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-76/minor-trackprice-and-artiststatrevenue-were-migrated-to-integer-cents",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-schema-nullable-refs-001": {
+      "linear_id": "27449f23-80f8-44ca-9d4b-d04027f6478d",
+      "identifier": "PLP-77",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-77/minor-multiple-tables-allow-nullable-foreign-key-references-with",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-schema-rls-coverage-001": {
+      "linear_id": "b3518c69-faac-4c2f-a478-d119ab0ed648",
+      "identifier": "PLP-78",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-78/blocker-database-uses-postgresql-but-no-rls-row-level-security",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-schema-validation-amount-001": {
+      "linear_id": "3fc34c5e-7154-4f79-9570-f90955362c6a",
+      "identifier": "PLP-79",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-79/major-monetary-amount-fields-wallet-transaction-tip-payout-lack-not",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-schema-orphaned-refs-transaction-user-001": {
+      "linear_id": "fa423dbe-d557-41ad-875a-cfa8c94964f3",
+      "identifier": "PLP-80",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-80/minor-transactionuserid-is-optional-nullable-with-ondelete-setnull",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-schema-wallet-unique-index-001": {
+      "linear_id": "0e2cbdb4-d8b9-4c71-8eec-5073efbdb590",
+      "identifier": "PLP-81",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-81/minor-walletuserid-has-unique-constraint-but-index-at-line-388-is",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-deploy-build-failure-nestjs-001": {
+      "linear_id": "86ddb7cd-1f5f-4076-bf9b-fd1bf02139a4",
+      "identifier": "PLP-82",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-82/blocker-nestjs-api-build-fails-with-typescript-compilation-errors-in",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-deploy-ci-build-api-missing-001": {
+      "linear_id": "b39fbada-5b3b-4684-85b7-87744053ede5",
+      "identifier": "PLP-83",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-83/major-cicd-pipeline-does-not-build-or-test-the-api-only-web-typecheck",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-deploy-typescript-strict-api-001": {
+      "linear_id": "1db0598f-f38a-4703-b326-248b48904665",
+      "identifier": "PLP-84",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-84/major-api-typescript-strict-mode-enabled-but-hundreds-of-pre-existing",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-deploy-error-boundary-web-001": {
+      "linear_id": "846cb834-b390-4cee-93db-20ed89aa0065",
+      "identifier": "PLP-85",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-85/major-web-frontend-has-global-error-page-but-no-react-error-boundary",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-deploy-health-check-api-001": {
+      "linear_id": "fc0a8bc6-8929-4933-afee-56ede15631d5",
+      "identifier": "PLP-86",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-86/major-api-health-check-endpoint-referenced-in-deployyml-but-may-not-be",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-deploy-env-validation-startup-001": {
+      "linear_id": "47652ea5-23ec-4d14-8092-4513d51eddce",
+      "identifier": "PLP-87",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-87/major-environment-variables-are-not-validated-at-startup-missing-or",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-deploy-web-env-validation-001": {
+      "linear_id": "893691d6-9eb2-43ab-9b24-3fa1f1175c0e",
+      "identifier": "PLP-88",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-88/minor-nextjs-web-app-does-not-validate-required-next-public-api-url-at",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-deploy-logging-structured-001": {
+      "linear_id": "68f32a29-54fc-47f8-a7f6-986ffae34027",
+      "identifier": "PLP-89",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-89/minor-api-logging-uses-nestjs-built-in-logger-console-based-instead-of",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-deploy-sentry-not-configured-001": {
+      "linear_id": "0b0c8c4e-6ffa-4ba1-8340-1d5ab6f7cc8c",
+      "identifier": "PLP-90",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-90/minor-sentry-error-reporting-is-not-configured-production-errors-are",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-deploy-docker-prod-config-missing-001": {
+      "linear_id": "21872a54-ed53-4100-a2b6-6c8ad713b958",
+      "identifier": "PLP-91",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-91/minor-production-docker-compose-config-docker-composeprodyml-is",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-deploy-db-migration-rollback-001": {
+      "linear_id": "e9864237-6f5f-49ee-b071-8fb3e3e1b40b",
+      "identifier": "PLP-92",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-92/minor-database-migration-rollback-plan-is-not-documented-failed",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-deploy-csp-unsafe-inline-001": {
+      "linear_id": "9379cb03-0404-4621-aeaf-ceb6fefe1b21",
+      "identifier": "PLP-93",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-93/minor-content-security-policy-in-web-app-uses-unsafe-inline-for",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-deploy-no-rollback-strategy-001": {
+      "linear_id": "25bb6028-7782-42ec-9682-dfb766152d49",
+      "identifier": "PLP-94",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-94/minor-no-automated-rollback-strategy-if-deployment-health-check-fails",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-log-001": {
+      "linear_id": "51110c0b-05a8-4ca2-a913-619604b67cbb",
+      "identifier": "PLP-95",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-95/blocker-missing-method-getunreadcountforconversation-in",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-log-002": {
+      "linear_id": "17ed856a-c942-4005-9663-369120841c5e",
+      "identifier": "PLP-96",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-96/major-potential-null-dereference-in-conversation-deletion-without-soft",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-log-003": {
+      "linear_id": "46203618-5017-472a-bea7-e9c3290e8c8e",
+      "identifier": "PLP-97",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-97/major-unsafe-profile-access-in-followsservicets-without-existence",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-log-004": {
+      "linear_id": "c5b845bd-1c7b-47e0-b065-1a25cdcb90fd",
+      "identifier": "PLP-98",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-98/major-race-condition-in-idempotency-check-for-checkout-ordersservicets",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-log-005": {
+      "linear_id": "f8174971-57e3-4d14-9d04-20334a87c2e1",
+      "identifier": "PLP-99",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-99/major-silent-notification-failure-in-followsservicets",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-log-006": {
+      "linear_id": "5bf46357-aa58-4755-8a32-0b4956bf5f44",
+      "identifier": "PLP-100",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-100/major-unsafe-access-to-messages0-in-markasread-without-bounds-check",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-log-007": {
+      "linear_id": "6e724bee-8852-4184-acad-b5d147818f54",
+      "identifier": "PLP-101",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-101/major-missing-await-on-rate-limiter-check-messagingservicets445",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-log-008": {
+      "linear_id": "0ed93561-d51b-414d-9286-8442b1e8bb10",
+      "identifier": "PLP-102",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-102/major-unsafe-property-access-in-message-sender-mapping",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-log-009": {
+      "linear_id": "2c1467a5-072c-47be-8f2d-5450ce1242f2",
+      "identifier": "PLP-103",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-103/minor-unhandled-promise-rejection-in-usemessaging-hook-error-callback",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-log-010": {
+      "linear_id": "557e51ad-61d4-4754-b58e-f122c6b0f876",
+      "identifier": "PLP-104",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-104/minor-unsafe-access-to-responsemessage-in-createconversation-hook",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-log-011": {
+      "linear_id": "3bc17464-6c29-40a6-a8d4-7cc42f01ec4f",
+      "identifier": "PLP-105",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-105/minor-unreachable-code-in-markasread-hook-usemessagingts427-447",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-log-012": {
+      "linear_id": "7b91d3d6-a2d4-427e-9e7f-22076b0bf7b3",
+      "identifier": "PLP-106",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-106/minor-unsafe-access-to-dataconversationid-in-setmessages-state-update",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-001": {
+      "linear_id": "3c82a239-a692-4be1-b781-ab8f3a29790e",
+      "identifier": "PLP-107",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-107/major-potential-n1-query-in-messagingservicegetconversations-with",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-002": {
+      "linear_id": "196c7885-9720-424b-8460-f21c7d2fe7a7",
+      "identifier": "PLP-108",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-108/major-missing-indexes-on-frequently-used-where-columns-in-messaging",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-003": {
+      "linear_id": "7c33b749-ff9d-4b2a-b1ad-7110ebe3a6c6",
+      "identifier": "PLP-109",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-109/major-messaging-service-n1-followsservice-calls",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-004": {
+      "linear_id": "9a8a40df-48e0-4544-a6a9-a616dd08c14d",
+      "identifier": "PLP-110",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-110/major-frontend-feed-component-may-re-fetch-on-every-dependency-change",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-005": {
+      "linear_id": "0032bcc0-dd7a-4d7f-8040-a84cb5a83086",
+      "identifier": "PLP-111",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-111/minor-cache-service-falls-back-to-in-memory-with-no-size-limit",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-006": {
+      "linear_id": "3f082a2f-e9db-4448-a6bd-1935d339f137",
+      "identifier": "PLP-112",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-112/minor-cache-service-does-not-handle-redis-connection-failures",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-007": {
+      "linear_id": "812073f2-f546-4794-a376-a9bdd195a176",
+      "identifier": "PLP-113",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-113/major-walletservice-queries-all-transactions-without-pagination-or",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-008": {
+      "linear_id": "ae72bbb3-9b90-4f64-a8ed-55fee32ca827",
+      "identifier": "PLP-114",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-114/minor-api-client-always-sends-withcredentialstrue-adds-latency-to",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-009": {
+      "linear_id": "67a262d1-35f2-424d-9d37-7cbdbe94f9c1",
+      "identifier": "PLP-115",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-115/major-frontend-marketplace-page-creates-new-hooks-with-unfetched",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-010": {
+      "linear_id": "1d64e3d2-c6ae-48d3-ad02-cbe4f0b26b7f",
+      "identifier": "PLP-116",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-116/minor-frontend-images-in-pages-lack-optimization-no-nextjs-image",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-011": {
+      "linear_id": "7fbcd034-15ec-4d4f-9c8e-590c5bdcefec",
+      "identifier": "PLP-117",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-117/minor-stripe-sdk-imported-but-stripe-connectservice-appears-disabled",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-012": {
+      "linear_id": "0a4de693-0587-4a6d-9a55-3165972fb8ee",
+      "identifier": "PLP-118",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-118/minor-messaging-hook-creates-socketio-connections-without-connection",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-013": {
+      "linear_id": "6d852102-27e1-4f9c-bbb3-42d0a478d148",
+      "identifier": "PLP-119",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-119/major-followsservice-denormalizes-followerfollowing-counts-but-no",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-014": {
+      "linear_id": "0dc80220-a5c6-4a2a-9e63-62ad83e17d0e",
+      "identifier": "PLP-120",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-120/minor-rating-limiter-service-may-not-scale-to-distributed-deployments",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-015": {
+      "linear_id": "22c1be94-b81c-46ec-855e-880b846f5bdd",
+      "identifier": "PLP-121",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-121/major-missing-database-indexes-on-postauthorid-messagesenderid",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-016": {
+      "linear_id": "8ae3d0b7-ab3c-4f85-99e1-771546131e65",
+      "identifier": "PLP-122",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-122/minor-prisma-client-instantiated-without-connection-pooling",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-017": {
+      "linear_id": "d96e8b2f-e3e4-4ac2-9879-8b43e1d34216",
+      "identifier": "PLP-123",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-123/minor-aws-ses-email-service-may-incur-high-costs-if-sending-to",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-018": {
+      "linear_id": "e35d1e2d-d4df-4b2b-a488-f591873172c6",
+      "identifier": "PLP-124",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-124/minor-nextjs-image-remotepatterns-allows-wildcard-subdomains-may",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-019": {
+      "linear_id": "0ed3ea79-027d-4b78-a663-0a41087e8c3c",
+      "identifier": "PLP-125",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-125/major-query-scheduling-unknown-frequency-of-scheduled-posts-processor",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-perf-020": {
+      "linear_id": "e9ff91c9-60e2-43a6-b82c-770e7713582a",
+      "identifier": "PLP-126",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-126/minor-query-mux-video-api-usage-metering-and-cost-tracking-not-visible",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "sec-001": {
+      "linear_id": "1b7a7e33-acf2-45f0-8482-ec434d166dae",
+      "identifier": "PLP-127",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-127/production-secrets-committed-to-git-in-env-file",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "sec-002": {
+      "linear_id": "887aafef-2c80-4aaf-9688-432c33b35496",
+      "identifier": "PLP-128",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-128/sql-injection-in-dollarqueryraw-without-parameterization",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "sec-003": {
+      "linear_id": "43c9c28f-ed2e-410c-a69e-73139d13bc10",
+      "identifier": "PLP-129",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-129/missing-cookie-secure-environment-variable-allows-cookie-transmission",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "sec-004": {
+      "linear_id": "00bd553e-6387-4564-8400-eab26f9dd716",
+      "identifier": "PLP-130",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-130/over-exposed-user-data-in-api-responses-leaks-private-fields",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "sec-005": {
+      "linear_id": "08868f31-adcd-45bb-b1a6-fc01131b0317",
+      "identifier": "PLP-131",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-131/idor-in-wallet-endpoints-no-ownership-verification",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "sec-006": {
+      "linear_id": "b2f01e02-6859-43ef-b0f6-ced3a0291c1e",
+      "identifier": "PLP-132",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-132/major-cors-credentials-exposed-with-loose-origin-validation",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "sec-007": {
+      "linear_id": "a4a02fe3-d4e8-468b-ad29-907d159c2aef",
+      "identifier": "PLP-133",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-133/major-account-enumeration-vulnerability-via-forgot-password-and-email",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "sec-008": {
+      "linear_id": "863542c3-410f-4f44-bc63-3e90a949a11b",
+      "identifier": "PLP-134",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-134/major-google-oauth-redirect-validation-incomplete-open-redirect-risk",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "sec-009": {
+      "linear_id": "e16f1a98-b1fd-48a3-bff9-ff385ba48bef",
+      "identifier": "PLP-135",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-135/major-no-rate-limiting-on-login-endpoint-brute-force-vulnerability",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "sec-010": {
+      "linear_id": "84570174-3e38-4e74-a090-12a7d46f1d9a",
+      "identifier": "PLP-136",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-136/major-password-reset-token-leak-in-email-user-id-embedded-in-plaintext",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "sec-011": {
+      "linear_id": "4e1f039c-670a-48b5-a4fb-d8e09c867282",
+      "identifier": "PLP-137",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-137/major-seed-account-credentials-documented-in-agentsmd-allow",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-copy-001": {
+      "linear_id": "104ad5c3-4cac-4a5e-9b2c-6f4a986e2ec2",
+      "identifier": "PLP-138",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-138/major-inconsistent-authentication-terminology",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-flow-001": {
+      "linear_id": "fb8bec90-c14c-4ca0-ade3-6d9f7490df7a",
+      "identifier": "PLP-139",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-139/major-broken-navigation-flow-no-back-button-or-escape-route-on-auth",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-state-001": {
+      "linear_id": "6e91bd18-cab3-4ac7-93d1-24813e1ec12b",
+      "identifier": "PLP-140",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-140/major-missing-loading-state-on-profile-page",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-state-002": {
+      "linear_id": "252cca47-09b1-4f3c-9270-487280b41b77",
+      "identifier": "PLP-141",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-141/minor-inconsistent-empty-state-messaging-across-list-views",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-a11y-001": {
+      "linear_id": "80bee95e-aa7f-4f8e-aeac-b9d2bb50ec62",
+      "identifier": "PLP-142",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-142/major-missing-alt-text-on-decorative-images-and-avatars",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-flow-002": {
+      "linear_id": "f3f527b1-dc38-47f9-a028-f1dda7274cdf",
+      "identifier": "PLP-143",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-143/major-dead-end-page-marketplace-checkout-flow-incomplete",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-flow-003": {
+      "linear_id": "7d9daebd-5952-4915-b7ed-46aa9a6ea44a",
+      "identifier": "PLP-144",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-144/major-messaging-compose-modal-lacks-clear-confirmation-feedback",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-error-001": {
+      "linear_id": "78c9e8a3-7c78-497b-a36a-e1497a5b259d",
+      "identifier": "PLP-145",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-145/major-generic-error-messages-dont-guide-user-action",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-a11y-002": {
+      "linear_id": "5f9e8daa-7888-46e2-b072-045237f83dfb",
+      "identifier": "PLP-146",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-146/minor-custom-button-implementations-lack-proper-aria-labels-and",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-flow-004": {
+      "linear_id": "6b1f66af-a7cf-4d95-b532-0edd9f57abbf",
+      "identifier": "PLP-147",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-147/major-missing-route-gigs-booking-page-doesnt-display-gig-detail",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-copy-002": {
+      "linear_id": "c00dc4d5-7b83-4f1b-b742-847631be2873",
+      "identifier": "PLP-148",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-148/minor-mixed-tone-in-ctas-join-the-feed-vs-go-to-feed-vs-continue-to",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-flow-005": {
+      "linear_id": "2aea6318-cfdd-43a2-99b9-14c3073ed3d3",
+      "identifier": "PLP-149",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-149/major-no-visible-onboarding-or-feature-discovery-for-new-users",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-state-003": {
+      "linear_id": "d9cc6146-3a2a-480d-a765-60da46e54c42",
+      "identifier": "PLP-150",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-150/minor-post-creation-doesnt-clear-state-or-show-success-confirmation",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-a11y-003": {
+      "linear_id": "3aa7943e-23f3-486e-b1ba-a11df1d928d6",
+      "identifier": "PLP-151",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-151/minor-form-inputs-lack-associated-labels-in-some-components",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    },
+    "f-error-002": {
+      "linear_id": "25b7c6d2-f0f3-411c-8538-22f87f9a109c",
+      "identifier": "PLP-152",
+      "url": "https://linear.app/the-penny-lane-project/issue/PLP-152/minor-error-messages-dont-provide-recovery-instructions",
+      "lyra_status": "open",
+      "created_at": "2026-03-16T01:26:22Z",
+      "last_synced": "2026-03-16T01:26:22Z"
+    }
+  },
+  "last_sync": "2026-03-16T01:26:22Z"
+}

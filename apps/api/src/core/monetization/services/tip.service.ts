@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { TransactionType as PrismaTransactionType } from '@prisma/client';
-import { WalletService } from './wallet.service';
 import { TransactionService } from './transaction.service';
 import { CreateTipDto, GetTipsQueryDto } from '../dto/tip.dto';
 import { NOTIFICATION_TYPES } from '../../notifications/notifications.constants';
@@ -19,7 +18,6 @@ export class TipService {
 
   constructor(
     private prisma: PrismaService,
-    private walletService: WalletService,
     private transactionService: TransactionService,
   ) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -271,22 +269,8 @@ export class TipService {
           tip.recipientId,
           tip.amount,
           tipId,
+          tx,
         );
-
-        // Update wallet balance (add net amount to recipient)
-        await tx.wallet.upsert({
-          where: { userId: tip.recipientId },
-          create: {
-            userId: tip.recipientId,
-            balance: netAmountCents,
-            currency: 'USD',
-          },
-          update: {
-            balance: {
-              increment: netAmountCents,
-            },
-          },
-        });
 
         // Create notification for recipient
         await tx.notification.create({
@@ -541,7 +525,7 @@ export class TipService {
       });
 
       // Deduct from recipient wallet
-      const platformFee = tip.amount * 0.05;
+      const platformFee = Math.round(tip.amount * 0.05);
       const netAmount = tip.amount - platformFee;
 
       const wallet = await tx.wallet.update({

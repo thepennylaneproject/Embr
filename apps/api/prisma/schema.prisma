@@ -1265,7 +1265,7 @@ model Track {
   lyrics            String?   @db.Text
 
   // Pricing & Monetization
-  price             Float     @default(0) // 0 = free, otherwise in USD
+  price             Int       @default(0) // 0 = free, otherwise integer cents
   isPublished       Boolean   @default(false)
   visibility        String    @default("public") // public, private, followers
 
@@ -1361,7 +1361,7 @@ model ArtistStat {
 
   date              DateTime  @default(now())
   streams           BigInt    @default(0)
-  revenue           Float     @default(0) // In USD
+  revenue           Int       @default(0) // In cents
   listeners         Int       @default(0)
   newFollowers      Int       @default(0)
 

@@ -32,6 +32,7 @@ export const envValidationSchema = Joi.object({
   GOOGLE_CLIENT_ID: Joi.string().optional().allow(''),
   GOOGLE_CLIENT_SECRET: Joi.string().optional().allow(''),
   GOOGLE_CALLBACK_URL: Joi.string().uri().optional(),
+  COOKIE_SECURE: Joi.boolean().default(false),
 
   // AWS (optional — S3/SES features degrade gracefully without these)
   AWS_REGION: Joi.string().default('us-east-1'),
@@ -56,7 +57,13 @@ export const envValidationSchema = Joi.object({
   SMTP_SECURE: Joi.boolean().default(false),
   SMTP_USER: Joi.string().optional().allow(''),
   SMTP_PASSWORD: Joi.string().optional().allow(''),
-  EMAIL_FROM: Joi.string().email().default('noreply@embr.local'),
+  EMAIL_FROM: Joi.string()
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.string().email().required(),
+      otherwise: Joi.string().optional().allow(''),
+    })
+    .default('noreply@dev.local'),
 
   // CORS
   ALLOWED_ORIGINS: Joi.string().default(

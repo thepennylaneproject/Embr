@@ -1,6 +1,5 @@
- WARN  The "workspaces" field in package.json is not supported by pnpm. Create a "pnpm-workspace.yaml" file instead.
 
-> embr-infrastructure@1.0.0 build /Users/sarahsahl/Desktop/embr
+> embr-infrastructure@1.0.0 build
 > npm run build:api && npm run build:web
 
 
@@ -11,15 +10,27 @@
 > embr-api@0.1.0 build
 > nest build
 
-[96msrc/verticals/messaging/messaging/services/messaging.service.ts[0m:[93m508[0m:[93m36[0m - [91merror[0m[90m TS2339: [0mProperty 'getUnreadCountForConversation' does not exist on type 'MessagingService'.
 
-[7m508[0m     const unreadCount = await this.getUnreadCountForConversation(
-[7m   [0m [91m                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
-[96msrc/verticals/messaging/messaging/services/messaging.service.ts[0m:[93m715[0m:[93m36[0m - [91merror[0m[90m TS2339: [0mProperty 'getUnreadCountForConversation' does not exist on type 'MessagingService'.
+> embr-infrastructure@1.0.0 build:web
+> npm --prefix apps/web run build
 
-[7m715[0m     const unreadCount = await this.getUnreadCountForConversation(
-[7m   [0m [91m                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
 
-Found 2 error(s).
+> embr-web@0.1.0 build
+> next build
 
- ELIFECYCLE  Command failed with exit code 1.
+  ▲ Next.js 14.2.5
+
+   Skipping linting
+   Checking validity of types ...
+Failed to compile.
+
+./src/components/groups/GroupHeader.tsx:3:22
+Type error: 'GroupMemberRole' is declared but never used.
+
+[0m [90m 1 |[39m [36mimport[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[33m;[39m[0m
+[0m [90m 2 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m type { [33mGroup[39m[33m,[39m [33mGroupMemberRole[39m } [36mfrom[39m [32m'@embr/types'[39m[33m;[39m[0m
+[0m [90m   |[39m                      [31m[1m^[22m[39m[0m
+[0m [90m 4 |[39m[0m
+[0m [90m 5 |[39m [36minterface[39m [33mGroupHeaderProps[39m {[0m
+[0m [90m 6 |[39m   group[33m:[39m [33mGroup[39m[33m;[39m[0m
