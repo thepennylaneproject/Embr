@@ -6,26 +6,27 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar } from '@embr/ui';
 import type { CSSProperties } from 'react';
+import { copy } from '@/lib/copy';
 
 const navItems = [
-  { href: '/feed', label: 'Feed' },
-  { href: '/discover', label: 'Discover' },
-  { href: '/create', label: 'Create' },
-  { href: '/groups', label: 'Groups' },
-  { href: '/events', label: 'Events' },
-  { href: '/mutual-aid', label: 'Mutual Aid' },
-  { href: '/marketplace', label: 'Marketplace' },
-  { href: '/music', label: 'Music' },
-  { href: '/gigs', label: 'Gigs' },
-  { href: '/earnings', label: 'Earnings' },
-  { href: '/messages', label: 'Messages' },
-  { href: '/profile', label: 'Profile' },
+  { href: '/feed', label: copy.nav.feed },
+  { href: '/discover', label: copy.nav.discover },
+  { href: '/create', label: copy.nav.create },
+  { href: '/groups', label: copy.nav.groups },
+  { href: '/events', label: copy.nav.events },
+  { href: '/mutual-aid', label: copy.nav.mutualAid },
+  { href: '/marketplace', label: copy.nav.marketplace },
+  { href: '/music', label: copy.nav.music },
+  { href: '/gigs', label: copy.nav.gigs },
+  { href: '/earnings', label: copy.nav.earnings },
+  { href: '/messages', label: copy.nav.messages },
+  { href: '/profile', label: copy.nav.profile },
 ];
 
 const quickCreateItems = [
-  { href: '/events/create', label: 'Host Event' },
-  { href: '/groups/create', label: 'Create Group' },
-  { href: '/marketplace/sell', label: 'Sell' },
+  { href: '/events/create', label: copy.nav.quickCreate.hostEvent },
+  { href: '/groups/create', label: copy.nav.quickCreate.createGroup },
+  { href: '/marketplace/sell', label: copy.nav.quickCreate.sell },
 ];
 
 export interface AppShellProps {
@@ -69,7 +70,7 @@ export function AppShell({
     <div className="embr-shell" style={shellStyle}>
       <header className="embr-header">
         <div className="embr-container embr-header-row">
-          <Link href="/feed" className="embr-brand" aria-label="Embr home">
+          <Link href="/feed" className="embr-brand" aria-label={copy.brand.ariaLabel}>
             <span className="embr-brand-dot" aria-hidden="true" />
             <span className="embr-brand-text">Embr</span>
           </Link>
@@ -78,7 +79,7 @@ export function AppShell({
           <button
             className="embr-menu-toggle"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
+            aria-label={copy.nav.toggleMenu}
             aria-expanded={mobileMenuOpen}
           >
             <span />
@@ -89,7 +90,7 @@ export function AppShell({
           {/* Main navigation */}
           <nav
             className="embr-main-nav"
-            aria-label="Primary navigation"
+            aria-label={copy.nav.primaryNav}
             data-mobile-open={mobileMenuOpen}
           >
             {navItems.map((item) => {
@@ -132,7 +133,7 @@ export function AppShell({
             <button
               className="embr-user-button"
               onClick={() => setUserMenuOpen(!userMenuOpen)}
-              aria-label="User menu"
+              aria-label={copy.nav.userMenu}
               aria-expanded={userMenuOpen}
             >
               <Avatar
@@ -154,17 +155,17 @@ export function AppShell({
                   View Profile
                 </Link>
                 <Link href="/profile/edit" className="embr-dropdown-item embr-dropdown-link">
-                  Edit Profile
+                  {copy.profile.editProfile}
                 </Link>
                 <Link href="/settings" className="embr-dropdown-item embr-dropdown-link">
-                  Settings
+                  {copy.nav.settings}
                 </Link>
                 <hr className="embr-dropdown-divider" />
                 <button
                   onClick={logout}
                   className="embr-dropdown-item embr-dropdown-button embr-dropdown-danger"
                 >
-                  Sign out
+                  {copy.nav.signOut}
                 </button>
               </div>
             )}

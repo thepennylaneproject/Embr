@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { ProtectedPageShell } from '@/components/layout';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Button } from '@embr/ui';
+import { copy } from '@/lib/copy';
 
 export default function NotificationsPage() {
   const {
@@ -32,11 +33,13 @@ export default function NotificationsPage() {
 
   return (
     <ProtectedPageShell
-      title="Notifications"
-      subtitle={unreadCount > 0
-        ? `${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}`
-        : 'You are all caught up.'}
-      breadcrumbs={[{ label: 'Notifications' }]}
+      title={copy.dashboard.notifications.title}
+      subtitle={
+        unreadCount > 0
+          ? copy.dashboard.notifications.unread(unreadCount)
+          : copy.dashboard.notifications.allCaughtUp
+      }
+      breadcrumbs={[{ label: copy.dashboard.notifications.title }]}
     >
       <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         <Button
@@ -45,7 +48,7 @@ export default function NotificationsPage() {
           onClick={() => markAllAsRead()}
           disabled={unreadCount === 0}
         >
-          Mark all read
+          {copy.actions.markAllRead}
         </Button>
         <Button
           type="button"
@@ -53,7 +56,7 @@ export default function NotificationsPage() {
           onClick={() => deleteAllRead()}
           disabled={!hasNotifications}
         >
-          Clear read
+          {copy.actions.deleteAllRead}
         </Button>
       </div>
 
@@ -73,18 +76,18 @@ export default function NotificationsPage() {
 
       {isLoading ? (
         <div className="ui-card" data-padding="lg">
-          <p style={{ color: 'var(--embr-muted-text)' }}>Loading notifications...</p>
+          <p style={{ color: 'var(--embr-muted-text)' }}>{copy.actions.loading}...</p>
         </div>
       ) : !hasNotifications ? (
         <div className="ui-card" data-padding="lg" style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--embr-muted-text)' }}>No notifications yet.</p>
+          <p style={{ color: 'var(--embr-muted-text)' }}>{copy.emptyStates.noNotifications}</p>
           <Button
             type="button"
             variant="ghost"
             onClick={() => fetchNotifications()}
             style={{ marginTop: '0.75rem' }}
           >
-            Refresh
+            {copy.actions.refresh}
           </Button>
         </div>
       ) : (
@@ -158,7 +161,7 @@ export default function NotificationsPage() {
                 onClick={loadMore}
                 disabled={isLoading}
               >
-                {isLoading ? 'Loading...' : 'Load more'}
+                {isLoading ? `${copy.actions.loading}...` : copy.actions.loadMore}
               </Button>
             </div>
           )}
