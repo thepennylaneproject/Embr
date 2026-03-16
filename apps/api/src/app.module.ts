@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { RlsInterceptor } from './common/interceptors/rls.interceptor';
 
 import { envValidationSchema } from './config/env.validation';
 import { PrismaModule } from './core/database/prisma.module';
@@ -77,6 +78,12 @@ import { HealthController } from './health.controller';
     EventsModule,
   ],
   providers: [
+    // Global RLS context interceptor – must run before any guards so that
+    // the user context is available to PrismaService during auth queries.
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RlsInterceptor,
+    },
     // Global rate limiting guard (runs before auth)
     {
       provide: APP_GUARD,
