@@ -50,7 +50,7 @@ Return only one JSON object:
 - `schema_version`: `"1.1.0"`
 - `kind`: `"agent_output"`
 - `run_id`: `ux-<YYYYMMDD>-<HHmmss>`
-- - `run_metadata` **(required)**:
+- `run_metadata` **(required)**:
   - `timestamp`: ISO 8601 datetime of run start (e.g. `"2026-03-10T14:00:00Z"`)
   - `branch`: git branch name (e.g. `"main"`)
   - `environment`: one of `"local"` | `"ci"` | `"staging"` | `"production"`
@@ -62,19 +62,19 @@ Return only one JSON object:
   - `role`: one-sentence description
   - `inputs_used`: list of files/artifacts you actually examined
   - `stop_conditions_hit`: list of any stop conditions triggered (or empty array)
-- - `coverage`:
+- `coverage`:
   - `files_examined`: **array** of file paths (not a count)
   - `files_skipped`: **array** of skipped paths with reasons (not a count)
   - `coverage_complete`: boolean
   - `incomplete_reason`: string (required when `coverage_complete` is false)
-- - `findings`: array of Finding objects — each must have:
+- `findings`: array of Finding objects — each must have:
   - `finding_id`, `type`, `category`, `severity`, `priority`, `confidence`
   - `title`, `description`, `impact`
   - `proof_hooks`: array with at least one hook, each requiring `hook_type` and `summary`
   - `suggested_fix`: object with `approach` field (not a string)
   - `status`, `history` (array with at least one `created` event including `timestamp`, `actor`, `event`)
 - `rollups`: `by_severity`, `by_category`, `by_type`, `by_status` (all required)
-- - `next_actions`: array of `{ action, finding_id, rationale }` objects
+- `next_actions`: array of `{ action, finding_id, rationale }` objects
 
 **Enum constraints (strict — no substitutions):**
 - `severity`: `blocker` | `major` | `minor` | `nit` (lowercase only)

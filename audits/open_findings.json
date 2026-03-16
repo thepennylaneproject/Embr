@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-03-16T20:57:21Z",
+  "last_updated": "2026-03-16T22:09:55Z",
   "run_id": "synthesizer-v2-20260310-011114",
   "open_findings": [
     {
@@ -736,6 +736,16 @@
       "status": "open",
       "title": "Error messages don't provide recovery instructions",
       "agent": "ux-flow-auditor"
+    },
+    {
+      "finding_id": "f-60ee7aca",
+      "type": "debt",
+      "severity": "major",
+      "priority": "P1",
+      "status": "fixed_verified",
+      "title": "runtime-bug-hunter agent output missing required run_metadata object (schema v1.1.0 violation)",
+      "agent": "synthesizer",
+      "linear_issue": "PLP-32"
     }
   ]
 }

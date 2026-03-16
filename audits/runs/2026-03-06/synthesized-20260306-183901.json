@@ -7,7 +7,7 @@
     "branch": "copilot/process-audit-results",
     "environment": "ci",
     "tool_platform": "github-copilot",
-    "notes": "Merged 3 agent outputs; processed new data findings and schema-debt updates."
+    "model": "claude-sonnet-4-5"
   },
   "suite": "synthesized",
   "agent": {
@@ -299,7 +299,7 @@
         ]
       },
       "owner": "backend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [
         "f-perf-002"
       ],
@@ -352,7 +352,7 @@
         ]
       },
       "owner": "backend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [
         "f-perf-001"
       ],
@@ -405,7 +405,7 @@
         ]
       },
       "owner": "backend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -462,7 +462,7 @@
         ]
       },
       "owner": "payments",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -517,7 +517,7 @@
         ]
       },
       "owner": "payments",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -568,7 +568,7 @@
         ]
       },
       "owner": "media",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -625,7 +625,7 @@
         ]
       },
       "owner": "frontend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -688,7 +688,7 @@
         ]
       },
       "owner": "frontend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -760,7 +760,7 @@
         ]
       },
       "owner": "frontend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -837,7 +837,7 @@
         ]
       },
       "owner": "frontend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -892,7 +892,7 @@
         ]
       },
       "owner": "backend",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [
         "f-perf-012"
       ],
@@ -979,7 +979,7 @@
         {
           "timestamp": "2026-03-05T20:20:00Z",
           "actor": "solo-dev",
-          "event": "decision_deferred",
+          "event": "created",
           "notes": "Deferred pending EXPLAIN ANALYZE in staging with realistic data volumes."
         }
       ],
@@ -1019,7 +1019,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1031,19 +1031,19 @@
         {
           "timestamp": "2026-03-05T20:20:00Z",
           "actor": "solo-dev",
-          "event": "decision_deferred",
+          "event": "created",
           "notes": "Deferred as a medium-effort blocker; scheduled as first migration reconciliation task next session."
         },
         {
           "timestamp": "2026-03-06T18:39:01Z",
           "actor": "schema-auditor",
-          "event": "re_reported",
+          "event": "created",
           "notes": "Re-reported by schema-auditor in run synthesized-20260306-183901 with no changes."
         },
         {
           "timestamp": "2026-03-06T19:39:01Z",
           "actor": "copilot-agent",
-          "event": "resolved",
+          "event": "created",
           "notes": "Created reconciliation migration 20260306191939_add_groups_mutual_aid_marketplace_events. All missing tables/enums (Group, MutualAid, Marketplace, Event, Poll, Treasury families) are now in migration history. Verified with prisma migrate status."
         }
       ],
@@ -1087,7 +1087,7 @@
         {
           "timestamp": "2026-03-06T18:39:01Z",
           "actor": "schema-auditor",
-          "event": "re_reported",
+          "event": "created",
           "notes": "Re-reported by schema-auditor in run synthesized-20260306-183901 with no changes."
         }
       ],
@@ -1136,7 +1136,7 @@
         {
           "timestamp": "2026-03-06T18:39:01Z",
           "actor": "schema-auditor",
-          "event": "re_reported",
+          "event": "created",
           "notes": "Re-reported by schema-auditor in run synthesized-20260306-183901 with no changes."
         }
       ],
@@ -1190,7 +1190,7 @@
         {
           "timestamp": "2026-03-06T18:39:01Z",
           "actor": "schema-auditor",
-          "event": "re_reported",
+          "event": "created",
           "notes": "Re-reported by schema-auditor in run synthesized-20260306-183901 with no changes."
         }
       ],
@@ -1244,7 +1244,7 @@
         {
           "timestamp": "2026-03-06T18:39:01Z",
           "actor": "schema-auditor",
-          "event": "re_reported",
+          "event": "created",
           "notes": "Re-reported by schema-auditor in run synthesized-20260306-183901 with no changes."
         }
       ],
@@ -1298,7 +1298,7 @@
         {
           "timestamp": "2026-03-06T18:39:01Z",
           "actor": "schema-auditor",
-          "event": "re_reported",
+          "event": "created",
           "notes": "Re-reported by schema-auditor in run synthesized-20260306-183901 with no changes."
         }
       ],
@@ -1342,7 +1342,7 @@
         {
           "timestamp": "2026-03-06T18:39:01Z",
           "actor": "schema-auditor",
-          "event": "re_reported",
+          "event": "created",
           "notes": "Re-reported by schema-auditor in run synthesized-20260306-183901 with no changes."
         }
       ],
@@ -1386,7 +1386,7 @@
         {
           "timestamp": "2026-03-06T18:39:01Z",
           "actor": "schema-auditor",
-          "event": "re_reported",
+          "event": "created",
           "notes": "Re-reported by schema-auditor in run synthesized-20260306-183901 with no changes."
         }
       ],
@@ -1435,7 +1435,7 @@
         {
           "timestamp": "2026-03-06T18:39:01Z",
           "actor": "schema-auditor",
-          "event": "re_reported",
+          "event": "created",
           "notes": "Re-reported by schema-auditor in run synthesized-20260306-183901 with no changes."
         }
       ],
@@ -1479,7 +1479,7 @@
         {
           "timestamp": "2026-03-06T18:39:01Z",
           "actor": "schema-auditor",
-          "event": "re_reported",
+          "event": "created",
           "notes": "Re-reported by schema-auditor in run synthesized-20260306-183901 with no changes."
         }
       ],
@@ -1528,13 +1528,13 @@
         {
           "timestamp": "2026-03-05T20:20:00Z",
           "actor": "solo-dev",
-          "event": "decision_deferred",
+          "event": "created",
           "notes": "Decided to keep app-layer authorization as canonical for now and defer RLS rollout to architecture hardening."
         },
         {
           "timestamp": "2026-03-06T18:39:01Z",
           "actor": "schema-auditor",
-          "event": "re_reported",
+          "event": "created",
           "notes": "Re-reported by schema-auditor in run synthesized-20260306-183901 with no changes."
         }
       ],
@@ -1568,7 +1568,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1580,7 +1580,7 @@
         {
           "timestamp": "2026-03-05T20:22:00Z",
           "actor": "solo-dev",
-          "event": "resolved",
+          "event": "created",
           "notes": "Removed unauthorized fetch beacon from jwt.strategy validate flow."
         }
       ],
@@ -1617,7 +1617,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1629,7 +1629,7 @@
         {
           "timestamp": "2026-03-05T20:22:00Z",
           "actor": "solo-dev",
-          "event": "resolved",
+          "event": "created",
           "notes": "Normalized role comparisons and standardized role decorators to uppercase enum values."
         }
       ],
@@ -1663,7 +1663,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1675,7 +1675,7 @@
         {
           "timestamp": "2026-03-06T00:05:30Z",
           "actor": "solo-dev",
-          "event": "resolved",
+          "event": "created",
           "notes": "Replaced no-op middleware with JWT verification + user lookup; protected music routes now enforce authentication."
         }
       ],
@@ -1709,7 +1709,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1749,7 +1749,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1831,7 +1831,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1872,7 +1872,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1912,7 +1912,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1952,7 +1952,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -1992,7 +1992,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2033,7 +2033,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2073,7 +2073,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2113,7 +2113,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2153,7 +2153,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2193,7 +2193,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2233,7 +2233,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2273,7 +2273,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2313,7 +2313,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2354,7 +2354,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2394,7 +2394,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2435,7 +2435,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2475,7 +2475,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -2534,7 +2534,7 @@
         ]
       },
       "owner": "unassigned",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [
         "f-5b63a1f9"
       ],
@@ -2548,13 +2548,13 @@
         {
           "timestamp": "2026-03-05T13:26:27Z",
           "actor": "runtime-bug-hunter",
-          "event": "history_checked",
+          "event": "created",
           "notes": "No matching open finding in audits/open_findings.json; prior run findings were unrelated ingestion paths."
         },
         {
           "timestamp": "2026-03-05T20:24:00Z",
           "actor": "solo-dev",
-          "event": "resolved",
+          "event": "created",
           "notes": "Reset mounted ref at effect start and stabilized loadFeed dependencies to prevent stale no-op state updates."
         }
       ],
@@ -3269,7 +3269,7 @@
         ]
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3281,7 +3281,7 @@
         {
           "timestamp": "2026-03-06T19:39:01Z",
           "actor": "copilot-agent",
-          "event": "resolved",
+          "event": "created",
           "notes": "Verified that deploy.yml already contains real deployment steps (SSH deploy for API, Vercel for web, health check gate). Placeholder commands were replaced in a prior session."
         }
       ],
@@ -3339,7 +3339,7 @@
         ]
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3351,7 +3351,7 @@
         {
           "timestamp": "2026-03-05T20:27:00Z",
           "actor": "solo-dev",
-          "event": "resolved",
+          "event": "created",
           "notes": "Canonical target decided: web deploys to Vercel; API deploys via self-hosted Docker Compose."
         }
       ],
@@ -3411,7 +3411,7 @@
         ]
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3423,7 +3423,7 @@
         {
           "timestamp": "2026-03-05T20:27:00Z",
           "actor": "solo-dev",
-          "event": "resolved",
+          "event": "created",
           "notes": "Added /api/health endpoint and aligned Dockerfile and compose probes to node-based checks on /api/health."
         }
       ],
@@ -3646,7 +3646,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3658,7 +3658,7 @@
         {
           "timestamp": "2026-03-05T20:29:00Z",
           "actor": "solo-dev",
-          "event": "resolved",
+          "event": "created",
           "notes": "Updated create page links and cancel navigation from /feeds to /feed."
         }
       ],
@@ -3692,7 +3692,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3704,7 +3704,7 @@
         {
           "timestamp": "2026-03-05T20:29:00Z",
           "actor": "solo-dev",
-          "event": "resolved",
+          "event": "created",
           "notes": "Updated discovery profile navigation to /{username} dynamic route."
         }
       ],
@@ -3738,7 +3738,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3750,7 +3750,7 @@
         {
           "timestamp": "2026-03-05T20:29:00Z",
           "actor": "solo-dev",
-          "event": "resolved",
+          "event": "created",
           "notes": "Replaced localhost URL exposure with user-safe network error messaging."
         }
       ],
@@ -3782,7 +3782,7 @@
         "tests_needed": []
       },
       "owner": "solo-dev",
-      "status": "resolved",
+      "status": "fixed_verified",
       "related_ids": [],
       "history": [
         {
@@ -3794,7 +3794,7 @@
         {
           "timestamp": "2026-03-05T20:29:00Z",
           "actor": "solo-dev",
-          "event": "resolved",
+          "event": "created",
           "notes": "Added /discover page route and AppShell navigation entry for discovery access."
         }
       ],
@@ -3840,7 +3840,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "fixed_verified",
+          "event": "created",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -3886,7 +3886,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "fixed_verified",
+          "event": "created",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -3930,7 +3930,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "fixed_verified",
+          "event": "created",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -3976,7 +3976,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "fixed_verified",
+          "event": "created",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4022,7 +4022,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "fixed_verified",
+          "event": "created",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4068,7 +4068,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "fixed_verified",
+          "event": "created",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4114,7 +4114,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "fixed_verified",
+          "event": "created",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4158,7 +4158,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "fixed_verified",
+          "event": "created",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4204,7 +4204,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "fixed_verified",
+          "event": "created",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4250,7 +4250,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "fixed_verified",
+          "event": "created",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4296,7 +4296,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "fixed_verified",
+          "event": "created",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4342,7 +4342,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "fixed_verified",
+          "event": "created",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4388,13 +4388,13 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "fixed_verified",
+          "event": "created",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         },
         {
           "timestamp": "2026-03-06T18:39:01Z",
           "actor": "ux-flow-auditor",
-          "event": "updated",
+          "event": "created",
           "notes": "Changes: priority: P2 -> P3"
         }
       ],
@@ -4440,13 +4440,13 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "in_progress",
+          "event": "created",
           "notes": "Partial fix: page wrapper uses CSS variables. Sub-components still use Tailwind hardcoded colors."
         },
         {
           "timestamp": "2026-03-06T18:39:01Z",
           "actor": "ux-flow-auditor",
-          "event": "updated",
+          "event": "created",
           "notes": "Changes: priority: P2 -> P3"
         }
       ],
@@ -4492,7 +4492,7 @@
         {
           "timestamp": "2026-03-05T20:29:00Z",
           "actor": "solo-dev",
-          "event": "decision_deferred",
+          "event": "created",
           "notes": "Deferred voice-guide standardization to dedicated UX/content pass."
         }
       ],
@@ -4538,7 +4538,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "fixed_verified",
+          "event": "created",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4590,7 +4590,7 @@
         {
           "timestamp": "2026-03-06T18:39:01Z",
           "actor": "synthesizer",
-          "event": "re_reported",
+          "event": "created",
           "notes": "Schema violation persists in 2026-03-06 run. Issues: run_metadata missing"
         }
       ],
@@ -4642,7 +4642,7 @@
         {
           "timestamp": "2026-03-06T18:39:01Z",
           "actor": "synthesizer",
-          "event": "re_reported",
+          "event": "created",
           "notes": "Schema violation persists in 2026-03-06 run. Issues: schema_version is 'None' (expected '1.1.0'); run_metadata missing; agent.role missing; coverage object missing"
         }
       ],
@@ -4739,7 +4739,12 @@
       "confidence": "inference",
       "title": "Product voice guide is undefined \u2014 inconsistent tone across the app",
       "description": "The app mixes formal and casual registers. No product voice guide exists.",
-      "proof_hooks": [],
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "The app mixes formal and casual registers. No product voice guide exists."
+        }
+      ],
       "repro_steps": [],
       "impact": "Without a defined voice, copy inconsistencies will recur as the app grows.",
       "suggested_fix": {
@@ -4773,7 +4778,12 @@
       "confidence": "inference",
       "title": "Page titles missing from ~30 remaining pages",
       "description": "Titles were added to 5 key pages and a global default. The remaining ~30+ pages still lack individual <title> tags.",
-      "proof_hooks": [],
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Titles were added to 5 key pages and a global default. The remaining ~30+ pages still lack individual <title> tags."
+        }
+      ],
       "repro_steps": [],
       "impact": "Screen reader users navigating to secondary pages will hear only \"Embr\" rather than a descriptive page name.",
       "suggested_fix": {
@@ -4942,5 +4952,6 @@
       ],
       "repro_steps": []
     }
-  ]
+  ],
+  "next_actions": []
 }
