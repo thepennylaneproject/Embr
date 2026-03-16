@@ -122,9 +122,12 @@ export const DMInbox: React.FC<DMInboxProps> = ({
       setComposeOpen(false);
       await fetchConversations();
       const convId = conv.conversation.id;
+      // Determine the other participant (the one we just started a conversation with)
+      const { participant1, participant2 } = conv.conversation;
+      const otherParticipant = participant1.id === userId ? participant1 : participant2;
       const fresh = conversations.find((c) => c.id === convId) ?? ({
         id: convId,
-        otherUser: (conv.conversation as unknown as { otherUser: ConversationPreview['otherUser'] }).otherUser,
+        otherUser: otherParticipant,
         unreadCount: 0,
         lastMessage: null,
         lastMessageAt: new Date().toISOString(),

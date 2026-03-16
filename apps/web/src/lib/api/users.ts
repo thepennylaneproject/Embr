@@ -43,7 +43,7 @@ export const usersApi = {
   },
 
   getUserByUsername: async (username: string) => {
-    const { data } = await apiClient.get(`/users/by-username/${encodeURIComponent(username)}`);
+    const { data } = await apiClient.get(`/users/${encodeURIComponent(username)}`);
     return data;
   },
 };
