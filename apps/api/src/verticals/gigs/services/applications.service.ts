@@ -208,6 +208,7 @@ export class ApplicationsService {
     const application = await this.findOne(id);
     const gig = application.gig;
 
+    // Ensure only the gig creator can accept applications
     if (gig.creatorId !== creatorId) {
       throw new ForbiddenException('Only the gig creator can accept applications');
     }
@@ -318,6 +319,24 @@ export class ApplicationsService {
         gigId: gig.id,
         applicantId: rejectedApp.applicantId,
       });
+    }
+
+    // Emit events for notifications
+    this.eventEmitter.emit('gig.application.accepted', {
+      applicationId: application.id,
+      gigId: gig.id,
+      applicantId: application.applicantId,
+    });
+
+    // Notify rejected applicants
+    for (const rejectedApp of pendingApplications) {
+      if (rejectedApp.id !== application.id) {
+        this.eventEmitter.emit('gig.application.rejected', {
+          applicationId: rejectedApp.id,
+          gigId: gig.id,
+          applicantId: rejectedApp.applicantId,
+        });
+      }
     }
 
     return {
