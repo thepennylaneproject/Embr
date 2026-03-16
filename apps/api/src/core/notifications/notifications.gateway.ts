@@ -18,6 +18,7 @@ import { Injectable, Logger, UseGuards } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationsService } from './notifications.service';
+import { extractBearerToken } from '../../shared/auth-header.util';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -61,10 +62,11 @@ export class NotificationsGateway
 
   async handleConnection(client: AuthenticatedSocket) {
     try {
-      // Extract token from handshake
+      // Extract token from handshake — check auth payload first, then fall back to
+      // the Authorization header (handles both lowercase and PascalCase variants).
       const token =
         client.handshake.auth.token ||
-        client.handshake.headers.authorization?.replace('Bearer ', '');
+        extractBearerToken(client.handshake.headers as Record<string, string | string[] | undefined>);
 
       if (!token) {
         this.logger.warn(`Client ${client.id} connection rejected: No token provided`);

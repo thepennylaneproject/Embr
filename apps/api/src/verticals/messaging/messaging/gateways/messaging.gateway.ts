@@ -21,6 +21,7 @@ import { MessageRateLimiterService } from '../services/message-rate-limiter.serv
 import { ConversationAccessService } from '../services/conversation-access.service';
 import { RedisService } from '../../../../core/redis/redis.service';
 import { RedisIoAdapter } from '../../../../core/redis/redis-io.adapter';
+import { extractBearerToken } from '../../../../shared/auth-header.util';
 import {
   SendMessageDto,
   MarkAsReadDto,
@@ -89,10 +90,11 @@ export class MessagingGateway
 
   async handleConnection(client: AuthenticatedSocket) {
     try {
-      // Extract token from handshake
+      // Extract token from handshake — check auth payload first, then fall back to
+      // the Authorization header (handles both lowercase and PascalCase variants).
       const token =
         client.handshake.auth.token ||
-        client.handshake.headers.authorization?.replace('Bearer ', '');
+        extractBearerToken(client.handshake.headers as Record<string, string | string[] | undefined>);
 
       if (!token) {
         this.logger.warn(`Client ${client.id} connection rejected: No token provided`);
