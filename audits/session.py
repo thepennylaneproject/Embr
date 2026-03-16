@@ -18,11 +18,14 @@ Usage:
   python3 session.py status           # Full dashboard
   python3 session.py canship          # Am I ready to deploy?
   python3 session.py decide <finding_id> <decision>  # Answer a question finding
+  python3 session.py validate <file.json>            # Validate a run file before ingesting
+  python3 session.py validate --all                  # Validate all run files
 """
 
 import json
 import sys
 import os
+import subprocess
 from datetime import datetime, timezone
 from collections import defaultdict
 
@@ -426,6 +429,20 @@ def cmd_reaudit():
     print("Scope hint for agents: focus on these files only, not full codebase.")
 
 
+def cmd_validate(args):
+    """Validate one or more run JSON files against LYRA schema v1.1.0 before ingesting."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    validator = os.path.join(script_dir, "validate_output.py")
+
+    if not os.path.exists(validator):
+        print(f"ERROR: Validator not found at {validator}")
+        sys.exit(1)
+
+    cmd = [sys.executable, validator] + args
+    result = subprocess.run(cmd)
+    sys.exit(result.returncode)
+
+
 def cmd_canship():
     findings, _ = load_findings()
 
@@ -599,6 +616,9 @@ def main():
         cmd_reaudit()
     elif cmd == "canship":
         cmd_canship()
+    elif cmd == "validate":
+        validate_args = sys.argv[2:] if len(sys.argv) > 2 else ["--all"]
+        cmd_validate(validate_args)
     elif cmd == "help":
         print(__doc__)
     else:
