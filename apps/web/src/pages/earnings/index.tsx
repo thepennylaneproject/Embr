@@ -3,6 +3,7 @@ import { ProtectedPageShell } from '@/components/layout';
 import { EarningsOverview } from '@/components/monetization/EarningsOverview';
 import { TransactionHistory } from '@/components/monetization/TransactionHistory';
 import { PayoutRequest } from '@/components/monetization/PayoutRequest';
+import { copy } from '@/lib/copy';
 
 type EarningsView = 'summary' | 'transactions' | 'payout';
 
@@ -31,19 +32,19 @@ export default function EarningsPage() {
 
   return (
     <ProtectedPageShell
-      title="Earnings"
-      subtitle="See where your money comes from. Transparent breakdown, zero hidden fees."
-      breadcrumbs={[{ label: 'Earnings' }]}
+      title={copy.dashboard.earnings.title}
+      subtitle={copy.dashboard.earnings.subtitle}
+      breadcrumbs={[{ label: copy.dashboard.earnings.title }]}
     >
       <div style={navStyle}>
         <button style={navButtonStyle(activeView === 'summary')} onClick={() => setActiveView('summary')}>
-          Summary
+          {copy.dashboard.earnings.summary}
         </button>
         <button style={navButtonStyle(activeView === 'transactions')} onClick={() => setActiveView('transactions')}>
-          Transactions
+          {copy.dashboard.earnings.transactions}
         </button>
         <button style={navButtonStyle(activeView === 'payout')} onClick={() => setActiveView('payout')}>
-          Request Payout
+          {copy.dashboard.earnings.requestPayout}
         </button>
       </div>
 

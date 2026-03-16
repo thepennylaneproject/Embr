@@ -5,6 +5,7 @@ import { ProtectedPageShell } from '@/components/layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@embr/ui';
 import { usersApi, UpdateSettingsPayload } from '@/lib/api/users';
+import { copy } from '@/lib/copy';
 
 // ─── Toggle ──────────────────────────────────────────────────────────────────
 
@@ -141,9 +142,9 @@ export default function SettingsPage() {
     try {
       const updated = await usersApi.updateSettings({ [field]: value });
       updateUser({ ...user, profile: { ...profile, ...updated } });
-      showToast({ title: 'Saved', kind: 'info' });
+      showToast({ title: copy.settings.saved, kind: 'info' });
     } catch {
-      showToast({ title: 'Could not save', description: 'Please try again.', kind: 'error' });
+      showToast({ title: copy.settings.couldNotSave, description: copy.settings.couldNotSaveDesc, kind: 'error' });
     } finally {
       setSaving(null);
     }
@@ -162,10 +163,10 @@ export default function SettingsPage() {
     try {
       const updated = await usersApi.updateAvatar(file);
       updateUser({ ...user, profile: { ...profile, ...updated } });
-      showToast({ title: 'Profile photo updated', kind: 'info' });
+      showToast({ title: copy.success.profilePhotoUpdated, kind: 'info' });
     } catch {
       setAvatarPreview(null);
-      showToast({ title: 'Upload failed', description: 'Please try a smaller image.', kind: 'error' });
+      showToast({ title: copy.settings.uploadFailed, description: copy.settings.uploadFailedDesc, kind: 'error' });
     } finally {
       setSaving(null);
     }
@@ -180,7 +181,7 @@ export default function SettingsPage() {
       await usersApi.deleteAccount();
       router.push('/auth/login');
     } catch {
-      showToast({ title: 'Deletion failed', description: 'Contact support if this continues.', kind: 'error' });
+      showToast({ title: copy.settings.deletionFailed, description: copy.settings.deletionFailedDesc, kind: 'error' });
       setDeleting(false);
     }
   };
@@ -193,7 +194,7 @@ export default function SettingsPage() {
       <div style={{ maxWidth: '640px', margin: '0 auto' }}>
         {/* Page title */}
         <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ margin: '0 0 0.25rem', fontWeight: '700', fontSize: '1.5rem' }}>Settings</h1>
+          <h1 style={{ margin: '0 0 0.25rem', fontWeight: '700', fontSize: '1.5rem' }}>{copy.settings.title}</h1>
           <p style={{ margin: 0, color: 'var(--embr-muted-text)', fontSize: '0.95rem' }}>
             Manage your account, privacy, and notification preferences.
           </p>
@@ -202,7 +203,7 @@ export default function SettingsPage() {
         <div style={{ display: 'grid', gap: '1.25rem' }}>
 
           {/* ── Account ─────────────────────────────────────────────── */}
-          <SectionCard title="Account">
+          <SectionCard title={copy.settings.account}>
             {/* Avatar */}
             <div
               style={{
@@ -343,10 +344,10 @@ export default function SettingsPage() {
           </SectionCard>
 
           {/* ── Privacy & Monetization ───────────────────────────────── */}
-          <SectionCard title="Privacy & Monetization">
+          <SectionCard title={copy.settings.privacyMonetization}>
             <SettingRow
-              label="Private account"
-              description="Only approved followers can see your posts"
+              label={copy.settings.privateAccount}
+              description={copy.settings.privateAccountDesc}
             >
               <Toggle
                 id="isPrivate"
@@ -357,8 +358,8 @@ export default function SettingsPage() {
             </SettingRow>
 
             <SettingRow
-              label="Creator mode"
-              description="Unlocks gig posting, music upload, and creator tools"
+              label={copy.personas.creatorMode}
+              description={copy.personas.creatorModeDesc}
             >
               <Toggle
                 id="isCreator"
@@ -369,8 +370,8 @@ export default function SettingsPage() {
             </SettingRow>
 
             <SettingRow
-              label="Allow tips"
-              description="Let others send you tips on your posts"
+              label={copy.settings.allowTips}
+              description={copy.settings.allowTipsDesc}
             >
               <Toggle
                 id="allowTips"
@@ -382,10 +383,10 @@ export default function SettingsPage() {
           </SectionCard>
 
           {/* ── Notifications ────────────────────────────────────────── */}
-          <SectionCard title="Notifications">
+          <SectionCard title={copy.settings.notifications}>
             <SettingRow
-              label="Email notifications"
-              description="Receive activity updates via email"
+              label={copy.settings.emailNotifications}
+              description={copy.settings.emailNotificationsDesc}
             >
               <Toggle
                 id="emailNotifications"
@@ -396,8 +397,8 @@ export default function SettingsPage() {
             </SettingRow>
 
             <SettingRow
-              label="Push notifications"
-              description="In-app alerts for messages and activity"
+              label={copy.settings.pushNotifications}
+              description={copy.settings.pushNotificationsDesc}
             >
               <Toggle
                 id="pushNotifications"
@@ -414,11 +415,6 @@ export default function SettingsPage() {
               </div>
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 {(['all', 'mentions', 'none'] as const).map((level) => {
-                  const labels: Record<string, { label: string; desc: string }> = {
-                    all: { label: 'All activity', desc: 'Likes, comments, follows, messages' },
-                    mentions: { label: 'Mentions only', desc: 'Only when someone tags or replies to you' },
-                    none: { label: 'None', desc: 'Turn off all notifications' },
-                  };
                   const isActive = profile.notificationPreference === level;
                   return (
                     <label
@@ -445,9 +441,9 @@ export default function SettingsPage() {
                         style={{ marginTop: '2px', accentColor: 'var(--embr-accent)' }}
                       />
                       <div>
-                        <div style={{ fontWeight: '600', fontSize: '0.88rem' }}>{labels[level].label}</div>
+                        <div style={{ fontWeight: '600', fontSize: '0.88rem' }}>{copy.settings.notificationLevel[level].label}</div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--embr-muted-text)', marginTop: '0.1rem' }}>
-                          {labels[level].desc}
+                          {copy.settings.notificationLevel[level].desc}
                         </div>
                       </div>
                     </label>
@@ -471,7 +467,7 @@ export default function SettingsPage() {
                 color: 'var(--embr-error)',
               }}
             >
-              Danger Zone
+              {copy.settings.dangerZone}
             </h2>
             <p style={{ margin: '0 0 1rem', fontSize: '0.85rem', color: 'var(--embr-muted-text)' }}>
               These actions are permanent and cannot be undone.
@@ -492,7 +488,7 @@ export default function SettingsPage() {
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--embr-error) 8%, white)'; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
             >
-              Delete my account
+              {copy.settings.deleteAccount}
             </button>
           </div>
 
@@ -520,7 +516,7 @@ export default function SettingsPage() {
             style={{ width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}
           >
             <h2 style={{ margin: '0 0 0.5rem', fontSize: '1.1rem', fontWeight: '700', color: 'var(--embr-error)' }}>
-              Delete account
+              {copy.settings.deleteAccount}
             </h2>
             <p style={{ margin: '0 0 1.25rem', fontSize: '0.9rem', color: 'var(--embr-muted-text)' }}>
               This will permanently delete your account, posts, followers, and all associated data.
@@ -550,7 +546,7 @@ export default function SettingsPage() {
                   fontWeight: '600',
                 }}
               >
-                Cancel
+                {copy.actions.cancel}
               </button>
               <button
                 onClick={handleDeleteAccount}
@@ -567,7 +563,7 @@ export default function SettingsPage() {
                   transition: 'background 0.15s',
                 }}
               >
-                {deleting ? 'Deleting…' : 'Delete permanently'}
+                {deleting ? copy.settings.deleting : copy.settings.deletePermanently}
               </button>
             </div>
           </div>
