@@ -2,7 +2,6 @@
   "schema_version": "1.1.0",
   "kind": "synthesizer_output",
   "run_id": "synthesizer-v2-20260310-011114",
-  "timestamp": "2026-03-10T01:11:14.254660",
   "suite": "synthesized",
   "agent": {
     "name": "synthesizer",
@@ -23,53 +22,53 @@
         {
           "hook_type": "data_shape",
           "file": "apps/api/prisma/schema.prisma",
-          "line_range": [
-            391,
-            423
-          ],
           "symbol": "model Transaction",
-          "proof": "Transaction model defines walletId: String (NOT NULL) at line 393, with Wallet relation at line 394. No DEFAULT provided, so application must supply walletId or creation fails."
+          "summary": "Transaction model defines walletId: String (NOT NULL) at line 393, with Wallet relation at line 394. No DEFAULT provided, so application must supply walletId or creation fails.",
+          "start_line": 391,
+          "end_line": 423
         },
         {
           "hook_type": "data_shape",
           "file": "apps/api/prisma/schema.prisma",
-          "line_range": [
-            482,
-            520
-          ],
           "symbol": "model Payout",
-          "proof": "Payout model defines walletId: String (NOT NULL) at line 486, with Wallet relation at line 487. Application must supply walletId on creation."
+          "summary": "Payout model defines walletId: String (NOT NULL) at line 486, with Wallet relation at line 487. Application must supply walletId on creation.",
+          "start_line": 482,
+          "end_line": 520
         },
         {
           "hook_type": "query",
           "file": "apps/api/prisma/migrations/20260310103000_backfill_wallet_foreign_keys/migration.sql",
-          "line_range": [
-            32,
-            45
-          ],
           "symbol": "backfill walletId",
-          "proof": "Migration backfills walletId for existing Transaction/Payout rows using UPDATE. This implies walletId was previously NULL or missing. Lines 33-37 update Transaction, lines 40-44 update Payout."
+          "summary": "Migration backfills walletId for existing Transaction/Payout rows using UPDATE. This implies walletId was previously NULL or missing. Lines 33-37 update Transaction, lines 40-44 update Payout.",
+          "start_line": 32,
+          "end_line": 45
         },
         {
           "hook_type": "code_ref",
           "file": "apps/api/src/core/monetization/services/transaction.service.ts",
-          "line_range": [
-            36,
-            64
-          ],
           "symbol": "recordTransaction",
-          "proof": "Line 36-51 shows wallet upsert (creates wallet if missing), then line 53-64 creates transaction with wallet.connect(). Application code correctly ensures wallet exists before transaction creation."
+          "summary": "Line 36-51 shows wallet upsert (creates wallet if missing), then line 53-64 creates transaction with wallet.connect(). Application code correctly ensures wallet exists before transaction creation.",
+          "start_line": 36,
+          "end_line": 64
         }
       ],
-      "suggested_fix": "Schema is correct (walletId is NOT NULL). Verify backfill migration completed successfully in all environments. Add constraint check: `SELECT COUNT(*) FROM \"Transaction\" WHERE \"walletId\" IS NULL;` must return 0. If any NULL walletIds remain in production, application will not insert new transactions (unique violation on FK).",
-      "estimated_effort": "trivial",
+      "suggested_fix": {
+        "approach": "Schema is correct (walletId is NOT NULL). Verify backfill migration completed successfully in all environments. Add constraint check: `SELECT COUNT(*) FROM \"Transaction\" WHERE \"walletId\" IS NULL;` must return 0. If any NULL walletIds remain in production, application will not insert new transactions (unique violation on FK).",
+        "estimated_effort": "trivial",
+        "affected_files": [
+          "apps/api/prisma/schema.prisma",
+          "apps/api/prisma/migrations/20260310103000_backfill_wallet_foreign_keys/migration.sql",
+          "apps/api/src/core/monetization/services/transaction.service.ts"
+        ]
+      },
       "history": [
         {
           "event": "created",
-          "timestamp": "2026-03-10T01:11:14.242903"
+          "timestamp": "2026-03-10T01:11:14.242903",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "schema-auditor"
+      "impact": "If not fixed: Schema defines Transaction.walletId and Payout.walletId as NOT NULL (required) after the 20260207 migration, but recent migrations (20260310103000) backfill missing walletIds, suggesting a past state "
     },
     {
       "finding_id": "f-schema-monetary-cents-001",
@@ -85,43 +84,44 @@
         {
           "hook_type": "query",
           "file": "apps/api/prisma/migrations/20260310101500_normalize_music_money_cents/migration.sql",
-          "line_range": [
-            4,
-            14
-          ],
           "symbol": "safety_check",
-          "proof": "Lines 4-14 check for out-of-range values (< 0 or > 1000000) and raise exception if found. This guards against corrupted USD->cents conversion."
+          "summary": "Lines 4-14 check for out-of-range values (< 0 or > 1000000) and raise exception if found. This guards against corrupted USD->cents conversion.",
+          "start_line": 4,
+          "end_line": 14
         },
         {
           "hook_type": "query",
           "file": "apps/api/prisma/migrations/20260310101500_normalize_music_money_cents/migration.sql",
-          "line_range": [
-            16,
-            29
-          ],
           "symbol": "conversion",
-          "proof": "Lines 16-19 convert Track.price: CAST(ROUND(price * 100) AS INTEGER). Lines 21-23 convert ArtistStat.revenue same way. ROUND() mitigates float precision."
+          "summary": "Lines 16-19 convert Track.price: CAST(ROUND(price * 100) AS INTEGER). Lines 21-23 convert ArtistStat.revenue same way. ROUND() mitigates float precision.",
+          "start_line": 16,
+          "end_line": 29
         },
         {
           "hook_type": "data_shape",
           "file": "apps/api/prisma/schema.prisma",
-          "line_range": [
-            1268,
-            1288
-          ],
           "symbol": "model Track",
-          "proof": "Line 1268 shows price: Int @default(0). All Track monetary values now in cents (integer)."
+          "summary": "Line 1268 shows price: Int @default(0). All Track monetary values now in cents (integer).",
+          "start_line": 1268,
+          "end_line": 1288
         }
       ],
-      "suggested_fix": "Migration includes safety check, so data is valid post-migration. Verify: 1) Migration completed without exception in all environments. 2) Spot-check Track.price and ArtistStat.revenue ranges: `SELECT COUNT(*) FROM \"Track\" WHERE \"price\" < 0 OR \"price\" > 1000000000;` should return 0. 3) Add validation in Track/ArtistStat creation to enforce cents range (0 to 9999999 cents = $0 to $99,999.99).",
-      "estimated_effort": "small",
+      "suggested_fix": {
+        "approach": "Migration includes safety check, so data is valid post-migration. Verify: 1) Migration completed without exception in all environments. 2) Spot-check Track.price and ArtistStat.revenue ranges: `SELECT COUNT(*) FROM \"Track\" WHERE \"price\" < 0 OR \"price\" > 1000000000;` should return 0. 3) Add validation in Track/ArtistStat creation to enforce cents range (0 to 9999999 cents = $0 to $99,999.99).",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/prisma/migrations/20260310101500_normalize_music_money_cents/migration.sql",
+          "apps/api/prisma/schema.prisma"
+        ]
+      },
       "history": [
         {
           "event": "created",
-          "timestamp": "2026-03-10T01:11:14.243147"
+          "timestamp": "2026-03-10T01:11:14.243147",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "schema-auditor"
+      "impact": "If not fixed: Migration 20260310101500 converts Track.price and ArtistStat.revenue from float to integer cents with safety check RAISE EXCEPTION if values are out of range (< 0 or > 1000000). This indicates a prior"
     },
     {
       "finding_id": "f-schema-nullable-refs-001",
@@ -137,43 +137,43 @@
         {
           "hook_type": "data_shape",
           "file": "apps/api/prisma/schema.prisma",
-          "line_range": [
-            247,
-            250
-          ],
           "symbol": "Post.groupId",
-          "proof": "Line 248: groupId: String? with onDelete: SetNull. Deleting Group sets Post.groupId = NULL for all child posts."
+          "summary": "Line 248: groupId: String? with onDelete: SetNull. Deleting Group sets Post.groupId = NULL for all child posts.",
+          "start_line": 247,
+          "end_line": 250
         },
         {
           "hook_type": "data_shape",
           "file": "apps/api/prisma/schema.prisma",
-          "line_range": [
-            929,
-            951
-          ],
           "symbol": "Report.reviewerId",
-          "proof": "Line 942: reviewerId: String? allows null. Report can exist without reviewer assignment initially, but no foreign key to User, so reviewerId is orphaned if User deleted."
+          "summary": "Line 942: reviewerId: String? allows null. Report can exist without reviewer assignment initially, but no foreign key to User, so reviewerId is orphaned if User deleted.",
+          "start_line": 929,
+          "end_line": 951
         },
         {
           "hook_type": "data_shape",
           "file": "apps/api/prisma/schema.prisma",
-          "line_range": [
-            959,
-            980
-          ],
           "symbol": "ModerationAction",
-          "proof": "Line 968-969: postId and commentId are nullable, no FK constraints. If Post/Comment deleted, orphaned references remain."
+          "summary": "Line 968-969: postId and commentId are nullable, no FK constraints. If Post/Comment deleted, orphaned references remain.",
+          "start_line": 959,
+          "end_line": 980
         }
       ],
-      "suggested_fix": "1) Audit application queries: when selecting Post/Report/etc., verify that NULL parent_id is handled (not joined or filtered). 2) For safety-critical data (ModerationAction, Appeal), consider NOT NULL + onDelete: Cascade if orphaned records should not exist. 3) Add NOT NULL constraint validation in DTOs to prevent application creating records with null parent IDs unintentionally. 4) Document which SetNull fields are intentional (e.g., soft-delete behavior) vs. accidental orphaning.",
-      "estimated_effort": "small",
+      "suggested_fix": {
+        "approach": "1) Audit application queries: when selecting Post/Report/etc., verify that NULL parent_id is handled (not joined or filtered). 2) For safety-critical data (ModerationAction, Appeal), consider NOT NULL + onDelete: Cascade if orphaned records should not exist. 3) Add NOT NULL constraint validation in DTOs to prevent application creating records with null parent IDs unintentionally. 4) Document which SetNull fields are intentional (e.g., soft-delete behavior) vs. accidental orphaning.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/prisma/schema.prisma"
+        ]
+      },
       "history": [
         {
           "event": "created",
-          "timestamp": "2026-03-10T01:11:14.243342"
+          "timestamp": "2026-03-10T01:11:14.243342",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "schema-auditor"
+      "impact": "If not fixed: Several models define optional foreign keys with onDelete: SetNull, e.g., Post.groupId, Report.reviewerId, ModerationAction. When parent is deleted, child records retain a reference to the deleted par"
     },
     {
       "finding_id": "f-schema-rls-coverage-001",
@@ -189,33 +189,36 @@
         {
           "hook_type": "config_key",
           "file": "apps/api/prisma/schema.prisma",
-          "line_range": [
-            8,
-            12
-          ],
           "symbol": "datasource db",
-          "proof": "Lines 8-12 define PostgreSQL as provider. Prisma does not generate RLS policies (out of scope for ORM), so RLS must be in migrations or external SQL."
+          "summary": "Lines 8-12 define PostgreSQL as provider. Prisma does not generate RLS policies (out of scope for ORM), so RLS must be in migrations or external SQL.",
+          "start_line": 8,
+          "end_line": 12
         },
         {
           "hook_type": "command",
           "file": "audits/open_findings.json",
-          "line_range": [
-            1,
-            5
-          ],
           "symbol": "no_findings",
-          "proof": "No prior RLS audit findings in open_findings.json, suggesting RLS not previously audited."
+          "summary": "No prior RLS audit findings in open_findings.json, suggesting RLS not previously audited.",
+          "start_line": 1,
+          "end_line": 5
         }
       ],
-      "suggested_fix": "1) Clarify if RLS is intentional or out of scope: Is this a single-tenant backend, or multi-tenant user isolation critical? 2) If RLS needed: Design policies for User (can see own profile + public profiles), Wallet/Transaction (user can see own only, admin sees all), Message (participants only), etc. 3) Create migration with RLS ON for sensitive tables and attach policies. 4) Test RLS bypass attempts (e.g., SELECT * FROM User as unauthorized user should fail). 5) Document: 'Data access control strategy: [application-only | RLS + application | RLS-only]'.",
-      "estimated_effort": "large",
+      "suggested_fix": {
+        "approach": "1) Clarify if RLS is intentional or out of scope: Is this a single-tenant backend, or multi-tenant user isolation critical? 2) If RLS needed: Design policies for User (can see own profile + public profiles), Wallet/Transaction (user can see own only, admin sees all), Message (participants only), etc. 3) Create migration with RLS ON for sensitive tables and attach policies. 4) Test RLS bypass attempts (e.g., SELECT * FROM User as unauthorized user should fail). 5) Document: 'Data access control strategy: [application-only | RLS + application | RLS-only]'.",
+        "estimated_effort": "large",
+        "affected_files": [
+          "apps/api/prisma/schema.prisma",
+          "audits/open_findings.json"
+        ]
+      },
       "history": [
         {
           "event": "created",
-          "timestamp": "2026-03-10T01:11:14.243534"
+          "timestamp": "2026-03-10T01:11:14.243534",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "schema-auditor"
+      "impact": "If not fixed: Schema targets PostgreSQL (provider = 'postgresql' in schema.prisma) but no RLS policies appear in migrations or schema. Embr is a multi-tenant social platform with user privacy, financial data, and m"
     },
     {
       "finding_id": "f-schema-validation-amount-001",
@@ -231,43 +234,44 @@
         {
           "hook_type": "data_shape",
           "file": "apps/api/prisma/schema.prisma",
-          "line_range": [
-            360,
-            390
-          ],
           "symbol": "model Wallet",
-          "proof": "Lines 366-369: balance, pendingBalance, totalEarned, totalWithdrawn all Int @default(0). No CHECK constraint. Line 401 (Transaction.amount) similarly Int with no check."
+          "summary": "Lines 366-369: balance, pendingBalance, totalEarned, totalWithdrawn all Int @default(0). No CHECK constraint. Line 401 (Transaction.amount) similarly Int with no check.",
+          "start_line": 360,
+          "end_line": 390
         },
         {
           "hook_type": "data_shape",
           "file": "apps/api/prisma/schema.prisma",
-          "line_range": [
-            442,
-            471
-          ],
           "symbol": "model Tip",
-          "proof": "Line 453: amount Int (no constraint). Line 454: fee Int @default(0). Line 455: netAmount Int. No CHECK for amount >= 0."
+          "summary": "Line 453: amount Int (no constraint). Line 454: fee Int @default(0). Line 455: netAmount Int. No CHECK for amount >= 0.",
+          "start_line": 442,
+          "end_line": 471
         },
         {
           "hook_type": "code_ref",
           "file": "apps/api/src/core/monetization/dto/tip.dto.ts",
-          "line_range": [
-            28,
-            31
-          ],
           "symbol": "CreateTipDto",
-          "proof": "Line 29: @Min(50) validates client-side (50 cents minimum). But if request bypassed or raw SQL used, schema has no guard."
+          "summary": "Line 29: @Min(50) validates client-side (50 cents minimum). But if request bypassed or raw SQL used, schema has no guard.",
+          "start_line": 28,
+          "end_line": 31
         }
       ],
-      "suggested_fix": "1) Add CHECK constraint in migration: ALTER TABLE \"Wallet\" ADD CONSTRAINT wallet_balance_check CHECK (balance >= 0); (and for pending, earned, withdrawn). 2) Repeat for Transaction, Tip, Payout amounts. 3) Add DTO @Min(0) / @Max() validators to prevent invalid input at API boundary. 4) Test: attempt raw INSERT INTO Wallet with negative balance, verify constraint fails.",
-      "estimated_effort": "small",
+      "suggested_fix": {
+        "approach": "1) Add CHECK constraint in migration: ALTER TABLE \"Wallet\" ADD CONSTRAINT wallet_balance_check CHECK (balance >= 0); (and for pending, earned, withdrawn). 2) Repeat for Transaction, Tip, Payout amounts. 3) Add DTO @Min(0) / @Max() validators to prevent invalid input at API boundary. 4) Test: attempt raw INSERT INTO Wallet with negative balance, verify constraint fails.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/prisma/schema.prisma",
+          "apps/api/src/core/monetization/dto/tip.dto.ts"
+        ]
+      },
       "history": [
         {
           "event": "created",
-          "timestamp": "2026-03-10T01:11:14.243724"
+          "timestamp": "2026-03-10T01:11:14.243724",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "schema-auditor"
+      "impact": "If not fixed: Amount fields are defined as Int with @default(0) in Wallet (balance, pendingBalance, totalEarned, totalWithdrawn) and other tables. Prisma defaults prevent NULL at ORM level, but raw SQL INSERT or ap"
     },
     {
       "finding_id": "f-schema-orphaned-refs-transaction-user-001",
@@ -283,23 +287,27 @@
         {
           "hook_type": "data_shape",
           "file": "apps/api/prisma/schema.prisma",
-          "line_range": [
-            391,
-            423
-          ],
           "symbol": "model Transaction",
-          "proof": "Line 395: userId: String? with onDelete: SetNull. Transaction.userId can be null if User deleted or initially null."
+          "summary": "Line 395: userId: String? with onDelete: SetNull. Transaction.userId can be null if User deleted or initially null.",
+          "start_line": 391,
+          "end_line": 423
         }
       ],
-      "suggested_fix": "1) Audit existing transactions: `SELECT COUNT(*) FROM \"Transaction\" WHERE \"userId\" IS NULL;` to quantify orphaned records. 2) Decide: should userId be NOT NULL? If so, what happens to transactions when user deletes account? (Anonymize instead of delete?) 3) If orphaned is acceptable, document this clearly in schema comments. 4) Add application-level constraint: all new transactions require userId OR explicit platform-initiated flag. 5) Consider adding 'initiatedBy' field to distinguish user vs. system transactions.",
-      "estimated_effort": "small",
+      "suggested_fix": {
+        "approach": "1) Audit existing transactions: `SELECT COUNT(*) FROM \"Transaction\" WHERE \"userId\" IS NULL;` to quantify orphaned records. 2) Decide: should userId be NOT NULL? If so, what happens to transactions when user deletes account? (Anonymize instead of delete?) 3) If orphaned is acceptable, document this clearly in schema comments. 4) Add application-level constraint: all new transactions require userId OR explicit platform-initiated flag. 5) Consider adding 'initiatedBy' field to distinguish user vs. system transactions.",
+        "estimated_effort": "small",
+        "affected_files": [
+          "apps/api/prisma/schema.prisma"
+        ]
+      },
       "history": [
         {
           "event": "created",
-          "timestamp": "2026-03-10T01:11:14.243913"
+          "timestamp": "2026-03-10T01:11:14.243913",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "schema-auditor"
+      "impact": "If not fixed: Transaction.userId is optional (userId: String?) with onDelete: SetNull. This allows transaction records to exist without a linked user, making it ambiguous who made the transaction. For audit/complia"
     },
     {
       "finding_id": "f-schema-wallet-unique-index-001",
@@ -315,23 +323,27 @@
         {
           "hook_type": "data_shape",
           "file": "apps/api/prisma/schema.prisma",
-          "line_range": [
-            360,
-            389
-          ],
           "symbol": "model Wallet",
-          "proof": "Line 362: userId: String @unique. Line 388: @@index([userId]). Prisma's @unique creates an index, making @@index redundant."
+          "summary": "Line 362: userId: String @unique. Line 388: @@index([userId]). Prisma's @unique creates an index, making @@index redundant.",
+          "start_line": 360,
+          "end_line": 389
         }
       ],
-      "suggested_fix": "Remove line 388 @@index([userId]). Unique constraints already provide fast lookup. No data migration needed, just schema cleanup. This is a code quality improvement, not a bug.",
-      "estimated_effort": "trivial",
+      "suggested_fix": {
+        "approach": "Remove line 388 @@index([userId]). Unique constraints already provide fast lookup. No data migration needed, just schema cleanup. This is a code quality improvement, not a bug.",
+        "estimated_effort": "trivial",
+        "affected_files": [
+          "apps/api/prisma/schema.prisma"
+        ]
+      },
       "history": [
         {
           "event": "created",
-          "timestamp": "2026-03-10T01:11:14.244104"
+          "timestamp": "2026-03-10T01:11:14.244104",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "schema-auditor"
+      "impact": "If not fixed: Schema line 362 defines userId: String @unique, making Wallet one-to-one with User. Line 388 then adds @@index([userId]), which is redundant because @unique already creates an index on userId. This in"
     },
     {
       "finding_id": "f-deploy-build-failure-nestjs-001",
@@ -353,27 +365,25 @@
         {
           "hook_type": "config_key",
           "file": "apps/api/package.json",
-          "line_range": [
-            10,
-            10
-          ],
           "symbol": "build script",
-          "summary": "Build script invokes nest build without --transpile-only flag, so strict TypeScript checking halts on errors."
+          "summary": "Build script invokes nest build without --transpile-only flag, so strict TypeScript checking halts on errors.",
+          "start_line": 10,
+          "end_line": 10
         }
       ],
       "suggested_fix": {
         "approach": "Implement missing getUnreadCountForConversation method or refactor calls",
         "estimated_effort": "small"
       },
-      "estimated_effort": "small",
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.841460",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The build command `npm run build:api` (which invokes `nest build`) fails with 2 TypeScript errors in src/verticals/messaging/messaging/services/messaging.service.ts. The method `getUnreadCountForConve"
     },
     {
       "finding_id": "f-deploy-ci-build-api-missing-001",
@@ -389,27 +399,25 @@
         {
           "hook_type": "code_ref",
           "file": ".github/workflows/ci.yml",
-          "line_range": [
-            37,
-            68
-          ],
           "symbol": "validate job",
-          "summary": "Steps: checkout, setup node, install deps, generate prisma, run migrations, validate API prisma, typecheck web, build web. No 'Build API' step."
+          "summary": "Steps: checkout, setup node, install deps, generate prisma, run migrations, validate API prisma, typecheck web, build web. No 'Build API' step.",
+          "start_line": 37,
+          "end_line": 68
         }
       ],
       "suggested_fix": {
         "approach": "Add Build API and optional Test API steps to ci.yml after Prisma validation",
         "estimated_effort": "trivial"
       },
-      "estimated_effort": "trivial",
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.841752",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The CI workflow (.github/workflows/ci.yml) runs database migrations, validates the Prisma schema, and builds the web app, but does NOT attempt to build the API. This means TypeScript errors and build "
     },
     {
       "finding_id": "f-deploy-typescript-strict-api-001",
@@ -425,12 +433,10 @@
         {
           "hook_type": "config_key",
           "file": "apps/api/tsconfig.json",
-          "line_range": [
-            1,
-            50
-          ],
           "symbol": "compilerOptions.strict",
-          "summary": "TypeScript strict mode is enabled, but hundreds of violations exist."
+          "summary": "TypeScript strict mode is enabled, but hundreds of violations exist.",
+          "start_line": 1,
+          "end_line": 50
         },
         {
           "hook_type": "artifact_ref",
@@ -442,15 +448,15 @@
         "approach": "Phase 1: Run typecheck without --transpile-only and bucket errors. Phase 2: Fix P0/P1 type errors. Phase 3: Enforce in CI. Phase 4: Gradual cleanup.",
         "estimated_effort": "large"
       },
-      "estimated_effort": "large",
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.841969",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The API has 'strict': true in tsconfig, but ts_errors.log, ts_errors_v2.log through ts_errors_v7.log exist in apps/api/, indicating known accumulation of type errors (666+ errors mentioned in AGENTS.m"
     },
     {
       "finding_id": "f-deploy-error-boundary-web-001",
@@ -466,12 +472,10 @@
         {
           "hook_type": "code_ref",
           "file": "apps/web/src/pages/_error.tsx",
-          "line_range": [
-            1,
-            20
-          ],
           "symbol": "ErrorPage component",
-          "summary": "Global error page exists for SSR and routing errors. But no client-side error boundary wraps components."
+          "summary": "Global error page exists for SSR and routing errors. But no client-side error boundary wraps components.",
+          "start_line": 1,
+          "end_line": 20
         },
         {
           "hook_type": "ui_path",
@@ -487,15 +491,15 @@
         "approach": "Create ErrorBoundary component in apps/web/src/components/ and wrap <Component> in _app.tsx",
         "estimated_effort": "small"
       },
-      "estimated_effort": "small",
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.842179",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The Next.js _error.tsx page handles server-side errors and 404s, but there is no React Error Boundary component wrapping the application tree. If a React component throws an error during render, the e"
     },
     {
       "finding_id": "f-deploy-health-check-api-001",
@@ -511,12 +515,10 @@
         {
           "hook_type": "code_ref",
           "file": ".github/workflows/deploy.yml",
-          "line_range": [
-            86,
-            100
-          ],
           "symbol": "Verify API health step",
-          "summary": "Deployment workflow queries /api/health. No implementation of this endpoint found in NestJS app."
+          "summary": "Deployment workflow queries /api/health. No implementation of this endpoint found in NestJS app.",
+          "start_line": 86,
+          "end_line": 100
         },
         {
           "hook_type": "command",
@@ -528,15 +530,15 @@
         "approach": "Create a HealthController with GET /health endpoint. Inject services to check DB and Redis connectivity. Return 200 if all OK, 503 otherwise.",
         "estimated_effort": "small"
       },
-      "estimated_effort": "small",
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.842385",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The deploy.yml workflow checks API health by querying /api/health (line 88), but the NestJS app code does not show a health check endpoint. The health check is critical for the deployment pipeline to "
     },
     {
       "finding_id": "f-deploy-env-validation-startup-001",
@@ -552,36 +554,32 @@
         {
           "hook_type": "code_ref",
           "file": "apps/api/src/main.ts",
-          "line_range": [
-            75,
-            80
-          ],
           "symbol": "bootstrap function",
-          "summary": "Only SENTRY_DSN and ALLOWED_ORIGINS checked. No validation of JWT_SECRET, DATABASE_URL, credentials, etc."
+          "summary": "Only SENTRY_DSN and ALLOWED_ORIGINS checked. No validation of JWT_SECRET, DATABASE_URL, credentials, etc.",
+          "start_line": 75,
+          "end_line": 80
         },
         {
           "hook_type": "config_key",
           "file": ".env.example",
-          "line_range": [
-            1,
-            50
-          ],
-          "summary": "Many required variables documented but no startup validation ensures they are present."
+          "summary": "Many required variables documented but no startup validation ensures they are present.",
+          "start_line": 1,
+          "end_line": 50
         }
       ],
       "suggested_fix": {
         "approach": "Use ConfigModule with validation. Define required vars in a schema. Call app.get(ConfigService).validate() at startup.",
         "estimated_effort": "small"
       },
-      "estimated_effort": "small",
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.842591",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The API main.ts logs a warning if SENTRY_DSN is missing, but does not validate required variables like JWT_SECRET, DATABASE_URL, REDIS_URL, or AWS credentials at startup. This means if a deploy is mis"
     },
     {
       "finding_id": "f-deploy-web-env-validation-001",
@@ -597,27 +595,25 @@
         {
           "hook_type": "code_ref",
           "file": "apps/web/src/lib/api/error.ts",
-          "line_range": [
-            1,
-            1
-          ],
           "symbol": "defaultApiUrl",
-          "summary": "Falls back to localhost:3003 if NEXT_PUBLIC_API_URL not defined."
+          "summary": "Falls back to localhost:3003 if NEXT_PUBLIC_API_URL not defined.",
+          "start_line": 1,
+          "end_line": 1
         }
       ],
       "suggested_fix": {
         "approach": "Add validation in next.config.js before module.exports: check env var presence in production.",
         "estimated_effort": "trivial"
       },
-      "estimated_effort": "trivial",
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.842798",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The web app references NEXT_PUBLIC_API_URL in several places (e.g., apps/web/src/lib/api/error.ts), but there is no build-time validation to ensure it is set. If the var is missing at build or runtime"
     },
     {
       "finding_id": "f-deploy-logging-structured-001",
@@ -633,27 +629,25 @@
         {
           "hook_type": "code_ref",
           "file": "apps/api/src/core/redis/redis.service.ts",
-          "line_range": [
-            1,
-            30
-          ],
           "symbol": "RedisService logger",
-          "summary": "Uses `private readonly logger = new Logger(RedisService.name)`; outputs plain text to console."
+          "summary": "Uses `private readonly logger = new Logger(RedisService.name)`; outputs plain text to console.",
+          "start_line": 1,
+          "end_line": 30
         }
       ],
       "suggested_fix": {
         "approach": "Add Winston/Pino, create logging module, gradually migrate services to use it.",
         "estimated_effort": "medium"
       },
-      "estimated_effort": "medium",
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.843555",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The API logs errors and status messages using @nestjs/common Logger (lines in redis.ts, redis-io.adapter.ts, main.ts), which outputs plain text to stdout. In production, structured JSON logging (e.g.,"
     },
     {
       "finding_id": "f-deploy-sentry-not-configured-001",
@@ -669,27 +663,25 @@
         {
           "hook_type": "code_ref",
           "file": "apps/api/src/main.ts",
-          "line_range": [
-            75,
-            80
-          ],
           "symbol": "Sentry warning",
-          "summary": "Logs warning if SENTRY_DSN not set, but no active integration."
+          "summary": "Logs warning if SENTRY_DSN not set, but no active integration.",
+          "start_line": 75,
+          "end_line": 80
         }
       ],
       "suggested_fix": {
         "approach": "Install Sentry, configure in main.ts, create exception filter, set DSN in production.",
         "estimated_effort": "small"
       },
-      "estimated_effort": "small",
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.844291",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The main.ts warns if SENTRY_DSN is not set, but there is no Sentry SDK integration in the API. This means unhandled exceptions, caught errors, and other observability signals are not sent to Sentry fo"
     },
     {
       "finding_id": "f-deploy-docker-prod-config-missing-001",
@@ -705,27 +697,25 @@
         {
           "hook_type": "code_ref",
           "file": ".github/workflows/deploy.yml",
-          "line_range": [
-            79,
-            79
-          ],
           "symbol": "Deploy API via SSH step",
-          "summary": "References docker/docker-compose.prod.yml which is not in the repo."
+          "summary": "References docker/docker-compose.prod.yml which is not in the repo.",
+          "start_line": 79,
+          "end_line": 79
         }
       ],
       "suggested_fix": {
         "approach": "Human decision: verify docker-compose.prod.yml location and whether it should be version-controlled.",
         "estimated_effort": "trivial"
       },
-      "estimated_effort": "trivial",
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.844986",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The deploy.yml workflow references docker/docker-compose.prod.yml (line 79), but only docker-compose.yml exists in the repo. The prod config may be intentionally excluded from version control (e.g., i"
     },
     {
       "finding_id": "f-deploy-db-migration-rollback-001",
@@ -748,15 +738,15 @@
         "approach": "Add migration rollback runbook to README. Consider automated backups before migrations.",
         "estimated_effort": "small"
       },
-      "estimated_effort": "small",
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.845582",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The deploy workflow runs `npm run db:migrate:deploy` as part of the deployment. Prisma migrations are forward-only; there is no built-in rollback mechanism. If a migration fails mid-deployment, the da"
     },
     {
       "finding_id": "f-deploy-csp-unsafe-inline-001",
@@ -772,27 +762,25 @@
         {
           "hook_type": "code_ref",
           "file": "apps/web/next.config.js",
-          "line_range": [
-            33,
-            36
-          ],
           "symbol": "Content-Security-Policy header",
-          "summary": "CSP allows unsafe-inline and unsafe-eval scripts; should use nonces or remove for production."
+          "summary": "CSP allows unsafe-inline and unsafe-eval scripts; should use nonces or remove for production.",
+          "start_line": 33,
+          "end_line": 36
         }
       ],
       "suggested_fix": {
         "approach": "Implement nonce-based CSP in next.config.js and update inline script handling.",
         "estimated_effort": "small"
       },
-      "estimated_effort": "small",
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.846104",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The next.config.js defines a Content-Security-Policy header with script-src 'unsafe-inline' and 'unsafe-eval' (lines 35), which allows any inline script and dynamically-generated code. This defeats CS"
     },
     {
       "finding_id": "f-deploy-no-rollback-strategy-001",
@@ -808,39 +796,38 @@
         {
           "hook_type": "code_ref",
           "file": ".github/workflows/deploy.yml",
-          "line_range": [
-            82,
-            100
-          ],
           "symbol": "Verify API health step",
-          "summary": "If health check fails, job fails but no rollback is triggered."
+          "summary": "If health check fails, job fails but no rollback is triggered.",
+          "start_line": 82,
+          "end_line": 100
         }
       ],
       "suggested_fix": {
         "approach": "Add rollback step to deploy job that reverses deployment on health check failure.",
         "estimated_effort": "medium"
       },
-      "estimated_effort": "medium",
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.846648",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.875914",
-          "related_to": "f-deploy-docker-prod-config-missing-001"
+          "related_to": "f-deploy-docker-prod-config-missing-001",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The deploy workflow waits 120 seconds for API health check to pass. If it times out, the step fails and marks the deployment as failed, but the deployed container is left running. There is no automati"
     },
     {
       "finding_id": "f-log-001",
       "type": "bug",
       "severity": "blocker",
       "priority": "P0",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Missing method: getUnreadCountForConversation in MessagingService",
       "description": "MessagingService.sendMessage (line 508) and MessagingService.markAsRead (line 721) call this.getUnreadCountForConversation(), but this method is never defined in the service. The method exists as a public getter (line 885-913, getUnreadCount), but the called signature expects a conversationId and userId parameter pair. This is a compile-time blocker that prevents the entire API from building.",
@@ -886,28 +873,29 @@
           "Run npm run build:api to verify the fix"
         ]
       },
-      "estimated_effort": "5 minutes",
       "history": [
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Discovered during runtime-bug-hunter audit via build output"
+          "notes": "Discovered during runtime-bug-hunter audit via build output",
+          "actor": "schema-auditor"
         },
         {
           "event": "severity_changed",
           "timestamp": "2026-03-10T00:46:46.865304",
           "from": "Blocker",
-          "to": "blocker"
+          "to": "blocker",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: MessagingService.sendMessage (line 508) and MessagingService.markAsRead (line 721) call this.getUnreadCountForConversation(), but this method is never defined in the service. The method exists as a pu"
     },
     {
       "finding_id": "f-log-002",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Potential null dereference in conversation deletion without soft-delete",
       "description": "deleteConversation checks that the user is a participant but performs a hard delete without soft-delete support. If delete fails mid-cascade (e.g., foreign key constraints on messages), the conversation state becomes undefined but no error propagates to the caller. Additionally, the method returns success before confirming the actual database state.",
@@ -935,28 +923,29 @@
           "  - Re-throw if deletion fails"
         ]
       },
-      "estimated_effort": "20 minutes",
       "history": [
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of deleteConversation method"
+          "notes": "Identified via code analysis of deleteConversation method",
+          "actor": "schema-auditor"
         },
         {
           "event": "severity_changed",
           "timestamp": "2026-03-10T00:46:46.866142",
           "from": "Major",
-          "to": "major"
+          "to": "major",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: deleteConversation checks that the user is a participant but performs a hard delete without soft-delete support. If delete fails mid-cascade (e.g., foreign key constraints on messages), the conversati"
     },
     {
       "finding_id": "f-log-003",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Unsafe profile access in follows.service.ts without existence check",
       "description": "followUser increments profile counters (line 78-86) but profile.update() may fail silently if the profile doesn't exist. Per the AGENTS.md guidance, some legacy/seeded users may not have profiles. The Promise.all on lines 77-86 will reject if either profile is missing, causing the entire follow to fail after already creating the follow record, resulting in inconsistent state.",
@@ -987,28 +976,29 @@
           "Or: Use updateMany with condition: where: { userId, profile: { not: null } }"
         ]
       },
-      "estimated_effort": "10 minutes",
       "history": [
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of followUser method"
+          "notes": "Identified via code analysis of followUser method",
+          "actor": "schema-auditor"
         },
         {
           "event": "severity_changed",
           "timestamp": "2026-03-10T00:46:46.866733",
           "from": "Major",
-          "to": "major"
+          "to": "major",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: followUser increments profile counters (line 78-86) but profile.update() may fail silently if the profile doesn't exist. Per the AGENTS.md guidance, some legacy/seeded users may not have profiles. The"
     },
     {
       "finding_id": "f-log-004",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Race condition in idempotency check for checkout (orders.service.ts)",
       "description": "checkout() checks for existing orders by idempotencyKey (lines 79-90), then proceeds to create new orders. Between the check and the create, another request with the same idempotencyKey could race in, violating idempotency. The current logic returns the old orders if they exist, but if a concurrent request passes the findMany, both will create orders, resulting in duplicate charges.",
@@ -1038,28 +1028,29 @@
           "})"
         ]
       },
-      "estimated_effort": "20 minutes",
       "history": [
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of checkout method"
+          "notes": "Identified via code analysis of checkout method",
+          "actor": "schema-auditor"
         },
         {
           "event": "severity_changed",
           "timestamp": "2026-03-10T00:46:46.867302",
           "from": "Major",
-          "to": "major"
+          "to": "major",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: checkout() checks for existing orders by idempotencyKey (lines 79-90), then proceeds to create new orders. Between the check and the create, another request with the same idempotencyKey could race in,"
     },
     {
       "finding_id": "f-log-005",
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Silent notification failure in follows.service.ts",
       "description": "Notification creation is swallowed with .catch(() => {}). If notifications are critical for UX (e.g., user never learns of new followers), this masks silent failures. No logging of the error, and no metrics to detect systemic issues. Users will not know they have new followers.",
@@ -1084,33 +1075,35 @@
           "Consider whether notifications should fail the entire follow operation"
         ]
       },
-      "estimated_effort": "5 minutes",
       "history": [
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of error handling pattern"
+          "notes": "Identified via code analysis of error handling pattern",
+          "actor": "schema-auditor"
         },
         {
           "event": "severity_changed",
           "timestamp": "2026-03-10T00:46:46.867916",
           "from": "Major",
-          "to": "major"
+          "to": "major",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.877040",
-          "related_to": "f-log-003"
+          "related_to": "f-log-003",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: Notification creation is swallowed with .catch(() => {}). If notifications are critical for UX (e.g., user never learns of new followers), this masks silent failures. No logging of the error, and no m"
     },
     {
       "finding_id": "f-log-006",
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Unsafe access to messages[0] in markAsRead without bounds check",
       "description": "After marking messages as read, markAsRead retrieves the conversation and accesses conversation.messages[0] (line 734) without checking if the array exists or has elements. If the conversation has no messages (e.g., deleted just before this call), this will be null and cause type errors in the response.",
@@ -1132,33 +1125,35 @@
           "lastMessage: conversation.messages[0] ? { id: conversation.messages[0].id, ... } : null"
         ]
       },
-      "estimated_effort": "5 minutes",
       "history": [
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of array access pattern"
+          "notes": "Identified via code analysis of array access pattern",
+          "actor": "schema-auditor"
         },
         {
           "event": "severity_changed",
           "timestamp": "2026-03-10T00:46:46.868618",
           "from": "Major",
-          "to": "major"
+          "to": "major",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.876246",
-          "related_to": "f-log-002"
+          "related_to": "f-log-002",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: After marking messages as read, markAsRead retrieves the conversation and accesses conversation.messages[0] (line 734) without checking if the array exists or has elements. If the conversation has no "
     },
     {
       "finding_id": "f-log-007",
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Missing await on rate limiter check (messaging.service.ts:445)",
       "description": "sendMessage calls this.rateLimiter.isAllowed (line 445) without await. If isAllowed is an async method, the Promise will resolve immediately (non-awaited), and rate limiting will be skipped entirely. Users can spam unlimited messages.",
@@ -1180,33 +1175,35 @@
           "Verify message-rate-limiter.service.ts confirms isAllowed is async"
         ]
       },
-      "estimated_effort": "5 minutes",
       "history": [
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of async/await pattern"
+          "notes": "Identified via code analysis of async/await pattern",
+          "actor": "schema-auditor"
         },
         {
           "event": "severity_changed",
           "timestamp": "2026-03-10T00:46:46.869261",
           "from": "Major",
-          "to": "major"
+          "to": "major",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.876461",
-          "related_to": "f-log-002"
+          "related_to": "f-log-002",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: sendMessage calls this.rateLimiter.isAllowed (line 445) without await. If isAllowed is an async method, the Promise will resolve immediately (non-awaited), and rate limiting will be skipped entirely. "
     },
     {
       "finding_id": "f-log-008",
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Unsafe property access in message sender mapping (messaging.service.ts:500)",
       "description": "sendMessage maps message.sender without null check (line 500-503). If sender is not included in the query result (unlikely but possible after refactoring), accessing message.sender.id will throw. Also uses unsafe any-casts which mask type errors.",
@@ -1228,33 +1225,35 @@
           "Remove any-casts and use proper typing instead"
         ]
       },
-      "estimated_effort": "10 minutes",
       "history": [
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of type casting pattern"
+          "notes": "Identified via code analysis of type casting pattern",
+          "actor": "schema-auditor"
         },
         {
           "event": "severity_changed",
           "timestamp": "2026-03-10T00:46:46.869896",
           "from": "Major",
-          "to": "major"
+          "to": "major",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.876787",
-          "related_to": "f-log-002"
+          "related_to": "f-log-002",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: sendMessage maps message.sender without null check (line 500-503). If sender is not included in the query result (unlikely but possible after refactoring), accessing message.sender.id will throw. Also"
     },
     {
       "finding_id": "f-log-009",
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Unhandled promise rejection in useMessaging hook error callback",
       "description": "fetchConversations calls onError callback (line 308) after catching an error, then re-throws (line 309). If caller doesn't handle the thrown error or if onError is undefined, the error swallows silently in some component trees, making debugging difficult.",
@@ -1277,28 +1276,29 @@
           "Or: (3) Ensure all callers wrap in try-catch and handle appropriately"
         ]
       },
-      "estimated_effort": "5 minutes",
       "history": [
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of hook error handling"
+          "notes": "Identified via code analysis of hook error handling",
+          "actor": "schema-auditor"
         },
         {
           "event": "severity_changed",
           "timestamp": "2026-03-10T00:46:46.873104",
           "from": "Minor",
-          "to": "minor"
+          "to": "minor",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: fetchConversations calls onError callback (line 308) after catching an error, then re-throws (line 309). If caller doesn't handle the thrown error or if onError is undefined, the error swallows silent"
     },
     {
       "finding_id": "f-log-010",
       "type": "bug",
       "severity": "minor",
       "priority": "P3",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Unsafe access to response.message in createConversation hook",
       "description": "createConversation assumes response.message exists (line 333), but the API may return null if no initial message was sent. This will cause the UI to render undefined for lastMessage.",
@@ -1319,33 +1319,35 @@
           "Line 333: Replace response.message with response.message || null"
         ]
       },
-      "estimated_effort": "3 minutes",
       "history": [
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of API response handling"
+          "notes": "Identified via code analysis of API response handling",
+          "actor": "schema-auditor"
         },
         {
           "event": "severity_changed",
           "timestamp": "2026-03-10T00:46:46.873875",
           "from": "Minor",
-          "to": "minor"
+          "to": "minor",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.877274",
-          "related_to": "f-log-009"
+          "related_to": "f-log-009",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: createConversation assumes response.message exists (line 333), but the API may return null if no initial message was sent. This will cause the UI to render undefined for lastMessage."
     },
     {
       "finding_id": "f-log-011",
-      "type": "dead_code",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Unreachable code in markAsRead hook (useMessaging.ts:427-447)",
       "description": "markAsRead has a condition on line 427: if (!socket || !isConnected). The logic flow is unclear - if both are false, code falls through to line 449 (emitWithAck), but emitWithAck checks if socket is not connected and rejects. This creates potentially dead code in the HTTP fallback branch if socket is null but isConnected is true (stale state).",
@@ -1371,28 +1373,29 @@
           "}"
         ]
       },
-      "estimated_effort": "10 minutes",
       "history": [
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of conditional logic"
+          "notes": "Identified via code analysis of conditional logic",
+          "actor": "schema-auditor"
         },
         {
           "event": "severity_changed",
           "timestamp": "2026-03-10T00:46:46.875092",
           "from": "Minor",
-          "to": "minor"
+          "to": "minor",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: markAsRead has a condition on line 427: if (!socket || !isConnected). The logic flow is unclear - if both are false, code falls through to line 449 (emitWithAck), but emitWithAck checks if socket is n"
     },
     {
       "finding_id": "f-log-012",
       "type": "bug",
       "severity": "minor",
       "priority": "P3",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Unsafe access to data.conversationId in setMessages state update",
       "description": "markAsRead updates messages with setMessages((prev) => { const conversationMessages = prev[data.conversationId] || [] }). If data.conversationId is undefined or doesn't exist, prev[undefined] will be undefined, and the || [] fallback is safe but indicates potential data inconsistency that should be validated.",
@@ -1414,953 +1417,1165 @@
           "Or log warning: if (!data.conversationId) logger.warn('Missing conversationId in markAsRead event')"
         ]
       },
-      "estimated_effort": "3 minutes",
       "history": [
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of state update pattern"
+          "notes": "Identified via code analysis of state update pattern",
+          "actor": "schema-auditor"
         },
         {
           "event": "severity_changed",
           "timestamp": "2026-03-10T00:46:46.875502",
           "from": "Minor",
-          "to": "minor"
+          "to": "minor",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.877485",
-          "related_to": "f-log-009"
+          "related_to": "f-log-009",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: markAsRead updates messages with setMessages((prev) => { const conversationMessages = prev[data.conversationId] || [] }). If data.conversationId is undefined or doesn't exist, prev[undefined] will be "
     },
     {
       "finding_id": "f-perf-001",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Potential N+1 query in messaging.service.getConversations with nested includes",
       "description": "The `getConversations` method includes `participant1`, `participant2`, and their profiles in a findMany call with pagination. If conversations table is large, fetching all participants + profiles for 20 items may be inefficient without indexed lookups.",
       "category": "database-query-efficiency",
       "proof_hooks": [
         {
-          "type": "code_ref",
           "summary": "getConversations includes nested User and Profile data",
           "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
           "symbol": "MessagingService.getConversations",
           "start_line": 97,
-          "end_line": 110
+          "end_line": 110,
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Add database indexes on participant1Id and participant2Id in Conversation table. Consider pagination cursor with indexed ordering. Profile select should limit to minimal fields (id, username, displayName, avatarUrl).",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Add database indexes on participant1Id and participant2Id in Conversation table. Consider pagination cursor with indexed ordering. Profile select should limit to minimal fields (id, username, displayName, avatarUrl).",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.848714",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The `getConversations` method includes `participant1`, `participant2`, and their profiles in a findMany call with pagination. If conversations table is large, fetching all participants + profiles for "
     },
     {
       "finding_id": "f-perf-002",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Missing indexes on frequently-used WHERE columns in messaging and follows tables",
       "description": "Grep analysis shows heavy use of participant1Id, participant2Id, followerId, followingId in WHERE clauses. These columns must have indexes to prevent full table scans as data grows.",
       "category": "missing-index",
       "proof_hooks": [
         {
-          "type": "query",
           "summary": "Conversation lookups by participant IDs without visible indexes",
           "query_text": "SELECT * FROM conversations WHERE participant1Id = ? OR participant2Id = ?",
-          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts"
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "hook_type": "query"
         },
         {
-          "type": "query",
           "summary": "Follow lookups by foreign keys",
           "query_text": "SELECT * FROM follows WHERE followerId = ? AND followingId = ?",
-          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts"
+          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "hook_type": "query"
         }
       ],
-      "suggested_fix": "Add Prisma indexes: @db.Index([participant1Id]), @db.Index([participant2Id]) on Conversation; @db.Index([followerId]), @db.Index([followingId]) on Follow; @db.Index([conversationId]) on Message.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Add Prisma indexes: @db.Index([participant1Id]), @db.Index([participant2Id]) on Conversation; @db.Index([followerId]), @db.Index([followingId]) on Follow; @db.Index([conversationId]) on Message.",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.848987",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.878057",
-          "related_to": "f-perf-001"
+          "related_to": "f-perf-001",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: Grep analysis shows heavy use of participant1Id, participant2Id, followerId, followingId in WHERE clauses. These columns must have indexes to prevent full table scans as data grows."
     },
     {
       "finding_id": "f-perf-003",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Messaging service N+1: follows.service calls blockingService.isBlocked() and extra findUnique in loop",
       "description": "In `followUser`, code checks target user existence (findUnique), then checks blocking (calls blockingService), then checks existing follow (findUnique). Each step triggers separate queries. For batch follow operations, this scales linearly.",
       "category": "n-plus-one",
       "proof_hooks": [
         {
-          "type": "code_ref",
           "summary": "Sequential checks in followUser causing multiple queries",
           "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
           "symbol": "FollowsService.followUser",
           "start_line": 33,
-          "end_line": 59
+          "end_line": 59,
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Combine checks into single Prisma transaction or use raw SQL batch: SELECT user, follow, blocked in one query. Investigate blockingService.isBlocked() to ensure it also caches or batches.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Combine checks into single Prisma transaction or use raw SQL batch: SELECT user, follow, blocked in one query. Investigate blockingService.isBlocked() to ensure it also caches or batches.",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.849201",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: In `followUser`, code checks target user existence (findUnique), then checks blocking (calls blockingService), then checks existing follow (findUnique). Each step triggers separate queries. For batch "
     },
     {
       "finding_id": "f-perf-004",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Frontend: Feed component may re-fetch on every dependency change without debounce",
       "description": "useFeed hook loads feed on mount and when feedType/limit changes. No evidence of dependency stable references or memoization preventing unnecessary re-fetches.",
       "category": "render-waste",
       "proof_hooks": [
         {
-          "type": "code_ref",
           "summary": "useFeed loads on feedType/limit change without memoization guard",
           "file": "apps/web/src/hooks/useFeed.ts",
           "symbol": "useFeed dependency array",
           "start_line": 270,
-          "end_line": 284
+          "end_line": 284,
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Wrap feedType/limit in useMemo in parent. Or use AbortController to cancel in-flight requests on dependency change. Verify FeedTabs component doesn't recreate feedType object on every render.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Wrap feedType/limit in useMemo in parent. Or use AbortController to cancel in-flight requests on dependency change. Verify FeedTabs component doesn't recreate feedType object on every render.",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/web/src/hooks/useFeed.ts"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.849760",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: useFeed hook loads feed on mount and when feedType/limit changes. No evidence of dependency stable references or memoization preventing unnecessary re-fetches."
     },
     {
       "finding_id": "f-perf-005",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Cache service falls back to in-memory with no size limit, potential memory leak",
       "description": "InMemoryCache in cache.service.ts stores entries indefinitely until expiration. No cleanup() call scheduled, and no max-size limit. Long-running API could accumulate stale entries.",
       "category": "cache-miss",
       "proof_hooks": [
         {
-          "type": "code_ref",
           "summary": "InMemoryCache cleanup never called",
           "file": "apps/api/src/core/cache/cache.service.ts",
           "symbol": "InMemoryCache",
           "start_line": 20,
-          "end_line": 58
+          "end_line": 58,
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Schedule periodic cache cleanup every 5 min: `setInterval(() => this.inMemoryCache.cleanup(), 300000)`. Or implement LRU eviction with max size (e.g., 10,000 entries).",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Schedule periodic cache cleanup every 5 min: `setInterval(() => this.inMemoryCache.cleanup(), 300000)`. Or implement LRU eviction with max size (e.g., 10,000 entries).",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/api/src/core/cache/cache.service.ts"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.850336",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: InMemoryCache in cache.service.ts stores entries indefinitely until expiration. No cleanup() call scheduled, and no max-size limit. Long-running API could accumulate stale entries."
     },
     {
       "finding_id": "f-perf-006",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Cache service does not handle Redis connection failures gracefully in get/set",
       "description": "Cache.get/set catch Redis errors and fall back to in-memory, but no metric/log to track fallback frequency. If Redis is flaky, client could degrade to in-memory without visibility.",
       "category": "cache-miss",
       "proof_hooks": [
         {
-          "type": "code_ref",
           "summary": "Redis fallback catches error but no visibility",
           "file": "apps/api/src/core/cache/cache.service.ts",
           "symbol": "CacheService.get",
           "start_line": 76,
-          "end_line": 88
+          "end_line": 88,
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Emit observability event on Redis fallback. Add Prometheus counter `cache_redis_fallback_total`. Set circuit breaker: after 5 consecutive Redis failures, skip Redis for 60 seconds.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Emit observability event on Redis fallback. Add Prometheus counter `cache_redis_fallback_total`. Set circuit breaker: after 5 consecutive Redis failures, skip Redis for 60 seconds.",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/api/src/core/cache/cache.service.ts"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.850899",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.878793",
-          "related_to": "f-perf-005"
+          "related_to": "f-perf-005",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: Cache.get/set catch Redis errors and fall back to in-memory, but no metric/log to track fallback frequency. If Redis is flaky, client could degrade to in-memory without visibility."
     },
     {
       "finding_id": "f-perf-007",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Wallet.service queries all transactions without pagination or filtering",
       "description": "getWallet includes full user + profile select, but no evidence of transaction list limiting or cursor pagination in wallet endpoints. Could load 1000s of transactions on large wallets.",
       "category": "database-query-efficiency",
       "proof_hooks": [
         {
-          "type": "code_ref",
           "summary": "getWallet includes user but transaction pagination not visible",
           "file": "apps/api/src/core/monetization/services/wallet.service.ts",
           "symbol": "WalletService.getWallet",
           "start_line": 54,
-          "end_line": 78
+          "end_line": 78,
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Split wallet fetch from transaction fetch. Return transaction summary (count, recent 10) in wallet response. Add separate paginated endpoint for transactions with cursor.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Split wallet fetch from transaction fetch. Return transaction summary (count, recent 10) in wallet response. Add separate paginated endpoint for transactions with cursor.",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/api/src/core/monetization/services/wallet.service.ts"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.851468",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: getWallet includes full user + profile select, but no evidence of transaction list limiting or cursor pagination in wallet endpoints. Could load 1000s of transactions on large wallets."
     },
     {
       "finding_id": "f-perf-008",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "API client always sends withCredentials=true, adds latency to preflight requests",
       "description": "apiClient in apps/web/src/lib/api/client.ts sets withCredentials globally. This causes CORS preflight OPTIONS requests for every cross-origin POST/PUT, even if cookies aren't needed.",
       "category": "api-cost",
       "proof_hooks": [
         {
-          "type": "code_ref",
           "summary": "Global withCredentials=true on apiClient",
           "file": "apps/web/src/lib/api/client.ts",
           "symbol": "apiClient",
           "start_line": 16,
-          "end_line": 22
+          "end_line": 22,
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Only set withCredentials=true for auth endpoints. For public API calls, omit or set false. Use request interceptor to conditionally add withCredentials based on endpoint.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Only set withCredentials=true for auth endpoints. For public API calls, omit or set false. Use request interceptor to conditionally add withCredentials based on endpoint.",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/web/src/lib/api/client.ts"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.852028",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: apiClient in apps/web/src/lib/api/client.ts sets withCredentials globally. This causes CORS preflight OPTIONS requests for every cross-origin POST/PUT, even if cookies aren't needed."
     },
     {
       "finding_id": "f-perf-009",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Frontend: Marketplace page creates new hooks with unfetched dependencies on every render",
       "description": "marketplaceIndex.tsx calls useMarketplace() on every render, and load() is called in useEffect with deps [debouncedQuery, typeFilter, category, minPrice, maxPrice, groupId]. If groupId is object or complex state, causes refetch.",
       "category": "render-waste",
       "proof_hooks": [
         {
-          "type": "code_ref",
           "summary": "useEffect dependencies include router.query.groupId which can change reference",
           "file": "apps/web/src/pages/marketplace/index.tsx",
           "symbol": "MarketplacePage",
           "start_line": 26,
-          "end_line": 40
+          "end_line": 40,
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Use useMemo to memoize groupId value. Or track previous groupId with useRef to prevent re-fetch on router ready.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Use useMemo to memoize groupId value. Or track previous groupId with useRef to prevent re-fetch on router ready.",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/web/src/pages/marketplace/index.tsx"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.852587",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: marketplaceIndex.tsx calls useMarketplace() on every render, and load() is called in useEffect with deps [debouncedQuery, typeFilter, category, minPrice, maxPrice, groupId]. If groupId is object or co"
     },
     {
       "finding_id": "f-perf-010",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Frontend: Images in pages lack optimization, no Next.js Image component used consistently",
       "description": "Marketplace, events, and groups pages use raw `<img>` tags with hardcoded sizes. No lazy loading, no responsive images, no format optimization (webp, avif).",
       "category": "bundle-size",
       "proof_hooks": [
         {
-          "type": "code_ref",
           "summary": "Raw img tags without Next.js Image optimization",
           "file": "apps/web/src/pages/events/[id].tsx",
           "symbol": "Event page image renders",
           "start_line": 86,
-          "end_line": 86
+          "end_line": 86,
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Replace all `<img>` with Next.js `<Image>` component. Add `priority` to above-fold images, enable lazy load for rest. Set `sizes` for responsive widths.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Replace all `<img>` with Next.js `<Image>` component. Add `priority` to above-fold images, enable lazy load for rest. Set `sizes` for responsive widths.",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/web/src/pages/events/[id].tsx"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.853154",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: Marketplace, events, and groups pages use raw `<img>` tags with hardcoded sizes. No lazy loading, no responsive images, no format optimization (webp, avif)."
     },
     {
       "finding_id": "f-perf-011",
-      "type": "cost",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Stripe SDK imported but stripe-connect.service appears disabled",
       "description": "apps/api/src/core/monetization/services/gigs-payment.service.disabled.ts imports Stripe but is never used. stripe-connect.service likely handles payments instead. Unused dependency adds bundle size.",
       "category": "api-cost",
       "proof_hooks": [
         {
-          "type": "config_key",
           "summary": "Stripe in package.json",
           "config_key": "dependencies.stripe",
           "config_value": "^14.25.0",
-          "file": "apps/api/package.json"
+          "file": "apps/api/package.json",
+          "hook_type": "config_key"
         }
       ],
-      "suggested_fix": "If gigs-payment.service is truly disabled, remove .disabled.ts file. Verify stripe-connect.service is production code. If not using Stripe, remove from package.json.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "If gigs-payment.service is truly disabled, remove .disabled.ts file. Verify stripe-connect.service is production code. If not using Stripe, remove from package.json.",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/api/package.json"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.853742",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: apps/api/src/core/monetization/services/gigs-payment.service.disabled.ts imports Stripe but is never used. stripe-connect.service likely handles payments instead. Unused dependency adds bundle size."
     },
     {
       "finding_id": "f-perf-012",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Messaging hook creates Socket.io connections without connection pooling",
       "description": "useMessaging hook in apps/web creates new Socket.io connection on every mount. Multiple components using this hook will create multiple connections to same server.",
       "category": "api-cost",
       "proof_hooks": [
         {
-          "type": "code_ref",
           "summary": "Socket.io client created in hook without pooling",
           "file": "apps/web/src/hooks/useMessaging.ts",
           "symbol": "useMessaging connect function",
           "start_line": 86,
-          "end_line": 95
+          "end_line": 95,
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Create SocketProvider context at app root, share single Socket.io instance. Use useMessaging as consumer hook. Reduces server connection count and memory per client.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Create SocketProvider context at app root, share single Socket.io instance. Use useMessaging as consumer hook. Reduces server connection count and memory per client.",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/web/src/hooks/useMessaging.ts"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.854159",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: useMessaging hook in apps/web creates new Socket.io connection on every mount. Multiple components using this hook will create multiple connections to same server."
     },
     {
       "finding_id": "f-perf-013",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "follows.service denormalizes follower/following counts but no transaction atomicity on update",
       "description": "followUser updates participant profile counts with separate Promise.all queries. If one fails, counts become out of sync. No database-level triggers to maintain consistency.",
       "category": "database-query-efficiency",
       "proof_hooks": [
         {
-          "type": "code_ref",
           "summary": "Non-atomic denormalized count updates",
           "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
           "symbol": "FollowsService.followUser",
           "start_line": 77,
-          "end_line": 86
+          "end_line": 86,
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Wrap in Prisma transaction: `prisma.$transaction([...])`. Or create database trigger on Follow insert/delete to auto-increment/decrement profile counts.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Wrap in Prisma transaction: `prisma.$transaction([...])`. Or create database trigger on Follow insert/delete to auto-increment/decrement profile counts.",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.854682",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.878274",
-          "related_to": "f-perf-003"
+          "related_to": "f-perf-003",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: followUser updates participant profile counts with separate Promise.all queries. If one fails, counts become out of sync. No database-level triggers to maintain consistency."
     },
     {
       "finding_id": "f-perf-014",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Rating limiter service may not scale to distributed deployments",
       "description": "RateLimitService uses in-memory state to track user actions. In multi-instance setup, each instance has separate rate limit, user could bypass by hitting different servers.",
       "category": "cache-miss",
       "proof_hooks": [
         {
-          "type": "code_ref",
           "summary": "Rate limiting likely in-memory",
           "file": "apps/api/src/verticals/feeds/content/services/posts.service.ts",
           "symbol": "PostsService.createPost",
           "start_line": 43,
-          "end_line": 50
+          "end_line": 50,
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Migrate RateLimitService to use Redis with keys like `rate:post:create:{userId}`. Use INCR with EXPIRE. Implement sliding window or token bucket in Redis.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Migrate RateLimitService to use Redis with keys like `rate:post:create:{userId}`. Use INCR with EXPIRE. Implement sliding window or token bucket in Redis.",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/api/src/verticals/feeds/content/services/posts.service.ts"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.855280",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: RateLimitService uses in-memory state to track user actions. In multi-instance setup, each instance has separate rate limit, user could bypass by hitting different servers."
     },
     {
       "finding_id": "f-perf-015",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Missing database indexes on post.authorId, message.senderId, comment.postId (common JOINs)",
       "description": "Pattern analysis shows posts are queried by authorId, messages by senderId/conversationId, comments by postId. No visible @db.Index decorators for these foreign keys.",
       "category": "missing-index",
       "proof_hooks": [
         {
-          "type": "query",
           "summary": "Posts by author without visible index",
-          "query_text": "SELECT * FROM posts WHERE authorId = ? ORDER BY createdAt DESC LIMIT 20"
+          "query_text": "SELECT * FROM posts WHERE authorId = ? ORDER BY createdAt DESC LIMIT 20",
+          "hook_type": "query"
         },
         {
-          "type": "query",
           "summary": "Messages by sender without visible index",
-          "query_text": "SELECT * FROM messages WHERE senderId = ? AND conversationId = ?"
+          "query_text": "SELECT * FROM messages WHERE senderId = ? AND conversationId = ?",
+          "hook_type": "query"
         }
       ],
-      "suggested_fix": "Add @db.Index([authorId]) to Post, @db.Index([senderId]) to Message, @db.Index([postId]) to Comment. Composite indexes for common filters: @db.Index([senderId, createdAt]).",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Add @db.Index([authorId]) to Post, @db.Index([senderId]) to Message, @db.Index([postId]) to Comment. Composite indexes for common filters: @db.Index([senderId, createdAt]).",
+        "estimated_effort": "medium"
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.856807",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: Pattern analysis shows posts are queried by authorId, messages by senderId/conversationId, comments by postId. No visible @db.Index decorators for these foreign keys."
     },
     {
       "finding_id": "f-perf-016",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Prisma client instantiated without connection pooling configuration",
       "description": "apps/api/src/core/database/prisma.service.ts likely instantiates PrismaClient without explicit `pool_connections` or `connection_timeout` settings. Defaults may be insufficient for high load.",
       "category": "database-query-efficiency",
       "proof_hooks": [
         {
-          "type": "config_key",
           "summary": "DATABASE_URL env var for Prisma",
           "config_key": "DATABASE_URL",
-          "config_value": "postgres://... (no pool params visible)"
+          "config_value": "postgres://... (no pool params visible)",
+          "hook_type": "config_key"
         }
       ],
-      "suggested_fix": "Set DATABASE_URL with query params: `?schema=public&connection_limit=20&pool_timeout=10`. Or use `prisma.schema.prisma` datasource to configure pool explicitly in code.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Set DATABASE_URL with query params: `?schema=public&connection_limit=20&pool_timeout=10`. Or use `prisma.schema.prisma` datasource to configure pool explicitly in code.",
+        "estimated_effort": "medium"
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.857545",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: apps/api/src/core/database/prisma.service.ts likely instantiates PrismaClient without explicit `pool_connections` or `connection_timeout` settings. Defaults may be insufficient for high load."
     },
     {
       "finding_id": "f-perf-017",
-      "type": "cost",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "AWS SES email service may incur high costs if sending to unvalidated addresses",
       "description": "Email service uses @aws-sdk/client-ses without apparent rate limiting or validation. If app sends to typos/invalid emails, SES charges per email sent.",
       "category": "api-cost",
       "proof_hooks": [
         {
-          "type": "code_ref",
           "summary": "Email service sends without visible validation",
           "file": "apps/api/src/core/email/email.service.ts",
-          "symbol": "EmailService (partial scan)"
+          "symbol": "EmailService (partial scan)",
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Validate email addresses before sending (RFC 5322 regex or library like email-validator). Deduplicate batch sends by recipient. Implement SES reputation monitoring.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Validate email addresses before sending (RFC 5322 regex or library like email-validator). Deduplicate batch sends by recipient. Implement SES reputation monitoring.",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/api/src/core/email/email.service.ts"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.858345",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: Email service uses @aws-sdk/client-ses without apparent rate limiting or validation. If app sends to typos/invalid emails, SES charges per email sent."
     },
     {
       "finding_id": "f-perf-018",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Next.js image remotePatterns allows wildcard subdomains, may bypass CDN optimization",
       "description": "next.config.js permits `*.s3.amazonaws.com` and `*.cloudfront.net` with wildcard. Next.js Image optimization requires known domain patterns for effective caching.",
       "category": "bundle-size",
       "proof_hooks": [
         {
-          "type": "code_ref",
           "summary": "Wildcard remote patterns in next.config",
           "file": "apps/web/next.config.js",
           "symbol": "images.remotePatterns",
           "start_line": 11,
-          "end_line": 24
+          "end_line": 24,
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Replace wildcard with specific bucket: `{ protocol: 'https', hostname: 'my-bucket.s3.us-east-1.amazonaws.com' }`. Use CloudFront distribution as canonical CDN. Enable Image Cache-Control headers.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Replace wildcard with specific bucket: `{ protocol: 'https', hostname: 'my-bucket.s3.us-east-1.amazonaws.com' }`. Use CloudFront distribution as canonical CDN. Enable Image Cache-Control headers.",
+        "estimated_effort": "medium",
+        "affected_files": [
+          "apps/web/next.config.js"
+        ]
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.858667",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: next.config.js permits `*.s3.amazonaws.com` and `*.cloudfront.net` with wildcard. Next.js Image optimization requires known domain patterns for effective caching."
     },
     {
       "finding_id": "f-perf-019",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Speculation",
+      "confidence": "speculation",
       "status": "open",
       "title": "Query: scheduling unknown frequency of scheduled posts processor",
       "description": "scheduled-posts.service.ts exists with queries on ScheduledPost table, but frequency of background job processor is unknown. Could cause missed scheduled posts or wasteful polling.",
       "category": "database-query-efficiency",
       "proof_hooks": [
         {
-          "type": "question",
-          "summary": "What is the scheduled post processor frequency?"
+          "summary": "What is the scheduled post processor frequency?",
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Verify @Cron decorator or job queue (Bull, RabbitMQ). Ensure frequency is at most once per minute and uses indexes for `dueAt <= NOW()` query.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Verify @Cron decorator or job queue (Bull, RabbitMQ). Ensure frequency is at most once per minute and uses indexes for `dueAt <= NOW()` query.",
+        "estimated_effort": "medium"
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.858885",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.879268",
-          "related_to": "f-perf-015"
+          "related_to": "f-perf-015",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: scheduled-posts.service.ts exists with queries on ScheduledPost table, but frequency of background job processor is unknown. Could cause missed scheduled posts or wasteful polling."
     },
     {
       "finding_id": "f-perf-020",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
-      "confidence": "Speculation",
+      "confidence": "speculation",
       "status": "open",
       "title": "Query: Mux video API usage metering and cost tracking not visible",
       "description": "Mux SDK is integrated (@mux/mux-node), but no evidence of request logging or cost tracking. Mux charges by minutes viewed; unbounded usage could cause bill shock.",
       "category": "api-cost",
       "proof_hooks": [
         {
-          "type": "question",
-          "summary": "Is Mux usage metered and tracked?"
+          "summary": "Is Mux usage metered and tracked?",
+          "hook_type": "code_ref"
         }
       ],
-      "suggested_fix": "Log every Mux API call with request size. Set up Mux cost alerts in dashboard. Implement cache for thumbnails/previews to avoid redundant encoding.",
-      "estimated_effort": "medium",
+      "suggested_fix": {
+        "approach": "Log every Mux API call with request size. Set up Mux cost alerts in dashboard. Implement cache for thumbnails/previews to avoid redundant encoding.",
+        "estimated_effort": "medium"
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.859093",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.880184",
-          "related_to": "f-perf-016"
+          "related_to": "f-perf-016",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: Mux SDK is integrated (@mux/mux-node), but no evidence of request logging or cost tracking. Mux charges by minutes viewed; unbounded usage could cause bill shock."
     },
     {
       "finding_id": "sec-001",
       "type": "bug",
-      "severity": "critical",
+      "severity": "blocker",
       "priority": "P0",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Production secrets committed to git in .env file",
       "description": "The .env file at repository root contains real production credentials including database passwords, JWT secrets, Redis passwords, AWS keys, Stripe live keys, Mux tokens, and email credentials. This file is tracked in git history and accessible to anyone with repo access.",
       "category": "secrets-exposure",
-      "proof_hooks": [],
-      "suggested_fix": "",
-      "estimated_effort": "medium",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "The .env file at repository root contains real production credentials including database passwords, JWT secrets, Redis p"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "",
+        "estimated_effort": "medium"
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.859817",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The .env file at repository root contains real production credentials including database passwords, JWT secrets, Redis passwords, AWS keys, Stripe live keys, Mux tokens, and email credentials. This fi"
     },
     {
       "finding_id": "sec-002",
       "type": "bug",
-      "severity": "high",
+      "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "SQL Injection in $queryRaw without parameterization",
       "description": "Two database query endpoints use Prisma's $queryRaw with string interpolation for user-controlled parameters (userId, limit). While Prisma's template tag syntax usually provides protection, the code uses direct ${} template literal interpolation which bypasses Prisma's parameterization.",
       "category": "missing-validation",
-      "proof_hooks": [],
-      "suggested_fix": "",
-      "estimated_effort": "medium",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Two database query endpoints use Prisma's $queryRaw with string interpolation for user-controlled parameters (userId, li"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "",
+        "estimated_effort": "medium"
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.860092",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: Two database query endpoints use Prisma's $queryRaw with string interpolation for user-controlled parameters (userId, limit). While Prisma's template tag syntax usually provides protection, the code u"
     },
     {
       "finding_id": "sec-003",
       "type": "bug",
-      "severity": "high",
+      "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Missing COOKIE_SECURE environment variable allows cookie transmission over HTTP",
       "description": "The auth.controller.ts sets secure cookie flag based on `process.env.COOKIE_SECURE === 'true'`, but the .env file does not define this variable. When undefined, cookies are set with secure=false, allowing them to be transmitted over unencrypted HTTP connections.",
       "category": "auth-bypass",
-      "proof_hooks": [],
-      "suggested_fix": "",
-      "estimated_effort": "medium",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "The auth.controller.ts sets secure cookie flag based on `process.env.COOKIE_SECURE === 'true'`, but the .env file does n"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "",
+        "estimated_effort": "medium"
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.860308",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.880523",
-          "related_to": "sec-002"
+          "related_to": "sec-002",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The auth.controller.ts sets secure cookie flag based on `process.env.COOKIE_SECURE === 'true'`, but the .env file does not define this variable. When undefined, cookies are set with secure=false, allo"
     },
     {
       "finding_id": "sec-004",
       "type": "bug",
-      "severity": "high",
+      "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Over-exposed user data in API responses leaks private fields",
       "description": "The sanitizeUser function in auth.service.ts only removes passwordHash and googleId, but returns user objects with unreviewed fields. User responses include sensitive data like wallet balances, full names, email addresses, and verification status that may not be appropriate for all contexts.",
       "category": "data-leakage",
-      "proof_hooks": [],
-      "suggested_fix": "",
-      "estimated_effort": "medium",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "The sanitizeUser function in auth.service.ts only removes passwordHash and googleId, but returns user objects with unrev"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "",
+        "estimated_effort": "medium"
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.860516",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.880748",
-          "related_to": "sec-002"
+          "related_to": "sec-002",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The sanitizeUser function in auth.service.ts only removes passwordHash and googleId, but returns user objects with unreviewed fields. User responses include sensitive data like wallet balances, full n"
     },
     {
       "finding_id": "sec-005",
       "type": "bug",
-      "severity": "high",
+      "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "IDOR in wallet endpoints\u2014no ownership verification",
       "description": "The WalletController.getWallet() method uses @GetUser('id') to get the current user but does not verify the user actually owns the wallet being accessed. An attacker could potentially craft requests to access other users' wallets if route parameters are not properly scoped.",
       "category": "idor",
-      "proof_hooks": [],
-      "suggested_fix": "",
-      "estimated_effort": "medium",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "The WalletController.getWallet() method uses @GetUser('id') to get the current user but does not verify the user actuall"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "",
+        "estimated_effort": "medium"
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.861221",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.880989",
-          "related_to": "sec-002"
+          "related_to": "sec-002",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The WalletController.getWallet() method uses @GetUser('id') to get the current user but does not verify the user actually owns the wallet being accessed. An attacker could potentially craft requests t"
     },
     {
       "finding_id": "sec-006",
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "CORS credentials exposed with loose origin validation",
       "description": "The main.ts enables CORS with `credentials: true` and parses ALLOWED_ORIGINS from env. However, the allowed origins list includes localhost URLs (3000, 3001, 3004) for development. If ALLOWED_ORIGINS is misconfigured or defaults are used in production, it opens the API to cross-origin requests with cookies.",
       "category": "cors-misconfiguration",
-      "proof_hooks": [],
-      "suggested_fix": "",
-      "estimated_effort": "medium",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "The main.ts enables CORS with `credentials: true` and parses ALLOWED_ORIGINS from env. However, the allowed origins list"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "",
+        "estimated_effort": "medium"
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.861814",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The main.ts enables CORS with `credentials: true` and parses ALLOWED_ORIGINS from env. However, the allowed origins list includes localhost URLs (3000, 3001, 3004) for development. If ALLOWED_ORIGINS "
     },
     {
       "finding_id": "sec-007",
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Account enumeration vulnerability via forgot-password and email verification endpoints",
       "description": "The forgot-password and resend-verification endpoints return the same message ('If that email is in our system...') whether the email exists or not. However, timing attacks could still enumerate accounts if email lookup is faster than email send. Additionally, no account enumeration protection like exponential backoff or account lockout is present.",
       "category": "missing-validation",
-      "proof_hooks": [],
-      "suggested_fix": "",
-      "estimated_effort": "medium",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "The forgot-password and resend-verification endpoints return the same message ('If that email is in our system...') whet"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "",
+        "estimated_effort": "medium"
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.862495",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.881200",
-          "related_to": "sec-006"
+          "related_to": "sec-006",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The forgot-password and resend-verification endpoints return the same message ('If that email is in our system...') whether the email exists or not. However, timing attacks could still enumerate accou"
     },
     {
       "finding_id": "sec-008",
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Google OAuth redirect validation incomplete\u2014OPEN_REDIRECT risk if FRONTEND_URL env not set",
       "description": "In auth.controller.ts line 101-107, the googleAuthCallback validates that FRONTEND_URL exists but only returns 503 error if missing. It doesn't validate that FRONTEND_URL is a valid, trusted URL. An attacker who compromises the deployment environment could set FRONTEND_URL to a malicious site to redirect users after OAuth login.",
       "category": "missing-validation",
-      "proof_hooks": [],
-      "suggested_fix": "",
-      "estimated_effort": "medium",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "In auth.controller.ts line 101-107, the googleAuthCallback validates that FRONTEND_URL exists but only returns 503 error"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "",
+        "estimated_effort": "medium"
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.863262",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.881405",
-          "related_to": "sec-006"
+          "related_to": "sec-006",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: In auth.controller.ts line 101-107, the googleAuthCallback validates that FRONTEND_URL exists but only returns 503 error if missing. It doesn't validate that FRONTEND_URL is a valid, trusted URL. An a"
     },
     {
       "finding_id": "sec-009",
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "No rate limiting on login endpoint\u2014brute force vulnerability",
       "description": "The login endpoint (POST /api/auth/login) has no @Throttle decorator. An attacker can make unlimited login attempts to brute force user passwords using the seed accounts (admin@embr.app:test1234, creator@embr.app:test1234, user@embr.app:test1234) or any known email.",
       "category": "missing-validation",
-      "proof_hooks": [],
-      "suggested_fix": "",
-      "estimated_effort": "medium",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "The login endpoint (POST /api/auth/login) has no @Throttle decorator. An attacker can make unlimited login attempts to b"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "",
+        "estimated_effort": "medium"
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.863577",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.881612",
-          "related_to": "sec-006"
+          "related_to": "sec-006",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The login endpoint (POST /api/auth/login) has no @Throttle decorator. An attacker can make unlimited login attempts to brute force user passwords using the seed accounts (admin@embr.app:test1234, crea"
     },
     {
       "finding_id": "sec-010",
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Password reset token leak in email\u2014user ID embedded in plaintext token",
       "description": "In auth.service.ts line 455-456, the password reset token is constructed as `${user.id}.${randomBytes(32)}` and sent in plaintext in the email. The user ID portion is not secret and can be extracted by anyone who intercepts or views the email.",
       "category": "missing-validation",
-      "proof_hooks": [],
-      "suggested_fix": "",
-      "estimated_effort": "medium",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "In auth.service.ts line 455-456, the password reset token is constructed as `${user.id}.${randomBytes(32)}` and sent in "
+        }
+      ],
+      "suggested_fix": {
+        "approach": "",
+        "estimated_effort": "medium"
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.863792",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.881817",
-          "related_to": "sec-006"
+          "related_to": "sec-006",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: In auth.service.ts line 455-456, the password reset token is constructed as `${user.id}.${randomBytes(32)}` and sent in plaintext in the email. The user ID portion is not secret and can be extracted b"
     },
     {
       "finding_id": "sec-011",
       "type": "bug",
       "severity": "major",
       "priority": "P3",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Seed account credentials documented in AGENTS.md allow unauthorized access",
       "description": "The AGENTS.md file at the repo root documents seed account credentials: admin@embr.app / test1234, creator@embr.app / test1234, user@embr.app / test1234. These are used for development/testing but are hardcoded and persistent. If seed data is not reset in production, these accounts can be used to gain privileged access.",
       "category": "missing-validation",
-      "proof_hooks": [],
-      "suggested_fix": "",
-      "estimated_effort": "medium",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "The AGENTS.md file at the repo root documents seed account credentials: admin@embr.app / test1234, creator@embr.app / te"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "",
+        "estimated_effort": "medium"
+      },
       "history": [
         {
           "event": "created",
           "timestamp": "2026-03-10T00:46:46.864087",
-          "notes": "Initial audit"
+          "notes": "Initial audit",
+          "actor": "schema-auditor"
         },
         {
-          "event": "deduplicated",
+          "event": "created",
           "timestamp": "2026-03-10T00:46:46.882020",
-          "related_to": "sec-006"
+          "related_to": "sec-006",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "synthesizer"
+      "impact": "If not fixed: The AGENTS.md file at the repo root documents seed account credentials: admin@embr.app / test1234, creator@embr.app / test1234, user@embr.app / test1234. These are used for development/testing but are"
     },
     {
       "finding_id": "f-copy-001",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Inconsistent authentication terminology",
       "description": "Sign-in flow uses 'Sign in' and 'Signing in...' but home page uses 'Sign in to continue'. Signup page consistently uses 'Create account' but password reset may use different terminology. No standardized copy set for auth actions across app.",
@@ -2389,25 +2604,24 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Create copy constants in a shared location (e.g., libs/copy or theme/strings). Define single source of truth for: 'Sign in', 'Sign out', 'Create account', 'Loading states' across all flows.",
-        "effort_estimate": "2 hours"
+        "approach": "Create copy constants in a shared location (e.g., libs/copy or theme/strings). Define single source of truth for: 'Sign in', 'Sign out', 'Create account', 'Loading states' across all flows."
       },
-      "estimated_effort": "medium",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "ux-flow-auditor"
+      "impact": "If not fixed: Sign-in flow uses 'Sign in' and 'Signing in...' but home page uses 'Sign in to continue'. Signup page consistently uses 'Create account' but password reset may use different terminology. No standardiz"
     },
     {
       "finding_id": "f-flow-001",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Broken navigation flow: No back button or escape route on auth pages",
       "description": "Auth pages (login, signup, forgot-password, reset-password) have no consistent way to go back. Users can navigate forward but can't easily return to home or discover without using browser back button. Violates common UX pattern of providing escape routes.",
@@ -2429,25 +2643,24 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Add back button or home link at top of auth pages. Pattern: 'Back to Home' link or breadcrumb showing path. Consistent with ProtectedPageShell breadcrumb pattern used elsewhere.",
-        "effort_estimate": "1 hour"
+        "approach": "Add back button or home link at top of auth pages. Pattern: 'Back to Home' link or breadcrumb showing path. Consistent with ProtectedPageShell breadcrumb pattern used elsewhere."
       },
-      "estimated_effort": "medium",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "ux-flow-auditor"
+      "impact": "If not fixed: Auth pages (login, signup, forgot-password, reset-password) have no consistent way to go back. Users can navigate forward but can't easily return to home or discover without using browser back button."
     },
     {
       "finding_id": "f-state-001",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Missing loading state on profile page",
       "description": "Profile page shows 'Loading profile' while auth loading, but does not show loading state while posts are fetching. If posts take time to load, user sees blank 'Recent Posts' section with only text 'Loading posts...' instead of skeleton or animated placeholder.",
@@ -2462,25 +2675,24 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Use PageState component or skeleton loader when isLoadingPosts=true. Consistent with Feed component's loading pattern (shows spinner + text).",
-        "effort_estimate": "1 hour"
+        "approach": "Use PageState component or skeleton loader when isLoadingPosts=true. Consistent with Feed component's loading pattern (shows spinner + text)."
       },
-      "estimated_effort": "medium",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "ux-flow-auditor"
+      "impact": "If not fixed: Profile page shows 'Loading profile' while auth loading, but does not show loading state while posts are fetching. If posts take time to load, user sees blank 'Recent Posts' section with only text 'Lo"
     },
     {
       "finding_id": "f-state-002",
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Inconsistent empty state messaging across list views",
       "description": "Different list pages use different empty state copy: Marketplace: 'Nothing to see here yet', Events: 'No upcoming events yet', Feed: 'No posts yet'. No consistent pattern or tone. Should use unified empty state component.",
@@ -2509,25 +2721,24 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Create a reusable EmptyState component that accepts context. Standardize copy: '[Noun] is empty', 'Be the first to [action]', CTA button. Use across all list pages.",
-        "effort_estimate": "3 hours"
+        "approach": "Create a reusable EmptyState component that accepts context. Standardize copy: '[Noun] is empty', 'Be the first to [action]', CTA button. Use across all list pages."
       },
-      "estimated_effort": "medium",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "ux-flow-auditor"
+      "impact": "If not fixed: Different list pages use different empty state copy: Marketplace: 'Nothing to see here yet', Events: 'No upcoming events yet', Feed: 'No posts yet'. No consistent pattern or tone. Should use unified e"
     },
     {
       "finding_id": "f-a11y-001",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Missing alt text on decorative images and avatars",
       "description": "Several images missing descriptive alt text: marketplace.tsx has alt='' on listing images, events page has alt='' on host avatars. OrderCard.tsx explicitly uses alt='' which signals to screen readers image is decorative, but these images are content.",
@@ -2549,25 +2760,24 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Add descriptive alt text to all content images. Pattern: 'Product name' for listings, 'Username's avatar' for user images. Keep decorative SVG icons as alt='' but verify with screen reader.",
-        "effort_estimate": "2 hours"
+        "approach": "Add descriptive alt text to all content images. Pattern: 'Product name' for listings, 'Username's avatar' for user images. Keep decorative SVG icons as alt='' but verify with screen reader."
       },
-      "estimated_effort": "medium",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "ux-flow-auditor"
+      "impact": "If not fixed: Several images missing descriptive alt text: marketplace.tsx has alt='' on listing images, events page has alt='' on host avatars. OrderCard.tsx explicitly uses alt='' which signals to screen readers "
     },
     {
       "finding_id": "f-flow-002",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Dead-end page: Marketplace checkout flow incomplete",
       "description": "Marketplace has /marketplace/checkout/index.tsx route but no clear entry point visible. Create listing page doesn't wire to checkout. No 'Buy Now' flow documented. Page exists but is unreachable from purchase flow\u2014creates confusion.",
@@ -2582,25 +2792,24 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Wire ListingCard onClick to navigate to listing detail page. Add 'Buy Now' button on detail that routes to checkout with ?listingId=X. Ensure checkout page has clear flow: review > payment > confirmation.",
-        "effort_estimate": "4 hours"
+        "approach": "Wire ListingCard onClick to navigate to listing detail page. Add 'Buy Now' button on detail that routes to checkout with ?listingId=X. Ensure checkout page has clear flow: review > payment > confirmation."
       },
-      "estimated_effort": "medium",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "ux-flow-auditor"
+      "impact": "If not fixed: Marketplace has /marketplace/checkout/index.tsx route but no clear entry point visible. Create listing page doesn't wire to checkout. No 'Buy Now' flow documented. Page exists but is unreachable from "
     },
     {
       "finding_id": "f-flow-003",
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Messaging compose modal lacks clear confirmation feedback",
       "description": "DMInbox ComposeModal closes after selecting a user but doesn't show confirmation that conversation was created or loaded. User sees spinner but no success message. If network is slow, user may not know if action succeeded.",
@@ -2615,25 +2824,24 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Show toast notification on successful conversation creation: 'Conversation started with @username'. Keep loading state visible until conversation appears in list.",
-        "effort_estimate": "1 hour"
+        "approach": "Show toast notification on successful conversation creation: 'Conversation started with @username'. Keep loading state visible until conversation appears in list."
       },
-      "estimated_effort": "medium",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "ux-flow-auditor"
+      "impact": "If not fixed: DMInbox ComposeModal closes after selecting a user but doesn't show confirmation that conversation was created or loaded. User sees spinner but no success message. If network is slow, user may not kno"
     },
     {
       "finding_id": "f-error-001",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Generic error messages don't guide user action",
       "description": "Feed error: 'Unable to load feed' + button 'Try Again'. DMInbox error handling exists but no user-facing error messages shown for common failures (network, permission, etc). GigDiscovery shows error text but no retry mechanism.",
@@ -2655,25 +2863,24 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Standardize error messages: 'Network error\u2014please check your connection', 'Permission denied\u2014sign in again', 'Server error\u2014try again in a moment'. Add retry button to all error states. Use ErrorBoundary to catch and display.",
-        "effort_estimate": "3 hours"
+        "approach": "Standardize error messages: 'Network error\u2014please check your connection', 'Permission denied\u2014sign in again', 'Server error\u2014try again in a moment'. Add retry button to all error states. Use ErrorBoundary to catch and display."
       },
-      "estimated_effort": "medium",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "ux-flow-auditor"
+      "impact": "If not fixed: Feed error: 'Unable to load feed' + button 'Try Again'. DMInbox error handling exists but no user-facing error messages shown for common failures (network, permission, etc). GigDiscovery shows error t"
     },
     {
       "finding_id": "f-a11y-002",
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Custom button implementations lack proper ARIA labels and keyboard support",
       "description": "Settings page has custom Toggle component with proper ARIA. But many pages use inline button elements with only title attribute (e.g., 'New Message' button in DMInbox). No aria-label, no keyboard nav guidance. Role attribute missing from clickable divs.",
@@ -2695,25 +2902,24 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Add aria-label to all button-like elements. Use <button> tag instead of <div role='button'>. Test keyboard nav: Tab, Space/Enter to activate. Use existing Button component from @embr/ui where possible.",
-        "effort_estimate": "3 hours"
+        "approach": "Add aria-label to all button-like elements. Use <button> tag instead of <div role='button'>. Test keyboard nav: Tab, Space/Enter to activate. Use existing Button component from @embr/ui where possible."
       },
-      "estimated_effort": "medium",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "ux-flow-auditor"
+      "impact": "If not fixed: Settings page has custom Toggle component with proper ARIA. But many pages use inline button elements with only title attribute (e.g., 'New Message' button in DMInbox). No aria-label, no keyboard nav "
     },
     {
       "finding_id": "f-flow-004",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Missing route: Gigs booking page doesn't display gig detail",
       "description": "Route exists: /gigs/[id].tsx and /gigs/booking/[gigId].tsx. But no route visible to display individual gig detail before booking. GigDiscovery clicks navigate to router.push(/gigs/{id}) but gigs/[id].tsx page may not exist or is unimplemented.",
@@ -2728,25 +2934,24 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Implement /gigs/[id].tsx page showing gig detail, description, budget, requirements, similar gigs. Add 'Apply' CTA that navigates to booking form. Wire booking form to submission endpoint.",
-        "effort_estimate": "5 hours"
+        "approach": "Implement /gigs/[id].tsx page showing gig detail, description, budget, requirements, similar gigs. Add 'Apply' CTA that navigates to booking form. Wire booking form to submission endpoint."
       },
-      "estimated_effort": "medium",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "ux-flow-auditor"
+      "impact": "If not fixed: Route exists: /gigs/[id].tsx and /gigs/booking/[gigId].tsx. But no route visible to display individual gig detail before booking. GigDiscovery clicks navigate to router.push(/gigs/{id}) but gigs/[id]."
     },
     {
       "finding_id": "f-copy-002",
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Mixed tone in CTAs: 'Join the Feed' vs 'Go to feed' vs 'Continue to feed'",
       "description": "Home page: 'Join the Feed', 'Create'. About page: 'Create'. Create page itself: none. Inconsistent CTA tone\u2014some are inviting ('Join'), some are functional ('Go'). Should standardize verb + target across entire app.",
@@ -2768,25 +2973,24 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Define CTA library: Primary = action verb + target (e.g., 'Post Now', 'Start Messaging', 'List Item'). Secondary = neutral (e.g., 'Cancel', 'Skip'). Tertiary = info (e.g., 'Learn more'). Update all pages to use consistent pattern.",
-        "effort_estimate": "2 hours"
+        "approach": "Define CTA library: Primary = action verb + target (e.g., 'Post Now', 'Start Messaging', 'List Item'). Secondary = neutral (e.g., 'Cancel', 'Skip'). Tertiary = info (e.g., 'Learn more'). Update all pages to use consistent pattern."
       },
-      "estimated_effort": "medium",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "ux-flow-auditor"
+      "impact": "If not fixed: Home page: 'Join the Feed', 'Create'. About page: 'Create'. Create page itself: none. Inconsistent CTA tone\u2014some are inviting ('Join'), some are functional ('Go'). Should standardize verb + target acr"
     },
     {
       "finding_id": "f-flow-005",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "No visible onboarding or feature discovery for new users",
       "description": "Home page redirects authenticated users directly to /feed. No onboarding flow. New users see feed but don't know how to create profile, add avatar, enable creator mode, etc. Gigs, marketplace, music features are hidden in nav but user doesn't know they exist or how to enable them.",
@@ -2801,25 +3005,24 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Create onboarding component shown on first login: 'Complete your profile' \u2192 'Enable creator mode' \u2192 'Explore features'. Use localStorage to track if user has completed onboarding. Show optional tooltips on nav items (Gigs, Marketplace, Music) on first visit.",
-        "effort_estimate": "6 hours"
+        "approach": "Create onboarding component shown on first login: 'Complete your profile' \u2192 'Enable creator mode' \u2192 'Explore features'. Use localStorage to track if user has completed onboarding. Show optional tooltips on nav items (Gigs, Marketplace, Music) on first visit."
       },
-      "estimated_effort": "medium",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "ux-flow-auditor"
+      "impact": "If not fixed: Home page redirects authenticated users directly to /feed. No onboarding flow. New users see feed but don't know how to create profile, add avatar, enable creator mode, etc. Gigs, marketplace, music f"
     },
     {
       "finding_id": "f-state-003",
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Post creation doesn't clear state or show success confirmation",
       "description": "PostCreator successfully creates post and redirects to /post/[id]. But no toast or success message shown. User might not realize their action succeeded if redirect is slow. No breadcrumb trail back to feed from success state.",
@@ -2834,25 +3037,24 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Show toast: 'Post published!' before redirect. Or show success page with 'View post' and 'Back to feed' buttons. Ensure redirect happens after user sees confirmation.",
-        "effort_estimate": "1 hour"
+        "approach": "Show toast: 'Post published!' before redirect. Or show success page with 'View post' and 'Back to feed' buttons. Ensure redirect happens after user sees confirmation."
       },
-      "estimated_effort": "medium",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "ux-flow-auditor"
+      "impact": "If not fixed: PostCreator successfully creates post and redirects to /post/[id]. But no toast or success message shown. User might not realize their action succeeded if redirect is slow. No breadcrumb trail back to"
     },
     {
       "finding_id": "f-a11y-003",
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "status": "open",
       "title": "Form inputs lack associated labels in some components",
       "description": "EventForm and marketplace sell form have input fields but many are missing visible labels. Placeholder text alone is insufficient for accessibility. Screen reader users won't know what each field represents.",
@@ -2867,25 +3069,24 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Add <label> elements to all input fields. Ensure label is associated via htmlFor attribute. Keep placeholder as helper text, not replacement for label. Use existing Input component which likely has label support.",
-        "effort_estimate": "2 hours"
+        "approach": "Add <label> elements to all input fields. Ensure label is associated via htmlFor attribute. Keep placeholder as helper text, not replacement for label. Use existing Input component which likely has label support."
       },
-      "estimated_effort": "medium",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "ux-flow-auditor"
+      "impact": "If not fixed: EventForm and marketplace sell form have input fields but many are missing visible labels. Placeholder text alone is insufficient for accessibility. Screen reader users won't know what each field repr"
     },
     {
       "finding_id": "f-error-002",
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "status": "open",
       "title": "Error messages don't provide recovery instructions",
       "description": "Settings page: 'Could not save' with description 'Please try again.' doesn't explain why (network? server error? validation?). PostCreator shows error text but no guidance on how to fix.",
@@ -2900,18 +3101,17 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Provide context-specific error recovery: 'Connection lost\u2014check your internet', 'File too large\u2014try a smaller image', 'Field required\u2014fill in all fields'. Show actionable next step.",
-        "effort_estimate": "2 hours"
+        "approach": "Provide context-specific error recovery: 'Connection lost\u2014check your internet', 'File too large\u2014try a smaller image', 'Field required\u2014fill in all fields'. Show actionable next step."
       },
-      "estimated_effort": "medium",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
       ],
-      "agent_source": "ux-flow-auditor"
+      "impact": "If not fixed: Settings page: 'Could not save' with description 'Please try again.' doesn't explain why (network? server error? validation?). PostCreator shows error text but no guidance on how to fix."
     }
   ],
   "rollups": {
@@ -2936,7 +3136,9 @@
       "schema-auditor": 7,
       "synthesizer": 56,
       "ux-flow-auditor": 15
-    }
+    },
+    "by_category": {},
+    "by_type": {}
   },
   "ranked_plan": {
     "top_fixes": [
@@ -2951,5 +3153,13 @@
       "f-perf-003",
       "f-perf-013"
     ]
-  }
+  },
+  "run_metadata": {
+    "timestamp": "2026-03-10T01:11:14.254660",
+    "branch": "main",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "claude-sonnet-4-5"
+  },
+  "next_actions": []
 }

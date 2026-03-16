@@ -25,8 +25,12 @@
     ]
   },
   "coverage": {
-    "files_examined": 25,
-    "files_skipped": 50,
+    "files_examined": [
+      "<25 files examined, list unavailable>"
+    ],
+    "files_skipped": [
+      "<50 files skipped, list unavailable>"
+    ],
     "coverage_complete": false,
     "incomplete_reason": "Large monorepo (77+ service files). Scanned critical paths (messaging, auth, posts, feeds, gigs, marketplace, hooks, API client). Test files and build config excluded per scope."
   },
@@ -34,9 +38,9 @@
     {
       "finding_id": "f-log-001",
       "type": "bug",
-      "severity": "Blocker",
+      "severity": "blocker",
       "priority": "P0",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "title": "Missing method: getUnreadCountForConversation in MessagingService",
       "description": "MessagingService.sendMessage (line 508) and MessagingService.markAsRead (line 721) call this.getUnreadCountForConversation(), but this method is never defined in the service. The method exists as a public getter (line 885-913, getUnreadCount), but the called signature expects a conversationId and userId parameter pair. This is a compile-time blocker that prevents the entire API from building.",
       "category": "missing-method",
@@ -81,7 +85,6 @@
           "Run npm run build:api to verify the fix"
         ]
       },
-      "estimated_effort": "5 minutes",
       "tests_needed": [
         "Unit test: getUnreadCountForConversation returns correct count for unread messages",
         "Integration test: sendMessage populates unreadCount in response",
@@ -92,16 +95,18 @@
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Discovered during runtime-bug-hunter audit via build output"
+          "notes": "Discovered during runtime-bug-hunter audit via build output",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: MessagingService.sendMessage (line 508) and MessagingService.markAsRead (line 721) call this.getUnreadCountForConversation(), but this method is never defined in the service. The method exists as a pu"
     },
     {
       "finding_id": "f-log-002",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "title": "Potential null dereference in conversation deletion without soft-delete",
       "description": "deleteConversation checks that the user is a participant but performs a hard delete without soft-delete support. If delete fails mid-cascade (e.g., foreign key constraints on messages), the conversation state becomes undefined but no error propagates to the caller. Additionally, the method returns success before confirming the actual database state.",
       "category": "error-handling",
@@ -128,7 +133,6 @@
           "  - Re-throw if deletion fails"
         ]
       },
-      "estimated_effort": "20 minutes",
       "tests_needed": [
         "Test: conversation not visible after soft-delete",
         "Test: hard-delete fails gracefully if messages exist",
@@ -139,16 +143,18 @@
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of deleteConversation method"
+          "notes": "Identified via code analysis of deleteConversation method",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: deleteConversation checks that the user is a participant but performs a hard delete without soft-delete support. If delete fails mid-cascade (e.g., foreign key constraints on messages), the conversati"
     },
     {
       "finding_id": "f-log-003",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "title": "Unsafe profile access in follows.service.ts without existence check",
       "description": "followUser increments profile counters (line 78-86) but profile.update() may fail silently if the profile doesn't exist. Per the AGENTS.md guidance, some legacy/seeded users may not have profiles. The Promise.all on lines 77-86 will reject if either profile is missing, causing the entire follow to fail after already creating the follow record, resulting in inconsistent state.",
       "category": "null-ref",
@@ -178,7 +184,6 @@
           "Or: Use updateMany with condition: where: { userId, profile: { not: null } }"
         ]
       },
-      "estimated_effort": "10 minutes",
       "tests_needed": [
         "Test: follow fails gracefully if follower profile missing",
         "Test: follow fails gracefully if following profile missing",
@@ -189,16 +194,18 @@
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of followUser method"
+          "notes": "Identified via code analysis of followUser method",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: followUser increments profile counters (line 78-86) but profile.update() may fail silently if the profile doesn't exist. Per the AGENTS.md guidance, some legacy/seeded users may not have profiles. The"
     },
     {
       "finding_id": "f-log-004",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "title": "Race condition in idempotency check for checkout (orders.service.ts)",
       "description": "checkout() checks for existing orders by idempotencyKey (lines 79-90), then proceeds to create new orders. Between the check and the create, another request with the same idempotencyKey could race in, violating idempotency. The current logic returns the old orders if they exist, but if a concurrent request passes the findMany, both will create orders, resulting in duplicate charges.",
       "category": "race-condition",
@@ -227,7 +234,6 @@
           "})"
         ]
       },
-      "estimated_effort": "20 minutes",
       "tests_needed": [
         "Test: concurrent requests with same idempotencyKey produce single order set",
         "Test: idempotent checkout returns same result on retry",
@@ -238,16 +244,18 @@
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of checkout method"
+          "notes": "Identified via code analysis of checkout method",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: checkout() checks for existing orders by idempotencyKey (lines 79-90), then proceeds to create new orders. Between the check and the create, another request with the same idempotencyKey could race in,"
     },
     {
       "finding_id": "f-log-005",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "title": "Silent notification failure in follows.service.ts",
       "description": "Notification creation is swallowed with .catch(() => {}). If notifications are critical for UX (e.g., user never learns of new followers), this masks silent failures. No logging of the error, and no metrics to detect systemic issues. Users will not know they have new followers.",
       "category": "error-handling",
@@ -271,7 +279,6 @@
           "Consider whether notifications should fail the entire follow operation"
         ]
       },
-      "estimated_effort": "5 minutes",
       "tests_needed": [
         "Test: notification failure is logged",
         "Monitoring: verify follow notification failures are captured in logs/metrics"
@@ -281,16 +288,18 @@
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of error handling pattern"
+          "notes": "Identified via code analysis of error handling pattern",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: Notification creation is swallowed with .catch(() => {}). If notifications are critical for UX (e.g., user never learns of new followers), this masks silent failures. No logging of the error, and no m"
     },
     {
       "finding_id": "f-log-006",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "title": "Unsafe access to messages[0] in markAsRead without bounds check",
       "description": "After marking messages as read, markAsRead retrieves the conversation and accesses conversation.messages[0] (line 734) without checking if the array exists or has elements. If the conversation has no messages (e.g., deleted just before this call), this will be null and cause type errors in the response.",
       "category": "null-ref",
@@ -311,7 +320,6 @@
           "lastMessage: conversation.messages[0] ? { id: conversation.messages[0].id, ... } : null"
         ]
       },
-      "estimated_effort": "5 minutes",
       "tests_needed": [
         "Test: markAsRead returns null for lastMessage when conversation has no messages",
         "Test: markAsRead returns correct lastMessage when messages exist"
@@ -321,16 +329,18 @@
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of array access pattern"
+          "notes": "Identified via code analysis of array access pattern",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: After marking messages as read, markAsRead retrieves the conversation and accesses conversation.messages[0] (line 734) without checking if the array exists or has elements. If the conversation has no "
     },
     {
       "finding_id": "f-log-007",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "title": "Missing await on rate limiter check (messaging.service.ts:445)",
       "description": "sendMessage calls this.rateLimiter.isAllowed (line 445) without await. If isAllowed is an async method, the Promise will resolve immediately (non-awaited), and rate limiting will be skipped entirely. Users can spam unlimited messages.",
       "category": "async-bug",
@@ -351,7 +361,6 @@
           "Verify message-rate-limiter.service.ts confirms isAllowed is async"
         ]
       },
-      "estimated_effort": "5 minutes",
       "tests_needed": [
         "Test: rate limiter rejects when limit exceeded",
         "Test: rate limiter allows within limit",
@@ -362,16 +371,18 @@
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of async/await pattern"
+          "notes": "Identified via code analysis of async/await pattern",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: sendMessage calls this.rateLimiter.isAllowed (line 445) without await. If isAllowed is an async method, the Promise will resolve immediately (non-awaited), and rate limiting will be skipped entirely. "
     },
     {
       "finding_id": "f-log-008",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "title": "Unsafe property access in message sender mapping (messaging.service.ts:500)",
       "description": "sendMessage maps message.sender without null check (line 500-503). If sender is not included in the query result (unlikely but possible after refactoring), accessing message.sender.id will throw. Also uses unsafe any-casts which mask type errors.",
       "category": "null-ref",
@@ -392,7 +403,6 @@
           "Remove any-casts and use proper typing instead"
         ]
       },
-      "estimated_effort": "10 minutes",
       "tests_needed": [
         "Test: sendMessage throws if sender missing from query",
         "Test: sendMessage includes sender details in response"
@@ -402,16 +412,18 @@
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of type casting pattern"
+          "notes": "Identified via code analysis of type casting pattern",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: sendMessage maps message.sender without null check (line 500-503). If sender is not included in the query result (unlikely but possible after refactoring), accessing message.sender.id will throw. Also"
     },
     {
       "finding_id": "f-log-009",
       "type": "bug",
-      "severity": "Minor",
+      "severity": "minor",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "title": "Unhandled promise rejection in useMessaging hook error callback",
       "description": "fetchConversations calls onError callback (line 308) after catching an error, then re-throws (line 309). If caller doesn't handle the thrown error or if onError is undefined, the error swallows silently in some component trees, making debugging difficult.",
       "category": "error-handling",
@@ -433,7 +445,6 @@
           "Or: (3) Ensure all callers wrap in try-catch and handle appropriately"
         ]
       },
-      "estimated_effort": "5 minutes",
       "tests_needed": [
         "Test: onError callback is called when fetchConversations fails",
         "Test: Error propagates to component error boundary or caller handler"
@@ -443,16 +454,18 @@
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of hook error handling"
+          "notes": "Identified via code analysis of hook error handling",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: fetchConversations calls onError callback (line 308) after catching an error, then re-throws (line 309). If caller doesn't handle the thrown error or if onError is undefined, the error swallows silent"
     },
     {
       "finding_id": "f-log-010",
       "type": "bug",
-      "severity": "Minor",
+      "severity": "minor",
       "priority": "P3",
-      "confidence": "Inference",
+      "confidence": "inference",
       "title": "Unsafe access to response.message in createConversation hook",
       "description": "createConversation assumes response.message exists (line 333), but the API may return null if no initial message was sent. This will cause the UI to render undefined for lastMessage.",
       "category": "null-ref",
@@ -472,7 +485,6 @@
           "Line 333: Replace response.message with response.message || null"
         ]
       },
-      "estimated_effort": "3 minutes",
       "tests_needed": [
         "Test: createConversation without initial message returns null for lastMessage",
         "Test: UI handles null lastMessage gracefully"
@@ -482,16 +494,18 @@
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of API response handling"
+          "notes": "Identified via code analysis of API response handling",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: createConversation assumes response.message exists (line 333), but the API may return null if no initial message was sent. This will cause the UI to render undefined for lastMessage."
     },
     {
       "finding_id": "f-log-011",
-      "type": "dead_code",
-      "severity": "Minor",
+      "type": "debt",
+      "severity": "minor",
       "priority": "P3",
-      "confidence": "Inference",
+      "confidence": "inference",
       "title": "Unreachable code in markAsRead hook (useMessaging.ts:427-447)",
       "description": "markAsRead has a condition on line 427: if (!socket || !isConnected). The logic flow is unclear - if both are false, code falls through to line 449 (emitWithAck), but emitWithAck checks if socket is not connected and rejects. This creates potentially dead code in the HTTP fallback branch if socket is null but isConnected is true (stale state).",
       "category": "dead-code",
@@ -516,7 +530,6 @@
           "}"
         ]
       },
-      "estimated_effort": "10 minutes",
       "tests_needed": [
         "Test: markAsRead uses socket when connected",
         "Test: markAsRead falls back to HTTP when socket disconnected"
@@ -526,16 +539,18 @@
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of conditional logic"
+          "notes": "Identified via code analysis of conditional logic",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: markAsRead has a condition on line 427: if (!socket || !isConnected). The logic flow is unclear - if both are false, code falls through to line 449 (emitWithAck), but emitWithAck checks if socket is n"
     },
     {
       "finding_id": "f-log-012",
       "type": "bug",
-      "severity": "Minor",
+      "severity": "minor",
       "priority": "P3",
-      "confidence": "Inference",
+      "confidence": "inference",
       "title": "Unsafe access to data.conversationId in setMessages state update",
       "description": "markAsRead updates messages with setMessages((prev) => { const conversationMessages = prev[data.conversationId] || [] }). If data.conversationId is undefined or doesn't exist, prev[undefined] will be undefined, and the || [] fallback is safe but indicates potential data inconsistency that should be validated.",
       "category": "validation",
@@ -556,7 +571,6 @@
           "Or log warning: if (!data.conversationId) logger.warn('Missing conversationId in markAsRead event')"
         ]
       },
-      "estimated_effort": "3 minutes",
       "tests_needed": [
         "Test: markAsRead throws/logs if conversationId missing",
         "Test: markAsRead correctly updates messages for valid conversationId"
@@ -566,9 +580,11 @@
         {
           "event": "created",
           "timestamp": "2025-03-10T00:26:36Z",
-          "notes": "Identified via code analysis of state update pattern"
+          "notes": "Identified via code analysis of state update pattern",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: markAsRead updates messages with setMessages((prev) => { const conversationMessages = prev[data.conversationId] || [] }). If data.conversationId is undefined or doesn't exist, prev[undefined] will be "
     }
   ],
   "rollups": {
@@ -595,14 +611,12 @@
       "open": 12
     }
   },
-  "next_actions": [
-    "FIX BLOCKER: Implement getUnreadCountForConversation method in MessagingService to unblock API build (f-log-001) - PRIORITY: NOW",
-    "Fix soft-delete pattern in conversation deletion (f-log-002) - PRIORITY: P1",
-    "Add profile existence checks in follows.service (f-log-003) - PRIORITY: P1",
-    "Implement idempotency pattern in orders.checkout (f-log-004) - PRIORITY: P1",
-    "Add await to rate limiter check (f-log-007) - PRIORITY: P1",
-    "Add logging to notification failures (f-log-005) - PRIORITY: P2",
-    "Standardize null-coalescing in message transformation code (f-log-006, f-log-008) - PRIORITY: P2",
-    "Review error handling in useMessaging hook and add explicit guards (f-log-009, f-log-011, f-log-012) - PRIORITY: P2"
-  ]
+  "next_actions": [],
+  "run_metadata": {
+    "timestamp": "2026-03-10T00:26:36Z",
+    "branch": "main",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "claude-sonnet-4-5"
+  }
 }

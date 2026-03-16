@@ -4,6 +4,7 @@ import { authApi } from '@/lib/api/auth';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { Button, Card, Input, PageState } from '@embr/ui';
+import { copy } from '@/lib/copy';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -20,7 +21,7 @@ export default function ForgotPasswordPage() {
       await authApi.forgotPassword(email);
       setSuccess(true);
     } catch (err: any) {
-      setError(getApiErrorMessage(err, 'Failed to send reset email.'));
+      setError(getApiErrorMessage(err, copy.errors.resetEmailFailed));
     } finally {
       setLoading(false);
     }
@@ -32,16 +33,16 @@ export default function ForgotPasswordPage() {
         <Card padding="lg" style={{ width: 'min(460px, 100%)' }}>
           {success ? (
             <PageState
-              title="Check your email"
-              description={`If an account exists for ${email}, a reset link has been sent.`}
+              title={copy.onboarding.checkEmail}
+              description={copy.onboarding.checkEmailDescription(email)}
             />
           ) : (
             <>
               <h1 className="ui-page-title" style={{ marginBottom: '0.4rem' }}>
-                Reset password
+                {copy.onboarding.resetPassword}
               </h1>
               <p className="ui-page-subtitle" style={{ marginBottom: '1rem' }}>
-                Enter your email and we will send a secure reset link.
+                {copy.onboarding.resetPasswordSubtitle}
               </p>
 
               <form onSubmit={handleSubmit} noValidate>
@@ -57,7 +58,7 @@ export default function ForgotPasswordPage() {
                 {error ? <p className="ui-error-text">{error}</p> : null}
                 <div style={{ marginTop: '0.8rem' }}>
                   <Button type="submit" fullWidth disabled={loading}>
-                    {loading ? 'Sending...' : 'Send reset link'}
+                    {loading ? copy.onboarding.sending : copy.onboarding.sendResetLink}
                   </Button>
                 </div>
               </form>
@@ -66,7 +67,7 @@ export default function ForgotPasswordPage() {
 
           <p style={{ marginTop: '1rem' }}>
             <Link href="/auth/login" style={{ color: 'var(--embr-muted-text)', textDecoration: 'underline' }}>
-              Back to sign in
+              {copy.actions.back} to {copy.onboarding.signIn}
             </Link>
           </p>
         </Card>

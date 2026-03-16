@@ -11,3 +11,4 @@
 export * from './password.utils.js';
 export * from './token.utils.js';
 export * from './types.js';
+export * from './jwt.utils.js';
