@@ -3142,17 +3142,60 @@
   },
   "ranked_plan": {
     "top_fixes": [
-      "f-log-001",
-      "f-schema-rls-coverage-001",
-      "f-deploy-build-failure-nestjs-001",
-      "sec-001",
-      "sec-002",
-      "sec-003",
-      "sec-004",
-      "sec-005",
-      "f-perf-003",
-      "f-perf-013"
-    ]
+      {
+        "finding_id": "f-log-001",
+        "why_now": "Finding ranked as high priority.",
+        "estimated_effort": "small"
+      },
+      {
+        "finding_id": "f-schema-rls-coverage-001",
+        "why_now": "Finding ranked as high priority.",
+        "estimated_effort": "small"
+      },
+      {
+        "finding_id": "f-deploy-build-failure-nestjs-001",
+        "why_now": "Finding ranked as high priority.",
+        "estimated_effort": "small"
+      },
+      {
+        "finding_id": "sec-001",
+        "why_now": "Finding ranked as high priority.",
+        "estimated_effort": "small"
+      },
+      {
+        "finding_id": "sec-002",
+        "why_now": "Finding ranked as high priority.",
+        "estimated_effort": "small"
+      },
+      {
+        "finding_id": "sec-003",
+        "why_now": "Finding ranked as high priority.",
+        "estimated_effort": "small"
+      },
+      {
+        "finding_id": "sec-004",
+        "why_now": "Finding ranked as high priority.",
+        "estimated_effort": "small"
+      },
+      {
+        "finding_id": "sec-005",
+        "why_now": "Finding ranked as high priority.",
+        "estimated_effort": "small"
+      },
+      {
+        "finding_id": "f-perf-003",
+        "why_now": "Finding ranked as high priority.",
+        "estimated_effort": "small"
+      },
+      {
+        "finding_id": "f-perf-013",
+        "why_now": "Finding ranked as high priority.",
+        "estimated_effort": "small"
+      }
+    ],
+    "commit_plan": [],
+    "regression_checklist": [],
+    "reaudit_plan": []
   },
   "run_metadata": {
     "timestamp": "2026-03-10T01:11:14.254660",

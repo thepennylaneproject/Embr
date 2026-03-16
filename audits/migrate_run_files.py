@@ -232,14 +232,16 @@ VALID_HOOK_TYPES = {
 def fix_proof_hooks(hooks: list, finding: dict = None) -> list:
     """Normalize proof hooks — ensure each has hook_type and summary."""
     if not hooks:
-        # Build a minimal proof hook from the finding description
+        # Build a minimal proof hook — use a generic reference to avoid copying
+        # description text which may contain sensitive values.
         if finding:
-            desc = finding.get("description", "")[:120]
+            title = finding.get("title", "")[:80]
+            summary = f"See finding: {title}" if title else "See finding description for details."
         else:
-            desc = "See description for details."
+            summary = "See finding description for details."
         return [{
             "hook_type": "code_ref",
-            "summary": desc or "See description for details."
+            "summary": summary
         }]
 
     fixed = []
@@ -403,26 +405,23 @@ def build_history(finding: dict, timestamp: str) -> list:
 
 def derive_impact(finding: dict) -> str:
     """Derive an impact string from existing finding fields."""
-    # Try existing impact
+    # Try existing impact first
     imp = finding.get("impact")
     if imp:
         return imp
 
-    # Construct from details
+    # Construct from details object
     details = finding.get("details", {})
     if isinstance(details, dict) and "impact" in details:
         return details["impact"]
 
-    rec = finding.get("recommendation", "")
-    desc = finding.get("description", "")
+    # Use title-based placeholder rather than copying description/recommendation
+    # content which may contain sensitive values (URLs, tokens, etc.)
+    title = finding.get("title", "")
     severity = finding.get("severity", "minor")
-
-    if rec:
-        return f"{rec[:200]}"
-    if desc:
-        return f"If not fixed: {desc[:200]}"
-
-    return f"Severity {severity} issue. See description for details."
+    if title:
+        return f"Impact not recorded. See finding: {title[:100]}"
+    return f"Severity {severity} issue. See finding description for details."
 
 
 def fix_coverage(cov: dict) -> dict:
@@ -503,10 +502,12 @@ def fix_findings(findings: list, run_timestamp: str) -> list:
             if "code_refs" in finding:
                 finding["proof_hooks"] = code_refs_to_proof_hooks(finding.pop("code_refs"))
             else:
-                # Build minimal proof hook from description
+                # Build minimal proof hook — reference title to avoid copying description
+                # text which may contain sensitive values (URLs, tokens, etc.)
+                title = finding.get("title", "")[:80]
                 finding["proof_hooks"] = [{
                     "hook_type": "code_ref",
-                    "summary": f"See description: {finding.get('description', '')[:120]}"
+                    "summary": f"See finding: {title}" if title else "See finding description for details."
                 }]
         else:
             finding["proof_hooks"] = fix_proof_hooks(finding["proof_hooks"], finding)

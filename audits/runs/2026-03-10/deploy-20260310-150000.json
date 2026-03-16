@@ -32,8 +32,7 @@
       "<15 files examined, list unavailable>"
     ],
     "files_skipped": [],
-    "coverage_complete": true,
-    "incomplete_reason": null
+    "coverage_complete": true
   },
   "findings": [
     {
