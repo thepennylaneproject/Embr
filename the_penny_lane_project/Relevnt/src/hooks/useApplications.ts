@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { Application } from '../types/application';
 import { fetchApplications } from '../api/applications';
+import { useSupabaseQuery } from './useSupabaseQuery';
 
 interface UseApplicationsResult {
   applications: Application[];
@@ -10,26 +11,16 @@ interface UseApplicationsResult {
 }
 
 export function useApplications(): UseApplicationsResult {
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Stabilise the query function reference so useSupabaseQuery's effect deps
+  // don't change on every render.
+  const queryFn = useCallback(() => fetchApplications(), []);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchApplications();
-      setApplications(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data, loading, error, refetch } = useSupabaseQuery<Application[]>(queryFn);
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  return { applications, loading, error, refetch: load };
+  return {
+    applications: data ?? [],
+    loading,
+    error,
+    refetch,
+  };
 }
