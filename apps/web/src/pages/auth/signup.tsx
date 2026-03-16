@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { Button, Card, Input } from '@embr/ui';
+import { copy } from '@/lib/copy';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -24,15 +25,15 @@ export default function SignupPage() {
     const nextErrors: Record<string, string> = {};
 
     if (formData.username.trim().length < 3) {
-      nextErrors.username = 'Username must be at least 3 characters.';
+      nextErrors.username = copy.errors.usernameTooShort;
     }
 
     if (formData.password.length < 8) {
-      nextErrors.password = 'Password must be at least 8 characters.';
+      nextErrors.password = copy.errors.passwordTooShort;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      nextErrors.confirmPassword = 'Passwords do not match.';
+      nextErrors.confirmPassword = copy.errors.passwordMismatch;
     }
 
     setErrors(nextErrors);
@@ -53,7 +54,7 @@ export default function SignupPage() {
       await signup(formData.email, formData.username, formData.password, formData.fullName || undefined);
       await router.push('/feed');
     } catch (err: any) {
-      setErrors({ general: getApiErrorMessage(err, 'Signup failed.') });
+      setErrors({ general: getApiErrorMessage(err, copy.errors.signupFailed) });
     } finally {
       setLoading(false);
     }
@@ -62,15 +63,15 @@ export default function SignupPage() {
   return (
     <ProtectedRoute requireAuth={false} redirectAuthenticated={false}>
       <Head>
-        <title>Create account — Embr</title>
+        <title>{copy.brand.pageTitle(copy.onboarding.createAccountTitle)}</title>
       </Head>
       <main className="embr-page" style={{ display: 'grid', placeItems: 'center', padding: '1rem' }}>
         <Card padding="lg" style={{ width: 'min(520px, 100%)' }}>
           <h1 className="ui-page-title" style={{ marginBottom: '0.3rem' }}>
-            Create account
+            {copy.onboarding.createAccountTitle}
           </h1>
           <p className="ui-page-subtitle" style={{ marginBottom: '1rem' }}>
-            Build your creator space on Embr.
+            {copy.onboarding.createAccountSubtitle}
           </p>
 
           <form onSubmit={handleSubmit} noValidate>
@@ -124,14 +125,14 @@ export default function SignupPage() {
               />
               {errors.general ? <p className="ui-error-text">{errors.general}</p> : null}
               <Button type="submit" disabled={loading} fullWidth>
-                {loading ? 'Creating account...' : 'Create account'}
+                {loading ? copy.onboarding.creatingAccount : copy.onboarding.createAccount}
               </Button>
             </div>
           </form>
 
           <p style={{ marginTop: '1rem' }}>
             <Link href="/auth/login" style={{ color: 'var(--embr-muted-text)', textDecoration: 'underline' }}>
-              Already have an account?
+              {copy.onboarding.alreadyHaveAccount}
             </Link>
           </p>
         </Card>

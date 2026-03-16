@@ -3,7 +3,6 @@
   "kind": "agent_output",
   "run_id": "deploy-20260310-150000",
   "suite": "deploy",
-  "timestamp": "2026-03-10T15:00:00Z",
   "agent": {
     "name": "build-deploy-auditor",
     "role": "Specialist auditor for build configuration, CI/CD pipelines, error handling, logging, environment management, and deployment safety",
@@ -29,14 +28,15 @@
     ]
   },
   "coverage": {
-    "files_examined": 15,
-    "files_skipped": 0,
+    "files_examined": [
+      "<15 files examined, list unavailable>"
+    ],
+    "files_skipped": [],
     "coverage_complete": true,
     "incomplete_reason": null
   },
   "findings": [
     {
-      "id": "f-deploy-build-failure-nestjs-001",
       "category": "build-config",
       "severity": "blocker",
       "priority": "P0",
@@ -45,15 +45,12 @@
       "confidence": "evidence",
       "title": "NestJS API build fails with TypeScript compilation errors in messaging service",
       "description": "The build command `npm run build:api` (which invokes `nest build`) fails with 2 TypeScript errors in src/verticals/messaging/messaging/services/messaging.service.ts. The method `getUnreadCountForConversation` is called on lines 508 and 721 but is not defined in the MessagingService class. This blocks all deployments and prevents local development builds from completing.",
-      "details": {
-        "build_command": "nest build",
-        "error_count": 2,
-        "affected_file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
-        "error_lines": [508, 721],
-        "error_type": "TS2339: Property does not exist on type",
-        "impact": "Deployment pipeline blocked. Both CI/CD deploy job and local `npm run build:api` fail."
+      "suggested_fix": {
+        "approach": "Implement missing getUnreadCountForConversation method or refactor calls",
+        "estimated_effort": "small"
       },
-      "code_refs": [
+      "finding_id": "f-deploy-build-failure-nestjs-001",
+      "proof_hooks": [
         {
           "hook_type": "error_text",
           "file": "audits/artifacts/_run_/build.txt",
@@ -63,21 +60,23 @@
         {
           "hook_type": "config_key",
           "file": "apps/api/package.json",
-          "line_range": [10, 10],
           "symbol": "build script",
-          "summary": "Build script invokes nest build without --transpile-only flag, so strict TypeScript checking halts on errors."
+          "summary": "Build script invokes nest build without --transpile-only flag, so strict TypeScript checking halts on errors.",
+          "start_line": 10,
+          "end_line": 10
         }
       ],
-      "recommendation": "1) Fix the MessagingService: either implement the getUnreadCountForConversation method or remove the calls on lines 508 and 721. 2) Verify method signature and logic against messaging domain logic. 3) Run `npm run build:api` to confirm fix. 4) Alternatively, temporarily use `nest build --transpile-only` if type errors are pre-existing and you want to unblock CI/CD while fixing separately, but this is not recommended for production.",
-      "suggested_fix": {
-        "approach": "Implement missing getUnreadCountForConversation method or refactor calls",
-        "estimated_effort": "small"
-      },
-      "estimated_effort": "small",
-      "estimated_effort_days": 1
+      "impact": "Deployment pipeline blocked. Both CI/CD deploy job and local `npm run build:api` fail.",
+      "history": [
+        {
+          "timestamp": "2026-03-10T15:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
-      "id": "f-deploy-ci-build-api-missing-001",
       "category": "ci-gap",
       "severity": "major",
       "priority": "P1",
@@ -86,33 +85,32 @@
       "confidence": "evidence",
       "title": "CI/CD pipeline does not build or test the API; only web typecheck and build are validated",
       "description": "The CI workflow (.github/workflows/ci.yml) runs database migrations, validates the Prisma schema, and builds the web app, but does NOT attempt to build the API. This means TypeScript errors and build failures in apps/api/ are not caught until deployment, and deployments fail without warning in CI logs. The build failure in MessagingService would not be detected without manual testing.",
-      "details": {
-        "pipeline": "ci.yml",
-        "api_build_step": "MISSING",
-        "api_test_step": "MISSING",
-        "web_build_step": "PRESENT",
-        "web_typecheck_step": "PRESENT",
-        "risk": "Untested API code reaches production. Build errors block deployments after code is already merged."
-      },
-      "code_refs": [
-        {
-          "hook_type": "code_ref",
-          "file": ".github/workflows/ci.yml",
-          "line_range": [37, 68],
-          "symbol": "validate job",
-          "summary": "Steps: checkout, setup node, install deps, generate prisma, run migrations, validate API prisma, typecheck web, build web. No 'Build API' step."
-        }
-      ],
-      "recommendation": "1) Add a 'Build API' step to CI after 'Validate API Prisma schema': `npm --prefix apps/api run build` 2) Optional: Add a 'Test API' step if tests exist: `npm --prefix apps/api run test` 3) These steps should run even if web build fails (separate jobs or allow-failure: false for API). 4) Commit and push the updated workflow.",
       "suggested_fix": {
         "approach": "Add Build API and optional Test API steps to ci.yml after Prisma validation",
         "estimated_effort": "trivial"
       },
-      "estimated_effort": "trivial",
-      "estimated_effort_days": 0.5
+      "finding_id": "f-deploy-ci-build-api-missing-001",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": ".github/workflows/ci.yml",
+          "symbol": "validate job",
+          "summary": "Steps: checkout, setup node, install deps, generate prisma, run migrations, validate API prisma, typecheck web, build web. No 'Build API' step.",
+          "start_line": 37,
+          "end_line": 68
+        }
+      ],
+      "impact": "1) Add a 'Build API' step to CI after 'Validate API Prisma schema': `npm --prefix apps/api run build` 2) Optional: Add a 'Test API' step if tests exist: `npm --prefix apps/api run test` 3) These steps",
+      "history": [
+        {
+          "timestamp": "2026-03-10T15:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
-      "id": "f-deploy-typescript-strict-api-001",
       "category": "build-config",
       "severity": "major",
       "priority": "P1",
@@ -121,20 +119,19 @@
       "confidence": "evidence",
       "title": "API TypeScript strict mode enabled but hundreds of pre-existing type errors prevent clean builds",
       "description": "The API has 'strict': true in tsconfig, but ts_errors.log, ts_errors_v2.log through ts_errors_v7.log exist in apps/api/, indicating known accumulation of type errors (666+ errors mentioned in AGENTS.md). Currently, builds invoke `nest build` which fails on first error. Developers are forced to either fix all type errors or use a workaround.",
-      "details": {
-        "tsconfig_strict": true,
-        "type_errors_known": "666+",
-        "error_logs": ["ts_errors.log", "ts_errors_v2.log", "ts_errors_v3.log", "ts_errors_v4.log", "ts_errors_v5.log", "ts_errors_v6.log", "ts_errors_v7.log"],
-        "workaround_documented": "Use `ts-node --transpile-only` for local dev (documented in AGENTS.md)",
-        "production_risk": "Workarounds (transpile-only) allow type-unsafe code to production"
+      "suggested_fix": {
+        "approach": "Phase 1: Run typecheck without --transpile-only and bucket errors. Phase 2: Fix P0/P1 type errors. Phase 3: Enforce in CI. Phase 4: Gradual cleanup.",
+        "estimated_effort": "large"
       },
-      "code_refs": [
+      "finding_id": "f-deploy-typescript-strict-api-001",
+      "proof_hooks": [
         {
           "hook_type": "config_key",
           "file": "apps/api/tsconfig.json",
-          "line_range": [1, 50],
           "symbol": "compilerOptions.strict",
-          "summary": "TypeScript strict mode is enabled, but hundreds of violations exist."
+          "summary": "TypeScript strict mode is enabled, but hundreds of violations exist.",
+          "start_line": 1,
+          "end_line": 50
         },
         {
           "hook_type": "artifact_ref",
@@ -142,16 +139,17 @@
           "summary": "Pre-existing type error log from past build attempts."
         }
       ],
-      "recommendation": "Medium-term plan: 1) Establish a type-error budget. Categorize errors by severity (critical vs. low-priority). 2) Fix critical errors (null-ref, type coercion, auth logic) in this cycle. 3) Defer cosmetic errors to a later cycle. 4) Set a max error count (e.g., 200 errors) and enforce it in CI. Short-term workaround: Use `nest build --transpile-only` in CI if you must unblock deploys now, but commit to fixing errors within 2 sprints.",
-      "suggested_fix": {
-        "approach": "Phase 1: Run typecheck without --transpile-only and bucket errors. Phase 2: Fix P0/P1 type errors. Phase 3: Enforce in CI. Phase 4: Gradual cleanup.",
-        "estimated_effort": "large"
-      },
-      "estimated_effort": "large",
-      "estimated_effort_days": 5
+      "impact": "Medium-term plan: 1) Establish a type-error budget. Categorize errors by severity (critical vs. low-priority). 2) Fix critical errors (null-ref, type coercion, auth logic) in this cycle. 3) Defer cosm",
+      "history": [
+        {
+          "timestamp": "2026-03-10T15:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
-      "id": "f-deploy-error-boundary-web-001",
       "category": "missing-error-boundary",
       "severity": "major",
       "priority": "P1",
@@ -160,20 +158,19 @@
       "confidence": "evidence",
       "title": "Web frontend has global _error page but no React Error Boundary component for client-side crashes",
       "description": "The Next.js _error.tsx page handles server-side errors and 404s, but there is no React Error Boundary component wrapping the application tree. If a React component throws an error during render, the error boundary would catch it; without it, the browser console shows an error and the component is unmounted without user feedback. This leaves users looking at a blank screen or a confusing state.",
-      "details": {
-        "error_page_exists": true,
-        "error_page_path": "apps/web/src/pages/_error.tsx",
-        "error_boundary_exists": false,
-        "error_boundary_location": "_app.tsx or top-level layout component",
-        "risk": "Unhandled component errors leave users stranded with no recovery path"
+      "suggested_fix": {
+        "approach": "Create ErrorBoundary component in apps/web/src/components/ and wrap <Component> in _app.tsx",
+        "estimated_effort": "small"
       },
-      "code_refs": [
+      "finding_id": "f-deploy-error-boundary-web-001",
+      "proof_hooks": [
         {
           "hook_type": "code_ref",
           "file": "apps/web/src/pages/_error.tsx",
-          "line_range": [1, 20],
           "symbol": "ErrorPage component",
-          "summary": "Global error page exists for SSR and routing errors. But no client-side error boundary wraps components."
+          "summary": "Global error page exists for SSR and routing errors. But no client-side error boundary wraps components.",
+          "start_line": 1,
+          "end_line": 20
         },
         {
           "hook_type": "ui_path",
@@ -185,16 +182,17 @@
           "summary": "No error boundary catches component render errors."
         }
       ],
-      "recommendation": "1) Create an ErrorBoundary component (React class component or use a library like react-error-boundary). 2) Wrap the main app in _app.tsx or a root layout with the ErrorBoundary. 3) ErrorBoundary should catch render errors and display a user-friendly fallback UI or link back to home. 4) Test: trigger an error in a child component and verify the boundary catches it.",
-      "suggested_fix": {
-        "approach": "Create ErrorBoundary component in apps/web/src/components/ and wrap <Component> in _app.tsx",
-        "estimated_effort": "small"
-      },
-      "estimated_effort": "small",
-      "estimated_effort_days": 1
+      "impact": "1) Create an ErrorBoundary component (React class component or use a library like react-error-boundary). 2) Wrap the main app in _app.tsx or a root layout with the ErrorBoundary. 3) ErrorBoundary shou",
+      "history": [
+        {
+          "timestamp": "2026-03-10T15:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
-      "id": "f-deploy-health-check-api-001",
       "category": "deploy-risk",
       "severity": "major",
       "priority": "P1",
@@ -203,19 +201,19 @@
       "confidence": "evidence",
       "title": "API health check endpoint referenced in deploy.yml but may not be implemented in NestJS app",
       "description": "The deploy.yml workflow checks API health by querying /api/health (line 88), but the NestJS app code does not show a health check endpoint. The health check is critical for the deployment pipeline to confirm the API is ready after deployment. If the endpoint is missing or returns wrong status codes, the deployment verification will timeout and fail.",
-      "details": {
-        "health_check_url": "/api/health",
-        "health_check_timeout": "120s (12 retries @ 10s each)",
-        "endpoint_confirmed": false,
-        "risk": "Deploy waits 120s for health check. If endpoint missing, deploy marked as failure but container may be running."
+      "suggested_fix": {
+        "approach": "Create a HealthController with GET /health endpoint. Inject services to check DB and Redis connectivity. Return 200 if all OK, 503 otherwise.",
+        "estimated_effort": "small"
       },
-      "code_refs": [
+      "finding_id": "f-deploy-health-check-api-001",
+      "proof_hooks": [
         {
           "hook_type": "code_ref",
           "file": ".github/workflows/deploy.yml",
-          "line_range": [86, 100],
           "symbol": "Verify API health step",
-          "summary": "Deployment workflow queries /api/health. No implementation of this endpoint found in NestJS app."
+          "summary": "Deployment workflow queries /api/health. No implementation of this endpoint found in NestJS app.",
+          "start_line": 86,
+          "end_line": 100
         },
         {
           "hook_type": "command",
@@ -223,16 +221,17 @@
           "command": "curl http://localhost:3003/api/health"
         }
       ],
-      "recommendation": "1) Verify that GET /api/health endpoint exists in NestJS app. If not, create it. 2) Health check should return 200 OK when app is ready. 3) Health check should verify critical dependencies: database connectivity, Redis connectivity (if used). 4) Test: start API locally and verify `curl http://localhost:3003/api/health` returns 200. 5) Commit implementation.",
-      "suggested_fix": {
-        "approach": "Create a HealthController with GET /health endpoint. Inject services to check DB and Redis connectivity. Return 200 if all OK, 503 otherwise.",
-        "estimated_effort": "small"
-      },
-      "estimated_effort": "small",
-      "estimated_effort_days": 1
+      "impact": "1) Verify that GET /api/health endpoint exists in NestJS app. If not, create it. 2) Health check should return 200 OK when app is ready. 3) Health check should verify critical dependencies: database c",
+      "history": [
+        {
+          "timestamp": "2026-03-10T15:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
-      "id": "f-deploy-env-validation-startup-001",
       "category": "env-management",
       "severity": "major",
       "priority": "P1",
@@ -241,47 +240,39 @@
       "confidence": "inference",
       "title": "Environment variables are not validated at startup; missing or invalid vars could cause runtime crashes hours after boot",
       "description": "The API main.ts logs a warning if SENTRY_DSN is missing, but does not validate required variables like JWT_SECRET, DATABASE_URL, REDIS_URL, or AWS credentials at startup. This means if a deploy is misconfigured, the app boots successfully but crashes later when it first tries to use a missing credential. Critical variables should be validated synchronously at bootstrap and fail fast.",
-      "details": {
-        "startup_validation": false,
-        "env_vars_checked": ["SENTRY_DSN"],
-        "env_vars_required_but_unchecked": [
-          "JWT_SECRET",
-          "JWT_REFRESH_SECRET",
-          "DATABASE_URL",
-          "DIRECT_URL",
-          "REDIS_URL",
-          "AWS_ACCESS_KEY_ID",
-          "AWS_SECRET_ACCESS_KEY",
-          "AWS_S3_BUCKET",
-          "STRIPE_SECRET_KEY"
-        ],
-        "risk": "App starts but crashes in production when first request uses missing env var"
-      },
-      "code_refs": [
-        {
-          "hook_type": "code_ref",
-          "file": "apps/api/src/main.ts",
-          "line_range": [75, 80],
-          "symbol": "bootstrap function",
-          "summary": "Only SENTRY_DSN and ALLOWED_ORIGINS checked. No validation of JWT_SECRET, DATABASE_URL, credentials, etc."
-        },
-        {
-          "hook_type": "config_key",
-          "file": ".env.example",
-          "line_range": [1, 50],
-          "summary": "Many required variables documented but no startup validation ensures they are present."
-        }
-      ],
-      "recommendation": "1) Create an env validation schema using a library like Joi or Zod. 2) List all required variables (JWT_SECRET, DATABASE_URL, REDIS_URL, AWS keys, etc.). 3) Call validation in main.ts before `app.listen()`. If validation fails, throw error and exit with code 1. 4) Test: start API with missing JWT_SECRET, verify it crashes immediately with clear error message.",
       "suggested_fix": {
         "approach": "Use ConfigModule with validation. Define required vars in a schema. Call app.get(ConfigService).validate() at startup.",
         "estimated_effort": "small"
       },
-      "estimated_effort": "small",
-      "estimated_effort_days": 1
+      "finding_id": "f-deploy-env-validation-startup-001",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/main.ts",
+          "symbol": "bootstrap function",
+          "summary": "Only SENTRY_DSN and ALLOWED_ORIGINS checked. No validation of JWT_SECRET, DATABASE_URL, credentials, etc.",
+          "start_line": 75,
+          "end_line": 80
+        },
+        {
+          "hook_type": "config_key",
+          "file": ".env.example",
+          "summary": "Many required variables documented but no startup validation ensures they are present.",
+          "start_line": 1,
+          "end_line": 50
+        }
+      ],
+      "impact": "1) Create an env validation schema using a library like Joi or Zod. 2) List all required variables (JWT_SECRET, DATABASE_URL, REDIS_URL, AWS keys, etc.). 3) Call validation in main.ts before `app.list",
+      "history": [
+        {
+          "timestamp": "2026-03-10T15:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
-      "id": "f-deploy-web-env-validation-001",
       "category": "env-management",
       "severity": "minor",
       "priority": "P2",
@@ -290,31 +281,32 @@
       "confidence": "inference",
       "title": "Next.js web app does not validate required NEXT_PUBLIC_API_URL at build time",
       "description": "The web app references NEXT_PUBLIC_API_URL in several places (e.g., apps/web/src/lib/api/error.ts), but there is no build-time validation to ensure it is set. If the var is missing at build or runtime, the app will use the fallback 'http://localhost:3003/api', which may be incorrect in staging/production and cause silent API failures.",
-      "details": {
-        "web_env_var": "NEXT_PUBLIC_API_URL",
-        "fallback_value": "http://localhost:3003/api",
-        "build_time_validation": false,
-        "risk": "Wrong API URL in production if env var not set; users silently hit wrong server"
-      },
-      "code_refs": [
-        {
-          "hook_type": "code_ref",
-          "file": "apps/web/src/lib/api/error.ts",
-          "line_range": [1, 1],
-          "symbol": "defaultApiUrl",
-          "summary": "Falls back to localhost:3003 if NEXT_PUBLIC_API_URL not defined."
-        }
-      ],
-      "recommendation": "1) Add a next.config.js check during build: if NEXT_PUBLIC_API_URL is not set and NODE_ENV === 'production', throw error. 2) Update .env.example to document NEXT_PUBLIC_API_URL as required. 3) Test: set NODE_ENV=production, unset NEXT_PUBLIC_API_URL, run `npm run build` — should fail with clear message.",
       "suggested_fix": {
         "approach": "Add validation in next.config.js before module.exports: check env var presence in production.",
         "estimated_effort": "trivial"
       },
-      "estimated_effort": "trivial",
-      "estimated_effort_days": 0.5
+      "finding_id": "f-deploy-web-env-validation-001",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/web/src/lib/api/error.ts",
+          "symbol": "defaultApiUrl",
+          "summary": "Falls back to localhost:3003 if NEXT_PUBLIC_API_URL not defined.",
+          "start_line": 1,
+          "end_line": 1
+        }
+      ],
+      "impact": "1) Add a next.config.js check during build: if NEXT_PUBLIC_API_URL is not set and NODE_ENV === 'production', throw error. 2) Update .env.example to document NEXT_PUBLIC_API_URL as required. 3) Test: s",
+      "history": [
+        {
+          "timestamp": "2026-03-10T15:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
-      "id": "f-deploy-logging-structured-001",
       "category": "logging-gap",
       "severity": "minor",
       "priority": "P2",
@@ -323,31 +315,32 @@
       "confidence": "inference",
       "title": "API logging uses NestJS built-in Logger (console-based) instead of structured JSON logging",
       "description": "The API logs errors and status messages using @nestjs/common Logger (lines in redis.ts, redis-io.adapter.ts, main.ts), which outputs plain text to stdout. In production, structured JSON logging (e.g., via Winston, Pino) makes it easier to parse, filter, and aggregate logs in centralized logging systems (CloudWatch, DataDog, Splunk, etc.). Plain text logs are harder to parse programmatically.",
-      "details": {
-        "current_logging": "NestJS built-in Logger (console)",
-        "log_format": "plain text",
-        "ideal_logging": "structured JSON",
-        "risk": "Hard to aggregate and analyze logs in production; slow debugging of distributed issues"
-      },
-      "code_refs": [
-        {
-          "hook_type": "code_ref",
-          "file": "apps/api/src/core/redis/redis.service.ts",
-          "line_range": [1, 30],
-          "symbol": "RedisService logger",
-          "summary": "Uses `private readonly logger = new Logger(RedisService.name)`; outputs plain text to console."
-        }
-      ],
-      "recommendation": "1) Install Winston or Pino for structured logging. 2) Create a logging module that wraps Winston/Pino and replaces NestJS Logger. 3) Configure logging to output JSON in production, pretty text in dev. 4) Update critical services (Redis, Database, Auth) to use the new logger. 5) This is a medium-term improvement; not urgent for current MVP.",
       "suggested_fix": {
         "approach": "Add Winston/Pino, create logging module, gradually migrate services to use it.",
         "estimated_effort": "medium"
       },
-      "estimated_effort": "medium",
-      "estimated_effort_days": 3
+      "finding_id": "f-deploy-logging-structured-001",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/core/redis/redis.service.ts",
+          "symbol": "RedisService logger",
+          "summary": "Uses `private readonly logger = new Logger(RedisService.name)`; outputs plain text to console.",
+          "start_line": 1,
+          "end_line": 30
+        }
+      ],
+      "impact": "1) Install Winston or Pino for structured logging. 2) Create a logging module that wraps Winston/Pino and replaces NestJS Logger. 3) Configure logging to output JSON in production, pretty text in dev.",
+      "history": [
+        {
+          "timestamp": "2026-03-10T15:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
-      "id": "f-deploy-sentry-not-configured-001",
       "category": "logging-gap",
       "severity": "minor",
       "priority": "P2",
@@ -356,31 +349,32 @@
       "confidence": "inference",
       "title": "Sentry error reporting is not configured; production errors are not sent to external service",
       "description": "The main.ts warns if SENTRY_DSN is not set, but there is no Sentry SDK integration in the API. This means unhandled exceptions, caught errors, and other observability signals are not sent to Sentry for alerting and debugging. In production, you are blind to post-deployment errors until a user reports them.",
-      "details": {
-        "sentry_sdk_installed": false,
-        "sentry_middleware_configured": false,
-        "sentry_warning": "Present in main.ts but non-blocking",
-        "risk": "Production errors invisible until user report; slow mean-time-to-resolve for production incidents"
-      },
-      "code_refs": [
-        {
-          "hook_type": "code_ref",
-          "file": "apps/api/src/main.ts",
-          "line_range": [75, 80],
-          "symbol": "Sentry warning",
-          "summary": "Logs warning if SENTRY_DSN not set, but no active integration."
-        }
-      ],
-      "recommendation": "1) Install @sentry/node and @sentry/tracing for NestJS. 2) Initialize Sentry early in main.ts, before app bootstrap. 3) Create a Sentry exception filter to capture and report errors. 4) Get a SENTRY_DSN from sentry.io. 5) Set SENTRY_DSN in production environment variables. 6) Test: trigger an error, verify it appears in Sentry dashboard.",
       "suggested_fix": {
         "approach": "Install Sentry, configure in main.ts, create exception filter, set DSN in production.",
         "estimated_effort": "small"
       },
-      "estimated_effort": "small",
-      "estimated_effort_days": 2
+      "finding_id": "f-deploy-sentry-not-configured-001",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/main.ts",
+          "symbol": "Sentry warning",
+          "summary": "Logs warning if SENTRY_DSN not set, but no active integration.",
+          "start_line": 75,
+          "end_line": 80
+        }
+      ],
+      "impact": "1) Install @sentry/node and @sentry/tracing for NestJS. 2) Initialize Sentry early in main.ts, before app bootstrap. 3) Create a Sentry exception filter to capture and report errors. 4) Get a SENTRY_D",
+      "history": [
+        {
+          "timestamp": "2026-03-10T15:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
-      "id": "f-deploy-docker-prod-config-missing-001",
       "category": "deploy-risk",
       "severity": "minor",
       "priority": "P2",
@@ -389,35 +383,32 @@
       "confidence": "speculation",
       "title": "Production Docker compose config (docker-compose.prod.yml) is referenced in deploy.yml but not found in repo",
       "description": "The deploy.yml workflow references docker/docker-compose.prod.yml (line 79), but only docker-compose.yml exists in the repo. The prod config may be intentionally excluded from version control (e.g., it contains secrets or is managed separately), or it may be missing and deployments will fail. This ambiguity needs a human decision.",
-      "details": {
-        "referenced_file": "docker/docker-compose.prod.yml",
-        "file_exists": false,
-        "deployment_step": "docker compose -f docker/docker-compose.prod.yml up -d --no-deps api",
-        "likely_scenarios": [
-          "File is managed separately on the deployment server",
-          "File should exist but is missing (deployment will fail)",
-          "File is in .gitignore and should be checked into repo"
-        ]
-      },
-      "code_refs": [
-        {
-          "hook_type": "code_ref",
-          "file": ".github/workflows/deploy.yml",
-          "line_range": [79, 79],
-          "symbol": "Deploy API via SSH step",
-          "summary": "References docker/docker-compose.prod.yml which is not in the repo."
-        }
-      ],
-      "recommendation": "Clarify: 1) Is docker-compose.prod.yml intentionally managed on the deployment server? If so, document this clearly in the README and ensure it is idempotent. 2) Should it be in the repo? If yes, commit it now (ensure no secrets are embedded; use .env for that). 3) Is it missing? If yes, either create it or update deploy.yml to use docker-compose.yml.",
       "suggested_fix": {
         "approach": "Human decision: verify docker-compose.prod.yml location and whether it should be version-controlled.",
         "estimated_effort": "trivial"
       },
-      "estimated_effort": "trivial",
-      "estimated_effort_days": 0.5
+      "finding_id": "f-deploy-docker-prod-config-missing-001",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": ".github/workflows/deploy.yml",
+          "symbol": "Deploy API via SSH step",
+          "summary": "References docker/docker-compose.prod.yml which is not in the repo.",
+          "start_line": 79,
+          "end_line": 79
+        }
+      ],
+      "impact": "Clarify: 1) Is docker-compose.prod.yml intentionally managed on the deployment server? If so, document this clearly in the README and ensure it is idempotent. 2) Should it be in the repo? If yes, comm",
+      "history": [
+        {
+          "timestamp": "2026-03-10T15:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
-      "id": "f-deploy-db-migration-rollback-001",
       "category": "deploy-risk",
       "severity": "minor",
       "priority": "P2",
@@ -426,28 +417,29 @@
       "confidence": "speculation",
       "title": "Database migration rollback plan is not documented; failed deployments could leave database in inconsistent state",
       "description": "The deploy workflow runs `npm run db:migrate:deploy` as part of the deployment. Prisma migrations are forward-only; there is no built-in rollback mechanism. If a migration fails mid-deployment, the database may be left in a partially-migrated state and the API may not start. A rollback and recovery plan should be documented.",
-      "details": {
-        "migration_tool": "Prisma",
-        "rollback_mechanism": "Manual (Prisma does not support auto-rollback)",
-        "risk": "Failed migration leaves DB in inconsistent state; recovery requires manual intervention or previous snapshot"
+      "suggested_fix": {
+        "approach": "Add migration rollback runbook to README. Consider automated backups before migrations.",
+        "estimated_effort": "small"
       },
-      "code_refs": [
+      "finding_id": "f-deploy-db-migration-rollback-001",
+      "proof_hooks": [
         {
           "hook_type": "command",
           "summary": "Database migration step",
           "command": "npm run db:migrate:deploy"
         }
       ],
-      "recommendation": "1) Document migration rollback procedure in README (e.g., restore from backup, manually revert schema change). 2) Consider adding a backup step before migrations: `pg_dump` to a timestamped file. 3) For critical migrations, test on a staging database first. 4) If a migration fails in production, runbook should be: stop API, restore DB from backup or previous snapshot, investigate and fix migration, redeploy.",
-      "suggested_fix": {
-        "approach": "Add migration rollback runbook to README. Consider automated backups before migrations.",
-        "estimated_effort": "small"
-      },
-      "estimated_effort": "small",
-      "estimated_effort_days": 1
+      "impact": "1) Document migration rollback procedure in README (e.g., restore from backup, manually revert schema change). 2) Consider adding a backup step before migrations: `pg_dump` to a timestamped file. 3) F",
+      "history": [
+        {
+          "timestamp": "2026-03-10T15:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
-      "id": "f-deploy-csp-unsafe-inline-001",
       "category": "build-config",
       "severity": "minor",
       "priority": "P2",
@@ -456,30 +448,32 @@
       "confidence": "evidence",
       "title": "Content Security Policy in web app uses unsafe-inline for scripts and styles; overly permissive for production",
       "description": "The next.config.js defines a Content-Security-Policy header with script-src 'unsafe-inline' and 'unsafe-eval' (lines 35), which allows any inline script and dynamically-generated code. This defeats CSP's purpose of preventing XSS attacks. The policy should be tightened to use nonces or strict script-src before launch.",
-      "details": {
-        "csp_directive": "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-        "risk_level": "high",
-        "remediation": "Use nonces (Content-Security-Policy: script-src 'nonce-<random>')"
-      },
-      "code_refs": [
-        {
-          "hook_type": "code_ref",
-          "file": "apps/web/next.config.js",
-          "line_range": [33, 36],
-          "symbol": "Content-Security-Policy header",
-          "summary": "CSP allows unsafe-inline and unsafe-eval scripts; should use nonces or remove for production."
-        }
-      ],
-      "recommendation": "1) Before launch, remove 'unsafe-inline' and 'unsafe-eval' from script-src. 2) Use nonce-based CSP: generate random nonce for each request and include in script tags. 3) Next.js supports nonces via the `script` tag with `nonce` prop. 4) Test: deploy with strict CSP and verify app still loads (all inline scripts must have correct nonce).",
       "suggested_fix": {
         "approach": "Implement nonce-based CSP in next.config.js and update inline script handling.",
         "estimated_effort": "small"
       },
-      "estimated_effort": "small",
-      "estimated_effort_days": 1
+      "finding_id": "f-deploy-csp-unsafe-inline-001",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/web/next.config.js",
+          "symbol": "Content-Security-Policy header",
+          "summary": "CSP allows unsafe-inline and unsafe-eval scripts; should use nonces or remove for production.",
+          "start_line": 33,
+          "end_line": 36
+        }
+      ],
+      "impact": "1) Before launch, remove 'unsafe-inline' and 'unsafe-eval' from script-src. 2) Use nonce-based CSP: generate random nonce for each request and include in script tags. 3) Next.js supports nonces via th",
+      "history": [
+        {
+          "timestamp": "2026-03-10T15:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
-      "id": "f-deploy-no-rollback-strategy-001",
       "category": "deploy-risk",
       "severity": "minor",
       "priority": "P2",
@@ -488,28 +482,30 @@
       "confidence": "speculation",
       "title": "No automated rollback strategy if deployment health check fails",
       "description": "The deploy workflow waits 120 seconds for API health check to pass. If it times out, the step fails and marks the deployment as failed, but the deployed container is left running. There is no automatic rollback to the previous version. If a deployment is broken, manual intervention is required.",
-      "details": {
-        "health_check_timeout": "120s",
-        "on_timeout_action": "Job fails, but container remains running",
-        "rollback": "manual",
-        "risk": "Broken deployments visible to users; requires manual intervention to recover"
-      },
-      "code_refs": [
-        {
-          "hook_type": "code_ref",
-          "file": ".github/workflows/deploy.yml",
-          "line_range": [82, 100],
-          "symbol": "Verify API health step",
-          "summary": "If health check fails, job fails but no rollback is triggered."
-        }
-      ],
-      "recommendation": "Consider adding rollback logic: 1) If health check fails, restart previous container (if using container image versioning). 2) Or: revert git pull and restart. 3) Document a manual rollback procedure in README for emergencies. 4) For now, this is acceptable for MVP, but before production scale, implement automated rollback.",
       "suggested_fix": {
         "approach": "Add rollback step to deploy job that reverses deployment on health check failure.",
         "estimated_effort": "medium"
       },
-      "estimated_effort": "medium",
-      "estimated_effort_days": 2
+      "finding_id": "f-deploy-no-rollback-strategy-001",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": ".github/workflows/deploy.yml",
+          "symbol": "Verify API health step",
+          "summary": "If health check fails, job fails but no rollback is triggered.",
+          "start_line": 82,
+          "end_line": 100
+        }
+      ],
+      "impact": "Consider adding rollback logic: 1) If health check fails, restart previous container (if using container image versioning). 2) Or: revert git pull and restart. 3) Document a manual rollback procedure ",
+      "history": [
+        {
+          "timestamp": "2026-03-10T15:00:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     }
   ],
   "rollups": {
@@ -538,64 +534,54 @@
   },
   "next_actions": [
     {
-      "priority": "P0",
       "action": "Fix MessagingService build error immediately",
-      "detail": "Implement or remove getUnreadCountForConversation method calls to unblock API builds. Estimated effort: 1 day.",
-      "blocked_by": "f-deploy-build-failure-nestjs-001"
+      "finding_id": "f-deploy-build-failure-nestjs-001",
+      "rationale": "Implement or remove getUnreadCountForConversation method calls to unblock API builds. Estimated effort: 1 day."
     },
     {
-      "priority": "P1",
       "action": "Add API build step to CI/CD",
-      "detail": "Insert 'npm --prefix apps/api run build' step after Prisma validation in ci.yml. Estimated effort: 0.5 days.",
-      "blocked_by": "f-deploy-ci-build-api-missing-001"
+      "finding_id": "f-deploy-ci-build-api-missing-001",
+      "rationale": "Insert 'npm --prefix apps/api run build' step after Prisma validation in ci.yml. Estimated effort: 0.5 days."
     },
     {
-      "priority": "P1",
       "action": "Implement API health check endpoint",
-      "detail": "Create GET /api/health endpoint that checks database and Redis connectivity. Estimated effort: 1 day.",
-      "blocked_by": "f-deploy-health-check-api-001"
+      "finding_id": "f-deploy-health-check-api-001",
+      "rationale": "Create GET /api/health endpoint that checks database and Redis connectivity. Estimated effort: 1 day."
     },
     {
-      "priority": "P1",
       "action": "Add environment variable validation at startup",
-      "detail": "Validate JWT_SECRET, DATABASE_URL, REDIS_URL, AWS keys, STRIPE key on bootstrap. Use Joi or Zod. Estimated effort: 1 day.",
-      "blocked_by": "f-deploy-env-validation-startup-001"
+      "finding_id": "f-deploy-env-validation-startup-001",
+      "rationale": "Validate JWT_SECRET, DATABASE_URL, REDIS_URL, AWS keys, STRIPE key on bootstrap. Use Joi or Zod. Estimated effort: 1 day."
     },
     {
-      "priority": "P1",
       "action": "Create React Error Boundary for web frontend",
-      "detail": "Implement error boundary component and wrap app in _app.tsx to catch component render errors. Estimated effort: 1 day.",
-      "blocked_by": "f-deploy-error-boundary-web-001"
+      "finding_id": "f-deploy-error-boundary-web-001",
+      "rationale": "Implement error boundary component and wrap app in _app.tsx to catch component render errors. Estimated effort: 1 day."
     },
     {
-      "priority": "P2",
       "action": "Clarify docker-compose.prod.yml location and version control strategy",
-      "detail": "Verify whether prod config is on server or should be in repo. Document strategy. Estimated effort: 0.5 days.",
-      "blocked_by": "f-deploy-docker-prod-config-missing-001"
+      "finding_id": "f-deploy-docker-prod-config-missing-001",
+      "rationale": "Verify whether prod config is on server or should be in repo. Document strategy. Estimated effort: 0.5 days."
     },
     {
-      "priority": "P2",
       "action": "Validate NEXT_PUBLIC_API_URL in Next.js build",
-      "detail": "Add build-time check in next.config.js to fail if API URL not set in production. Estimated effort: 0.5 days.",
-      "blocked_by": "f-deploy-web-env-validation-001"
+      "finding_id": "f-deploy-web-env-validation-001",
+      "rationale": "Add build-time check in next.config.js to fail if API URL not set in production. Estimated effort: 0.5 days."
     },
     {
-      "priority": "P2",
       "action": "Document database migration rollback procedure",
-      "detail": "Add runbook to README for failed migration recovery. Consider automated backups. Estimated effort: 1 day.",
-      "blocked_by": "f-deploy-db-migration-rollback-001"
+      "finding_id": "f-deploy-db-migration-rollback-001",
+      "rationale": "Add runbook to README for failed migration recovery. Consider automated backups. Estimated effort: 1 day."
     },
     {
-      "priority": "P2",
       "action": "Tighten Content Security Policy before launch",
-      "detail": "Remove unsafe-inline from CSP and implement nonce-based script loading. Estimated effort: 1 day.",
-      "blocked_by": "f-deploy-csp-unsafe-inline-001"
+      "finding_id": "f-deploy-csp-unsafe-inline-001",
+      "rationale": "Remove unsafe-inline from CSP and implement nonce-based script loading. Estimated effort: 1 day."
     },
     {
-      "priority": "P3",
       "action": "Long-term: Fix API TypeScript strict mode errors and set up structured logging",
-      "detail": "This is a multi-sprint effort. Triage type errors, migrate to Winston/Pino, add Sentry integration. Estimated effort: 8+ days.",
-      "blocked_by": "f-deploy-typescript-strict-api-001"
+      "finding_id": "f-deploy-typescript-strict-api-001",
+      "rationale": "This is a multi-sprint effort. Triage type errors, migrate to Winston/Pino, add Sentry integration. Estimated effort: 8+ days."
     }
   ],
   "summary": {
@@ -613,5 +599,12 @@
       "Security-adjacent issue: CSP header uses unsafe-inline for scripts, which defeats XSS protection. Should use nonces before production launch.",
       "TypeScript ecosystem has pre-existing debt: 666+ type errors in strict mode. Workarounds (transpile-only) allow unsafe code to production. This is a medium-to-long-term refactoring effort."
     ]
+  },
+  "run_metadata": {
+    "timestamp": "2026-03-10T15:00:00Z",
+    "branch": "main",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "claude-sonnet-4-5"
   }
 }

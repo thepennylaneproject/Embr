@@ -3,6 +3,15 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+/**
+ * The seed script may connect as `embr_app` (subject to RLS) when DATABASE_URL
+ * is the app role.  We bypass RLS for all seed operations so we can insert data
+ * across user boundaries without restriction.
+ */
+async function bypassRlsForSession(): Promise<void> {
+  await prisma.$executeRaw`SELECT set_config('app.bypass_rls', 'on', false)`;
+}
+
 const random = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 const pickRandom = <T>(arr: T[], count: number = 1): T[] => {
@@ -52,6 +61,10 @@ const gigDescriptions = [
 
 async function main() {
   console.log('Starting database seed...\n');
+
+  // Bypass RLS for the entire seed session so we can insert data without
+  // needing a user context (the seed script is a service-level operation).
+  await bypassRlsForSession();
 
   console.log('Clearing existing data...');
   await prisma.analyticsEvent.deleteMany();
