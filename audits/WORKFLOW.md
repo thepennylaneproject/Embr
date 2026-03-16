@@ -59,6 +59,19 @@ Run 1-6 agents depending on Fast Lane vs Deep Audit:
 
 Save each output to: `audits/runs/<YYYY-MM-DD>/<run_id>.json`
 
+After saving, **validate schema conformance before committing**:
+
+```bash
+python3 audits/validate_output.py audits/runs/<YYYY-MM-DD>/<run_id>.json
+```
+
+Fix any reported violations before running the synthesizer. Common issues to check:
+- `run_metadata` object must be present with `timestamp`, `branch`, `environment`, `tool_platform`, `model`
+- All enum values must be lowercase: `severity`, `confidence`, `type`
+- `proof_hooks` must be an array with at least 1 hook (not `code_refs`)
+- `suggested_fix` must be an object with `approach` field (not a plain string)
+- `history` must be a non-empty array with `timestamp`, `actor`, `event` on each entry
+
 ## 4) Synthesizer
 
 Run `audits/prompts/synthesizer.md` last with all agent outputs.

@@ -34,9 +34,9 @@
     {
       "finding_id": "f-copy-001",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "title": "Inconsistent authentication terminology",
       "description": "Sign-in flow uses 'Sign in' and 'Signing in...' but home page uses 'Sign in to continue'. Signup page consistently uses 'Create account' but password reset may use different terminology. No standardized copy set for auth actions across app.",
       "category": "Copy Consistency",
@@ -64,24 +64,25 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Create copy constants in a shared location (e.g., libs/copy or theme/strings). Define single source of truth for: 'Sign in', 'Sign out', 'Create account', 'Loading states' across all flows.",
-        "effort_estimate": "2 hours"
+        "approach": "Create copy constants in a shared location (e.g., libs/copy or theme/strings). Define single source of truth for: 'Sign in', 'Sign out', 'Create account', 'Loading states' across all flows."
       },
       "status": "open",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: Sign-in flow uses 'Sign in' and 'Signing in...' but home page uses 'Sign in to continue'. Signup page consistently uses 'Create account' but password reset may use different terminology. No standardiz"
     },
     {
       "finding_id": "f-flow-001",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "title": "Broken navigation flow: No back button or escape route on auth pages",
       "description": "Auth pages (login, signup, forgot-password, reset-password) have no consistent way to go back. Users can navigate forward but can't easily return to home or discover without using browser back button. Violates common UX pattern of providing escape routes.",
       "category": "Navigation & Flow",
@@ -102,24 +103,25 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Add back button or home link at top of auth pages. Pattern: 'Back to Home' link or breadcrumb showing path. Consistent with ProtectedPageShell breadcrumb pattern used elsewhere.",
-        "effort_estimate": "1 hour"
+        "approach": "Add back button or home link at top of auth pages. Pattern: 'Back to Home' link or breadcrumb showing path. Consistent with ProtectedPageShell breadcrumb pattern used elsewhere."
       },
       "status": "open",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: Auth pages (login, signup, forgot-password, reset-password) have no consistent way to go back. Users can navigate forward but can't easily return to home or discover without using browser back button."
     },
     {
       "finding_id": "f-state-001",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "title": "Missing loading state on profile page",
       "description": "Profile page shows 'Loading profile' while auth loading, but does not show loading state while posts are fetching. If posts take time to load, user sees blank 'Recent Posts' section with only text 'Loading posts...' instead of skeleton or animated placeholder.",
       "category": "UI States",
@@ -133,24 +135,25 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Use PageState component or skeleton loader when isLoadingPosts=true. Consistent with Feed component's loading pattern (shows spinner + text).",
-        "effort_estimate": "1 hour"
+        "approach": "Use PageState component or skeleton loader when isLoadingPosts=true. Consistent with Feed component's loading pattern (shows spinner + text)."
       },
       "status": "open",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: Profile page shows 'Loading profile' while auth loading, but does not show loading state while posts are fetching. If posts take time to load, user sees blank 'Recent Posts' section with only text 'Lo"
     },
     {
       "finding_id": "f-state-002",
       "type": "bug",
-      "severity": "Minor",
+      "severity": "minor",
       "priority": "P2",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "title": "Inconsistent empty state messaging across list views",
       "description": "Different list pages use different empty state copy: Marketplace: 'Nothing to see here yet', Events: 'No upcoming events yet', Feed: 'No posts yet'. No consistent pattern or tone. Should use unified empty state component.",
       "category": "Copy Consistency",
@@ -178,24 +181,25 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Create a reusable EmptyState component that accepts context. Standardize copy: '[Noun] is empty', 'Be the first to [action]', CTA button. Use across all list pages.",
-        "effort_estimate": "3 hours"
+        "approach": "Create a reusable EmptyState component that accepts context. Standardize copy: '[Noun] is empty', 'Be the first to [action]', CTA button. Use across all list pages."
       },
       "status": "open",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: Different list pages use different empty state copy: Marketplace: 'Nothing to see here yet', Events: 'No upcoming events yet', Feed: 'No posts yet'. No consistent pattern or tone. Should use unified e"
     },
     {
       "finding_id": "f-a11y-001",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "title": "Missing alt text on decorative images and avatars",
       "description": "Several images missing descriptive alt text: marketplace.tsx has alt='' on listing images, events page has alt='' on host avatars. OrderCard.tsx explicitly uses alt='' which signals to screen readers image is decorative, but these images are content.",
       "category": "Accessibility",
@@ -216,26 +220,27 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Add descriptive alt text to all content images. Pattern: 'Product name' for listings, 'Username's avatar' for user images. Keep decorative SVG icons as alt='' but verify with screen reader.",
-        "effort_estimate": "2 hours"
+        "approach": "Add descriptive alt text to all content images. Pattern: 'Product name' for listings, 'Username's avatar' for user images. Keep decorative SVG icons as alt='' but verify with screen reader."
       },
       "status": "open",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: Several images missing descriptive alt text: marketplace.tsx has alt='' on listing images, events page has alt='' on host avatars. OrderCard.tsx explicitly uses alt='' which signals to screen readers "
     },
     {
       "finding_id": "f-flow-002",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "title": "Dead-end page: Marketplace checkout flow incomplete",
-      "description": "Marketplace has /marketplace/checkout/index.tsx route but no clear entry point visible. Create listing page doesn't wire to checkout. No 'Buy Now' flow documented. Page exists but is unreachable from purchase flow—creates confusion.",
+      "description": "Marketplace has /marketplace/checkout/index.tsx route but no clear entry point visible. Create listing page doesn't wire to checkout. No 'Buy Now' flow documented. Page exists but is unreachable from purchase flow\u2014creates confusion.",
       "category": "Navigation & Flow",
       "proof_hooks": [
         {
@@ -247,24 +252,25 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Wire ListingCard onClick to navigate to listing detail page. Add 'Buy Now' button on detail that routes to checkout with ?listingId=X. Ensure checkout page has clear flow: review > payment > confirmation.",
-        "effort_estimate": "4 hours"
+        "approach": "Wire ListingCard onClick to navigate to listing detail page. Add 'Buy Now' button on detail that routes to checkout with ?listingId=X. Ensure checkout page has clear flow: review > payment > confirmation."
       },
       "status": "open",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: Marketplace has /marketplace/checkout/index.tsx route but no clear entry point visible. Create listing page doesn't wire to checkout. No 'Buy Now' flow documented. Page exists but is unreachable from "
     },
     {
       "finding_id": "f-flow-003",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "title": "Messaging compose modal lacks clear confirmation feedback",
       "description": "DMInbox ComposeModal closes after selecting a user but doesn't show confirmation that conversation was created or loaded. User sees spinner but no success message. If network is slow, user may not know if action succeeded.",
       "category": "UI States",
@@ -278,24 +284,25 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Show toast notification on successful conversation creation: 'Conversation started with @username'. Keep loading state visible until conversation appears in list.",
-        "effort_estimate": "1 hour"
+        "approach": "Show toast notification on successful conversation creation: 'Conversation started with @username'. Keep loading state visible until conversation appears in list."
       },
       "status": "open",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: DMInbox ComposeModal closes after selecting a user but doesn't show confirmation that conversation was created or loaded. User sees spinner but no success message. If network is slow, user may not kno"
     },
     {
       "finding_id": "f-error-001",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "title": "Generic error messages don't guide user action",
       "description": "Feed error: 'Unable to load feed' + button 'Try Again'. DMInbox error handling exists but no user-facing error messages shown for common failures (network, permission, etc). GigDiscovery shows error text but no retry mechanism.",
       "category": "Error Handling",
@@ -316,24 +323,25 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Standardize error messages: 'Network error—please check your connection', 'Permission denied—sign in again', 'Server error—try again in a moment'. Add retry button to all error states. Use ErrorBoundary to catch and display.",
-        "effort_estimate": "3 hours"
+        "approach": "Standardize error messages: 'Network error\u2014please check your connection', 'Permission denied\u2014sign in again', 'Server error\u2014try again in a moment'. Add retry button to all error states. Use ErrorBoundary to catch and display."
       },
       "status": "open",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: Feed error: 'Unable to load feed' + button 'Try Again'. DMInbox error handling exists but no user-facing error messages shown for common failures (network, permission, etc). GigDiscovery shows error t"
     },
     {
       "finding_id": "f-a11y-002",
       "type": "bug",
-      "severity": "Minor",
+      "severity": "minor",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "title": "Custom button implementations lack proper ARIA labels and keyboard support",
       "description": "Settings page has custom Toggle component with proper ARIA. But many pages use inline button elements with only title attribute (e.g., 'New Message' button in DMInbox). No aria-label, no keyboard nav guidance. Role attribute missing from clickable divs.",
       "category": "Accessibility",
@@ -354,24 +362,25 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Add aria-label to all button-like elements. Use <button> tag instead of <div role='button'>. Test keyboard nav: Tab, Space/Enter to activate. Use existing Button component from @embr/ui where possible.",
-        "effort_estimate": "3 hours"
+        "approach": "Add aria-label to all button-like elements. Use <button> tag instead of <div role='button'>. Test keyboard nav: Tab, Space/Enter to activate. Use existing Button component from @embr/ui where possible."
       },
       "status": "open",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: Settings page has custom Toggle component with proper ARIA. But many pages use inline button elements with only title attribute (e.g., 'New Message' button in DMInbox). No aria-label, no keyboard nav "
     },
     {
       "finding_id": "f-flow-004",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P1",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "title": "Missing route: Gigs booking page doesn't display gig detail",
       "description": "Route exists: /gigs/[id].tsx and /gigs/booking/[gigId].tsx. But no route visible to display individual gig detail before booking. GigDiscovery clicks navigate to router.push(/gigs/{id}) but gigs/[id].tsx page may not exist or is unimplemented.",
       "category": "Navigation & Flow",
@@ -385,26 +394,27 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Implement /gigs/[id].tsx page showing gig detail, description, budget, requirements, similar gigs. Add 'Apply' CTA that navigates to booking form. Wire booking form to submission endpoint.",
-        "effort_estimate": "5 hours"
+        "approach": "Implement /gigs/[id].tsx page showing gig detail, description, budget, requirements, similar gigs. Add 'Apply' CTA that navigates to booking form. Wire booking form to submission endpoint."
       },
       "status": "open",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: Route exists: /gigs/[id].tsx and /gigs/booking/[gigId].tsx. But no route visible to display individual gig detail before booking. GigDiscovery clicks navigate to router.push(/gigs/{id}) but gigs/[id]."
     },
     {
       "finding_id": "f-copy-002",
       "type": "bug",
-      "severity": "Minor",
+      "severity": "minor",
       "priority": "P2",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "title": "Mixed tone in CTAs: 'Join the Feed' vs 'Go to feed' vs 'Continue to feed'",
-      "description": "Home page: 'Join the Feed', 'Create'. About page: 'Create'. Create page itself: none. Inconsistent CTA tone—some are inviting ('Join'), some are functional ('Go'). Should standardize verb + target across entire app.",
+      "description": "Home page: 'Join the Feed', 'Create'. About page: 'Create'. Create page itself: none. Inconsistent CTA tone\u2014some are inviting ('Join'), some are functional ('Go'). Should standardize verb + target across entire app.",
       "category": "Copy Consistency",
       "proof_hooks": [
         {
@@ -423,24 +433,25 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Define CTA library: Primary = action verb + target (e.g., 'Post Now', 'Start Messaging', 'List Item'). Secondary = neutral (e.g., 'Cancel', 'Skip'). Tertiary = info (e.g., 'Learn more'). Update all pages to use consistent pattern.",
-        "effort_estimate": "2 hours"
+        "approach": "Define CTA library: Primary = action verb + target (e.g., 'Post Now', 'Start Messaging', 'List Item'). Secondary = neutral (e.g., 'Cancel', 'Skip'). Tertiary = info (e.g., 'Learn more'). Update all pages to use consistent pattern."
       },
       "status": "open",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: Home page: 'Join the Feed', 'Create'. About page: 'Create'. Create page itself: none. Inconsistent CTA tone\u2014some are inviting ('Join'), some are functional ('Go'). Should standardize verb + target acr"
     },
     {
       "finding_id": "f-flow-005",
       "type": "bug",
-      "severity": "Major",
+      "severity": "major",
       "priority": "P1",
-      "confidence": "Inference",
+      "confidence": "inference",
       "title": "No visible onboarding or feature discovery for new users",
       "description": "Home page redirects authenticated users directly to /feed. No onboarding flow. New users see feed but don't know how to create profile, add avatar, enable creator mode, etc. Gigs, marketplace, music features are hidden in nav but user doesn't know they exist or how to enable them.",
       "category": "Navigation & Flow",
@@ -454,24 +465,25 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Create onboarding component shown on first login: 'Complete your profile' → 'Enable creator mode' → 'Explore features'. Use localStorage to track if user has completed onboarding. Show optional tooltips on nav items (Gigs, Marketplace, Music) on first visit.",
-        "effort_estimate": "6 hours"
+        "approach": "Create onboarding component shown on first login: 'Complete your profile' \u2192 'Enable creator mode' \u2192 'Explore features'. Use localStorage to track if user has completed onboarding. Show optional tooltips on nav items (Gigs, Marketplace, Music) on first visit."
       },
       "status": "open",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: Home page redirects authenticated users directly to /feed. No onboarding flow. New users see feed but don't know how to create profile, add avatar, enable creator mode, etc. Gigs, marketplace, music f"
     },
     {
       "finding_id": "f-state-003",
       "type": "bug",
-      "severity": "Minor",
+      "severity": "minor",
       "priority": "P2",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "title": "Post creation doesn't clear state or show success confirmation",
       "description": "PostCreator successfully creates post and redirects to /post/[id]. But no toast or success message shown. User might not realize their action succeeded if redirect is slow. No breadcrumb trail back to feed from success state.",
       "category": "UI States",
@@ -485,24 +497,25 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Show toast: 'Post published!' before redirect. Or show success page with 'View post' and 'Back to feed' buttons. Ensure redirect happens after user sees confirmation.",
-        "effort_estimate": "1 hour"
+        "approach": "Show toast: 'Post published!' before redirect. Or show success page with 'View post' and 'Back to feed' buttons. Ensure redirect happens after user sees confirmation."
       },
       "status": "open",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: PostCreator successfully creates post and redirects to /post/[id]. But no toast or success message shown. User might not realize their action succeeded if redirect is slow. No breadcrumb trail back to"
     },
     {
       "finding_id": "f-a11y-003",
       "type": "bug",
-      "severity": "Minor",
+      "severity": "minor",
       "priority": "P2",
-      "confidence": "Inference",
+      "confidence": "inference",
       "title": "Form inputs lack associated labels in some components",
       "description": "EventForm and marketplace sell form have input fields but many are missing visible labels. Placeholder text alone is insufficient for accessibility. Screen reader users won't know what each field represents.",
       "category": "Accessibility",
@@ -516,24 +529,25 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Add <label> elements to all input fields. Ensure label is associated via htmlFor attribute. Keep placeholder as helper text, not replacement for label. Use existing Input component which likely has label support.",
-        "effort_estimate": "2 hours"
+        "approach": "Add <label> elements to all input fields. Ensure label is associated via htmlFor attribute. Keep placeholder as helper text, not replacement for label. Use existing Input component which likely has label support."
       },
       "status": "open",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: EventForm and marketplace sell form have input fields but many are missing visible labels. Placeholder text alone is insufficient for accessibility. Screen reader users won't know what each field repr"
     },
     {
       "finding_id": "f-error-002",
       "type": "bug",
-      "severity": "Minor",
+      "severity": "minor",
       "priority": "P2",
-      "confidence": "Evidence",
+      "confidence": "evidence",
       "title": "Error messages don't provide recovery instructions",
       "description": "Settings page: 'Could not save' with description 'Please try again.' doesn't explain why (network? server error? validation?). PostCreator shows error text but no guidance on how to fix.",
       "category": "Error Handling",
@@ -547,17 +561,18 @@
         }
       ],
       "suggested_fix": {
-        "approach": "Provide context-specific error recovery: 'Connection lost—check your internet', 'File too large—try a smaller image', 'Field required—fill in all fields'. Show actionable next step.",
-        "effort_estimate": "2 hours"
+        "approach": "Provide context-specific error recovery: 'Connection lost\u2014check your internet', 'File too large\u2014try a smaller image', 'Field required\u2014fill in all fields'. Show actionable next step."
       },
       "status": "open",
       "history": [
         {
-          "event_type": "created",
           "timestamp": "2026-03-10T00:00:00Z",
-          "note": "Initial audit finding"
+          "event": "created",
+          "notes": "Initial audit finding",
+          "actor": "schema-auditor"
         }
-      ]
+      ],
+      "impact": "If not fixed: Settings page: 'Could not save' with description 'Please try again.' doesn't explain why (network? server error? validation?). PostCreator shows error text but no guidance on how to fix."
     }
   ],
   "rollups": {
@@ -588,52 +603,67 @@
   },
   "next_actions": [
     {
-      "priority": "P0",
       "action": "Standardize copy across auth flows and CTAs",
       "owner": "Product/Design",
-      "due_date": "2026-03-17"
+      "due_date": "2026-03-17",
+      "finding_id": "unknown",
+      "rationale": "Priority P0 action."
     },
     {
-      "priority": "P0",
       "action": "Add back buttons and escape routes to auth pages",
       "owner": "Frontend",
-      "due_date": "2026-03-17"
+      "due_date": "2026-03-17",
+      "finding_id": "unknown",
+      "rationale": "Priority P0 action."
     },
     {
-      "priority": "P0",
       "action": "Implement error recovery messaging across all async operations",
       "owner": "Frontend",
-      "due_date": "2026-03-24"
+      "due_date": "2026-03-24",
+      "finding_id": "unknown",
+      "rationale": "Priority P0 action."
     },
     {
-      "priority": "P1",
       "action": "Wire marketplace checkout and gigs detail flows",
       "owner": "Frontend",
-      "due_date": "2026-03-24"
+      "due_date": "2026-03-24",
+      "finding_id": "unknown",
+      "rationale": "Priority P1 action."
     },
     {
-      "priority": "P1",
       "action": "Add comprehensive alt text and accessibility labels to all interactive elements",
       "owner": "Frontend + QA",
-      "due_date": "2026-03-31"
+      "due_date": "2026-03-31",
+      "finding_id": "unknown",
+      "rationale": "Priority P1 action."
     },
     {
-      "priority": "P1",
       "action": "Create reusable EmptyState and LoadingState components for consistency",
       "owner": "Frontend/Design Systems",
-      "due_date": "2026-03-24"
+      "due_date": "2026-03-24",
+      "finding_id": "unknown",
+      "rationale": "Priority P1 action."
     },
     {
-      "priority": "P2",
       "action": "Build onboarding flow for first-time users",
       "owner": "Product/Frontend",
-      "due_date": "2026-04-07"
+      "due_date": "2026-04-07",
+      "finding_id": "unknown",
+      "rationale": "Priority P2 action."
     },
     {
-      "priority": "P2",
       "action": "Add success confirmations and toast notifications to all critical user actions",
       "owner": "Frontend",
-      "due_date": "2026-03-31"
+      "due_date": "2026-03-31",
+      "finding_id": "unknown",
+      "rationale": "Priority P2 action."
     }
-  ]
+  ],
+  "run_metadata": {
+    "timestamp": "2026-03-10T12:00:00Z",
+    "branch": "main",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "claude-sonnet-4-5"
+  }
 }
