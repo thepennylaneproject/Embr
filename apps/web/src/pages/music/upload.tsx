@@ -156,8 +156,6 @@ export default function MusicUploadPage() {
     }
   };
 
-  const selectedLicensing = LICENSING_OPTIONS.find((o) => o.value === formData.licensingModel);
-
   return (
     <ProtectedPageShell>
       <div style={{ maxWidth: '700px', margin: '0 auto' }}>

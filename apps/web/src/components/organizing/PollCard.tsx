@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Poll, PollOption } from '@embr/types';
+import type { Poll } from '@embr/types';
 
 interface PollCardProps {
   poll: Poll;
@@ -11,7 +11,7 @@ interface PollCardProps {
   loading?: boolean;
 }
 
-export function PollCard({ poll, groupId, onVote, onClose, canManage, currentUserId, loading }: PollCardProps) {
+export function PollCard({ poll, groupId: _groupId, onVote, onClose, canManage, currentUserId: _currentUserId, loading }: PollCardProps) {
   const [selected, setSelected] = useState<string[]>([]);
   const [voted, setVoted] = useState(false);
   const [submitting, setSubmitting] = useState(false);

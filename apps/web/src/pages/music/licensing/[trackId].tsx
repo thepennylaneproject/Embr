@@ -68,10 +68,10 @@ export default function MusicLicensingPage() {
     setError('');
 
     try {
-      const { data } = await apiClient.post(`/music/licensing/${track.id}/checkout`, {
+      await apiClient.post(`/music/licensing/${track.id}/checkout`, {
         creatorId: track.id,
       });
-      // paymentIntentId is not stored in sessionStorage (F-023)
+      // Response data is intentionally not used — checkout confirmation is implicit (F-023)
       setStep('success');
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Failed to process payment');

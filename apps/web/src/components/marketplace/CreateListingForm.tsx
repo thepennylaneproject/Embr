@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
-import type { CreateListingInput, ListingType, ListingCondition } from '@embr/types';
+import type { CreateListingInput, ListingType } from '@embr/types';
 import { LISTING_CATEGORIES, LISTING_CONDITION_LABELS } from '@embr/types';
 import { clearDraft, readDraft, writeDraft } from '@/lib/draft';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';

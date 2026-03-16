@@ -36,10 +36,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     // For Phase 1, we can log them or store in a simple table
     // Example: await analyticsDb.insertMany(events);
 
-    console.log(`[Analytics] Received ${events.length} events`, {
-      events: events.map(e => ({ event: e.event, timestamp: e.timestamp })),
-    });
-
     // Return success
     res.status(200).json({
       success: true,

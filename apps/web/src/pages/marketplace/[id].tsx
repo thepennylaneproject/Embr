@@ -13,7 +13,7 @@ export default function ListingDetailPage() {
   const router = useRouter();
   const { id } = router.query;
   const { user } = useAuth();
-  const { getListing, createOrder, makeOffer, loading } = useMarketplace();
+  const { getListing, createOrder, makeOffer, loading: _loading } = useMarketplace();
   const { showToast } = useToast();
 
   const [listing, setListing] = useState<MarketplaceListing | null>(null);

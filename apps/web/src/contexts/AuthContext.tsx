@@ -75,7 +75,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Attempt to refresh the token via API
       // The API uses the refresh token from httpOnly cookie
       await authApi.refreshToken();
-      console.log('Token refreshed successfully');
     } catch (error) {
       console.error('Token refresh failed, user may need to re-login:', error);
       setUser(null);

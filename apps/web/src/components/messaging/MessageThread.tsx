@@ -146,7 +146,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
 
             {/* Text */}
             {message.content && (
-              <p style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-words' }}>
+              <p style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                 {message.content}
               </p>
             )}

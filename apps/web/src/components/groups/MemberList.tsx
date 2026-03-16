@@ -21,7 +21,7 @@ export const MemberList: React.FC<MemberListProps> = ({
   currentUserId,
   currentUserRole,
   onRemove,
-  onUpdateRole,
+  onUpdateRole: _onUpdateRole,
 }) => {
   const canManage = currentUserRole === 'ADMIN' || currentUserRole === 'MODERATOR';
   const roleOrder = { ADMIN: 2, MODERATOR: 1, MEMBER: 0 };

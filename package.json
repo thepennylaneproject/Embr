@@ -1,7 +1,9 @@
 {
-  "name": "embr-infrastructure",
-  "version": "1.0.0",
-  "description": "Complete infrastructure setup for Embr platform",
+  "name": "embr",
+  "version": "0.1.0",
+  "description": "Embr — creator monetization platform and social marketplace",
+  "author": "The Penny Lane Project <Sarah@thepennylaneproject.org>",
+  "license": "MIT",
   "private": true,
   "workspaces": [
     "packages/*",

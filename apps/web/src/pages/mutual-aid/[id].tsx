@@ -14,7 +14,7 @@ export default function MutualAidDetailPage() {
   const router = useRouter();
   const { id } = router.query;
   const { user } = useAuth();
-  const { getPost, respond, acceptResponse, completeResponse, declineResponse, markFulfilled, loading } = useMutualAid();
+  const { getPost, respond, acceptResponse, completeResponse, declineResponse: _declineResponse, markFulfilled, loading: _loading } = useMutualAid();
 
   const [post, setPost] = useState<MutualAidPost | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
@@ -50,11 +50,6 @@ export default function MutualAidDetailPage() {
 
   const handleAccept = async (responseId: string) => {
     await acceptResponse(id as string, responseId);
-    await loadPost();
-  };
-
-  const handleComplete = async (responseId: string) => {
-    await completeResponse(id as string, responseId);
     await loadPost();
   };
 

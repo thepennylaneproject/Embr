@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import type { Group, GroupMemberRole } from '@embr/types';
+import type { Group } from '@embr/types';
 
 interface GroupHeaderProps {
   group: Group;
@@ -19,7 +19,6 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
 }) => {
   const isMember = !!group.membershipRole;
   const isAdmin = group.membershipRole === 'ADMIN';
-  const isModerator = group.membershipRole === 'MODERATOR';
   const isCreator = group.createdById === currentUserId;
 
   return (
