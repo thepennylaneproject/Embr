@@ -5,11 +5,9 @@
   "run_metadata": {
     "timestamp": "2026-03-05T19:44:51.494026Z",
     "branch": "unknown",
-    "commit": "unknown",
     "environment": "local",
     "tool_platform": "cursor",
-    "model": "gpt-5.3-codex",
-    "notes": "Merged 6 agent outputs; normalized non-conforming payloads and added schema-debt findings where needed."
+    "model": "gpt-5.3-codex"
   },
   "suite": "synthesized",
   "agent": {
@@ -28,8 +26,7 @@
       "audits/index.json"
     ],
     "files_skipped": [],
-    "coverage_complete": true,
-    "incomplete_reason": null
+    "coverage_complete": true
   },
   "findings": [
     {
@@ -2217,7 +2214,7 @@
         {
           "timestamp": "2026-03-05T13:26:27Z",
           "actor": "runtime-bug-hunter",
-          "event": "history_checked",
+          "event": "note_added",
           "notes": "No matching open finding in audits/open_findings.json; prior run findings were unrelated ingestion paths."
         }
       ],

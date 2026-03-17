@@ -5,14 +5,9 @@
   "run_metadata": {
     "timestamp": "2026-03-06T06:20:09Z",
     "branch": "copilot/consistency-audit-ux-flows",
-    "commit": "c7e3703",
     "environment": "ci",
     "tool_platform": "github-copilot",
-    "model": "claude-sonnet-4-5",
-    "preflight_artifacts": {
-      "build_output": "build_web_output.txt"
-    },
-    "notes": "Second UX audit run. All 4 blocker findings from prior run confirmed resolved. This run addresses 15 open minor/major findings. Code fixes applied in same PR."
+    "model": "claude-sonnet-4-5"
   },
   "suite": "ux",
   "agent": {
@@ -48,22 +43,47 @@
       "category": "a11y-gap",
       "severity": "major",
       "priority": "P1",
-      "confidence": "confirmed",
-      "title": "No `<title>` element set on any page — screen readers announce no page name",
-      "description": "Fixed: Added `<Head><title>...</title></Head>` to _app.tsx (default 'Embr'), index.tsx ('Embr — Creator Community'), auth/login.tsx ('Sign in — Embr'), auth/signup.tsx ('Create account — Embr'), and feed.tsx ('Feed — Embr'). Screen readers will now announce the page name on navigation.",
+      "confidence": "evidence",
+      "title": "No `<title>` element set on any page \u2014 screen readers announce no page name",
+      "description": "Fixed: Added `<Head><title>...</title></Head>` to _app.tsx (default 'Embr'), index.tsx ('Embr \u2014 Creator Community'), auth/login.tsx ('Sign in \u2014 Embr'), auth/signup.tsx ('Create account \u2014 Embr'), and feed.tsx ('Feed \u2014 Embr'). Screen readers will now announce the page name on navigation.",
       "proof_hooks": [
-        { "hook_type": "code_ref", "summary": "Default title in _app.tsx", "file": "apps/web/src/pages/_app.tsx", "start_line": 11 },
-        { "hook_type": "code_ref", "summary": "Homepage title", "file": "apps/web/src/pages/index.tsx", "start_line": 11 }
+        {
+          "hook_type": "code_ref",
+          "summary": "Default title in _app.tsx",
+          "file": "apps/web/src/pages/_app.tsx",
+          "start_line": 11
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Homepage title",
+          "file": "apps/web/src/pages/index.tsx",
+          "start_line": 11
+        }
       ],
       "repro_steps": [],
       "impact": "Screen reader users can now understand which page they are on.",
-      "suggested_fix": { "approach": "Applied. Remaining pages still lack individual titles — see next_actions.", "affected_files": [], "estimated_effort": "small", "risk_notes": "", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Applied. Remaining pages still lack individual titles \u2014 see next_actions.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "fixed_verified",
       "related_ids": [],
       "history": [
-        { "timestamp": "2026-03-05T19:44:51Z", "actor": "ux-flow-auditor", "event": "created" },
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "fixed_verified", "notes": "Titles added to _app.tsx and key pages." }
+        {
+          "timestamp": "2026-03-05T19:44:51Z",
+          "actor": "ux-flow-auditor",
+          "event": "created"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "verification_passed",
+          "notes": "Titles added to _app.tsx and key pages."
+        }
       ],
       "artifacts": []
     },
@@ -73,21 +93,40 @@
       "category": "nav-dead-end",
       "severity": "major",
       "priority": "P1",
-      "confidence": "confirmed",
-      "title": "marketplace/sell.tsx has no post-publish navigation — user stranded after listing",
-      "description": "Re-examined: CreateListingForm.tsx already calls router.push(`/marketplace/${listing.id}`) in its handleSubmit function after calling onPublish. The finding was a false positive — navigation is handled inside the form component. No code change needed.",
+      "confidence": "evidence",
+      "title": "marketplace/sell.tsx has no post-publish navigation \u2014 user stranded after listing",
+      "description": "Re-examined: CreateListingForm.tsx already calls router.push(`/marketplace/${listing.id}`) in its handleSubmit function after calling onPublish. The finding was a false positive \u2014 navigation is handled inside the form component. No code change needed.",
       "proof_hooks": [
-        { "hook_type": "code_ref", "summary": "CreateListingForm already navigates after publish", "file": "apps/web/src/components/marketplace/CreateListingForm.tsx", "start_line": 68 }
+        {
+          "hook_type": "code_ref",
+          "summary": "CreateListingForm already navigates after publish",
+          "file": "apps/web/src/components/marketplace/CreateListingForm.tsx",
+          "start_line": 68
+        }
       ],
       "repro_steps": [],
-      "impact": "No impact — navigation works correctly.",
-      "suggested_fix": { "approach": "No fix needed. Navigation is already in CreateListingForm.", "affected_files": [], "estimated_effort": "none", "risk_notes": "", "tests_needed": [] },
+      "impact": "No impact \u2014 navigation works correctly.",
+      "suggested_fix": {
+        "approach": "No fix needed. Navigation is already in CreateListingForm.",
+        "affected_files": [],
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "fixed_verified",
       "related_ids": [],
       "history": [
-        { "timestamp": "2026-03-05T19:44:51Z", "actor": "ux-flow-auditor", "event": "created" },
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "fixed_verified", "notes": "Re-examined. Navigation already exists in CreateListingForm." }
+        {
+          "timestamp": "2026-03-05T19:44:51Z",
+          "actor": "ux-flow-auditor",
+          "event": "created"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "verification_passed",
+          "notes": "Re-examined. Navigation already exists in CreateListingForm."
+        }
       ],
       "artifacts": []
     },
@@ -97,22 +136,47 @@
       "category": "a11y-gap",
       "severity": "major",
       "priority": "P1",
-      "confidence": "confirmed",
+      "confidence": "evidence",
       "title": "alert() and prompt() across 7 files block screen readers and break UX flow",
-      "description": "Fixed: All alert() and prompt() calls replaced with accessible alternatives. marketplace/[id].tsx: 3 alerts → inline error state + success toast. marketplace/orders.tsx: 1 prompt → ship-tracking modal with inline validation. groups/[id]/settings.tsx: 1 alert + 1 confirm → inline confirmation UI + toast. components/gigs/GigManagementDashboard.tsx: 4 alerts + 2 confirms → toasts. components/monetization/TipButton.tsx: 2 alerts → inline validationError state. components/monetization/PayoutRequest.tsx: 2 alerts → inline validationError state. components/messaging/MessageInput.tsx: 3 alerts → inline fileError and sendError states. components/monetization/StripeConnectOnboarding.tsx: 1 prompt → inline email form.",
+      "description": "Fixed: All alert() and prompt() calls replaced with accessible alternatives. marketplace/[id].tsx: 3 alerts \u2192 inline error state + success toast. marketplace/orders.tsx: 1 prompt \u2192 ship-tracking modal with inline validation. groups/[id]/settings.tsx: 1 alert + 1 confirm \u2192 inline confirmation UI + toast. components/gigs/GigManagementDashboard.tsx: 4 alerts + 2 confirms \u2192 toasts. components/monetization/TipButton.tsx: 2 alerts \u2192 inline validationError state. components/monetization/PayoutRequest.tsx: 2 alerts \u2192 inline validationError state. components/messaging/MessageInput.tsx: 3 alerts \u2192 inline fileError and sendError states. components/monetization/StripeConnectOnboarding.tsx: 1 prompt \u2192 inline email form.",
       "proof_hooks": [
-        { "hook_type": "code_ref", "summary": "marketplace/[id].tsx now uses inline errors", "file": "apps/web/src/pages/marketplace/[id].tsx", "start_line": 40 },
-        { "hook_type": "code_ref", "summary": "orders.tsx now uses ship modal", "file": "apps/web/src/pages/marketplace/orders.tsx", "start_line": 31 }
+        {
+          "hook_type": "code_ref",
+          "summary": "marketplace/[id].tsx now uses inline errors",
+          "file": "apps/web/src/pages/marketplace/[id].tsx",
+          "start_line": 40
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "orders.tsx now uses ship modal",
+          "file": "apps/web/src/pages/marketplace/orders.tsx",
+          "start_line": 31
+        }
       ],
       "repro_steps": [],
       "impact": "All user interactions now use accessible in-page UI instead of browser-native dialogs.",
-      "suggested_fix": { "approach": "Applied.", "affected_files": [], "estimated_effort": "medium", "risk_notes": "", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Applied.",
+        "affected_files": [],
+        "estimated_effort": "medium",
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "fixed_verified",
       "related_ids": [],
       "history": [
-        { "timestamp": "2026-03-05T19:44:51Z", "actor": "ux-flow-auditor", "event": "created" },
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "fixed_verified", "notes": "All alert/prompt/confirm calls replaced." }
+        {
+          "timestamp": "2026-03-05T19:44:51Z",
+          "actor": "ux-flow-auditor",
+          "event": "created"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "verification_passed",
+          "notes": "All alert/prompt/confirm calls replaced."
+        }
       ],
       "artifacts": []
     },
@@ -122,22 +186,47 @@
       "category": "a11y-gap",
       "severity": "major",
       "priority": "P1",
-      "confidence": "confirmed",
+      "confidence": "evidence",
       "title": "Inline modals in marketplace/[id].tsx and orders.tsx missing ARIA dialog semantics",
       "description": "Fixed: Added role='dialog', aria-modal='true', and aria-labelledby referencing the modal title h2 to all inline modals: buy modal, offer modal (marketplace/[id].tsx), ship modal, review modal (orders.tsx). Backdrop overlays also have aria-hidden='true'. Labels for form inputs inside modals now use htmlFor.",
       "proof_hooks": [
-        { "hook_type": "code_ref", "summary": "Buy modal ARIA attributes", "file": "apps/web/src/pages/marketplace/[id].tsx", "start_line": 205 },
-        { "hook_type": "code_ref", "summary": "Review modal ARIA attributes", "file": "apps/web/src/pages/marketplace/orders.tsx", "start_line": 160 }
+        {
+          "hook_type": "code_ref",
+          "summary": "Buy modal ARIA attributes",
+          "file": "apps/web/src/pages/marketplace/[id].tsx",
+          "start_line": 205
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Review modal ARIA attributes",
+          "file": "apps/web/src/pages/marketplace/orders.tsx",
+          "start_line": 160
+        }
       ],
       "repro_steps": [],
       "impact": "Screen reader users will now receive proper dialog announcements.",
-      "suggested_fix": { "approach": "Applied.", "affected_files": [], "estimated_effort": "small", "risk_notes": "", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Applied.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "fixed_verified",
       "related_ids": [],
       "history": [
-        { "timestamp": "2026-03-05T19:44:51Z", "actor": "ux-flow-auditor", "event": "created" },
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "fixed_verified", "notes": "ARIA dialog semantics added." }
+        {
+          "timestamp": "2026-03-05T19:44:51Z",
+          "actor": "ux-flow-auditor",
+          "event": "created"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "verification_passed",
+          "notes": "ARIA dialog semantics added."
+        }
       ],
       "artifacts": []
     },
@@ -147,21 +236,41 @@
       "category": "missing-state",
       "severity": "major",
       "priority": "P1",
-      "confidence": "confirmed",
-      "title": "Toast system supports only 'info' | 'error' — no 'success' or 'warning' variant",
+      "confidence": "evidence",
+      "title": "Toast system supports only 'info' | 'error' \u2014 no 'success' or 'warning' variant",
       "description": "Fixed: Added 'success' and 'warning' to ToastKind in both packages/ui/src/components/Toast.tsx and apps/web/src/components/ui/Toast.tsx. Updated screen-reader announcement text for each new kind. New success toasts are now used in orders.tsx, GigManagementDashboard.tsx, and marketplace/[id].tsx.",
       "proof_hooks": [
-        { "hook_type": "code_ref", "summary": "ToastKind updated", "file": "packages/ui/src/components/Toast.tsx", "start_line": 3 }
+        {
+          "hook_type": "code_ref",
+          "summary": "ToastKind updated",
+          "file": "packages/ui/src/components/Toast.tsx",
+          "start_line": 3
+        }
       ],
       "repro_steps": [],
       "impact": "Success and warning notifications are now semantically distinct and properly announced to screen readers.",
-      "suggested_fix": { "approach": "Applied.", "affected_files": [], "estimated_effort": "small", "risk_notes": "", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Applied.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "fixed_verified",
       "related_ids": [],
       "history": [
-        { "timestamp": "2026-03-05T19:44:51Z", "actor": "ux-flow-auditor", "event": "created" },
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "fixed_verified", "notes": "success and warning ToastKind variants added." }
+        {
+          "timestamp": "2026-03-05T19:44:51Z",
+          "actor": "ux-flow-auditor",
+          "event": "created"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "verification_passed",
+          "notes": "success and warning ToastKind variants added."
+        }
       ],
       "artifacts": []
     },
@@ -171,21 +280,41 @@
       "category": "copy-mismatch",
       "severity": "major",
       "priority": "P1",
-      "confidence": "confirmed",
+      "confidence": "evidence",
       "title": "FeaturePlaceholder component leaks developer issue IDs in user-visible text",
       "description": "Fixed: Removed 'TODO: ${issueId}' and '${issueId}' references from all three stateContent descriptions in FeaturePlaceholder.tsx. Also removed the 'Tracking note: <code>{issuePath}</code>' paragraph from the component UI. State descriptions are now generic user-friendly copy.",
       "proof_hooks": [
-        { "hook_type": "code_ref", "summary": "Updated stateContent in FeaturePlaceholder", "file": "apps/web/src/components/layout/FeaturePlaceholder.tsx", "start_line": 24 }
+        {
+          "hook_type": "code_ref",
+          "summary": "Updated stateContent in FeaturePlaceholder",
+          "file": "apps/web/src/components/layout/FeaturePlaceholder.tsx",
+          "start_line": 24
+        }
       ],
       "repro_steps": [],
       "impact": "Users no longer see internal issue tracking IDs in placeholder state messages.",
-      "suggested_fix": { "approach": "Applied.", "affected_files": [], "estimated_effort": "small", "risk_notes": "", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Applied.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "fixed_verified",
       "related_ids": [],
       "history": [
-        { "timestamp": "2026-03-05T19:44:51Z", "actor": "ux-flow-auditor", "event": "created" },
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "fixed_verified", "notes": "Issue IDs removed from FeaturePlaceholder." }
+        {
+          "timestamp": "2026-03-05T19:44:51Z",
+          "actor": "ux-flow-auditor",
+          "event": "created"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "verification_passed",
+          "notes": "Issue IDs removed from FeaturePlaceholder."
+        }
       ],
       "artifacts": []
     },
@@ -195,21 +324,41 @@
       "category": "copy-mismatch",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "confirmed",
-      "title": "Homepage H1 reads 'Embr Frontend' — developer placeholder visible to all users",
+      "confidence": "evidence",
+      "title": "Homepage H1 reads 'Embr Frontend' \u2014 developer placeholder visible to all users",
       "description": "Fixed: Changed h1 from 'Embr Frontend' to 'Welcome to Embr' and updated the subtitle from 'Cohesive UI foundation is active. Social, messaging, monetization, and safety slices are staged next.' to 'A creator-focused social platform for your community.'",
       "proof_hooks": [
-        { "hook_type": "code_ref", "summary": "Updated H1 in index.tsx", "file": "apps/web/src/pages/index.tsx", "start_line": 16 }
+        {
+          "hook_type": "code_ref",
+          "summary": "Updated H1 in index.tsx",
+          "file": "apps/web/src/pages/index.tsx",
+          "start_line": 16
+        }
       ],
       "repro_steps": [],
       "impact": "Homepage now presents user-facing copy instead of internal development notes.",
-      "suggested_fix": { "approach": "Applied.", "affected_files": [], "estimated_effort": "trivial", "risk_notes": "", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Applied.",
+        "affected_files": [],
+        "estimated_effort": "trivial",
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "fixed_verified",
       "related_ids": [],
       "history": [
-        { "timestamp": "2026-03-05T19:44:51Z", "actor": "ux-flow-auditor", "event": "created" },
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "fixed_verified", "notes": "H1 and subtitle updated." }
+        {
+          "timestamp": "2026-03-05T19:44:51Z",
+          "actor": "ux-flow-auditor",
+          "event": "created"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "verification_passed",
+          "notes": "H1 and subtitle updated."
+        }
       ],
       "artifacts": []
     },
@@ -219,21 +368,41 @@
       "category": "inconsistent-label",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "confirmed",
-      "title": "'Sign in' vs 'Sign Out' — inconsistent capitalisation for the same auth concept",
+      "confidence": "evidence",
+      "title": "'Sign in' vs 'Sign Out' \u2014 inconsistent capitalisation for the same auth concept",
       "description": "Fixed: Changed 'Sign Out' to 'Sign out' in AppShell.tsx dropdown menu to match the sentence-case style of 'Sign in' used on auth/login.tsx.",
       "proof_hooks": [
-        { "hook_type": "code_ref", "summary": "Sign out in AppShell dropdown", "file": "apps/web/src/components/layout/AppShell.tsx", "start_line": 130 }
+        {
+          "hook_type": "code_ref",
+          "summary": "Sign out in AppShell dropdown",
+          "file": "apps/web/src/components/layout/AppShell.tsx",
+          "start_line": 130
+        }
       ],
       "repro_steps": [],
       "impact": "Auth labels are now consistently sentence-case across the app.",
-      "suggested_fix": { "approach": "Applied.", "affected_files": [], "estimated_effort": "trivial", "risk_notes": "", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Applied.",
+        "affected_files": [],
+        "estimated_effort": "trivial",
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "fixed_verified",
       "related_ids": [],
       "history": [
-        { "timestamp": "2026-03-05T19:44:51Z", "actor": "ux-flow-auditor", "event": "created" },
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "fixed_verified", "notes": "Capitalisation made consistent." }
+        {
+          "timestamp": "2026-03-05T19:44:51Z",
+          "actor": "ux-flow-auditor",
+          "event": "created"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "verification_passed",
+          "notes": "Capitalisation made consistent."
+        }
       ],
       "artifacts": []
     },
@@ -243,21 +412,41 @@
       "category": "copy-mismatch",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "confirmed",
-      "title": "Safety page exposes raw internal 'user ID' input fields — not user-addressable",
+      "confidence": "evidence",
+      "title": "Safety page exposes raw internal 'user ID' input fields \u2014 not user-addressable",
       "description": "Fixed: Changed placeholder text from 'Enter user ID' to 'Enter username' for both block and mute inputs in pages/safety/index.tsx. Also changed 'Entity ID' placeholder for the report input to 'Content URL or ID'.",
       "proof_hooks": [
-        { "hook_type": "code_ref", "summary": "Updated placeholders in safety/index.tsx", "file": "apps/web/src/pages/safety/index.tsx", "start_line": 48 }
+        {
+          "hook_type": "code_ref",
+          "summary": "Updated placeholders in safety/index.tsx",
+          "file": "apps/web/src/pages/safety/index.tsx",
+          "start_line": 48
+        }
       ],
       "repro_steps": [],
       "impact": "Users are guided to enter usernames (understandable) rather than internal IDs (opaque).",
-      "suggested_fix": { "approach": "Applied.", "affected_files": [], "estimated_effort": "trivial", "risk_notes": "", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Applied.",
+        "affected_files": [],
+        "estimated_effort": "trivial",
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "fixed_verified",
       "related_ids": [],
       "history": [
-        { "timestamp": "2026-03-05T19:44:51Z", "actor": "ux-flow-auditor", "event": "created" },
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "fixed_verified", "notes": "Placeholder text updated." }
+        {
+          "timestamp": "2026-03-05T19:44:51Z",
+          "actor": "ux-flow-auditor",
+          "event": "created"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "verification_passed",
+          "notes": "Placeholder text updated."
+        }
       ],
       "artifacts": []
     },
@@ -267,21 +456,41 @@
       "category": "a11y-gap",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "confirmed",
+      "confidence": "evidence",
       "title": "Avatar upload clickable div in settings lacks keyboard support and ARIA role",
       "description": "Fixed: The avatar div in pages/settings/index.tsx now has role='button', tabIndex={0}, aria-label='Change profile photo', and an onKeyDown handler that triggers the file input on Enter or Space key press. The old title attribute was replaced with the accessible aria-label.",
       "proof_hooks": [
-        { "hook_type": "code_ref", "summary": "Avatar div with role='button' in settings/index.tsx", "file": "apps/web/src/pages/settings/index.tsx", "start_line": 214 }
+        {
+          "hook_type": "code_ref",
+          "summary": "Avatar div with role='button' in settings/index.tsx",
+          "file": "apps/web/src/pages/settings/index.tsx",
+          "start_line": 214
+        }
       ],
       "repro_steps": [],
       "impact": "Keyboard-only users can now activate the avatar upload using Enter or Space.",
-      "suggested_fix": { "approach": "Applied.", "affected_files": [], "estimated_effort": "trivial", "risk_notes": "", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Applied.",
+        "affected_files": [],
+        "estimated_effort": "trivial",
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "fixed_verified",
       "related_ids": [],
       "history": [
-        { "timestamp": "2026-03-05T19:44:51Z", "actor": "ux-flow-auditor", "event": "created" },
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "fixed_verified", "notes": "Keyboard support and ARIA role added." }
+        {
+          "timestamp": "2026-03-05T19:44:51Z",
+          "actor": "ux-flow-auditor",
+          "event": "created"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "verification_passed",
+          "notes": "Keyboard support and ARIA role added."
+        }
       ],
       "artifacts": []
     },
@@ -291,21 +500,41 @@
       "category": "missing-state",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "confirmed",
-      "title": "music/artist/[id].tsx error state is dead code — `_setError` prefixed, never called",
+      "confidence": "evidence",
+      "title": "music/artist/[id].tsx error state is dead code \u2014 `_setError` prefixed, never called",
       "description": "Fixed: Renamed `_setError` to `setError` and updated the useEffect to call `setError('Artist not found.')` and `setLoading(false)` when router.query.id is defined but artistId is empty (meaning the id was not a valid string).",
       "proof_hooks": [
-        { "hook_type": "code_ref", "summary": "Fixed useEffect in music/artist/[id].tsx", "file": "apps/web/src/pages/music/artist/[id].tsx", "start_line": 17 }
+        {
+          "hook_type": "code_ref",
+          "summary": "Fixed useEffect in music/artist/[id].tsx",
+          "file": "apps/web/src/pages/music/artist/[id].tsx",
+          "start_line": 17
+        }
       ],
       "repro_steps": [],
       "impact": "The error state UI is now reachable when artist lookup fails.",
-      "suggested_fix": { "approach": "Applied.", "affected_files": [], "estimated_effort": "small", "risk_notes": "", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Applied.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "fixed_verified",
       "related_ids": [],
       "history": [
-        { "timestamp": "2026-03-05T19:44:51Z", "actor": "ux-flow-auditor", "event": "created" },
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "fixed_verified", "notes": "Error state now reachable." }
+        {
+          "timestamp": "2026-03-05T19:44:51Z",
+          "actor": "ux-flow-auditor",
+          "event": "created"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "verification_passed",
+          "notes": "Error state now reachable."
+        }
       ],
       "artifacts": []
     },
@@ -315,21 +544,41 @@
       "category": "inconsistent-label",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "confirmed",
-      "title": "Loading states inconsistent — plain `<p>` text on 3 pages, PageState component on others",
+      "confidence": "evidence",
+      "title": "Loading states inconsistent \u2014 plain `<p>` text on 3 pages, PageState component on others",
       "description": "Fixed: Replaced `<p className='text-gray-600'>Loading profile...</p>` in pages/profile/index.tsx with `<PageState title='Loading profile' description='Please wait while we load your profile.' />`. Added PageState to the Button import from @embr/ui.",
       "proof_hooks": [
-        { "hook_type": "code_ref", "summary": "Updated loading state in profile/index.tsx", "file": "apps/web/src/pages/profile/index.tsx", "start_line": 50 }
+        {
+          "hook_type": "code_ref",
+          "summary": "Updated loading state in profile/index.tsx",
+          "file": "apps/web/src/pages/profile/index.tsx",
+          "start_line": 50
+        }
       ],
       "repro_steps": [],
       "impact": "Loading states are now visually consistent across the app.",
-      "suggested_fix": { "approach": "Applied.", "affected_files": [], "estimated_effort": "trivial", "risk_notes": "", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Applied.",
+        "affected_files": [],
+        "estimated_effort": "trivial",
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "fixed_verified",
       "related_ids": [],
       "history": [
-        { "timestamp": "2026-03-05T19:44:51Z", "actor": "ux-flow-auditor", "event": "created" },
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "fixed_verified", "notes": "Loading state standardized." }
+        {
+          "timestamp": "2026-03-05T19:44:51Z",
+          "actor": "ux-flow-auditor",
+          "event": "created"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "verification_passed",
+          "notes": "Loading state standardized."
+        }
       ],
       "artifacts": []
     },
@@ -339,21 +588,43 @@
       "category": "inconsistent-label",
       "severity": "minor",
       "priority": "P3",
-      "confidence": "confirmed",
+      "confidence": "evidence",
       "title": "profile/index.tsx mixes Tailwind class `text-gray-600` with the CSS variable design system",
       "description": "Fixed: The `text-gray-600` Tailwind class was the loading-state paragraph text. By replacing the loading state with <PageState>, the `text-gray-600` usage is removed. Profile page now exclusively uses CSS variable design tokens.",
       "proof_hooks": [
-        { "hook_type": "code_ref", "summary": "Tailwind class removed via loading state fix", "file": "apps/web/src/pages/profile/index.tsx", "start_line": 50 }
+        {
+          "hook_type": "code_ref",
+          "summary": "Tailwind class removed via loading state fix",
+          "file": "apps/web/src/pages/profile/index.tsx",
+          "start_line": 50
+        }
       ],
       "repro_steps": [],
       "impact": "Design token consistency improved.",
-      "suggested_fix": { "approach": "Applied as part of f-ux-f-016 fix.", "affected_files": [], "estimated_effort": "trivial", "risk_notes": "", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Applied as part of f-ux-f-016 fix.",
+        "affected_files": [],
+        "estimated_effort": "trivial",
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "fixed_verified",
-      "related_ids": ["f-ux-f-016"],
+      "related_ids": [
+        "f-ux-f-016"
+      ],
       "history": [
-        { "timestamp": "2026-03-05T19:44:51Z", "actor": "ux-flow-auditor", "event": "created" },
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "fixed_verified", "notes": "Tailwind class removed." }
+        {
+          "timestamp": "2026-03-05T19:44:51Z",
+          "actor": "ux-flow-auditor",
+          "event": "created"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "verification_passed",
+          "notes": "Tailwind class removed."
+        }
       ],
       "artifacts": []
     },
@@ -363,21 +634,41 @@
       "category": "inconsistent-label",
       "severity": "minor",
       "priority": "P3",
-      "confidence": "confirmed",
-      "title": "DiscoveryPage.tsx uses hardcoded hex colors and Tailwind — isolated from design token system",
+      "confidence": "evidence",
+      "title": "DiscoveryPage.tsx uses hardcoded hex colors and Tailwind \u2014 isolated from design token system",
       "description": "Partially fixed: Replaced hardcoded bg-[#F4F1F1] page background with style={{ background: 'var(--embr-bg)' }}, and text-gray-900 / text-gray-600 heading/subheading with CSS variable equivalents (var(--embr-text), var(--embr-muted-text)) in the page header. Interior component-level Tailwind colors (TrendingCreators, SuggestedUsers sub-components) remain and would require a larger refactor.",
       "proof_hooks": [
-        { "hook_type": "code_ref", "summary": "Updated wrapper div in DiscoveryPage.tsx", "file": "apps/web/src/pages/DiscoveryPage.tsx", "start_line": 22 }
+        {
+          "hook_type": "code_ref",
+          "summary": "Updated wrapper div in DiscoveryPage.tsx",
+          "file": "apps/web/src/pages/DiscoveryPage.tsx",
+          "start_line": 22
+        }
       ],
       "repro_steps": [],
       "impact": "Page background and header text now follow the design token system.",
-      "suggested_fix": { "approach": "Partial fix applied. Full fix requires refactoring sub-components.", "affected_files": [], "estimated_effort": "medium", "risk_notes": "Interior sub-components still use Tailwind utility classes.", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Partial fix applied. Full fix requires refactoring sub-components.",
+        "affected_files": [],
+        "estimated_effort": "medium",
+        "risk_notes": "Interior sub-components still use Tailwind utility classes.",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "in_progress",
       "related_ids": [],
       "history": [
-        { "timestamp": "2026-03-05T19:44:51Z", "actor": "ux-flow-auditor", "event": "created" },
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "in_progress", "notes": "Partial fix: page wrapper and header now use CSS variables." }
+        {
+          "timestamp": "2026-03-05T19:44:51Z",
+          "actor": "ux-flow-auditor",
+          "event": "created"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "patch_proposed",
+          "notes": "Partial fix: page wrapper and header now use CSS variables."
+        }
       ],
       "artifacts": []
     },
@@ -387,21 +678,41 @@
       "category": "copy-mismatch",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "confirmed",
+      "confidence": "evidence",
       "title": "Order/offer error messages provide no actionable next step",
       "description": "Fixed: Error messages in marketplace/[id].tsx now read 'Order failed. Please try again or contact support.' and 'Failed to send offer. Please try again.' instead of bare 'Order failed' / 'Offer failed'. In orders.tsx, handleComplete and handleShipSubmit now show descriptive toast messages. All are shown inline in the modal so the user can see them without dismissing.",
       "proof_hooks": [
-        { "hook_type": "code_ref", "summary": "Updated error messages in marketplace/[id].tsx", "file": "apps/web/src/pages/marketplace/[id].tsx", "start_line": 44 }
+        {
+          "hook_type": "code_ref",
+          "summary": "Updated error messages in marketplace/[id].tsx",
+          "file": "apps/web/src/pages/marketplace/[id].tsx",
+          "start_line": 44
+        }
       ],
       "repro_steps": [],
       "impact": "Error messages now guide users on what to do next.",
-      "suggested_fix": { "approach": "Applied.", "affected_files": [], "estimated_effort": "small", "risk_notes": "", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Applied.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "fixed_verified",
       "related_ids": [],
       "history": [
-        { "timestamp": "2026-03-05T19:44:51Z", "actor": "ux-flow-auditor", "event": "created" },
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "fixed_verified", "notes": "Actionable error messages added." }
+        {
+          "timestamp": "2026-03-05T19:44:51Z",
+          "actor": "ux-flow-auditor",
+          "event": "created"
+        },
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "verification_passed",
+          "notes": "Actionable error messages added."
+        }
       ],
       "artifacts": []
     },
@@ -412,17 +723,35 @@
       "severity": "minor",
       "priority": "P3",
       "confidence": "inference",
-      "title": "Product voice guide is undefined — inconsistent tone across the app",
+      "title": "Product voice guide is undefined \u2014 inconsistent tone across the app",
       "description": "The app mixes formal and casual registers (e.g. 'Build your creator space on Embr.' vs. 'When you buy something, it'll show up here.'). No product voice guide exists. A voice guide would prevent future regressions in copy consistency.",
-      "proof_hooks": [],
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "The app mixes formal and casual registers (e.g. 'Build your creator space on Embr.' vs. 'When you buy something, it'll s"
+        }
+      ],
       "repro_steps": [],
       "impact": "Without a defined voice, copy inconsistencies will recur as the app grows.",
-      "suggested_fix": { "approach": "Create a style-scope-voice.md product voice guide defining tone, register, capitalization rules, and common terms.", "affected_files": ["style-scope-voice.md"], "estimated_effort": "small", "risk_notes": "", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Create a style-scope-voice.md product voice guide defining tone, register, capitalization rules, and common terms.",
+        "affected_files": [
+          "style-scope-voice.md"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "open",
       "related_ids": [],
       "history": [
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "created", "notes": "New finding from second audit pass." }
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "created",
+          "notes": "New finding from second audit pass."
+        }
       ],
       "artifacts": []
     },
@@ -435,15 +764,35 @@
       "confidence": "inference",
       "title": "Page titles missing from ~30 remaining pages",
       "description": "Titles were added to 5 key pages (homepage, login, signup, feed, and a global default). The remaining ~30+ pages (marketplace, groups, profile, settings, music, gigs, earnings, notifications, etc.) still lack individual <title> tags. The global default 'Embr' will display for all of these.",
-      "proof_hooks": [],
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Titles were added to 5 key pages (homepage, login, signup, feed, and a global default). The remaining ~30+ pages (market"
+        }
+      ],
       "repro_steps": [],
       "impact": "Screen reader users navigating to secondary pages will hear only 'Embr' rather than a descriptive page name.",
-      "suggested_fix": { "approach": "Add <Head><title>PageName — Embr</title></Head> to each remaining page.", "affected_files": ["apps/web/src/pages/**/*.tsx"], "estimated_effort": "medium", "risk_notes": "", "tests_needed": [] },
+      "suggested_fix": {
+        "approach": "Add <Head><title>PageName \u2014 Embr</title></Head> to each remaining page.",
+        "affected_files": [
+          "apps/web/src/pages/**/*.tsx"
+        ],
+        "estimated_effort": "medium",
+        "risk_notes": "",
+        "tests_needed": []
+      },
       "owner": "solo-dev",
       "status": "open",
-      "related_ids": ["f-ux-f-005"],
+      "related_ids": [
+        "f-ux-f-005"
+      ],
       "history": [
-        { "timestamp": "2026-03-06T06:20:09Z", "actor": "ux-flow-auditor", "event": "created", "notes": "New finding from second audit pass." }
+        {
+          "timestamp": "2026-03-06T06:20:09Z",
+          "actor": "ux-flow-auditor",
+          "event": "created",
+          "notes": "New finding from second audit pass."
+        }
       ],
       "artifacts": []
     }
