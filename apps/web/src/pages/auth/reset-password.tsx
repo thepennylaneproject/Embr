@@ -69,22 +69,22 @@ export default function ResetPasswordPage() {
         <Card padding="lg" style={{ width: 'min(460px, 100%)' }}>
           {success ? (
             <PageState
-              title={copy.success.passwordChanged}
-              description="Your password was updated. Redirecting to sign in."
+              title={copy.onboarding.passwordReset}
+              description={copy.onboarding.passwordResetSuccess}
             />
           ) : (
             <>
               <h1 className="ui-page-title" style={{ marginBottom: '0.4rem' }}>
-                Set a new password
+                {copy.onboarding.setNewPassword}
               </h1>
               <p className="ui-page-subtitle" style={{ marginBottom: '1rem' }}>
-                Choose a secure password for your Embr account.
+                {copy.onboarding.setNewPasswordSubtitle}
               </p>
 
               {!token && (
                 <PageState
-                  title="Missing reset token"
-                  description="Open the password reset link from your email again."
+                  title={copy.onboarding.missingResetToken}
+                  description={copy.onboarding.missingResetTokenDesc}
                 />
               )}
 
@@ -113,7 +113,7 @@ export default function ResetPasswordPage() {
                     />
                     {errors.general ? <p className="ui-error-text">{errors.general}</p> : null}
                     <Button type="submit" disabled={loading} fullWidth>
-                      {loading ? 'Resetting...' : copy.onboarding.resetPassword}
+                      {loading ? copy.onboarding.resetting : copy.onboarding.resetPassword}
                     </Button>
                   </div>
                 </form>
@@ -123,7 +123,7 @@ export default function ResetPasswordPage() {
 
           <p style={{ marginTop: '1rem' }}>
             <Link href="/auth/login" style={{ color: 'var(--embr-muted-text)', textDecoration: 'underline' }}>
-              {copy.actions.back} to {copy.onboarding.signIn}
+              {copy.onboarding.backToSignIn}
             </Link>
           </p>
         </Card>
