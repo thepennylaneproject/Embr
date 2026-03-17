@@ -62,13 +62,11 @@ export class TipController {
 
   /**
    * GET /tips/:id
-   * Get a specific tip
+   * Get a specific tip — only accessible by the sender, recipient, or an admin
    */
   @Get(':id')
-  async getTip(@Param('id') id: string) {
-    // Implementation would fetch single tip
-    // Ensure user has permission to view (sender or recipient)
-    return { id }; // Placeholder
+  async getTip(@Request() req, @Param('id') id: string) {
+    return this.tipService.getTipById(id, req.user.id, req.user.role);
   }
 
   /**
@@ -96,7 +94,7 @@ export class TipController {
     @Param('postId') postId: string,
     @Query() query: GetTipsQueryDto,
   ) {
-    return this.tipService.getTips(req.user.id, { ...query, postId });
+    return this.tipService.getPostTips(req.user.id, postId, query);
   }
 
   /**

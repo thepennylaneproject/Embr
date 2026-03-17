@@ -360,17 +360,18 @@ export class MessagingGateway
         return;
       }
 
-      // Mark all messages in multiple conversations as read
-      const results = await Promise.all(
-        data.conversationIds.map((conversationId) =>
-          this.messagingService.markAsRead(client.userId!, { conversationId }),
-        ),
+      // Mark all messages in multiple conversations as read using a single bulk
+      // operation (3 fixed DB queries) instead of N * markAsRead() calls.
+      const bulkResult = await this.messagingService.bulkMarkAsRead(
+        client.userId!,
+        data.conversationIds,
       );
 
       // Emit to reader
       this.server.to(`user:${client.userId}`).emit(WebSocketEvent.MESSAGE_BULK_READ, {
-        conversationIds: data.conversationIds,
-        results,
+        conversationIds: bulkResult.conversationIds,
+        updatedCount: bulkResult.updatedCount,
+        unreadCounts: bulkResult.unreadCounts,
       });
 
       this.logger.log(

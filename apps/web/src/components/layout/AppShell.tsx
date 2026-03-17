@@ -160,6 +160,9 @@ export function AppShell({
                 <Link href="/settings" className="embr-dropdown-item embr-dropdown-link">
                   {copy.nav.settings}
                 </Link>
+                <Link href="/onboarding" className="embr-dropdown-item embr-dropdown-link">
+                  Getting Started
+                </Link>
                 <hr className="embr-dropdown-divider" />
                 <button
                   onClick={logout}
