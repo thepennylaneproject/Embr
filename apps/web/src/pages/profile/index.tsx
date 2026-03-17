@@ -46,7 +46,11 @@ export default function ProfilePage() {
   if (!user || loading) {
     return (
       <ProtectedPageShell breadcrumbs={[{ label: 'Profile' }]}>
-        <PageState title="Loading profile" description="Please wait while we load your profile." />
+        <PageState
+          title="Loading profile"
+          description="Please wait while we load your profile."
+          isLoading
+        />
       </ProtectedPageShell>
     );
   }
@@ -125,7 +129,7 @@ export default function ProfilePage() {
       <section>
         <h2 style={{ marginBottom: '1rem', fontWeight: '600' }}>Recent Posts</h2>
         {isLoadingPosts ? (
-          <p style={{ color: 'var(--embr-muted-text)' }}>Loading posts...</p>
+          <PageState title="Loading posts" description="Fetching your recent posts." isLoading />
         ) : postsError ? (
           <p style={{ color: 'var(--embr-error)' }}>{postsError}</p>
         ) : posts.length === 0 ? (
