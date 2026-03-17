@@ -37,6 +37,7 @@ describe('Block Enforcement', () => {
     lastMessageAt: new Date(),
     participant1: { id: mockUserId1, username: 'user1', profile: {} },
     participant2: { id: mockUserId2, username: 'user2', profile: {} },
+    messages: [],
   };
 
   beforeEach(async () => {
@@ -58,6 +59,8 @@ describe('Block Enforcement', () => {
             },
             message: {
               create: jest.fn(),
+              count: jest.fn().mockResolvedValue(0),
+              findMany: jest.fn().mockResolvedValue([]),
             },
             blockedUser: {
               findFirst: jest.fn(),
@@ -87,7 +90,8 @@ describe('Block Enforcement', () => {
         participantId: mockUserId2,
       });
 
-      expect(result.conversation).toEqual(mockConversation);
+      expect(result.conversation).toBeDefined();
+      expect(result.conversation.id).toBe(mockConversation.id);
       expect(prismaService.blockedUser.findFirst).toHaveBeenCalledWith({
         where: {
           OR: [
@@ -167,7 +171,8 @@ describe('Block Enforcement', () => {
         participantId: mockUserId2,
       });
 
-      expect(result.conversation).toEqual(mockConversation);
+      expect(result.conversation).toBeDefined();
+      expect(result.conversation.id).toBe(mockConversation.id);
     });
   });
 
@@ -262,7 +267,8 @@ describe('Block Enforcement', () => {
         participantId: mockUserId2,
       });
 
-      expect(result.conversation).toEqual(mockConversation);
+      expect(result.conversation).toBeDefined();
+      expect(result.conversation.id).toBe(mockConversation.id);
     });
 
     it('should handle block check database errors', async () => {

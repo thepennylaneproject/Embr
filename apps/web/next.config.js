@@ -1,4 +1,68 @@
 /** @type {import('next').NextConfig} */
+
+// Validate environment variables before Next.js configuration is applied.
+// This runs on `next dev`, `next build`, and `next start` so misconfigurations
+// are surfaced immediately rather than causing cryptic runtime failures.
+//
+// next.config.js is plain JavaScript, so we inline a minimal validation here
+// rather than importing the TypeScript module at apps/web/src/lib/env.ts
+// (which is transpiled separately).
+(function validateRequiredEnv() {
+  /** @type {Array<{name: string, description: string, validate?: (v: string) => boolean, hint?: string}>} */
+  const required = [
+    {
+      name: 'NEXT_PUBLIC_API_URL',
+      description: 'Base URL for the Embr API (e.g. http://localhost:3003/api)', // pragma: allowlist secret
+      validate: (v) => /^https?:\/\/.+/.test(v),
+      hint: 'must be a full HTTP(S) URL',
+    },
+    {
+      name: 'NEXT_PUBLIC_WS_URL',
+      description: 'WebSocket server URL for real-time messaging (e.g. http://localhost:3003)', // pragma: allowlist secret
+      validate: (v) => /^(https?|wss?):\/\/.+/.test(v),
+      hint: 'must be a full HTTP(S) or WS(S) URL',
+    },
+  ];
+
+  /** @type {string[]} */
+  const errors = [];
+
+  for (const spec of required) {
+    const value = process.env[spec.name];
+    if (!value || value.trim() === '') {
+      errors.push(`  ${spec.name} — ${spec.description}`);
+    } else if (spec.validate && !spec.validate(value)) {
+      errors.push(`  ${spec.name} — invalid value ("${value}"): ${spec.hint}`);
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(
+      '[Embr] Missing or invalid required environment variables:\n' +
+        errors.join('\n') +
+        '\n\nCopy apps/web/.env.example to apps/web/.env.local and fill in the values.',
+    );
+  }
+
+  // Log optional vars that are absent so operators notice them during startup.
+  /** @type {Array<{name: string, description: string}>} */
+  const optional = [
+    { name: 'NEXT_PUBLIC_WEB_URL', description: 'Public web app URL (canonical links, OAuth)' },
+    { name: 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY', description: 'Stripe key (payment UIs)' },
+    { name: 'NEXT_PUBLIC_GOOGLE_CLIENT_ID', description: 'Google OAuth (Sign in with Google)' },
+    { name: 'NEXT_PUBLIC_GA_ID', description: 'Google Analytics' },
+    { name: 'NEXT_PUBLIC_SENTRY_DSN', description: 'Sentry error tracking' },
+  ];
+
+  const missing = optional.filter(({ name }) => !process.env[name]);
+  if (missing.length > 0) {
+    console.warn(
+      '[Embr] Optional environment variables are not set — some features will be unavailable:\n' +
+        missing.map(({ name, description }) => `  ${name} — ${description}`).join('\n'),
+    );
+  }
+})();
+
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
@@ -19,10 +83,23 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.imgix.net' },
       { protocol: 'https', hostname: 'gravatar.com' },
       { protocol: 'https', hostname: '*.githubusercontent.com' },
+      // DiceBear avatars (used by seed data)
+      { protocol: 'https', hostname: 'api.dicebear.com' },
+      // Placeholder images used in demo/seed content
+      { protocol: 'https', hostname: 'placehold.co' },
+      { protocol: 'https', hostname: 'via.placeholder.com' },
+      { protocol: 'https', hostname: 'picsum.photos' },
     ],
   },
 
   async headers() {
+    const isDev = process.env.NODE_ENV !== 'production';
+    // In development, allow cross-port localhost connections (API runs on different port)
+    // In production, 'self' plus the stripe API are sufficient
+    const connectSrc = isDev
+      ? "'self' https://api.stripe.com ws://localhost:* http://localhost:3003 http://localhost:*"  // pragma: allowlist secret
+      : "'self' https://api.stripe.com";
+
     return [
       {
         source: "/:path*",
@@ -33,14 +110,13 @@ const nextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https:",
+              "img-src 'self' data: https: blob:",
               "font-src 'self'",
-              "connect-src 'self' https://api.stripe.com",
+              `connect-src 'self' https://api.stripe.com${apiOrigin ? ` ${apiOrigin}` : ''}`,
               "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
-              "upgrade-insecure-requests",
             ].join("; "),
           },
           {

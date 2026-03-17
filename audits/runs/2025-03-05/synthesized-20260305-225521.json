@@ -19,13 +19,6 @@
       "audits/runs/**/*.summary.md"
     ]
   },
-  "summary": {
-    "new_findings": 0,
-    "resolved_findings": 0,
-    "changed_status": 0,
-    "open_findings_total": 80,
-    "resolved_findings_total": 9
-  },
   "triage": {
     "p0_blockers_fix_now": [],
     "p0_p1_small_fix_this_session": [],

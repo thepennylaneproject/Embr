@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { UserRole } from '@prisma/client';
+import { sanitizeAdminUser } from '../../../common/utils/user-sanitizer';
 
 export interface ModerationStats {
   pendingReports: number;
@@ -183,9 +184,15 @@ export class AdminModerationService {
       });
     }
 
+    // Sanitize the nested reportedUser to prevent credential leakage.
+    const safeReport = {
+      ...report,
+      reportedUser: report.reportedUser ? sanitizeAdminUser(report.reportedUser) : null,
+    };
+
     return {
       message: `Report ${action === 'APPROVE' ? 'approved and action taken' : 'dismissed'}`,
-      report,
+      report: safeReport,
     };
   }
 
@@ -222,7 +229,7 @@ export class AdminModerationService {
       } as any,
     });
 
-    return { message: `User suspended for ${suspensionDays} days`, user };
+    return { message: `User suspended for ${suspensionDays} days`, user: sanitizeAdminUser(user) };
   }
 
   /**
@@ -241,7 +248,7 @@ export class AdminModerationService {
       data: { suspended: false, suspendedUntil: null },
     });
 
-    return { message: 'User unsuspended', user };
+    return { message: 'User unsuspended', user: sanitizeAdminUser(user) };
   }
 
   /**

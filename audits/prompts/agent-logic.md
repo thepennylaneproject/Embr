@@ -80,8 +80,12 @@ Return only one JSON object:
 - `severity`: `blocker` | `major` | `minor` | `nit` (lowercase only)
 - `priority`: `P0` | `P1` | `P2` | `P3`
 - `type`: `bug` | `enhancement` | `debt` | `question`
+- `status`: `open` | `accepted` | `in_progress` | `fixed_pending_verify` | `fixed_verified` | `wont_fix` | `deferred` | `duplicate` | `converted_to_enhancement`
 - `confidence`: `evidence` | `inference` | `speculation` (lowercase only)
 - `hook_type`: `code_ref` | `error_text` | `command` | `repro_steps` | `ui_path` | `data_shape` | `log_line` | `config_key` | `query` | `artifact_ref`
 - `environment`: `local` | `ci` | `staging` | `production`
+- `history[].event`: `created` | `repro_confirmed` | `hypothesis_added` | `patch_proposed` | `patch_applied` | `verification_passed` | `verification_failed` | `reopened` | `deferred` | `wont_fix` | `linked_duplicate` | `scope_changed` | `severity_changed` | `split_into_children` | `converted_type` | `note_added`
+
+Do NOT use: `vulnerability`, `risk`, `performance`, `dead_code`, `high`, `medium`, `low`, `critical`, `info`, `P4`, `resolved`, `fixed`, `closed`, `history_checked`, `re_reported`, `decision_deferred`, `updated`, `fixed_verified` (as a history event), `in_progress` (as a history event). Map to the values above.
 
 No text outside JSON. Validate your output against `audits/schema/audit-output.schema.json` before writing.

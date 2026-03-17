@@ -11,13 +11,14 @@ import { MuxVideoService } from '../services/mux-video.service';
 import { ThumbnailService } from '../services/thumbnail.service';
 import { MediaService } from '../services/media.service';
 import { MediaValidatorService } from '../services/media-validator.service';
-import { InitiateUploadDto } from '../dto/media-upload.dto';
+import { InitiateUploadDto, ContentType } from '../dto/media-upload.dto';
 
 describe('MediaUploadController', () => {
   let controller: MediaUploadController;
   let s3Service: S3MultipartService;
   let mediaService: MediaService;
   let mediaValidator: MediaValidatorService;
+  let muxService: MuxVideoService;
 
   const mockUser = { id: 'user-123', email: 'test@example.com' };
 
@@ -71,6 +72,7 @@ describe('MediaUploadController', () => {
     s3Service = module.get<S3MultipartService>(S3MultipartService);
     mediaService = module.get<MediaService>(MediaService);
     mediaValidator = module.get<MediaValidatorService>(MediaValidatorService);
+    muxService = module.get<MuxVideoService>(MuxVideoService);
   });
 
   describe('initiateUpload', () => {
@@ -79,20 +81,21 @@ describe('MediaUploadController', () => {
         fileName: 'huge-file.mp4',
         fileType: 'video/mp4',
         fileSize: 2 * 1024 * 1024 * 1024, // 2GB (exceeds 1GB max)
-        contentType: 'video',
+        contentType: ContentType.VIDEO,
       };
 
-      expect(async () => {
+      await expect(async () => {
         await controller.initiateUpload(mockUser, dto);
       }).rejects.toThrow();
     });
 
     it('should allow file within size limits', async () => {
+      // Use DOCUMENT to avoid the Mux path (VIDEO goes through Mux for large files)
       const dto: InitiateUploadDto = {
-        fileName: 'video.mp4',
-        fileType: 'video/mp4',
+        fileName: 'report.pdf',
+        fileType: 'application/pdf',
         fileSize: 500 * 1024 * 1024, // 500MB (within limit)
-        contentType: 'video',
+        contentType: ContentType.DOCUMENT,
       };
 
       jest.spyOn(mediaService, 'getMediaStats').mockResolvedValue({
@@ -105,7 +108,7 @@ describe('MediaUploadController', () => {
       jest.spyOn(s3Service, 'shouldUseMultipart').mockReturnValue(true);
       jest.spyOn(s3Service, 'initializeMultipartUpload').mockResolvedValue({
         uploadId: 'upload-123',
-        fileKey: 'videos/2026/02/user-123/file.mp4',
+        fileKey: 'documents/2026/02/user-123/file.pdf',
         partSize: 10 * 1024 * 1024,
         totalParts: 50,
       });
@@ -125,7 +128,7 @@ describe('MediaUploadController', () => {
         fileName: 'video.mp4',
         fileType: 'video/mp4',
         fileSize: 50 * 1024 * 1024 * 1024, // 50GB
-        contentType: 'video',
+        contentType: ContentType.VIDEO,
       };
 
       jest.spyOn(mediaService, 'getMediaStats').mockResolvedValue({
@@ -135,7 +138,7 @@ describe('MediaUploadController', () => {
         byStatus: [],
       });
 
-      expect(async () => {
+      await expect(async () => {
         await controller.initiateUpload(mockUser, dto);
       }).rejects.toThrow(HttpException);
     });
@@ -145,7 +148,7 @@ describe('MediaUploadController', () => {
         fileName: 'file.jpg',
         fileType: 'image/jpeg',
         fileSize: 2 * 1024 * 1024, // 2MB
-        contentType: 'image',
+        contentType: ContentType.IMAGE,
       };
 
       jest.spyOn(mediaService, 'getMediaStats').mockResolvedValue({
@@ -163,7 +166,7 @@ describe('MediaUploadController', () => {
         expiresIn: 300, // Should be ~300s for 2MB file
       });
 
-      const result = await controller.initiateUpload(mockUser, dto);
+      const result = await controller.initiateUpload(mockUser, dto) as any;
       expect(result.expiresIn).toBeLessThanOrEqual(900); // Max 15 minutes
       expect(result.expiresIn).toBeGreaterThan(0);
     });
@@ -173,7 +176,7 @@ describe('MediaUploadController', () => {
         fileName: 'script.exe',
         fileType: 'application/x-msdownload',
         fileSize: 1 * 1024 * 1024,
-        contentType: 'video', // Mismatch: .exe shouldn't be video
+        contentType: ContentType.VIDEO, // Mismatch: .exe shouldn't be video
       };
 
       jest.spyOn(mediaService, 'getMediaStats').mockResolvedValue({
@@ -183,7 +186,7 @@ describe('MediaUploadController', () => {
         byStatus: [],
       });
 
-      expect(async () => {
+      await expect(async () => {
         await controller.initiateUpload(mockUser, dto);
       }).rejects.toThrow(HttpException);
     });
@@ -220,10 +223,10 @@ describe('MediaUploadController', () => {
       const dto = {
         fileKey: 'images/2026/02/user-123/file.jpg',
         fileName: 'file.jpg',
-        contentType: 'image',
+        contentType: ContentType.IMAGE,
       };
 
-      expect(async () => {
+      await expect(async () => {
         await (controller as any).completeUpload(mockUser, dto);
       }).rejects.toThrow(HttpException);
 
@@ -237,10 +240,10 @@ describe('MediaUploadController', () => {
       const dto = {
         fileKey: 'images/2026/02/other-user/file.jpg', // Different userId
         fileName: 'file.jpg',
-        contentType: 'image',
+        contentType: ContentType.IMAGE,
       };
 
-      expect(async () => {
+      await expect(async () => {
         await (controller as any).completeUpload(mockUser, dto);
       }).rejects.toThrow(HttpException);
     });
@@ -274,12 +277,12 @@ describe('MediaUploadController', () => {
         userId: mockUser.id,
         fileName: 'file.jpg',
         status: 'completed',
-      });
+      } as any);
 
       const dto = {
         fileKey: 'images/2026/02/user-123/file.jpg',
         fileName: 'file.jpg',
-        contentType: 'image',
+        contentType: ContentType.IMAGE,
       };
 
       const result = await (controller as any).completeUpload(mockUser, dto);
@@ -294,7 +297,7 @@ describe('MediaUploadController', () => {
         fileName: 'video.mp4',
         fileType: 'video/mp4',
         fileSize: 500 * 1024 * 1024,
-        contentType: 'video',
+        contentType: ContentType.VIDEO,
         isPrivate: true, // Default
       };
 
@@ -319,7 +322,7 @@ describe('MediaUploadController', () => {
         userId: mockUser.id,
         fileName: 'video.mp4',
         status: 'uploading',
-      });
+      } as any);
 
       const result = await controller.initiateUpload(mockUser, dto);
       expect(result.uploadType).toBe('mux');
@@ -338,7 +341,7 @@ describe('MediaUploadController', () => {
         fileName: 'video.mp4',
         fileType: 'video/mp4',
         fileSize: 500 * 1024 * 1024,
-        contentType: 'video',
+        contentType: ContentType.VIDEO,
         isPrivate: false, // Public
       };
 
@@ -362,7 +365,7 @@ describe('MediaUploadController', () => {
         userId: mockUser.id,
         fileName: 'video.mp4',
         status: 'uploading',
-      });
+      } as any);
 
       const result = await controller.initiateUpload(mockUser, dto);
 

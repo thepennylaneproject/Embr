@@ -708,23 +708,30 @@
       "priority": "P3"
     }
   ],
-  "summary": {
-    "total_findings": 23,
+  "schema_version": "1.1.0",
+  "run_metadata": {
+    "timestamp": "2026-03-05T14:30:00Z",
+    "branch": "main",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "claude-sonnet-4-5"
+  },
+  "rollups": {
     "by_severity": {
-      "P0_blocker": 2,
-      "P1_high": 11,
-      "P2_medium": 7,
-      "P3_low": 3
+      "blocker": 2,
+      "major": 11,
+      "minor": 8,
+      "nit": 2
     },
     "by_category": {
-      "auth-bypass": 5,
-      "data-leakage": 7,
       "secrets-exposure": 4,
+      "auth-bypass": 5,
+      "data-leakage": 8,
       "missing-validation": 5,
-      "cors-misconfiguration": 1,
-      "xss": 0,
-      "injection": 0,
-      "dependency-vuln": 0
+      "cors-misconfiguration": 1
+    },
+    "by_type": {
+      "bug": 23
     },
     "dependency_note": "No known critical CVEs in declared dependency versions: NestJS 10.x, Next.js 14.2.5, bcryptjs 2.4.3, passport-jwt 4.0.1, Stripe 14.x, Prisma 5.8.0. passport-google-oauth20 2.0.0 is current. Prisma 5.8.0 is behind 5.22.0 (declared in apps/api/package.json) \u2014 the root package.json pins 5.8.0. Recommend running npm audit for transitive dependency vulnerabilities not visible from declared dependencies alone.",
     "top_priorities": [

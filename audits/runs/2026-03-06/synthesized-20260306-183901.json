@@ -23,8 +23,7 @@
       "audits/index.json"
     ],
     "files_skipped": [],
-    "coverage_complete": true,
-    "incomplete_reason": null
+    "coverage_complete": true
   },
   "rollups": {
     "by_severity": {
@@ -79,8 +78,16 @@
     ],
     "resolved_findings": [],
     "changed_severity": [
-      "f-ux-f-017",
-      "f-ux-f-018"
+      {
+        "finding_id": "f-ux-f-017",
+        "old_severity": "unknown",
+        "new_severity": "unknown"
+      },
+      {
+        "finding_id": "f-ux-f-018",
+        "old_severity": "unknown",
+        "new_severity": "unknown"
+      }
     ],
     "changed_status": [],
     "converted_type": [],
@@ -2133,7 +2140,7 @@
       "priority": "P2",
       "confidence": "inference",
       "title": "CORS falls back to localhost origins if ALLOWED_ORIGINS is unset in production",
-      "description": "The CORS origin whitelist defaults to 'http://localhost:3000,http://localhost:3001,http://localhost:3004' if ALLOWED_ORIGINS is not set. In a production deployment where this env var is absent, legitimate production-domain requests are blocked while localhost origins are permitted.",
+      "description": "The CORS origin whitelist defaults to 'http://localhost:3000,http://localhost:3001,http://app.example.com' if ALLOWED_ORIGINS is not set. In a production deployment where this env var is absent, legitimate production-domain requests are blocked while localhost origins are permitted.",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
@@ -4817,7 +4824,7 @@
       "severity": "major",
       "priority": "P1",
       "confidence": "evidence",
-      "title": "revenueService.recordStream() stores a USD float as TrackPlay.royaltyAmount which is declared Int (cents) in Prisma schema",
+      "title": "revenueService.recordStream() stores a USD float as TrackPlay.royaltyAmount which is declared Int (cents) in Prisma s...",
       "description": "revenueService.recordStream() computes royaltyAmount = isValidStream ? 0.003 : 0 (a USD dollar float) and persists it to TrackPlay.royaltyAmount. The Prisma schema declares TrackPlay.royaltyAmount as Int (integer cents). Prisma silently truncates the float to 0, making all stream royalty earnings zero regardless of playback.",
       "proof_hooks": [
         {
@@ -4862,7 +4869,7 @@
       "severity": "major",
       "priority": "P1",
       "confidence": "evidence",
-      "title": "Music AudioQuality type uses lowercase/mismatched values vs. Prisma enum; service writes unvalidated string with `as any` cast",
+      "title": "Music AudioQuality type uses lowercase/mismatched values vs. Prisma enum; service writes unvalidated string with `as ...",
       "description": "The music module's TypeScript AudioQuality interface defines quality as 'low'|'standard'|'high'|'lossless' while the Prisma enum uses LOW|STANDARD|HIGH|HIRES. The value 'lossless' has no DB equivalent (HIRES is the closest). revenueService.recordStream() accepts quality as a raw string and writes quality: quality as any, bypassing all enum validation. Any caller using the TypeScript type values directly will get runtime DB errors.",
       "proof_hooks": [
         {
@@ -4913,7 +4920,7 @@
       "severity": "major",
       "priority": "P1",
       "confidence": "evidence",
-      "title": "ArtistStat.revenue and Track.price use Float (USD) while the rest of the platform uses Int (integer cents) for all monetary values",
+      "title": "ArtistStat.revenue and Track.price use Float (USD) while the rest of the platform uses Int (integer cents) for all mo...",
       "description": "The music vertical introduced ArtistStat.revenue (Float, in USD) and Track.price (Float, in USD). Every other monetary field in the schema (Wallet.balance, Transaction.amount, Payout.amount, Escrow.amount, GigMilestone.amount, MarketplaceListing.price, VideoUsage.totalRevenue, VideoUsage.originalArtistShare, etc.) uses Int (integer cents). This creates a dual-unit money model where cross-domain revenue aggregation code will produce 100x scaling errors.",
       "proof_hooks": [
         {

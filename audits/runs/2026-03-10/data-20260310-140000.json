@@ -24,8 +24,7 @@
       "<13 files examined, list unavailable>"
     ],
     "files_skipped": [],
-    "coverage_complete": true,
-    "incomplete_reason": null
+    "coverage_complete": true
   },
   "findings": [
     {
@@ -397,25 +396,6 @@
       "rationale": "Remove @@index([userId]) from Wallet model (line 388). Rebuild schema. Estimated effort: 0.25 days."
     }
   ],
-  "summary": {
-    "total_findings": 7,
-    "critical_issues": 1,
-    "major_issues": 2,
-    "minor_issues": 4,
-    "schema_version_in_use": "Prisma 5 with PostgreSQL 16",
-    "tables_examined": 60,
-    "tables_with_issues": 8,
-    "rls_policies": 0,
-    "key_observations": [
-      "Schema is generally well-structured with comprehensive foreign key relationships and cascading deletes.",
-      "Recent migrations (Feb-Mar 2026) show active schema evolution, particularly around monetization (wallet backfill, cents normalization).",
-      "Constraint enforcement is primarily application-layer (Prisma DTOs); database-level CHECK constraints are absent for monetary fields.",
-      "No Row-Level Security policies implemented; data access control relies entirely on application middleware.",
-      "Multiple optional (nullable) foreign keys with SetNull cascade create orphaning risk for integrity audits.",
-      "Monetary type normalization from float to integer (cents) completed with safety checks; no data quality issues detected.",
-      "Transaction and Payout tables correctly depend on Wallet; backfill migration ensures referential integrity post-migration."
-    ]
-  },
   "run_metadata": {
     "timestamp": "2026-03-10T14:30:22Z",
     "branch": "main",

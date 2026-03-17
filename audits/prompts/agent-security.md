@@ -29,16 +29,20 @@ Identify practical security/privacy risks: auth/authz gaps, validation weaknesse
 ## Valid Enums (strict -- no substitutions, no invented values)
 
 - **severity:** `blocker` | `major` | `minor` | `nit`
-  - Security-specific mapping: critical risk = `blocker`, high risk = `major`, medium risk = `minor`, informational = `nit`
+  - Security-specific mapping: critical risk = `blocker`, high risk = `major`, medium risk = `minor`, informational observations = `nit`
+  - NEVER use: `critical`, `high`, `medium`, `low`, `info`, `informational`, `warning`, `P0`, `P1`, `P2`, `P3`
 - **priority:** `P0` | `P1` | `P2` | `P3`
 - **type:** `bug` | `enhancement` | `debt` | `question`
-  - Security-specific mapping: vulnerability = `bug`, risk/exposure = `bug`, informational = `debt`
+  - Security-specific mapping: vulnerability = `bug`, risk/exposure = `bug`, informational observations = `debt`
+  - NEVER use: `vulnerability`, `risk`, `informational`, `info`, `observation`, `note`, `security`
 - **status:** `open` | `accepted` | `in_progress` | `fixed_pending_verify` | `fixed_verified` | `wont_fix` | `deferred` | `duplicate` | `converted_to_enhancement`
 - **confidence:** `evidence` | `inference` | `speculation`
 - **hook_type:** `code_ref` | `error_text` | `command` | `repro_steps` | `ui_path` | `data_shape` | `log_line` | `config_key` | `query` | `artifact_ref`
 - **estimated_effort:** `trivial` | `small` | `medium` | `large` | `epic`
 
-Do NOT use "vulnerability", "risk", "informational", "high", "medium", "low", "critical", "info", or "P4". Map to the values above.
+**FORBIDDEN values** (schema validator will reject these — do not use them):
+- severity: `critical`, `high`, `medium`, `low`, `info`, `informational`, `P0`, `P1`, `P2`, `P3`
+- type: `vulnerability`, `risk`, `informational`, `info`, `observation`, `note`, `security`
 
 ## Finding ID Format
 
@@ -79,11 +83,13 @@ Return only one JSON object:
 - `next_actions`: array of `{ action, finding_id, rationale }` objects
 
 **Enum constraints (strict — no substitutions):**
-- `severity`: `blocker` | `major` | `minor` | `nit` (lowercase only)
+- `severity`: `blocker` | `major` | `minor` | `nit` (lowercase only — NOT `info`, `informational`, `high`, `critical`, or priority codes)
 - `priority`: `P0` | `P1` | `P2` | `P3`
-- `type`: `bug` | `enhancement` | `debt` | `question`
+- `type`: `bug` | `enhancement` | `debt` | `question` (NOT `informational`, `vulnerability`, `risk`, or `info`)
 - `confidence`: `evidence` | `inference` | `speculation` (lowercase only)
 - `hook_type`: `code_ref` | `error_text` | `command` | `repro_steps` | `ui_path` | `data_shape` | `log_line` | `config_key` | `query` | `artifact_ref`
 - `environment`: `local` | `ci` | `staging` | `production`
+- `history[].event`: `created` | `repro_confirmed` | `hypothesis_added` | `patch_proposed` | `patch_applied` | `verification_passed` | `verification_failed` | `reopened` | `deferred` | `wont_fix` | `linked_duplicate` | `scope_changed` | `severity_changed` | `split_into_children` | `converted_type` | `note_added`
 
 No text outside JSON. Validate your output against `audits/schema/audit-output.schema.json` before writing.
+Run `python3 audits/validate_output.py <your-output-file.json>` to check conformance before submitting.

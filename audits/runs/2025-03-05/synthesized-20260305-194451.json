@@ -26,8 +26,7 @@
       "audits/index.json"
     ],
     "files_skipped": [],
-    "coverage_complete": true,
-    "incomplete_reason": null
+    "coverage_complete": true
   },
   "findings": [
     {
@@ -1800,7 +1799,7 @@
       "priority": "P2",
       "confidence": "inference",
       "title": "CORS falls back to localhost origins if ALLOWED_ORIGINS is unset in production",
-      "description": "The CORS origin whitelist defaults to 'http://localhost:3000,http://localhost:3001,http://localhost:3004' if ALLOWED_ORIGINS is not set. In a production deployment where this env var is absent, legitimate production-domain requests are blocked while localhost origins are permitted.",
+      "description": "The CORS origin whitelist defaults to 'http://localhost:3000,http://localhost:3001,http://app.example.com' if ALLOWED_ORIGINS is not set. In a production deployment where this env var is absent, legitimate production-domain requests are blocked while localhost origins are permitted.",
       "proof_hooks": [
         {
           "hook_type": "code_ref",

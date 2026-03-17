@@ -73,8 +73,7 @@
       ".archive/** (non-runtime historical copies)",
       "generated build manifests not present"
     ],
-    "coverage_complete": true,
-    "incomplete_reason": null
+    "coverage_complete": true
   },
   "findings": [
     {
