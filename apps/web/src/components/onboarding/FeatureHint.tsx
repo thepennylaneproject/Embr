@@ -3,8 +3,12 @@
  * A dismissible hint banner shown once per page to explain what the feature does.
  * Uses OnboardingContext to track which pages have been visited.
  * Stops appearing after the user has seen it (localStorage-backed).
+ *
+ * Implementation note: we use local state to capture "first visit" on mount
+ * (before the context marks the page as visited) to avoid an immediate
+ * disappear due to state updates in the same render cycle.
  */
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -18,20 +22,24 @@ interface FeatureHintProps {
 export function FeatureHint({ pageId, icon, title, description }: FeatureHintProps) {
   const { user } = useAuth();
   const { loaded, isPageVisited, markPageVisited } = useOnboarding();
-  const [dismissed, setDismissed] = React.useState(false);
+  const [visible, setVisible] = React.useState(false);
+  // Prevent the effect from running multiple times in React StrictMode
+  const hasRun = useRef(false);
 
-  // Mark page as visited once it's been seen
   useEffect(() => {
-    if (!loaded || !user) return;
+    if (!loaded || !user || hasRun.current) return;
+    hasRun.current = true;
+
     if (!isPageVisited(pageId)) {
+      // Show the hint now, and mark the page as visited so it won't appear again on next visit
+      setVisible(true);
       markPageVisited(pageId);
     }
-  }, [loaded, user, pageId, isPageVisited, markPageVisited]);
+    // Intentionally not depending on isPageVisited/markPageVisited to capture one-time check
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, user]);
 
-  // Only show on first visit (before the effect marks it as visited)
-  const shouldShow = loaded && user && !isPageVisited(pageId) && !dismissed;
-
-  if (!shouldShow) return null;
+  if (!visible) return null;
 
   return (
     <div
@@ -77,7 +85,7 @@ export function FeatureHint({ pageId, icon, title, description }: FeatureHintPro
         </p>
       </div>
       <button
-        onClick={() => setDismissed(true)}
+        onClick={() => setVisible(false)}
         aria-label="Dismiss hint"
         style={{
           background: 'none',

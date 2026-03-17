@@ -19,6 +19,9 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.imgix.net' },
       { protocol: 'https', hostname: 'gravatar.com' },
       { protocol: 'https', hostname: '*.githubusercontent.com' },
+      // Placeholder and avatar services
+      { protocol: 'https', hostname: 'placehold.co' },
+      { protocol: 'https', hostname: 'api.dicebear.com' },
     ],
   },
 
@@ -35,7 +38,8 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self'",
-              "connect-src 'self' https://api.stripe.com",
+
+              `connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL || ''} https://api.stripe.com`,
               "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
               "object-src 'none'",
               "base-uri 'self'",
