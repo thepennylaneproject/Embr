@@ -27,8 +27,7 @@
     "files_skipped": [
       "Music-related pages (in progress)"
     ],
-    "coverage_complete": true,
-    "incomplete_reason": null
+    "coverage_complete": true
   },
   "findings": [
     {

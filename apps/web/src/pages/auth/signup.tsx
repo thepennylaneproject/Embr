@@ -4,6 +4,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
+import AuthShell from '@/components/auth/AuthShell';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { Button, Card, Input } from '@embr/ui';
 import { copy } from '@/lib/copy';
@@ -65,7 +66,7 @@ export default function SignupPage() {
       <Head>
         <title>{copy.brand.pageTitle(copy.onboarding.createAccountTitle)}</title>
       </Head>
-      <main className="embr-page" style={{ display: 'grid', placeItems: 'center', padding: '1rem' }}>
+      <AuthShell backHref="/auth/login">
         <Card padding="lg" style={{ width: 'min(520px, 100%)' }}>
           <h1 className="ui-page-title" style={{ marginBottom: '0.3rem' }}>
             {copy.onboarding.createAccountTitle}
@@ -136,7 +137,7 @@ export default function SignupPage() {
             </Link>
           </p>
         </Card>
-      </main>
+      </AuthShell>
     </ProtectedRoute>
   );
 }

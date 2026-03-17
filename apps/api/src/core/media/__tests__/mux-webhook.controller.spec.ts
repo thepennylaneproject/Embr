@@ -11,18 +11,49 @@ import { MuxVideoService } from '../services/mux-video.service';
 import { MediaService } from '../services/media.service';
 import { ThumbnailService } from '../services/thumbnail.service';
 
+/** Minimal Media row stub – only fields actually checked in this test file. */
+const createMockMedia = (overrides: Record<string, unknown> = {}) => ({
+  id: 'media-123',
+  userId: 'user-123',
+  fileName: 'video.mp4',
+  fileType: 'video/mp4',
+  fileSize: 1024,
+  contentType: 'video',
+  uploadId: null,
+  fileKey: 'key/video.mp4',
+  fileUrl: 'https://cdn.example.com/video.mp4',
+  thumbnailUrl: null,
+  thumbnailKey: null,
+  muxAssetId: null,
+  muxPlaybackId: null,
+  playbackUrl: null,
+  playbackPolicy: null,
+  duration: null,
+  aspectRatio: null,
+  status: 'processing',
+  errorMessage: null,
+  completedAt: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  deletedAt: null,
+  postId: null,
+  ...overrides,
+});
+
 describe('MuxWebhookController', () => {
   let controller: MuxWebhookController;
   let muxService: MuxVideoService;
   let mediaService: MediaService;
   let eventEmitter: EventEmitter2;
+  let thumbnailService: ThumbnailService;
+  let module: TestingModule;
 
   const mockRequest = {
     rawBody: Buffer.from(JSON.stringify({ test: 'data' })),
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       controllers: [MuxWebhookController],
       providers: [
         {
@@ -37,6 +68,7 @@ describe('MuxWebhookController', () => {
             webhookEventProcessed: jest.fn(),
             markWebhookEventProcessed: jest.fn(),
             getMediaByMuxAssetId: jest.fn(),
+            getMediaByUploadId: jest.fn(),
             updateMediaStatus: jest.fn(),
             updateMediaWithMuxData: jest.fn(),
           },
@@ -60,6 +92,7 @@ describe('MuxWebhookController', () => {
     muxService = module.get<MuxVideoService>(MuxVideoService);
     mediaService = module.get<MediaService>(MediaService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
+    thumbnailService = module.get<ThumbnailService>(ThumbnailService);
   });
 
   describe('Webhook Idempotency', () => {
@@ -74,21 +107,26 @@ describe('MuxWebhookController', () => {
         .spyOn(muxService, 'verifyWebhookSignature')
         .mockReturnValue(false);
 
-      expect(async () => {
-        await controller.handleWebhook(
+      await expect(
+        controller.handleWebhook(
           mockRequest as any,
           'invalid-signature',
           '1708000000',
           body,
-        );
-      }).rejects.toThrow(HttpException);
+        ),
+      ).rejects.toThrow(HttpException);
     });
 
     it('should process webhook only once (idempotency)', async () => {
       const body = {
         id: 'webhook-123',
         type: 'video.asset.ready',
-        data: { id: 'asset-456' },
+        data: {
+          id: 'asset-456',
+          playback_ids: [{ id: 'playback-789', policy: 'public' }],
+          duration: 60,
+          aspect_ratio: '16:9',
+        },
       };
 
       // First call: webhook not processed
@@ -105,16 +143,22 @@ describe('MuxWebhookController', () => {
         .spyOn(mediaService, 'markWebhookEventProcessed')
         .mockResolvedValue(undefined);
 
-      jest.spyOn(mediaService, 'getMediaByMuxAssetId').mockResolvedValue({
-        id: 'media-123',
-        userId: 'user-123',
-        fileName: 'video.mp4',
-        status: 'processing',
-      });
+      jest.spyOn(mediaService, 'getMediaByMuxAssetId').mockResolvedValue(createMockMedia() as any);
 
       jest
         .spyOn(mediaService, 'updateMediaWithMuxData')
-        .mockResolvedValue({ id: 'media-123' });
+        .mockResolvedValue({ id: 'media-123' } as any);
+
+      jest
+        .spyOn(thumbnailService, 'generateVideoThumbnail')
+        .mockResolvedValue({
+          thumbnailUrl: 'https://cdn.example.com/thumb.jpg',
+          thumbnailKey: 'thumbnails/thumb.jpg',
+          width: 1280,
+          height: 720,
+          format: 'jpeg',
+          size: 5678,
+        });
 
       // First webhook delivery - should process
       const result1 = await controller.handleWebhook(
@@ -163,20 +207,23 @@ describe('MuxWebhookController', () => {
         .spyOn(mediaService, 'webhookEventProcessed')
         .mockResolvedValue(false);
 
-      jest.spyOn(mediaService, 'getMediaByMuxAssetId').mockResolvedValue(null);
+      // Make the handler throw by rejecting the database query
+      jest
+        .spyOn(mediaService, 'getMediaByMuxAssetId')
+        .mockRejectedValue(new Error('Database unavailable'));
 
       jest
         .spyOn(mediaService, 'markWebhookEventProcessed')
         .mockResolvedValue(undefined);
 
-      expect(async () => {
-        await controller.handleWebhook(
+      await expect(
+        controller.handleWebhook(
           mockRequest as any,
           'valid-signature',
           '1708000000',
           body,
-        );
-      }).rejects.toThrow();
+        ),
+      ).rejects.toThrow();
 
       // Should not mark as processed since handler failed
       expect(mediaService.markWebhookEventProcessed).not.toHaveBeenCalled();
@@ -205,16 +252,13 @@ describe('MuxWebhookController', () => {
         .spyOn(mediaService, 'webhookEventProcessed')
         .mockResolvedValue(false);
 
-      jest.spyOn(mediaService, 'getMediaByMuxAssetId').mockResolvedValue({
-        id: 'media-error-123',
-        userId: 'user-123',
-        fileName: 'video.mp4',
-        status: 'processing',
-      });
+      jest.spyOn(mediaService, 'getMediaByMuxAssetId').mockResolvedValue(
+        createMockMedia({ id: 'media-error-123' }) as any,
+      );
 
       jest
         .spyOn(mediaService, 'updateMediaStatus')
-        .mockResolvedValue({ status: 'error' });
+        .mockResolvedValue({ status: 'error' } as any);
 
       jest
         .spyOn(mediaService, 'markWebhookEventProcessed')
@@ -257,16 +301,13 @@ describe('MuxWebhookController', () => {
         .spyOn(mediaService, 'webhookEventProcessed')
         .mockResolvedValue(false);
 
-      jest.spyOn(mediaService, 'getMediaByUploadId').mockResolvedValue({
-        id: 'media-upload-error-123',
-        userId: 'user-456',
-        fileName: 'large-video.mp4',
-        status: 'uploading',
-      });
+      jest.spyOn(mediaService, 'getMediaByUploadId').mockResolvedValue(
+        createMockMedia({ id: 'media-upload-error-123', userId: 'user-456', fileName: 'large-video.mp4', status: 'uploading' }) as any,
+      );
 
       jest
         .spyOn(mediaService, 'updateMediaStatus')
-        .mockResolvedValue({ status: 'error' });
+        .mockResolvedValue({ status: 'error' } as any);
 
       jest
         .spyOn(mediaService, 'markWebhookEventProcessed')
@@ -312,27 +353,27 @@ describe('MuxWebhookController', () => {
         .spyOn(mediaService, 'webhookEventProcessed')
         .mockResolvedValue(false);
 
-      jest.spyOn(mediaService, 'getMediaByMuxAssetId').mockResolvedValue({
-        id: 'media-ready-123',
-        userId: 'user-789',
-        fileName: 'processed-video.mp4',
-        status: 'processing',
-      });
+      jest.spyOn(mediaService, 'getMediaByMuxAssetId').mockResolvedValue(
+        createMockMedia({ id: 'media-ready-123', userId: 'user-789', fileName: 'processed-video.mp4' }) as any,
+      );
 
       jest
         .spyOn(mediaService, 'updateMediaWithMuxData')
-        .mockResolvedValue({ id: 'media-ready-123' });
+        .mockResolvedValue({ id: 'media-ready-123' } as any);
 
       jest
         .spyOn(mediaService, 'markWebhookEventProcessed')
         .mockResolvedValue(undefined);
 
-      const thumbnailService = module.get<ThumbnailService>(ThumbnailService);
       jest
         .spyOn(thumbnailService, 'generateVideoThumbnail')
         .mockResolvedValue({
           thumbnailUrl: 'https://cdn.example.com/thumb.jpg',
           thumbnailKey: 'thumbnails/thumb.jpg',
+          width: 1920,
+          height: 1080,
+          format: 'jpeg',
+          size: 12345,
         });
 
       await controller.handleWebhook(
@@ -371,14 +412,14 @@ describe('MuxWebhookController', () => {
         .spyOn(muxService, 'verifyWebhookSignature')
         .mockReturnValue(false); // Should be false due to old timestamp
 
-      expect(async () => {
-        await controller.handleWebhook(
+      await expect(
+        controller.handleWebhook(
           mockRequest as any,
           'valid-signature',
           oldTimestamp,
           body,
-        );
-      }).rejects.toThrow(HttpException);
+        ),
+      ).rejects.toThrow(HttpException);
     });
 
     it('should accept webhook with fresh timestamp', async () => {
@@ -398,16 +439,13 @@ describe('MuxWebhookController', () => {
         .spyOn(mediaService, 'webhookEventProcessed')
         .mockResolvedValue(false);
 
-      jest.spyOn(mediaService, 'getMediaByMuxAssetId').mockResolvedValue({
-        id: 'media-fresh-123',
-        userId: 'user-fresh',
-        fileName: 'video.mp4',
-        status: 'processing',
-      });
+      jest.spyOn(mediaService, 'getMediaByMuxAssetId').mockResolvedValue(
+        createMockMedia({ id: 'media-fresh-123', userId: 'user-fresh' }) as any,
+      );
 
       jest
         .spyOn(mediaService, 'updateMediaWithMuxData')
-        .mockResolvedValue({ id: 'media-fresh-123' });
+        .mockResolvedValue({ id: 'media-fresh-123' } as any);
 
       jest
         .spyOn(mediaService, 'markWebhookEventProcessed')

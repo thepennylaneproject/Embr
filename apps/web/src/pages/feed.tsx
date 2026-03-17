@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { ProtectedPageShell } from '@/components/layout';
 import { FeedTabs } from '@/components/content';
+import { WelcomeBanner } from '@/components/onboarding';
 import { copy } from '@/lib/copy';
 
 export default function FeedPage() {
@@ -14,6 +15,7 @@ export default function FeedPage() {
         subtitle={copy.dashboard.feed.subtitle}
         breadcrumbs={[{ label: copy.dashboard.feed.title }]}
       >
+        <WelcomeBanner />
         <FeedTabs />
       </ProtectedPageShell>
     </>

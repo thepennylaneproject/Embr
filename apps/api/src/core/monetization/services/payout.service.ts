@@ -468,6 +468,45 @@ export class PayoutService {
   }
 
   /**
+   * Get a single payout by ID, enforcing ownership or admin access
+   */
+  async getPayoutById(
+    payoutId: string,
+    requestingUserId: string,
+    requestingUserRole: string,
+  ): Promise<any> {
+    const payout = await this.prisma.payout.findUnique({
+      where: { id: payoutId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              select: {
+                username: true,
+                displayName: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!payout) {
+      throw new NotFoundException('Payout not found');
+    }
+
+    if (payout.userId !== requestingUserId && requestingUserRole !== 'ADMIN') {
+      throw new ForbiddenException(
+        'You do not have permission to view this payout',
+      );
+    }
+
+    return payout;
+  }
+
+  /**
    * Get payout statistics
    */
   async getPayoutStats(userId: string): Promise<{

@@ -7,7 +7,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RedisService } from './redis.service';
 
 /**
- * Mock Redis client for testing
+ * Mock Redis client – created fresh for each test.
  */
 const createMockRedisClient = () => ({
   connect: jest.fn().mockResolvedValue(undefined),
@@ -27,18 +27,23 @@ const createMockRedisClient = () => ({
   duplicate: jest.fn(),
 });
 
+// Module-level mock – must be at top-level so Jest hoists it before imports.
+jest.mock('redis', () => ({
+  createClient: jest.fn(),
+}));
+
 describe('RedisService', () => {
   let service: RedisService;
-  let mockRedisClient: any;
+  let mockRedisClient: ReturnType<typeof createMockRedisClient>;
 
   beforeEach(async () => {
+    // Build a fresh mock client for each test and wire up `duplicate`.
     mockRedisClient = createMockRedisClient();
     mockRedisClient.duplicate = jest.fn().mockReturnValue(createMockRedisClient());
 
-    // Mock the redis module
-    jest.mock('redis', () => ({
-      createClient: jest.fn().mockReturnValue(mockRedisClient),
-    }));
+    // Point the module-level mock at our fresh client.
+    const { createClient } = jest.requireMock('redis');
+    (createClient as jest.Mock).mockReturnValue(mockRedisClient);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [RedisService],
