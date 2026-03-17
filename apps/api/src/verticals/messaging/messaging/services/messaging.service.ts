@@ -298,11 +298,11 @@ export class MessagingService {
 
       // Update conversation last message time
       const updatedAt = new Date();
-      await this.prisma.conversation.update({
+      conversation = await this.prisma.conversation.update({
         where: { id: conversation.id },
         data: { lastMessageAt: updatedAt },
+        include: conversationInclude,
       });
-      conversation.lastMessageAt = updatedAt;
 
       message = {
         id: newMessage.id,
