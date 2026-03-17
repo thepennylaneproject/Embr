@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { authApi } from '@/lib/api/auth';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
+import AuthShell from '@/components/auth/AuthShell';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { Button, Card, Input, PageState } from '@embr/ui';
+import { copy } from '@/lib/copy';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -18,15 +21,15 @@ export default function ResetPasswordPage() {
     const nextErrors: Record<string, string> = {};
 
     if (!token) {
-      nextErrors.general = 'Reset token is missing.';
+      nextErrors.general = copy.errors.notFound;
     }
 
     if (formData.newPassword.length < 8) {
-      nextErrors.newPassword = 'Password must be at least 8 characters.';
+      nextErrors.newPassword = copy.errors.passwordTooShort;
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      nextErrors.confirmPassword = 'Passwords do not match.';
+      nextErrors.confirmPassword = copy.errors.passwordMismatch;
     }
 
     setErrors(nextErrors);
@@ -50,7 +53,7 @@ export default function ResetPasswordPage() {
         router.push('/auth/login');
       }, 2200);
     } catch (err: any) {
-      setErrors({ general: getApiErrorMessage(err, 'Failed to reset password.') });
+      setErrors({ general: getApiErrorMessage(err, copy.errors.generic) });
     } finally {
       setLoading(false);
     }
@@ -58,10 +61,16 @@ export default function ResetPasswordPage() {
 
   return (
     <ProtectedRoute requireAuth={false}>
-      <main className="embr-page" style={{ display: 'grid', placeItems: 'center', padding: '1rem' }}>
+      <Head>
+        <title>{copy.brand.pageTitle(copy.onboarding.resetPassword)}</title>
+      </Head>
+      <AuthShell backHref="/auth/login">
         <Card padding="lg" style={{ width: 'min(460px, 100%)' }}>
           {success ? (
-            <PageState title="Password reset" description="Your password was updated. Redirecting to sign in." />
+            <PageState
+              title={copy.success.passwordChanged}
+              description="Your password was updated. Redirecting to sign in."
+            />
           ) : (
             <>
               <h1 className="ui-page-title" style={{ marginBottom: '0.4rem' }}>
@@ -103,7 +112,7 @@ export default function ResetPasswordPage() {
                     />
                     {errors.general ? <p className="ui-error-text">{errors.general}</p> : null}
                     <Button type="submit" disabled={loading} fullWidth>
-                      {loading ? 'Resetting...' : 'Reset password'}
+                      {loading ? 'Resetting...' : copy.onboarding.resetPassword}
                     </Button>
                   </div>
                 </form>
@@ -113,11 +122,11 @@ export default function ResetPasswordPage() {
 
           <p style={{ marginTop: '1rem' }}>
             <Link href="/auth/login" style={{ color: 'var(--embr-muted-text)', textDecoration: 'underline' }}>
-              Back to sign in
+              {copy.actions.back} to {copy.onboarding.signIn}
             </Link>
           </p>
         </Card>
-      </main>
+      </AuthShell>
     </ProtectedRoute>
   );
 }
