@@ -224,6 +224,23 @@ export class MessagingService {
       );
     }
 
+    const conversationInclude = {
+      participant1: {
+        include: {
+          profile: true,
+        },
+      },
+      participant2: {
+        include: {
+          profile: true,
+        },
+      },
+      messages: {
+        take: 1,
+        orderBy: { createdAt: 'desc' },
+      },
+    };
+
     // Check if conversation already exists (including previously soft-deleted)
     const existingConversation = await this.prisma.conversation.findFirst({
       where: {
@@ -232,22 +249,7 @@ export class MessagingService {
           { participant1Id: participantId, participant2Id: userId },
         ],
       },
-      include: {
-        participant1: {
-          include: {
-            profile: true,
-          },
-        },
-        participant2: {
-          include: {
-            profile: true,
-          },
-        },
-        messages: {
-          take: 1,
-          orderBy: { createdAt: 'desc' },
-        },
-      },
+      include: conversationInclude,
     });
 
     let conversation: any;
@@ -258,22 +260,7 @@ export class MessagingService {
         conversation = await this.prisma.conversation.update({
           where: { id: existingConversation.id },
           data: { deletedAt: null },
-          include: {
-            participant1: {
-              include: {
-                profile: true,
-              },
-            },
-            participant2: {
-              include: {
-                profile: true,
-              },
-            },
-            messages: {
-              take: 1,
-              orderBy: { createdAt: 'desc' },
-            },
-          },
+          include: conversationInclude,
         });
       } else {
         conversation = existingConversation;
@@ -285,22 +272,7 @@ export class MessagingService {
           participant1Id: userId,
           participant2Id: participantId,
         },
-        include: {
-          participant1: {
-            include: {
-              profile: true,
-            },
-          },
-          participant2: {
-            include: {
-              profile: true,
-            },
-          },
-          messages: {
-            take: 1,
-            orderBy: { createdAt: 'desc' },
-          },
-        },
+        include: conversationInclude,
       });
     }
 
@@ -401,13 +373,17 @@ export class MessagingService {
       throw new ForbiddenException('You are not a participant in this conversation');
     }
 
+    if (conversation.deletedAt) {
+      throw new NotFoundException('Conversation already deleted');
+    }
+
     const result = await this.prisma.conversation.updateMany({
       where: { id: conversationId, deletedAt: null },
       data: { deletedAt: new Date() },
     });
 
     if (result.count === 0) {
-      throw new NotFoundException('Conversation not found or already deleted');
+      throw new NotFoundException('Conversation not found');
     }
 
     return { message: 'Conversation deleted successfully' };

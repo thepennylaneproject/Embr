@@ -71,11 +71,6 @@ export class ConversationAccessService {
     try {
       const conversation = await this.prisma.conversation.findUnique({
         where: { id: conversationId },
-        select: {
-          participant1Id: true,
-          participant2Id: true,
-          deletedAt: true,
-        },
       });
 
       if (!conversation || conversation.deletedAt) {
