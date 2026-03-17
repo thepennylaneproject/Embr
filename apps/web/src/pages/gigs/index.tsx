@@ -1,11 +1,18 @@
 import Link from 'next/link';
 import { ProtectedPageShell } from '@/components/layout';
 import { GigDiscovery } from '@/components/gigs/GigDiscoveryNew';
+import { FeatureHint } from '@/components/onboarding';
 import { copy } from '@/lib/copy';
 
 export default function GigsPage() {
   return (
     <ProtectedPageShell>
+      <FeatureHint
+        pageId="gigs"
+        icon="💼"
+        title="Welcome to Gigs"
+        description="Browse paid creative opportunities, post your own gigs, and manage applications — with no hidden platform commissions."
+      />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
           <h1 style={{ margin: 0, fontWeight: '700', fontSize: '1.5rem' }}>{copy.jobs.findWork.title}</h1>
