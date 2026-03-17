@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ProtectedPageShell } from '@/components/layout';
 import { GroupCard } from '@/components/groups/GroupCard';
+import { FeatureHint } from '@/components/onboarding';
 import { useGroups } from '@/hooks/useGroups';
 import { useAuth } from '@/contexts/AuthContext';
 import type { PaginatedGroups } from '@embr/types';
@@ -52,6 +53,12 @@ export default function GroupsPage() {
 
   return (
     <ProtectedPageShell>
+      <FeatureHint
+        pageId="groups"
+        icon="🏘"
+        title="Welcome to Groups"
+        description="Join focused communities around shared interests — from music and arts to organizing and mutual aid. Groups have their own feed, events, and discussions."
+      />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
           <h1 style={{ margin: 0, fontWeight: '800', fontSize: '1.5rem' }}>Groups</h1>

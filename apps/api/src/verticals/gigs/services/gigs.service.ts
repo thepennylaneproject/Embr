@@ -1,5 +1,38 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../../core/database/prisma.service';
+
+/**
+ * Prisma select shape for user + profile data that is safe to return publicly.
+ * Using select (vs include) prevents sensitive fields from being fetched at all.
+ */
+const PUBLIC_USER_SELECT = {
+  id: true,
+  username: true,
+  isVerified: true,
+  role: true,
+  createdAt: true,
+  profile: {
+    select: {
+      displayName: true,
+      avatarUrl: true,
+      bannerUrl: true,
+      bio: true,
+      location: true,
+      website: true,
+      socialLinks: true,
+      availability: true,
+      skills: true,
+      categories: true,
+      isCreator: true,
+      isPrivate: true,
+      isVerified: true,
+      allowTips: true,
+      followerCount: true,
+      followingCount: true,
+      postCount: true,
+    },
+  },
+} as const;
 import {
   CreateGigDto,
   UpdateGigDto,
@@ -144,7 +177,7 @@ export class GigsService {
         skip,
         take: limit,
         include: {
-          creator: { include: { profile: true } },
+          creator: { select: PUBLIC_USER_SELECT },
         },
       }),
       this.prisma.gig.count({ where }),
@@ -166,7 +199,7 @@ export class GigsService {
     const gig = await this.prisma.gig.findUnique({
       where: { id },
       include: {
-        creator: { include: { profile: true } },
+        creator: { select: PUBLIC_USER_SELECT },
         milestones: true,
         escrows: true,
       },
@@ -179,7 +212,7 @@ export class GigsService {
     const acceptedApplication = await this.prisma.application.findFirst({
       where: { gigId: id, status: 'ACCEPTED' },
       include: {
-        applicant: { include: { profile: true } },
+        applicant: { select: PUBLIC_USER_SELECT },
         escrow: true,
         milestones: true,
       },
@@ -202,7 +235,7 @@ export class GigsService {
     const [gigs, total] = await Promise.all([
       this.prisma.gig.findMany({
         where: { creatorId, deletedAt: null },
-        include: { creator: { include: { profile: true } } },
+        include: { creator: { select: PUBLIC_USER_SELECT } },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
@@ -356,7 +389,7 @@ export class GigsService {
         { createdAt: 'desc' },
       ],
       take: limit,
-      include: { creator: { include: { profile: true } } },
+      include: { creator: { select: PUBLIC_USER_SELECT } },
     });
 
     return gigs.map(gig => ({
