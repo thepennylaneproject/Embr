@@ -35,11 +35,13 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
    * All model accessors (`this.user`, `this.post`, …) are delegated here via
    * `Object.assign` in the constructor so that callers can use
    * `prismaService.user.findMany()` without any changes.
+   *
+   * The model property types are provided via the interface declaration merge
+   * below the class — this gives full Prisma delegate types (findMany, create, …)
+   * on each model accessor without needing an `[key: string]: unknown` index
+   * signature that would erase those types.
    */
   private readonly extended: ReturnType<PrismaClient['$extends']>;
-
-  // Model proxy accessors are dynamically assigned in the constructor.
-  [key: string]: unknown;
 
   constructor(private readonly rlsContext: RlsContextService) {
     this.base = new PrismaClient();
@@ -163,3 +165,32 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     });
   }
 }
+
+/**
+ * Declaration merging: adds all Prisma model delegate properties (user, post,
+ * wallet, …) to PrismaService so that callers get full type-safe access to
+ * every model operation (findMany, create, update, …).
+ *
+ * The conflicting lifecycle / raw-query / extension methods ($on, $connect,
+ * $disconnect, $use, $extends, $transaction, $executeRaw, $executeRawUnsafe,
+ * $queryRaw, $queryRawUnsafe) are omitted here because PrismaService defines
+ * its own implementations for them as class getters / methods.
+ *
+ * The actual runtime implementations are installed in the constructor via
+ * Object.defineProperty, delegating to the RLS-aware `extended` client.
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface PrismaService
+  extends Omit<
+    PrismaClient,
+    | '$on'
+    | '$connect'
+    | '$disconnect'
+    | '$use'
+    | '$extends'
+    | '$transaction'
+    | '$executeRaw'
+    | '$executeRawUnsafe'
+    | '$queryRaw'
+    | '$queryRawUnsafe'
+  > {}
