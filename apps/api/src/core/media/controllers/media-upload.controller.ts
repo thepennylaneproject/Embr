@@ -233,7 +233,7 @@ export class MediaUploadController {
         );
       }
     } catch (error) {
-      if (error.response?.statusCode === 400) {
+      if (error instanceof HttpException) {
         throw error; // Re-throw validation errors
       }
 
@@ -319,7 +319,7 @@ export class MediaUploadController {
         );
       }
     } catch (error) {
-      if (error.response?.statusCode === 400) {
+      if (error instanceof HttpException) {
         throw error; // Re-throw validation errors
       }
 

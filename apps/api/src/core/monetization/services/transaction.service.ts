@@ -148,7 +148,7 @@ export class TransactionService {
   }
 
   /**
-   * Get transaction history for a user
+   * Get transaction history for a user with pagination
    */
   async getUserTransactions(
     userId: string,
@@ -159,7 +159,10 @@ export class TransactionService {
       page?: number;
       limit?: number;
     },
-  ): Promise<{ transactions: any[]; total: number }> {
+  ): Promise<{
+    transactions: any[];
+    pagination: { page: number; limit: number; total: number; totalPages: number };
+  }> {
     const { type, startDate, endDate, page = 1, limit = 20 } = filters;
 
     const where: any = { userId };
@@ -212,7 +215,15 @@ export class TransactionService {
       this.prisma.transaction.count({ where }),
     ]);
 
-    return { transactions, total };
+    return {
+      transactions,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   /**
@@ -241,28 +252,38 @@ export class TransactionService {
   }
 
   /**
-   * Get financial summary for date range
+   * Get financial summary for date range using database aggregation
+   * Avoids loading all transactions into memory
    */
   async getFinancialSummary(userId: string, start: Date, end: Date) {
-    const transactions = await this.prisma.transaction.findMany({
-      where: {
-        userId,
-        createdAt: { gte: start, lte: end },
-      },
-    });
+    const dateFilter = { gte: start, lte: end };
 
-    const totalIn = transactions
-      .filter(t => t.amount > 0)
-      .reduce((sum, t) => sum + t.amount, 0);
-    const totalOut = transactions
-      .filter(t => t.amount < 0)
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    const [inflow, outflow, count] = await Promise.all([
+      // Sum of positive amounts (money in)
+      this.prisma.transaction.aggregate({
+        where: { userId, createdAt: dateFilter, amount: { gt: 0 } },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      // Sum of negative amounts (money out) — amounts stored as negatives
+      this.prisma.transaction.aggregate({
+        where: { userId, createdAt: dateFilter, amount: { lt: 0 } },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      this.prisma.transaction.count({
+        where: { userId, createdAt: dateFilter },
+      }),
+    ]);
+
+    const totalIn = inflow._sum.amount ?? 0;
+    const totalOut = Math.abs(outflow._sum.amount ?? 0);
 
     return {
       totalIn,
       totalOut,
       net: totalIn - totalOut,
-      count: transactions.length,
+      count,
       start,
       end,
     };

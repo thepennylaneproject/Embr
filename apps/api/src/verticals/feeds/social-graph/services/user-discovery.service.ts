@@ -8,6 +8,7 @@ import {
   GetTrendingCreatorsDto,
   SimilarUsersDto
 } from '../dto/discovery.dto';
+import { sanitizePublicProfile } from '../../../../common/utils/user-sanitizer';
 
 interface SearchRankingFactors {
   textRelevance: number;
@@ -182,7 +183,7 @@ export class UserDiscoveryService {
         id: user.id,
         username: user.username,
         verified: user.isVerified,
-        profile: user.profile,
+        profile: sanitizePublicProfile(user.profile),
         stats: {
           posts: (user as any)._count.posts,
           followers: (user as any)._count.followers,
@@ -470,7 +471,7 @@ export class UserDiscoveryService {
       id: user.id,
       username: user.username,
       verified: user.isVerified,
-      profile: user.profile,
+      profile: sanitizePublicProfile(user.profile),
       reason: 'Similar interests',
       stats: {
         followers: (user as any)._count.followers,
@@ -484,51 +485,87 @@ export class UserDiscoveryService {
    * Excludes blocked users
    */
   private async getMutualConnectionUsers(userId: string, limit: number) {
-    const suggestions = await this.prisma.$queryRaw<any[]>`
-      SELECT
-        u.id,
-        u.username,
-        u.isVerified,
-        COUNT(DISTINCT f1.follower_id) as mutual_count,
-        p.avatar_url,
-        p.full_name,
-        p.bio,
-        p.follower_count
-      FROM users u
-      INNER JOIN follows f2 ON f2.following_id = u.id
-      INNER JOIN follows f1 ON f1.following_id = f2.follower_id
-      LEFT JOIN profiles p ON p.user_id = u.id
-      WHERE f1.follower_id = ${userId}
-      AND f2.follower_id != ${userId}
-      AND u.id != ${userId}
-      AND NOT EXISTS (
-        SELECT 1 FROM follows
-        WHERE follower_id = ${userId}
-        AND following_id = u.id
-      )
-      AND NOT EXISTS (
-        SELECT 1 FROM blocked_users
-        WHERE (blocker_id = ${userId} AND blocked_id = u.id)
-           OR (blocker_id = u.id AND blocked_id = ${userId})
-      )
-      AND p.is_private = false
-      GROUP BY u.id, u.username, u.isVerified, p.avatar_url, p.full_name, p.bio, p.follower_count
-      ORDER BY mutual_count DESC, p.follower_count DESC
-      LIMIT ${limit}
-    `;
+    // Get all users the current user already follows
+    const following = await this.prisma.follow.findMany({
+      where: { followerId: userId },
+      select: { followingId: true },
+    });
+    const followingIds = following.map(f => f.followingId);
 
-    return suggestions.map(s => ({
-      id: s.id,
-      username: s.username,
-      verified: s.isVerified,
-      profile: {
-        avatarUrl: s.avatar_url,
-        fullName: s.full_name,
-        bio: s.bio,
-        followerCount: s.follower_count,
+    if (followingIds.length === 0) return [];
+
+    // Get blocked user IDs (both directions)
+    const blocked = await this.prisma.blockedUser.findMany({
+      where: {
+        OR: [
+          { blockerId: userId },
+          { blockedId: userId },
+        ],
       },
-      reason: `${s.mutual_count} mutual connection${s.mutual_count > 1 ? 's' : ''}`,
-      mutualCount: parseInt(s.mutual_count),
+      select: { blockerId: true, blockedId: true },
+    });
+    const blockedIds = blocked.flatMap(b => [b.blockerId, b.blockedId]);
+    const excludedIds = [...followingIds, userId, ...blockedIds];
+
+    // Get 2nd-degree connections: who the people you follow also follow (public profiles only)
+    const secondDegree = await this.prisma.follow.findMany({
+      where: {
+        followerId: { in: followingIds },
+        followingId: { notIn: excludedIds },
+        following: {
+          profile: { isPrivate: false },
+        },
+      },
+      select: {
+        followingId: true,
+        following: {
+          select: {
+            id: true,
+            username: true,
+            isVerified: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                displayName: true,
+                bio: true,
+                followerCount: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Aggregate mutual connection counts per candidate user
+    const mutualCountMap = new Map<string, { user: any; count: number }>();
+    for (const { followingId, following } of secondDegree) {
+      if (!mutualCountMap.has(followingId)) {
+        mutualCountMap.set(followingId, { user: following, count: 0 });
+      }
+      mutualCountMap.get(followingId)!.count++;
+    }
+
+    // Sort by mutual count, then by follower count, take top `limit`
+    const sorted = Array.from(mutualCountMap.values())
+      .sort((a, b) => {
+        const countDiff = b.count - a.count;
+        if (countDiff !== 0) return countDiff;
+        return (b.user.profile?.followerCount ?? 0) - (a.user.profile?.followerCount ?? 0);
+      })
+      .slice(0, limit);
+
+    return sorted.map(({ user, count }) => ({
+      id: user.id,
+      username: user.username,
+      verified: user.isVerified,
+      profile: {
+        avatarUrl: user.profile?.avatarUrl ?? null,
+        fullName: user.profile?.displayName ?? null,
+        bio: user.profile?.bio ?? null,
+        followerCount: user.profile?.followerCount ?? 0,
+      },
+      reason: `${count} mutual connection${count > 1 ? 's' : ''}`,
+      mutualCount: count,
     }));
   }
 
@@ -607,7 +644,7 @@ export class UserDiscoveryService {
       id: user.id,
       username: user.username,
       verified: user.isVerified,
-      profile: user.profile,
+      profile: sanitizePublicProfile(user.profile),
       reason: 'Trending creator',
       stats: {
         followers: (user as any)._count.followers,
@@ -811,7 +848,7 @@ export class UserDiscoveryService {
         id: creator.id,
         username: creator.username,
         verified: creator.isVerified,
-        profile: (creator as any).profile as any,
+        profile: sanitizePublicProfile((creator as any).profile),
         stats: {
           followers: (creator as any)._count.followers,
           posts: (creator as any)._count.posts,
