@@ -3,6 +3,7 @@ import {
   Logger,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { TransactionType as PrismaTransactionType } from '@prisma/client';
@@ -318,6 +319,116 @@ export class TipService {
         },
       },
     });
+  }
+
+  /**
+   * Get a single tip by ID, enforcing sender/recipient or admin access
+   */
+  async getTipById(
+    tipId: string,
+    requestingUserId: string,
+    requestingUserRole: string,
+  ): Promise<any> {
+    const tip = await this.prisma.tip.findUnique({
+      where: { id: tipId },
+      include: {
+        sender: {
+          select: {
+            user: {
+              select: {
+                username: true,
+                profile: { select: { displayName: true, avatarUrl: true } },
+              },
+            },
+          },
+        },
+        recipient: {
+          select: {
+            user: {
+              select: {
+                username: true,
+                profile: { select: { displayName: true, avatarUrl: true } },
+              },
+            },
+          },
+        },
+        post: {
+          select: { id: true, content: true, thumbnailUrl: true },
+        },
+      },
+    });
+
+    if (!tip) {
+      throw new NotFoundException('Tip not found');
+    }
+
+    const isParty =
+      tip.senderId === requestingUserId ||
+      tip.recipientId === requestingUserId;
+
+    if (!isParty && requestingUserRole !== 'ADMIN') {
+      throw new ForbiddenException(
+        'You do not have permission to view this tip',
+      );
+    }
+
+    return tip;
+  }
+
+  /**
+   * Get all tips for a specific post — restricted to the post author or admins
+   */
+  async getPostTips(
+    requestingUserId: string,
+    postId: string,
+    query: GetTipsQueryDto,
+  ): Promise<{ tips: any[]; total: number; page: number; totalPages: number }> {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      select: { authorId: true },
+    });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    if (post.authorId !== requestingUserId) {
+      throw new ForbiddenException('You can only view tips for your own posts');
+    }
+
+    const { page = 1, limit = 20 } = query;
+
+    const [tips, total] = await Promise.all([
+      this.prisma.tip.findMany({
+        where: { postId },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          sender: {
+            select: {
+              user: {
+                select: {
+                  username: true,
+                  profile: { select: { displayName: true, avatarUrl: true } },
+                },
+              },
+            },
+          },
+          post: {
+            select: { id: true, content: true, thumbnailUrl: true },
+          },
+        },
+      }),
+      this.prisma.tip.count({ where: { postId } }),
+    ]);
+
+    return {
+      tips,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   /**

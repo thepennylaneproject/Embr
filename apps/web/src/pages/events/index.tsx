@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ProtectedPageShell } from '@/components/layout';
 import { EventCard } from '@/components/events/EventCard';
+import { FeatureHint } from '@/components/onboarding';
 import { useEvents } from '@/hooks/useEvents';
 import type { EventType, PaginatedEvents } from '@embr/types';
 
@@ -38,6 +39,12 @@ export default function EventsPage() {
 
   return (
     <ProtectedPageShell>
+      <FeatureHint
+        pageId="events"
+        icon="🗓"
+        title="Welcome to Events"
+        description="Discover and RSVP to skill shares, meetups, and teach-ins. Host your own in-person or virtual event and invite the community."
+      />
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>

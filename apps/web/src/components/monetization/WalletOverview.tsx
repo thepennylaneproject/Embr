@@ -6,6 +6,12 @@ interface WalletOverviewProps {
   onViewTransactions?: () => void;
 }
 
+/** Convert integer cents to a formatted dollar string, e.g. 500 → "5.00" */
+const centsToDisplay = (cents: number | undefined | null): string => {
+  if (cents == null) return '0.00';
+  return (cents / 100).toFixed(2);
+};
+
 export const WalletOverview: React.FC<WalletOverviewProps> = ({
   onRequestPayout,
   onViewTransactions,
@@ -50,13 +56,13 @@ export const WalletOverview: React.FC<WalletOverviewProps> = ({
         <h2 className="text-lg font-medium mb-1">Wallet Balance</h2>
         <div className="flex items-baseline gap-2">
           <span className="text-4xl font-bold">
-            ${balance?.available?.toFixed(2) || '0.00'}
+            ${centsToDisplay(balance?.available)}
           </span>
           <span className="text-sm opacity-90">available</span>
         </div>
         {balance && (balance.pending || 0) > 0 && (
           <p className="text-sm mt-2 opacity-90">
-            ${balance.pending?.toFixed(2) || '0.00'} pending in payouts
+            ${centsToDisplay(balance.pending)} pending in payouts
           </p>
         )}
       </div>
@@ -66,7 +72,7 @@ export const WalletOverview: React.FC<WalletOverviewProps> = ({
         <div className="bg-white p-4 text-center">
           <p className="text-sm text-gray-600 mb-1">Total Earned</p>
           <p className="text-xl font-semibold text-gray-900">
-            ${stats?.totalEarned?.toFixed(2) || '0.00'}
+            ${centsToDisplay(stats?.totalEarned)}
           </p>
         </div>
         <div className="bg-white p-4 text-center">
@@ -78,7 +84,7 @@ export const WalletOverview: React.FC<WalletOverviewProps> = ({
         <div className="bg-white p-4 text-center">
           <p className="text-sm text-gray-600 mb-1">Avg Tip</p>
           <p className="text-xl font-semibold text-gray-900">
-            ${stats?.averageTipReceived?.toFixed(2) || '0.00'}
+            ${centsToDisplay(stats?.averageTipReceived)}
           </p>
         </div>
       </div>
@@ -87,7 +93,7 @@ export const WalletOverview: React.FC<WalletOverviewProps> = ({
       <div className="p-6 bg-gray-50 flex gap-3">
         <button
           onClick={onRequestPayout}
-          disabled={!balance || balance.available < 10}
+          disabled={!balance || balance.available < 1000}
           className="flex-1 px-4 py-2 bg-[#E8998D] text-white rounded-lg font-medium
                      hover:bg-[#d88578] transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed"
@@ -104,7 +110,7 @@ export const WalletOverview: React.FC<WalletOverviewProps> = ({
       </div>
 
       {/* Info Banner */}
-      {balance && balance.available < 10 && balance.available > 0 && (
+      {balance && balance.available < 1000 && balance.available > 0 && (
         <div className="px-6 pb-6">
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
             <p className="text-sm text-amber-800">

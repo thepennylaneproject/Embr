@@ -67,7 +67,11 @@ export const CreateListingForm: React.FC<CreateListingFormProps> = ({ onSubmit, 
       setDraftStatus('idle');
       router.push(`/marketplace/${listing.id}`);
     } catch (e: any) {
-      setError(e.response?.data?.message || 'Something went wrong');
+      const msg = e?.response?.data?.message;
+      setError(
+        Array.isArray(msg) ? msg[0] :
+        msg || 'Could not create the listing. Please check your input and try again.'
+      );
     }
   };
 

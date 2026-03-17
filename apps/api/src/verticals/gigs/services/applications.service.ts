@@ -321,24 +321,6 @@ export class ApplicationsService {
       });
     }
 
-    // Emit events for notifications
-    this.eventEmitter.emit('gig.application.accepted', {
-      applicationId: application.id,
-      gigId: gig.id,
-      applicantId: application.applicantId,
-    });
-
-    // Notify rejected applicants
-    for (const rejectedApp of pendingApplications) {
-      if (rejectedApp.id !== application.id) {
-        this.eventEmitter.emit('gig.application.rejected', {
-          applicationId: rejectedApp.id,
-          gigId: gig.id,
-          applicantId: rejectedApp.applicantId,
-        });
-      }
-    }
-
     return {
       ...savedApplication,
       milestoneProposals: savedApplication.milestoneProposals as unknown as MilestoneProposal[],

@@ -166,6 +166,11 @@ model Follow {
   @@unique([followerId, followingId])
   @@index([followerId])
   @@index([followingId])
+  // Composite indexes for paginated follower/following lists sorted by time
+  // WHERE followerId = X ORDER BY createdAt DESC (getFollowing)
+  @@index([followerId, createdAt])
+  // WHERE followingId = X ORDER BY createdAt DESC (getFollowers)
+  @@index([followingId, createdAt])
 }
 
 model RefreshToken {
@@ -265,6 +270,9 @@ model Post {
   @@index([groupId])
   @@index([createdAt])
   @@index([deletedAt])
+  // Compound index for the most common query pattern: a user's posts sorted by newest
+  // Covers: profile page, home feed, following feed (authorId=X OR authorId IN [...]) + ORDER BY createdAt DESC
+  @@index([authorId, createdAt])
   // Full-text search handled via pg_trgm GIN index in init.sql
   // Note: @@fulltext is not supported on PostgreSQL in Prisma 5. Use raw SQL GIN/tsvector for full-text search.
 }
@@ -315,6 +323,11 @@ model Comment {
   @@index([authorId])
   @@index([parentId])
   @@index([createdAt])
+  // Compound index for fetching top-level comments or replies on a post sorted by date.
+  // Covers the core getComments() and getReplies() query: WHERE postId=X AND parentId=Y ORDER BY createdAt DESC
+  @@index([postId, parentId, createdAt])
+  // Compound index for the recursive comment-tree walk on delete: WHERE parentId=X AND deletedAt IS NULL
+  @@index([parentId, deletedAt])
 }
 
 model Like {
@@ -840,6 +853,11 @@ model Conversation {
   @@index([participant1Id])
   @@index([participant2Id])
   @@index([lastMessageAt])
+  // Composite indexes for sorted conversation list queries
+  // WHERE participant1Id = X ORDER BY lastMessageAt DESC
+  @@index([participant1Id, lastMessageAt])
+  // WHERE participant2Id = X ORDER BY lastMessageAt DESC
+  @@index([participant2Id, lastMessageAt])
 }
 
 enum MessageType {
@@ -879,6 +897,14 @@ model Message {
   @@index([conversationId])
   @@index([senderId])
   @@index([createdAt])
+  // Composite index for paginated message retrieval within a conversation
+  // WHERE conversationId = X ORDER BY createdAt DESC
+  @@index([conversationId, createdAt])
+  // Composite index for unread message queries
+  // WHERE conversationId = X AND status != READ AND senderId != Y
+  @@index([conversationId, status])
+  // Index for global unread count groupBy queries filtering by status
+  @@index([status])
 }
 
 // ============================================
