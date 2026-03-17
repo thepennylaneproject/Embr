@@ -4,15 +4,10 @@
   "run_id": "synthesized-20260306-000530",
   "run_metadata": {
     "timestamp": "2026-03-06T00:05:30Z",
+    "branch": "main",
     "environment": "local",
     "tool_platform": "cursor",
-    "notes": "Fresh audit/validate/release pass with focused security re-audit and one blocker fix."
-  },
-  "summary": {
-    "new_findings": 0,
-    "resolved_findings_this_run": 1,
-    "open_findings_total": 79,
-    "resolved_findings_total": 10
+    "model": "claude-sonnet-4-5"
   },
   "resolved_finding_ids": [
     "f-security-f-003"
@@ -26,5 +21,18 @@
     "notes_only": [
       "No additional application/runtime code changes were introduced in scope besides blocker remediation."
     ]
-  }
+  },
+  "suite": "synthesized",
+  "agent": {
+    "name": "synthesizer",
+    "role": "Audit agent \u2014 see suite for scope."
+  },
+  "findings": [],
+  "rollups": {
+    "by_severity": {},
+    "by_category": {},
+    "by_type": {},
+    "by_status": {}
+  },
+  "next_actions": []
 }

@@ -1,0 +1,208 @@
+{
+  "schema_version": "1.1.0",
+  "kind": "agent_output",
+  "run_id": "data-20260305-193600",
+  "run_metadata": {
+    "timestamp": "2026-03-05T19:36:00Z",
+    "branch": "main",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "claude-sonnet-4-5",
+    "notes": "Second data-integrity pass on 2026-03-05. Focused on wallet/transaction constraints, missing RLS analogues, and enum drift between Prisma schema and application code. Prior run (data-20260305-131933) identified migration gaps; this run audits the application-layer validation against those gaps."
+  },
+  "suite": "data",
+  "agent": {
+    "name": "schema-auditor",
+    "role": "Find schema mismatches, missing RLS policies, migration gaps, data constraint violations, type drift between code and database, and validation gaps.",
+    "inputs_used": [
+      "apps/api/prisma/schema.prisma",
+      "apps/api/src/core/monetization/services/tip.service.ts",
+      "apps/api/src/core/monetization/services/transaction.service.ts",
+      "apps/api/src/core/monetization/services/payout.service.ts",
+      "apps/api/src/core/monetization/dto/payout.dto.ts",
+      "apps/api/src/verticals/gigs/services/escrow.service.ts",
+      "apps/api/src/verticals/gigs/services/applications.service.ts",
+      "apps/api/src/core/users/users.service.ts",
+      "apps/api/src/core/safety/services/blocking.service.ts",
+      "audits/open_findings.json",
+      "audits/runs/2025-03-05/data-20260305-131933.json"
+    ],
+    "stop_conditions_hit": []
+  },
+  "coverage": {
+    "files_examined": [
+      "apps/api/prisma/schema.prisma",
+      "apps/api/src/core/monetization/services/tip.service.ts",
+      "apps/api/src/core/monetization/services/transaction.service.ts",
+      "apps/api/src/core/monetization/services/payout.service.ts",
+      "apps/api/src/core/monetization/dto/payout.dto.ts",
+      "apps/api/src/verticals/gigs/services/escrow.service.ts",
+      "apps/api/src/verticals/gigs/services/applications.service.ts",
+      "apps/api/src/core/users/users.service.ts",
+      "apps/api/src/core/safety/services/blocking.service.ts"
+    ],
+    "files_skipped": [
+      "apps/web/ (frontend-only, outside data-integrity scope)",
+      "node_modules/ (generated)",
+      "dist/ (generated)"
+    ],
+    "coverage_complete": true
+  },
+  "findings": [
+    {
+      "finding_id": "f-cafeec5b",
+      "type": "bug",
+      "category": "validation-gap",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Wallet balance updated without DB transaction — concurrent tips can corrupt balance",
+      "description": "tip.service.ts credits the recipient wallet and debits the sender wallet in two sequential Prisma calls without wrapping them in a $transaction. Under concurrent requests, one update can read a stale balance before the other commits, causing double-credits or missed debits.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Two separate prisma.wallet.update calls with no transaction wrapper in tip.service.ts",
+          "file": "apps/api/src/core/monetization/services/tip.service.ts",
+          "symbol": "TipService.createTip",
+          "start_line": 45,
+          "end_line": 72
+        }
+      ],
+      "impact": "Concurrent tip submissions can result in incorrect wallet balances — funds credited twice or not debited — causing financial inconsistencies that require manual reconciliation.",
+      "suggested_fix": {
+        "approach": "Wrap the sender-debit and recipient-credit updates in a single prisma.$transaction([...]) call. Add optimistic concurrency with a version field or use SELECT ... FOR UPDATE via raw SQL if Prisma transactions are insufficient.",
+        "affected_files": [
+          "apps/api/src/core/monetization/services/tip.service.ts"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "Transaction rollback must be tested to confirm it handles partial failures correctly."
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T19:36:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during second data-integrity audit pass on 2026-03-05."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-d3a17c22",
+      "type": "bug",
+      "category": "constraint-violation",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Payout amount validation allows zero-value and negative payouts",
+      "description": "CreatePayoutDto uses @IsNumber() and @Min(0) but not @Min(1). A payout request with amount: 0 passes DTO validation and reaches the database. The Prisma schema has no check constraint on payout amounts. Negative amounts are blocked by @IsPositive() but zero is not.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "@Min(0) permits zero-value payouts in CreatePayoutDto",
+          "file": "apps/api/src/core/monetization/dto/payout.dto.ts",
+          "symbol": "CreatePayoutDto.amount",
+          "start_line": 8,
+          "end_line": 14
+        },
+        {
+          "hook_type": "data_shape",
+          "summary": "Prisma Payout model has no check constraint for amount > 0",
+          "expected_schema": "amount Int CHECK (amount > 0)",
+          "observed_schema": "amount Int"
+        }
+      ],
+      "impact": "Zero-value payout requests create database records and may trigger downstream Stripe API calls with a $0 amount, which Stripe rejects with an error, causing unhandled exceptions in the payout service.",
+      "suggested_fix": {
+        "approach": "Change @Min(0) to @Min(1) in CreatePayoutDto.amount. Add a Prisma migration to add a check constraint: ALTER TABLE Payout ADD CONSTRAINT payout_amount_positive CHECK (amount > 0).",
+        "affected_files": [
+          "apps/api/src/core/monetization/dto/payout.dto.ts"
+        ],
+        "estimated_effort": "trivial",
+        "risk_notes": "Migration may fail if any existing rows have amount = 0 — run a cleanup query first."
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T19:36:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during second data-integrity audit pass on 2026-03-05."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-a91bf034",
+      "type": "debt",
+      "category": "type-drift",
+      "severity": "minor",
+      "priority": "P2",
+      "confidence": "inference",
+      "title": "GigApplicationStatus enum in Prisma not exhaustively handled in applications.service.ts",
+      "description": "The Prisma schema defines GigApplicationStatus with values PENDING, ACCEPTED, REJECTED, WITHDRAWN. The applications.service.ts switch statement handling status transitions is missing the WITHDRAWN branch — falling through to a default that throws. A user withdrawing an application after a service restart would receive an internal server error.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Switch on GigApplicationStatus missing WITHDRAWN case in applications.service.ts",
+          "file": "apps/api/src/verticals/gigs/services/applications.service.ts",
+          "symbol": "ApplicationsService.updateStatus",
+          "start_line": 88,
+          "end_line": 110
+        }
+      ],
+      "impact": "Users attempting to withdraw a gig application may receive a 500 error. The record is not corrupted but the operation fails silently from the user's perspective.",
+      "suggested_fix": {
+        "approach": "Add a WITHDRAWN case to the status transition switch in updateStatus(). Consider using TypeScript exhaustive checks (assertNever pattern) to catch missing enum cases at compile time.",
+        "affected_files": [
+          "apps/api/src/verticals/gigs/services/applications.service.ts"
+        ],
+        "estimated_effort": "trivial",
+        "risk_notes": "Low risk — additive change only."
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T19:36:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during second data-integrity audit pass on 2026-03-05."
+        }
+      ]
+    }
+  ],
+  "rollups": {
+    "by_severity": {
+      "major": 2,
+      "minor": 1
+    },
+    "by_category": {
+      "validation-gap": 1,
+      "constraint-violation": 1,
+      "type-drift": 1
+    },
+    "by_type": {
+      "bug": 2,
+      "debt": 1
+    },
+    "by_status": {
+      "open": 3
+    }
+  },
+  "next_actions": [
+    {
+      "action": "Wrap tip wallet updates in prisma.$transaction to prevent balance corruption under concurrency",
+      "finding_id": "f-cafeec5b",
+      "rationale": "P1/major bug with evidence. Financial data integrity risk. Fix is small effort with low regression risk."
+    },
+    {
+      "action": "Change CreatePayoutDto.amount @Min(0) to @Min(1) and add DB check constraint",
+      "finding_id": "f-d3a17c22",
+      "rationale": "P1/major bug. Trivial fix. Zero-value payouts can cause unhandled Stripe API errors."
+    },
+    {
+      "action": "Add WITHDRAWN case to GigApplicationStatus switch and add exhaustive type checks",
+      "finding_id": "f-a91bf034",
+      "rationale": "P2/minor debt. Trivial fix. Prevents 500 errors for users withdrawing applications."
+    }
+  ]
+}

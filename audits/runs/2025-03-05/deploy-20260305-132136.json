@@ -1,646 +1,640 @@
 {
-"schema_version": "1.1.0",
-"kind": "agent_output",
-"run_id": "deploy-20260305-132136",
-"run_metadata": {
-"timestamp": "2026-03-05T19:21:36Z",
-"branch": "main",
-"commit": "2723d61",
-"environment": "local",
-"tool_platform": "cursor",
-"model": "gpt-5.3-codex",
-"preflight_artifacts": {
-"build_output": "audits/artifacts/run/build.txt"
-},
-"notes": "Deploy audit executed against local repo state; preflight build artifact is present but incomplete."
-},
-"suite": "deploy",
-"agent": {
-"name": "build-deploy-auditor",
-"role": "Find gaps in build configuration, deployment safety, error handling infrastructure, logging coverage, and monitoring that reduce production visibility.",
-"inputs_used": [
-"audits/open_findings.json",
-"audits/schema/audit-output.schema.json",
-"audits/artifacts/run/build.txt",
-".github/workflows/ci.yml",
-".github/workflows/deploy.yml",
-"package.json",
-"apps/api/package.json",
-"apps/web/package.json",
-"tsconfig.base.json",
-"apps/api/tsconfig.json",
-"apps/api/tsconfig.build.json",
-"apps/web/next.config.js",
-"apps/api/src/main.ts",
-"apps/api/src/app.module.ts",
-"apps/api/src/shared/filters/http-exception.filter.ts",
-"apps/web/src/pages/app.tsx",
-"apps/web/src/components/ErrorBoundary.tsx",
-"apps/web/src/lib/reliability.ts",
-"apps/web/src/pages/api/analytics/events.ts",
-"apps/api/Dockerfile",
-"docker/docker-compose.yml",
-"docker/docker-compose.prod.yml",
-".env.example",
-"apps/api/.env.example",
-"apps/web/.env.example",
-"README.md",
-"apps/web/.eslintrc.json"
-],
-"stop_conditions_hit": [
-"deployment-target-unknown"
-]
-},
-"coverage": {
-"files_examined": [
-".github/workflows/",
-"apps/api/src/",
-"apps/web/src/",
-"docker/",
-"package.json",
-"tsconfig.json",
-".env.example",
-"README.md",
-"audits/artifacts/run/build.txt"
-],
-"files_skipped": [
-".archive/ - historical/reference copies outside active deploy path",
-"node_modules/ - third-party code",
-"dist/ - generated outputs not used as source-of-truth"
-],
-"coverage_complete": true,
-"incomplete_reason": null
-},
-"findings": [
-{
-"finding_id": "f-dpl-0001",
-"type": "debt",
-"category": "build-config",
-"severity": "major",
-"priority": "P1",
-"confidence": "evidence",
-"title": "TypeScript strictness is disabled in shared and API build configs",
-"description": "Core TypeScript configs disable strict mode (strict: false) in both the monorepo base and API tsconfig. This allows latent runtime issues to pass build-time checks and reduces build confidence for production releases.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"summary": "Root TS config disables strict mode",
-"file": "tsconfig.base.json",
-"symbol": "compilerOptions",
-"start_line": 2,
-"end_line": 10
-},
-{
-"hook_type": "code_ref",
-"summary": "API TS config disables strict mode and strictNullChecks",
-"file": "apps/api/tsconfig.json",
-"symbol": "compilerOptions",
-"start_line": 15,
-"end_line": 18
-}
-],
-"impact": "Builds can pass while null/typing defects remain, increasing production incident risk and making regressions harder to catch pre-deploy.",
-"suggested_fix": {
-"approach": "Incrementally enable strict mode for API and shared TS configs, starting with strictNullChecks in high-risk modules and enforcing type fixes in CI.",
-"affected_files": [
-"tsconfig.base.json",
-"apps/api/tsconfig.json",
-".github/workflows/ci.yml"
-],
-"estimated_effort": "large",
-"risk_notes": "Turning strict mode on globally may initially fail many files; rollout should be staged to avoid delivery freeze.",
-"tests_needed": [
-"Run API typecheck step in CI on each strictness increment",
-"Run API build and smoke-test auth/content endpoints"
-]
-},
-"owner": "solo-dev",
-"status": "open",
-"history": [
-{
-"timestamp": "2026-03-05T19:21:36Z",
-"actor": "build-deploy-auditor",
-"event": "created",
-"notes": "Observed directly in active TS build configuration."
-}
-]
-},
-{
-"finding_id": "f-dpl-0002",
-"type": "debt",
-"category": "build-config",
-"severity": "major",
-"priority": "P1",
-"confidence": "evidence",
-"title": "Web build explicitly ignores lint and TypeScript errors",
-"description": "Next.js production build is configured with eslint.ignoreDuringBuilds: true and typescript.ignoreBuildErrors: true. This permits deployment of known-lint and known-type-broken frontend code.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"summary": "Next config suppresses lint and type failures during build",
-"file": "apps/web/next.config.js",
-"symbol": "nextConfig",
-"start_line": 3,
-"end_line": 7
-}
-],
-"impact": "Deployment can succeed despite static analysis failures, reducing release quality signal and increasing user-facing runtime regressions.",
-"suggested_fix": {
-"approach": "Remove build suppressions and gate deploy on successful next lint and next build without ignored errors.",
-"affected_files": [
-"apps/web/next.config.js",
-".github/workflows/ci.yml",
-".github/workflows/deploy.yml"
-],
-"estimated_effort": "medium",
-"risk_notes": "Build may fail initially due to existing debt; triage backlog and phase enforcement if needed.",
-"tests_needed": [
-"Run npm --prefix apps/web run lint in CI",
-"Run npm --prefix apps/web run build with strict build settings"
-]
-},
-"owner": "solo-dev",
-"status": "open",
-"history": [
-{
-"timestamp": "2026-03-05T19:21:36Z",
-"actor": "build-deploy-auditor",
-"event": "created",
-"notes": "Observed directly in Next.js configuration."
-}
-]
-},
-{
-"finding_id": "f-dpl-0003",
-"type": "bug",
-"category": "ci-gap",
-"severity": "major",
-"priority": "P1",
-"confidence": "evidence",
-"title": "CI declares checks that are not reliably runnable in current repo state",
-"description": "CI runs API lint and test steps, but API package scripts rely on tooling not declared in apps/api/package.json (e.g., jest) and no API ESLint config is present while only web has an ESLint config file. This creates a high likelihood of flaky or permanently failing CI, reducing trust in pipeline status.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"summary": "CI runs lint and tests for API",
-"file": ".github/workflows/ci.yml",
-"symbol": "jobs.test.steps",
-"start_line": 59,
-"end_line": 76
-},
-{
-"hook_type": "code_ref",
-"summary": "API test script requires jest but jest is not declared in API package devDependencies",
-"file": "apps/api/package.json",
-"symbol": "scripts",
-"start_line": 9,
-"end_line": 11
-},
-{
-"hook_type": "code_ref",
-"summary": "Only web app has an ESLint config file in active tree",
-"file": "apps/web/.eslintrc.json",
-"symbol": "root",
-"start_line": 1,
-"end_line": 5
-}
-],
-"impact": "A red or unreliable CI signal blocks safe release gating and obscures whether failures represent real regressions.",
-"suggested_fix": {
-"approach": "Align CI steps with actually supported tooling: either add missing API test/lint toolchain and config, or temporarily gate only verified checks while backlog is fixed.",
-"affected_files": [
-".github/workflows/ci.yml",
-"apps/api/package.json",
-"apps/api/.eslintrc.* (new or equivalent)",
-"apps/api/jest.config.* (new)"
-],
-"estimated_effort": "medium",
-"risk_notes": "Partial gating can reduce coverage if done without a tracked remediation timeline.",
-"tests_needed": [
-"Run CI workflow on PR with fresh install",
-"Verify lint/test/build pass for both API and web or are intentionally scoped"
-]
-},
-"owner": "solo-dev",
-"status": "open",
-"history": [
-{
-"timestamp": "2026-03-05T19:21:36Z",
-"actor": "build-deploy-auditor",
-"event": "created",
-"notes": "Derived from workflow and package-level toolchain mismatch."
-}
-]
-},
-{
-"finding_id": "f-dpl-0004",
-"type": "enhancement",
-"category": "deploy-risk",
-"severity": "major",
-"priority": "P0",
-"confidence": "evidence",
-"title": "Deploy workflow contains placeholder commands instead of real release steps",
-"description": "The deploy workflow has placeholder echo commands for API and web deployment and lacks concrete rollback, migration orchestration, and post-deploy verification logic.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"summary": "API deploy step is placeholder text",
-"file": ".github/workflows/deploy.yml",
-"symbol": "deploy-api",
-"start_line": 55,
-"end_line": 64
-},
-{
-"hook_type": "code_ref",
-"summary": "Web deploy step is placeholder text",
-"file": ".github/workflows/deploy.yml",
-"symbol": "deploy-web",
-"start_line": 78,
-"end_line": 84
-}
-],
-"impact": "Main-branch pushes appear deploy-enabled but do not perform a verifiable production release, creating a false sense of deploy safety.",
-"suggested_fix": {
-"approach": "Implement real deployment actions per target platform, add health verification gates, and define rollback commands with failure handling.",
-"affected_files": [
-".github/workflows/deploy.yml",
-"docker/docker-compose.prod.yml (if self-hosted API)",
-"deployment scripts (new)"
-],
-"estimated_effort": "medium",
-"risk_notes": "Automating deploy without environment protections can increase blast radius; add staged rollout safeguards.",
-"tests_needed": [
-"Dry-run deploy on staging branch",
-"Post-deploy health-check gate",
-"Rollback drill runbook validation"
-]
-},
-"owner": "solo-dev",
-"status": "open",
-"history": [
-{
-"timestamp": "2026-03-05T19:21:36Z",
-"actor": "build-deploy-auditor",
-"event": "created",
-"notes": "Placeholder deployment logic confirmed in workflow."
-}
-]
-},
-{
-"finding_id": "f-dpl-0005",
-"type": "question",
-"category": "deploy-risk",
-"severity": "major",
-"priority": "P0",
-"confidence": "evidence",
-"title": "Production deployment target is ambiguous across API and web",
-"description": "Repository signals conflict: deploy workflow references Vercel token for web, API deploy is unspecified placeholder, and Docker prod compose suggests self-hosted API path. A single authoritative production target is not declared.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"summary": "Workflow references Vercel for web deploy",
-"file": ".github/workflows/deploy.yml",
-"symbol": "deploy-web",
-"start_line": 78,
-"end_line": 83
-},
-{
-"hook_type": "code_ref",
-"summary": "API deploy target is not implemented in workflow",
-"file": ".github/workflows/deploy.yml",
-"symbol": "deploy-api",
-"start_line": 55,
-"end_line": 63
-},
-{
-"hook_type": "code_ref",
-"summary": "Separate production Docker compose path exists",
-"file": "docker/docker-compose.prod.yml",
-"symbol": "services",
-"start_line": 1,
-"end_line": 10
-}
-],
-"impact": "Without a clear target, release automation, env injection, rollback planning, and incident response remain inconsistent.",
-"suggested_fix": {
-"approach": "Decide and document canonical production targets for API and web, then align CI/CD, env docs, and runbooks to that decision.",
-"affected_files": [
-"README.md",
-".github/workflows/deploy.yml",
-"docs/deployment/* (new or updated)"
-],
-"estimated_effort": "small",
-"risk_notes": "Choosing a target implies migration work for any existing ad-hoc deployment path.",
-"tests_needed": [
-"End-to-end deploy rehearsal using chosen target",
-"Verify secrets/environment mapping for selected platform"
-]
-},
-"owner": "solo-dev",
-"status": "open",
-"history": [
-{
-"timestamp": "2026-03-05T19:21:36Z",
-"actor": "build-deploy-auditor",
-"event": "created",
-"notes": "Emitted per stop condition: deployment target unknown."
-}
-]
-},
-{
-"finding_id": "f-dpl-0006",
-"type": "bug",
-"category": "deploy-risk",
-"severity": "major",
-"priority": "P0",
-"confidence": "evidence",
-"title": "Health checks are inconsistent with API routing and container runtime",
-"description": "API global prefix is set to /api, but Docker health checks probe /health; no dedicated health controller route was found in active API source. Additionally, compose healthcheck uses curl, while API runtime image does not install curl.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"summary": "API sets global route prefix to /api",
-"file": "apps/api/src/main.ts",
-"symbol": "bootstrap",
-"start_line": 22,
-"end_line": 24
-},
-{
-"hook_type": "code_ref",
-"summary": "Compose healthcheck probes /health via curl",
-"file": "docker/docker-compose.prod.yml",
-"symbol": "services.api.healthcheck",
-"start_line": 39,
-"end_line": 41
-},
-{
-"hook_type": "code_ref",
-"summary": "Dockerfile healthcheck probes /health",
-"file": "apps/api/Dockerfile",
-"symbol": "HEALTHCHECK",
-"start_line": 45,
-"end_line": 47
-}
-],
-"impact": "Containers can report unhealthy despite app availability (or vice versa), causing restart loops and masking true production health.",
-"suggested_fix": {
-"approach": "Add a real health endpoint under the configured prefix, standardize health probe path and tooling, and ensure runtime image has required probe binary (or pure node probe).",
-"affected_files": [
-"apps/api/src/main.ts",
-"apps/api/src//health.controller.ts (new)",
-"apps/api/Dockerfile",
-"docker/docker-compose.prod.yml"
-],
-"estimated_effort": "small",
-"risk_notes": "Changing probe semantics can affect orchestrator restart behavior; validate in staging first.",
-"tests_needed": [
-"Container healthcheck returns healthy on startup",
-"Health endpoint verifies db/redis dependencies",
-"Negative-path check returns unhealthy on dependency outage"
-]
-},
-"owner": "solo-dev",
-"status": "open",
-"history": [
-{
-"timestamp": "2026-03-05T19:21:36Z",
-"actor": "build-deploy-auditor",
-"event": "created",
-"notes": "Routing/probe mismatch and probe tooling mismatch confirmed in config."
-}
-]
-},
-{
-"finding_id": "f-dpl-0007",
-"type": "enhancement",
-"category": "env-management",
-"severity": "major",
-"priority": "P1",
-"confidence": "evidence",
-"title": "Required environment variables are not validated at startup",
-"description": "Configuration is loaded from env files but no startup schema validation is configured. Runtime-critical values are read directly from process.env, so misconfiguration fails late and inconsistently.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"summary": "ConfigModule.forRoot has no validationSchema/validate hook",
-"file": "apps/api/src/app.module.ts",
-"symbol": "ConfigModule.forRoot",
-"start_line": 28,
-"end_line": 31
-},
-{
-"hook_type": "code_ref",
-"summary": "Bootstrap directly consumes process.env values",
-"file": "apps/api/src/main.ts",
-"symbol": "bootstrap",
-"start_line": 41,
-"end_line": 52
-}
-],
-"impact": "Bad or missing env values surface as runtime incidents instead of fast-fail startup errors, increasing MTTR and deployment uncertainty.",
-"suggested_fix": {
-"approach": "Add centralized env validation (Joi/Zod) in ConfigModule startup and fail boot on missing/invalid required variables.",
-"affected_files": [
-"apps/api/src/app.module.ts",
-"apps/api/src/config/env.validation.ts (new)",
-".env.example",
-"apps/api/.env.example",
-"apps/web/.env.example"
-],
-"estimated_effort": "small",
-"risk_notes": "Initial enforcement may break existing local setups until env files are normalized.",
-"tests_needed": [
-"Startup fails with missing required secrets",
-"Startup succeeds with complete valid env set"
-]
-},
-"owner": "solo-dev",
-"status": "open",
-"history": [
-{
-"timestamp": "2026-03-05T19:21:36Z",
-"actor": "build-deploy-auditor",
-"event": "created",
-"notes": "No runtime env schema validation found."
-}
-]
-},
-{
-"finding_id": "f-dpl-0008",
-"type": "enhancement",
-"category": "logging-gap",
-"severity": "major",
-"priority": "P1",
-"confidence": "evidence",
-"title": "No centralized production logging or external error reporting path",
-"description": "Logging remains mostly console/Nest logger output with no integrated sink (Sentry/OpenTelemetry/structured log pipeline). Web reliability tracking is localStorage-only and analytics endpoint currently logs events instead of persisting them.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"summary": "Web error boundary reports errors only to console",
-"file": "apps/web/src/components/ErrorBoundary.tsx",
-"symbol": "componentDidCatch",
-"start_line": 29,
-"end_line": 34
-},
-{
-"hook_type": "code_ref",
-"summary": "Reliability events are stored locally and persistence errors are swallowed",
-"file": "apps/web/src/lib/reliability.ts",
-"symbol": "trackReliabilityEvent",
-"start_line": 21,
-"end_line": 28
-},
-{
-"hook_type": "code_ref",
-"summary": "Analytics API logs events and has TODO for storage",
-"file": "apps/web/src/pages/api/analytics/events.ts",
-"symbol": "handler",
-"start_line": 35,
-"end_line": 41
-}
-],
-"impact": "Production incidents are difficult to detect and correlate across services; developers remain blind to many failures until user reports.",
-"suggested_fix": {
-"approach": "Adopt structured logging and external error/trace sink, wire web and API error paths to it, and persist analytics/reliability signals server-side.",
-"affected_files": [
-"apps/api/src/main.ts",
-"apps/web/src/components/ErrorBoundary.tsx",
-"apps/web/src/lib/reliability.ts",
-"apps/web/src/pages/api/analytics/events.ts"
-],
-"estimated_effort": "medium",
-"risk_notes": "Telemetry additions can increase noise/cost; define sampling and PII redaction rules up front.",
-"tests_needed": [
-"Synthetic error appears in external dashboard",
-"Log records include request correlation identifiers",
-"PII redaction checks on error payloads"
-]
-},
-"owner": "solo-dev",
-"status": "open",
-"history": [
-{
-"timestamp": "2026-03-05T19:21:36Z",
-"actor": "build-deploy-auditor",
-"event": "created",
-"notes": "No external observability integration found in active config/code."
-}
-]
-},
-{
-"finding_id": "f-dpl-0009",
-"type": "enhancement",
-"category": "missing-error-boundary",
-"severity": "major",
-"priority": "P1",
-"confidence": "evidence",
-"title": "Global error handling is incomplete for process-level and Next.js non-React failures",
-"description": "API only handles SIGTERM/SIGINT and lacks unhandledRejection/uncaughtException handlers. Web has a React error boundary in _app, but no explicit global Next.js error page path for non-boundary failures and no external reporting hook.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"summary": "Only SIGTERM/SIGINT process handlers are registered",
-"file": "apps/api/src/main.ts",
-"symbol": "bootstrap",
-"start_line": 57,
-"end_line": 73
-},
-{
-"hook_type": "code_ref",
-"summary": "Web app wraps pages with React ErrorBoundary",
-"file": "apps/web/src/pages/app.tsx",
-"symbol": "App",
-"start_line": 9,
-"end_line": 20
-},
-{
-"hook_type": "code_ref",
-"summary": "Boundary handles errors locally and does not report externally",
-"file": "apps/web/src/components/ErrorBoundary.tsx",
-"symbol": "componentDidCatch",
-"start_line": 29,
-"end_line": 35
-}
-],
-"impact": "Unhandled crashes and SSR/runtime failures can terminate process or degrade user sessions without reliable incident capture.",
-"suggested_fix": {
-"approach": "Add process-level fatal error handlers and centralized reporting, plus explicit Next.js global error surfaces/reporting for non-component failures.",
-"affected_files": [
-"apps/api/src/main.ts",
-"apps/web/src/pages/app.tsx",
-"apps/web/src/components/ErrorBoundary.tsx",
-"apps/web/src/pages/error.tsx (new or equivalent)"
-],
-"estimated_effort": "small",
-"risk_notes": "Fatal exception handlers must avoid masking crash loops; ensure graceful shutdown and supervised restart behavior.",
-"tests_needed": [
-"Unhandled promise rejection is logged and reported",
-"Simulated render/SSR failure reaches global error reporting path"
-]
-},
-"owner": "solo-dev",
-"status": "open",
-"history": [
-{
-"timestamp": "2026-03-05T19:21:36Z",
-"actor": "build-deploy-auditor",
-"event": "created",
-"notes": "Marked major enhancement per deploy audit rule for global error boundary/infrastructure gaps."
-}
-]
-}
-],
-"rollups": {
-"by_severity": {
-"blocker": 0,
-"major": 9,
-"minor": 0,
-"nit": 0
-},
-"by_category": {
-"build-config": 2,
-"ci-gap": 1,
-"deploy-risk": 3,
-"env-management": 1,
-"logging-gap": 1,
-"missing-error-boundary": 1
-},
-"by_type": {
-"bug": 2,
-"enhancement": 4,
-"debt": 2,
-"question": 1
-},
-"by_status": {
-"open": 9
-}
-},
-"next_actions": [
-{
-"action": "Define canonical production targets and implement non-placeholder deploy jobs",
-"finding_id": "f-dpl-0005",
-"rationale": "P0 ambiguity blocks safe CI/CD design and incident ownership."
-},
-{
-"action": "Fix healthcheck path/tooling and add explicit API health endpoint",
-"finding_id": "f-dpl-0006",
-"rationale": "P0 health mismatches can trigger false restarts and blind operations."
-},
-{
-"action": "Remove frontend build suppressions and restore strict build gates",
-"finding_id": "f-dpl-0002",
-"rationale": "Current web build can ship known broken code."
-},
-{
-"action": "Implement startup env validation with fail-fast behavior",
-"finding_id": "f-dpl-0007",
-"rationale": "Catches deploy misconfiguration before serving traffic."
-},
-{
-"action": "Introduce centralized logging and external error reporting for API and web",
-"finding_id": "f-dpl-0008",
-"rationale": "Improves production observability and shortens incident detection time."
-}
-]
+  "schema_version": "1.1.0",
+  "kind": "agent_output",
+  "run_id": "deploy-20260305-132136",
+  "run_metadata": {
+    "timestamp": "2026-03-05T19:21:36Z",
+    "branch": "main",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "gpt-5.3-codex"
+  },
+  "suite": "deploy",
+  "agent": {
+    "name": "build-deploy-auditor",
+    "role": "Find gaps in build configuration, deployment safety, error handling infrastructure, logging coverage, and monitoring that reduce production visibility.",
+    "inputs_used": [
+      "audits/open_findings.json",
+      "audits/schema/audit-output.schema.json",
+      "audits/artifacts/run/build.txt",
+      ".github/workflows/ci.yml",
+      ".github/workflows/deploy.yml",
+      "package.json",
+      "apps/api/package.json",
+      "apps/web/package.json",
+      "tsconfig.base.json",
+      "apps/api/tsconfig.json",
+      "apps/api/tsconfig.build.json",
+      "apps/web/next.config.js",
+      "apps/api/src/main.ts",
+      "apps/api/src/app.module.ts",
+      "apps/api/src/shared/filters/http-exception.filter.ts",
+      "apps/web/src/pages/app.tsx",
+      "apps/web/src/components/ErrorBoundary.tsx",
+      "apps/web/src/lib/reliability.ts",
+      "apps/web/src/pages/api/analytics/events.ts",
+      "apps/api/Dockerfile",
+      "docker/docker-compose.yml",
+      "docker/docker-compose.prod.yml",
+      ".env.example",
+      "apps/api/.env.example",
+      "apps/web/.env.example",
+      "README.md",
+      "apps/web/.eslintrc.json"
+    ],
+    "stop_conditions_hit": [
+      "deployment-target-unknown"
+    ]
+  },
+  "coverage": {
+    "files_examined": [
+      ".github/workflows/",
+      "apps/api/src/",
+      "apps/web/src/",
+      "docker/",
+      "package.json",
+      "tsconfig.json",
+      ".env.example",
+      "README.md",
+      "audits/artifacts/run/build.txt"
+    ],
+    "files_skipped": [
+      ".archive/ - historical/reference copies outside active deploy path",
+      "node_modules/ - third-party code",
+      "dist/ - generated outputs not used as source-of-truth"
+    ],
+    "coverage_complete": true
+  },
+  "findings": [
+    {
+      "finding_id": "f-dpl-0001",
+      "type": "debt",
+      "category": "build-config",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "TypeScript strictness is disabled in shared and API build configs",
+      "description": "Core TypeScript configs disable strict mode (strict: false) in both the monorepo base and API tsconfig. This allows latent runtime issues to pass build-time checks and reduces build confidence for production releases.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Root TS config disables strict mode",
+          "file": "tsconfig.base.json",
+          "symbol": "compilerOptions",
+          "start_line": 2,
+          "end_line": 10
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "API TS config disables strict mode and strictNullChecks",
+          "file": "apps/api/tsconfig.json",
+          "symbol": "compilerOptions",
+          "start_line": 15,
+          "end_line": 18
+        }
+      ],
+      "impact": "Builds can pass while null/typing defects remain, increasing production incident risk and making regressions harder to catch pre-deploy.",
+      "suggested_fix": {
+        "approach": "Incrementally enable strict mode for API and shared TS configs, starting with strictNullChecks in high-risk modules and enforcing type fixes in CI.",
+        "affected_files": [
+          "tsconfig.base.json",
+          "apps/api/tsconfig.json",
+          ".github/workflows/ci.yml"
+        ],
+        "estimated_effort": "large",
+        "risk_notes": "Turning strict mode on globally may initially fail many files; rollout should be staged to avoid delivery freeze.",
+        "tests_needed": [
+          "Run API typecheck step in CI on each strictness increment",
+          "Run API build and smoke-test auth/content endpoints"
+        ]
+      },
+      "owner": "solo-dev",
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T19:21:36Z",
+          "actor": "build-deploy-auditor",
+          "event": "created",
+          "notes": "Observed directly in active TS build configuration."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-dpl-0002",
+      "type": "debt",
+      "category": "build-config",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Web build explicitly ignores lint and TypeScript errors",
+      "description": "Next.js production build is configured with eslint.ignoreDuringBuilds: true and typescript.ignoreBuildErrors: true. This permits deployment of known-lint and known-type-broken frontend code.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Next config suppresses lint and type failures during build",
+          "file": "apps/web/next.config.js",
+          "symbol": "nextConfig",
+          "start_line": 3,
+          "end_line": 7
+        }
+      ],
+      "impact": "Deployment can succeed despite static analysis failures, reducing release quality signal and increasing user-facing runtime regressions.",
+      "suggested_fix": {
+        "approach": "Remove build suppressions and gate deploy on successful next lint and next build without ignored errors.",
+        "affected_files": [
+          "apps/web/next.config.js",
+          ".github/workflows/ci.yml",
+          ".github/workflows/deploy.yml"
+        ],
+        "estimated_effort": "medium",
+        "risk_notes": "Build may fail initially due to existing debt; triage backlog and phase enforcement if needed.",
+        "tests_needed": [
+          "Run npm --prefix apps/web run lint in CI",
+          "Run npm --prefix apps/web run build with strict build settings"
+        ]
+      },
+      "owner": "solo-dev",
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T19:21:36Z",
+          "actor": "build-deploy-auditor",
+          "event": "created",
+          "notes": "Observed directly in Next.js configuration."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-dpl-0003",
+      "type": "bug",
+      "category": "ci-gap",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "CI declares checks that are not reliably runnable in current repo state",
+      "description": "CI runs API lint and test steps, but API package scripts rely on tooling not declared in apps/api/package.json (e.g., jest) and no API ESLint config is present while only web has an ESLint config file. This creates a high likelihood of flaky or permanently failing CI, reducing trust in pipeline status.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "CI runs lint and tests for API",
+          "file": ".github/workflows/ci.yml",
+          "symbol": "jobs.test.steps",
+          "start_line": 59,
+          "end_line": 76
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "API test script requires jest but jest is not declared in API package devDependencies",
+          "file": "apps/api/package.json",
+          "symbol": "scripts",
+          "start_line": 9,
+          "end_line": 11
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Only web app has an ESLint config file in active tree",
+          "file": "apps/web/.eslintrc.json",
+          "symbol": "root",
+          "start_line": 1,
+          "end_line": 5
+        }
+      ],
+      "impact": "A red or unreliable CI signal blocks safe release gating and obscures whether failures represent real regressions.",
+      "suggested_fix": {
+        "approach": "Align CI steps with actually supported tooling: either add missing API test/lint toolchain and config, or temporarily gate only verified checks while backlog is fixed.",
+        "affected_files": [
+          ".github/workflows/ci.yml",
+          "apps/api/package.json",
+          "apps/api/.eslintrc.* (new or equivalent)",
+          "apps/api/jest.config.* (new)"
+        ],
+        "estimated_effort": "medium",
+        "risk_notes": "Partial gating can reduce coverage if done without a tracked remediation timeline.",
+        "tests_needed": [
+          "Run CI workflow on PR with fresh install",
+          "Verify lint/test/build pass for both API and web or are intentionally scoped"
+        ]
+      },
+      "owner": "solo-dev",
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T19:21:36Z",
+          "actor": "build-deploy-auditor",
+          "event": "created",
+          "notes": "Derived from workflow and package-level toolchain mismatch."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-dpl-0004",
+      "type": "enhancement",
+      "category": "deploy-risk",
+      "severity": "major",
+      "priority": "P0",
+      "confidence": "evidence",
+      "title": "Deploy workflow contains placeholder commands instead of real release steps",
+      "description": "The deploy workflow has placeholder echo commands for API and web deployment and lacks concrete rollback, migration orchestration, and post-deploy verification logic.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "API deploy step is placeholder text",
+          "file": ".github/workflows/deploy.yml",
+          "symbol": "deploy-api",
+          "start_line": 55,
+          "end_line": 64
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Web deploy step is placeholder text",
+          "file": ".github/workflows/deploy.yml",
+          "symbol": "deploy-web",
+          "start_line": 78,
+          "end_line": 84
+        }
+      ],
+      "impact": "Main-branch pushes appear deploy-enabled but do not perform a verifiable production release, creating a false sense of deploy safety.",
+      "suggested_fix": {
+        "approach": "Implement real deployment actions per target platform, add health verification gates, and define rollback commands with failure handling.",
+        "affected_files": [
+          ".github/workflows/deploy.yml",
+          "docker/docker-compose.prod.yml (if self-hosted API)",
+          "deployment scripts (new)"
+        ],
+        "estimated_effort": "medium",
+        "risk_notes": "Automating deploy without environment protections can increase blast radius; add staged rollout safeguards.",
+        "tests_needed": [
+          "Dry-run deploy on staging branch",
+          "Post-deploy health-check gate",
+          "Rollback drill runbook validation"
+        ]
+      },
+      "owner": "solo-dev",
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T19:21:36Z",
+          "actor": "build-deploy-auditor",
+          "event": "created",
+          "notes": "Placeholder deployment logic confirmed in workflow."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-dpl-0005",
+      "type": "question",
+      "category": "deploy-risk",
+      "severity": "major",
+      "priority": "P0",
+      "confidence": "evidence",
+      "title": "Production deployment target is ambiguous across API and web",
+      "description": "Repository signals conflict: deploy workflow references Vercel token for web, API deploy is unspecified placeholder, and Docker prod compose suggests self-hosted API path. A single authoritative production target is not declared.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Workflow references Vercel for web deploy",
+          "file": ".github/workflows/deploy.yml",
+          "symbol": "deploy-web",
+          "start_line": 78,
+          "end_line": 83
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "API deploy target is not implemented in workflow",
+          "file": ".github/workflows/deploy.yml",
+          "symbol": "deploy-api",
+          "start_line": 55,
+          "end_line": 63
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Separate production Docker compose path exists",
+          "file": "docker/docker-compose.prod.yml",
+          "symbol": "services",
+          "start_line": 1,
+          "end_line": 10
+        }
+      ],
+      "impact": "Without a clear target, release automation, env injection, rollback planning, and incident response remain inconsistent.",
+      "suggested_fix": {
+        "approach": "Decide and document canonical production targets for API and web, then align CI/CD, env docs, and runbooks to that decision.",
+        "affected_files": [
+          "README.md",
+          ".github/workflows/deploy.yml",
+          "docs/deployment/* (new or updated)"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "Choosing a target implies migration work for any existing ad-hoc deployment path.",
+        "tests_needed": [
+          "End-to-end deploy rehearsal using chosen target",
+          "Verify secrets/environment mapping for selected platform"
+        ]
+      },
+      "owner": "solo-dev",
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T19:21:36Z",
+          "actor": "build-deploy-auditor",
+          "event": "created",
+          "notes": "Emitted per stop condition: deployment target unknown."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-dpl-0006",
+      "type": "bug",
+      "category": "deploy-risk",
+      "severity": "major",
+      "priority": "P0",
+      "confidence": "evidence",
+      "title": "Health checks are inconsistent with API routing and container runtime",
+      "description": "API global prefix is set to /api, but Docker health checks probe /health; no dedicated health controller route was found in active API source. Additionally, compose healthcheck uses curl, while API runtime image does not install curl.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "API sets global route prefix to /api",
+          "file": "apps/api/src/main.ts",
+          "symbol": "bootstrap",
+          "start_line": 22,
+          "end_line": 24
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Compose healthcheck probes /health via curl",
+          "file": "docker/docker-compose.prod.yml",
+          "symbol": "services.api.healthcheck",
+          "start_line": 39,
+          "end_line": 41
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Dockerfile healthcheck probes /health",
+          "file": "apps/api/Dockerfile",
+          "symbol": "HEALTHCHECK",
+          "start_line": 45,
+          "end_line": 47
+        }
+      ],
+      "impact": "Containers can report unhealthy despite app availability (or vice versa), causing restart loops and masking true production health.",
+      "suggested_fix": {
+        "approach": "Add a real health endpoint under the configured prefix, standardize health probe path and tooling, and ensure runtime image has required probe binary (or pure node probe).",
+        "affected_files": [
+          "apps/api/src/main.ts",
+          "apps/api/src//health.controller.ts (new)",
+          "apps/api/Dockerfile",
+          "docker/docker-compose.prod.yml"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "Changing probe semantics can affect orchestrator restart behavior; validate in staging first.",
+        "tests_needed": [
+          "Container healthcheck returns healthy on startup",
+          "Health endpoint verifies db/redis dependencies",
+          "Negative-path check returns unhealthy on dependency outage"
+        ]
+      },
+      "owner": "solo-dev",
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T19:21:36Z",
+          "actor": "build-deploy-auditor",
+          "event": "created",
+          "notes": "Routing/probe mismatch and probe tooling mismatch confirmed in config."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-dpl-0007",
+      "type": "enhancement",
+      "category": "env-management",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Required environment variables are not validated at startup",
+      "description": "Configuration is loaded from env files but no startup schema validation is configured. Runtime-critical values are read directly from process.env, so misconfiguration fails late and inconsistently.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "ConfigModule.forRoot has no validationSchema/validate hook",
+          "file": "apps/api/src/app.module.ts",
+          "symbol": "ConfigModule.forRoot",
+          "start_line": 28,
+          "end_line": 31
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Bootstrap directly consumes process.env values",
+          "file": "apps/api/src/main.ts",
+          "symbol": "bootstrap",
+          "start_line": 41,
+          "end_line": 52
+        }
+      ],
+      "impact": "Bad or missing env values surface as runtime incidents instead of fast-fail startup errors, increasing MTTR and deployment uncertainty.",
+      "suggested_fix": {
+        "approach": "Add centralized env validation (Joi/Zod) in ConfigModule startup and fail boot on missing/invalid required variables.",
+        "affected_files": [
+          "apps/api/src/app.module.ts",
+          "apps/api/src/config/env.validation.ts (new)",
+          ".env.example",
+          "apps/api/.env.example",
+          "apps/web/.env.example"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "Initial enforcement may break existing local setups until env files are normalized.",
+        "tests_needed": [
+          "Startup fails with missing required secrets",
+          "Startup succeeds with complete valid env set"
+        ]
+      },
+      "owner": "solo-dev",
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T19:21:36Z",
+          "actor": "build-deploy-auditor",
+          "event": "created",
+          "notes": "No runtime env schema validation found."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-dpl-0008",
+      "type": "enhancement",
+      "category": "logging-gap",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "No centralized production logging or external error reporting path",
+      "description": "Logging remains mostly console/Nest logger output with no integrated sink (Sentry/OpenTelemetry/structured log pipeline). Web reliability tracking is localStorage-only and analytics endpoint currently logs events instead of persisting them.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Web error boundary reports errors only to console",
+          "file": "apps/web/src/components/ErrorBoundary.tsx",
+          "symbol": "componentDidCatch",
+          "start_line": 29,
+          "end_line": 34
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Reliability events are stored locally and persistence errors are swallowed",
+          "file": "apps/web/src/lib/reliability.ts",
+          "symbol": "trackReliabilityEvent",
+          "start_line": 21,
+          "end_line": 28
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Analytics API logs events and has TODO for storage",
+          "file": "apps/web/src/pages/api/analytics/events.ts",
+          "symbol": "handler",
+          "start_line": 35,
+          "end_line": 41
+        }
+      ],
+      "impact": "Production incidents are difficult to detect and correlate across services; developers remain blind to many failures until user reports.",
+      "suggested_fix": {
+        "approach": "Adopt structured logging and external error/trace sink, wire web and API error paths to it, and persist analytics/reliability signals server-side.",
+        "affected_files": [
+          "apps/api/src/main.ts",
+          "apps/web/src/components/ErrorBoundary.tsx",
+          "apps/web/src/lib/reliability.ts",
+          "apps/web/src/pages/api/analytics/events.ts"
+        ],
+        "estimated_effort": "medium",
+        "risk_notes": "Telemetry additions can increase noise/cost; define sampling and PII redaction rules up front.",
+        "tests_needed": [
+          "Synthetic error appears in external dashboard",
+          "Log records include request correlation identifiers",
+          "PII redaction checks on error payloads"
+        ]
+      },
+      "owner": "solo-dev",
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T19:21:36Z",
+          "actor": "build-deploy-auditor",
+          "event": "created",
+          "notes": "No external observability integration found in active config/code."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-dpl-0009",
+      "type": "enhancement",
+      "category": "missing-error-boundary",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Global error handling is incomplete for process-level and Next.js non-React failures",
+      "description": "API only handles SIGTERM/SIGINT and lacks unhandledRejection/uncaughtException handlers. Web has a React error boundary in _app, but no explicit global Next.js error page path for non-boundary failures and no external reporting hook.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Only SIGTERM/SIGINT process handlers are registered",
+          "file": "apps/api/src/main.ts",
+          "symbol": "bootstrap",
+          "start_line": 57,
+          "end_line": 73
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Web app wraps pages with React ErrorBoundary",
+          "file": "apps/web/src/pages/app.tsx",
+          "symbol": "App",
+          "start_line": 9,
+          "end_line": 20
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Boundary handles errors locally and does not report externally",
+          "file": "apps/web/src/components/ErrorBoundary.tsx",
+          "symbol": "componentDidCatch",
+          "start_line": 29,
+          "end_line": 35
+        }
+      ],
+      "impact": "Unhandled crashes and SSR/runtime failures can terminate process or degrade user sessions without reliable incident capture.",
+      "suggested_fix": {
+        "approach": "Add process-level fatal error handlers and centralized reporting, plus explicit Next.js global error surfaces/reporting for non-component failures.",
+        "affected_files": [
+          "apps/api/src/main.ts",
+          "apps/web/src/pages/app.tsx",
+          "apps/web/src/components/ErrorBoundary.tsx",
+          "apps/web/src/pages/error.tsx (new or equivalent)"
+        ],
+        "estimated_effort": "small",
+        "risk_notes": "Fatal exception handlers must avoid masking crash loops; ensure graceful shutdown and supervised restart behavior.",
+        "tests_needed": [
+          "Unhandled promise rejection is logged and reported",
+          "Simulated render/SSR failure reaches global error reporting path"
+        ]
+      },
+      "owner": "solo-dev",
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T19:21:36Z",
+          "actor": "build-deploy-auditor",
+          "event": "created",
+          "notes": "Marked major enhancement per deploy audit rule for global error boundary/infrastructure gaps."
+        }
+      ]
+    }
+  ],
+  "rollups": {
+    "by_severity": {
+      "blocker": 0,
+      "major": 9,
+      "minor": 0,
+      "nit": 0
+    },
+    "by_category": {
+      "build-config": 2,
+      "ci-gap": 1,
+      "deploy-risk": 3,
+      "env-management": 1,
+      "logging-gap": 1,
+      "missing-error-boundary": 1
+    },
+    "by_type": {
+      "bug": 2,
+      "enhancement": 4,
+      "debt": 2,
+      "question": 1
+    },
+    "by_status": {
+      "open": 9
+    }
+  },
+  "next_actions": [
+    {
+      "action": "Define canonical production targets and implement non-placeholder deploy jobs",
+      "finding_id": "f-dpl-0005",
+      "rationale": "P0 ambiguity blocks safe CI/CD design and incident ownership."
+    },
+    {
+      "action": "Fix healthcheck path/tooling and add explicit API health endpoint",
+      "finding_id": "f-dpl-0006",
+      "rationale": "P0 health mismatches can trigger false restarts and blind operations."
+    },
+    {
+      "action": "Remove frontend build suppressions and restore strict build gates",
+      "finding_id": "f-dpl-0002",
+      "rationale": "Current web build can ship known broken code."
+    },
+    {
+      "action": "Implement startup env validation with fail-fast behavior",
+      "finding_id": "f-dpl-0007",
+      "rationale": "Catches deploy misconfiguration before serving traffic."
+    },
+    {
+      "action": "Introduce centralized logging and external error reporting for API and web",
+      "finding_id": "f-dpl-0008",
+      "rationale": "Improves production observability and shortens incident detection time."
+    }
+  ]
 }

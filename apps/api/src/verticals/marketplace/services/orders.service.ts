@@ -179,6 +179,14 @@ export class OrdersService {
     };
   }
 
+  async confirmPayment(orderId: string, buyerId: string) {
+    const order = await this.prisma.marketplaceOrder.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.buyerId !== buyerId) throw new ForbiddenException('Not the buyer');
+    if (order.status !== 'PENDING') throw new BadRequestException('Order is not pending');
+    return this.markPaid(orderId, `simulated_${Date.now()}_${orderId}`);
+  }
+
   async markPaid(orderId: string, stripePaymentIntentId: string) {
     const order = await this.prisma.marketplaceOrder.findUnique({ where: { id: orderId } });
     if (!order) throw new NotFoundException('Order not found');

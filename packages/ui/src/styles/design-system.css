@@ -521,6 +521,66 @@ select {
   display: none;
 }
 
+/* ─── Auth-page shell ──────────────────────────────────────────────────────── */
+
+.embr-auth-shell {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+}
+
+.embr-auth-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--embr-bg) 85%, white);
+  border-bottom: 1px solid var(--embr-border);
+  backdrop-filter: blur(8px);
+}
+
+.embr-auth-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 60px;
+}
+
+/* Always show the brand text on auth pages (unlike AppShell desktop where it is hidden) */
+.embr-brand-text-auth {
+  display: inline;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.embr-auth-content {
+  min-height: 0;
+}
+
+.embr-auth-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--embr-muted-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  transition: background-color 120ms ease, color 120ms ease;
+  text-decoration: none;
+}
+
+.embr-auth-back-link:hover {
+  background: color-mix(in srgb, var(--embr-accent) 14%, white);
+  color: var(--embr-text);
+}
+
+.embr-auth-back-arrow {
+  font-size: 1rem;
+  line-height: 1;
+}
+
 @media (max-width: 900px) {
   .embr-header-row {
     align-items: center;

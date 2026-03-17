@@ -1,377 +1,496 @@
 {
-"schema_version": "1.1.0",
-"kind": "agent_output",
-"run_id": "data-20260305-131933",
-"suite": "data",
-"agent": {
-"name": "schema-auditor",
-"role": "Find schema mismatches, missing or broken RLS policies, migration gaps, data constraint violations, and orphaned data patterns.",
-"inputs_used": [
-"audits/open_findings.json",
-"audits/runs/2025-03-04/logic.20250304-143022.json",
-"apps/api/prisma/schema.prisma",
-"apps/api/prisma/migrations//migration.sql",
-"scripts/seed.ts",
-"scripts/seed-simple.js",
-"apps/api/src/core/database/prisma.service.ts",
-"apps/api/src/core/users/dto/update-user-settings.dto.ts",
-"apps/api/src/core/users/users.service.ts",
-"apps/api/src/core/safety/dto/safety.dto.ts",
-"apps/api/src/core/safety/services/reports.service.ts",
-"apps/api/src/verticals/gigs/dto/gig.dto.ts",
-"apps/api/src/verticals/gigs/services/applications.service.ts",
-"apps/api/src/verticals/gigs/services/escrow.service.ts",
-"apps/api/src/verticals/feeds/content/services/comments.service.ts",
-"apps/api/src/verticals/feeds/content/services/scheduled-posts.service.ts",
-"apps/api/src/core/monetization/dto/payout.dto.ts",
-"apps/api/src/core/monetization/services/payout.service.ts",
-"apps/api/src/core/monetization/services/tip.service.ts",
-"apps/api/src/core/monetization/services/transaction.service.ts",
-"apps/api/src/verticals/marketplace/services/orders.service.ts",
-"apps/api/src/core/safety/services/blocking.service.ts",
-"packages/types/src/.ts",
-".env.example",
-"apps/api/.env.example"
-],
-"stop_conditions_hit": []
-},
-"coverage": {
-"files_examined": [
-"apps/api/prisma/schema.prisma",
-"apps/api/prisma/migrations/20260205071952_init/migration.sql",
-"apps/api/prisma/migrations/20260207042211_init/migration.sql",
-"apps/api/prisma/migrations/20260225231059_add_device_tracking/migration.sql",
-"apps/api/prisma/migrations/20260225232035_convert_to_integer_cents/migration.sql",
-"apps/api/prisma/migrations/20260226000100_fix_monetary_types_and_add_indexes/migration.sql",
-"apps/api/prisma/migrations/20260227000000_add_social_graph_indexes/migration.sql",
-"apps/api/prisma/migrations/20260227203522_add_webhook_event_and_playback_policy/migration.sql",
-"apps/api/prisma/migrations/20260301233811_add_unread_notification_countyes/migration.sql",
-"apps/api/src/core//dto/.ts",
-"apps/api/src//services/.ts",
-"packages/types/src/.ts",
-"scripts/seed.ts",
-"scripts/seed-simple.js",
-".env.example",
-"apps/api/.env.example",
-"audits/open_findings.json",
-"audits/runs/2025-03-04/logic.20250304-143022.json"
-],
-"files_skipped": [
-".archive/ (historical duplicates)",
-"apps/web/ frontend-only components outside data integrity scope",
-"node_modules/",
-"generated runtime artifacts (playwright-report/, dist/)"
-],
-"coverage_complete": false
-},
-"findings": [
-{
-"finding_id": "data-f001",
-"type": "bug",
-"category": "migration-gap",
-"severity": "blocker",
-"priority": "P0",
-"confidence": "evidence",
-"title": "Prisma schema contains many models absent from migration history",
-"description": "Current Prisma schema declares Group/MutualAid/Marketplace/Event/Organizing models, but migration SQL history never creates those tables/enums. Databases built from migrations will not match runtime Prisma client expectations.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"file": "apps/api/prisma/schema.prisma",
-"summary": "Models exist: Group, MarketplaceListing, Event, Poll, GroupTreasury and related entities"
-},
-{
-"hook_type": "code_ref",
-"file": "apps/api/prisma/migrations//migration.sql",
-"summary": "No CREATE TABLE for Group/Marketplace/Event/Poll/GroupTreasury families"
-}
-],
-"impact": "Runtime query failures and deploy-time schema drift across environments; high risk of production breakage when code touches missing tables.",
-"suggested_fix": {
-"approach": "Create reconciliation migrations for all missing models/enums and verify with prisma migrate status on a clean DB and an existing DB snapshot.",
-"affected_files": [
-"apps/api/prisma/migrations//migration.sql",
-"apps/api/prisma/schema.prisma"
-]
-},
-"status": "open"
-},
-{
-"finding_id": "data-f002",
-"type": "bug",
-"category": "migration-gap",
-"severity": "major",
-"priority": "P1",
-"confidence": "evidence",
-"title": "Historical migration adds required columns without defaults",
-"description": "Migration adds Payout.walletId and Transaction.walletId as NOT NULL without defaults/backfill.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"file": "apps/api/prisma/migrations/20260207042211_init/migration.sql",
-"summary": "ALTER TABLE adds required walletId on existing tables"
-}
-],
-"impact": "Migration can fail on non-empty databases, causing partial rollout and schema divergence.",
-"suggested_fix": {
-"approach": "Use phased migration: add nullable column, backfill from existing relations, validate, then set NOT NULL."
-},
-"status": "open"
-},
-{
-"finding_id": "data-f003",
-"type": "bug",
-"category": "migration-gap",
-"severity": "major",
-"priority": "P1",
-"confidence": "evidence",
-"title": "Money-type conversions are sequenced in a way that risks irreversible value corruption",
-"description": "One migration casts monetary columns from float to int directly; a later migration multiplies values by 100 and casts again.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"file": "apps/api/prisma/migrations/20260207042211_init/migration.sql",
-"summary": "ALTER COLUMN amount/balance/... SET DATA TYPE INTEGER"
-},
-{
-"hook_type": "code_ref",
-"file": "apps/api/prisma/migrations/20260225232035_convert_to_integer_cents/migration.sql",
-"summary": "ALTER COLUMN ... TYPE INTEGER USING ROUND(column * 100)"
-}
-],
-"impact": "Precision loss or 100x scale inconsistencies depending on environment state and migration order history.",
-"suggested_fix": {
-"approach": "Run one-time data audit comparing expected cents ranges, then ship corrective migration with explicit source-unit assumptions and rollback notes."
-},
-"status": "open"
-},
-{
-"finding_id": "data-f004",
-"type": "bug",
-"category": "type-drift",
-"severity": "major",
-"priority": "P1",
-"confidence": "evidence",
-"title": "DTO/service still write dropped Profile columns",
-"description": "emailNotifications and pushNotifications were dropped from schema, but user settings DTO and service still accept/pass them into prisma.profile.update.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"file": "apps/api/src/core/users/dto/update-user-settings.dto.ts",
-"summary": "DTO includes emailNotifications and pushNotifications"
-},
-{
-"hook_type": "code_ref",
-"file": "apps/api/src/core/users/users.service.ts",
-"summary": "passes updateSettingsDto directly to prisma.profile.update"
-},
-{
-"hook_type": "code_ref",
-"file": "apps/api/prisma/migrations/20260207042211_init/migration.sql",
-"summary": "DROP COLUMN emailNotifications, pushNotifications from Profile"
-}
-],
-"impact": "Runtime write errors and failed settings updates.",
-"suggested_fix": {
-"approach": "Remove obsolete DTO fields and map only schema-valid fields in service."
-},
-"status": "open"
-},
-{
-"finding_id": "data-f005",
-"type": "bug",
-"category": "type-drift",
-"severity": "major",
-"priority": "P1",
-"confidence": "evidence",
-"title": "Safety DTO enums are lowercase while Prisma enums are uppercase",
-"description": "Safety DTOs validate lowercase enum values (e.g., spam, pending) and services cast directly to Prisma enum types without normalization.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"file": "apps/api/src/core/safety/dto/safety.dto.ts",
-"summary": "ReportReason/ReportStatus/ActionType/AppealStatus lowercase values"
-},
-{
-"hook_type": "code_ref",
-"file": "apps/api/src/core/safety/services/reports.service.ts",
-"summary": "casts dto values as unknown as Prisma* during writes"
-},
-{
-"hook_type": "code_ref",
-"file": "apps/api/prisma/schema.prisma",
-"summary": "Prisma enums are uppercase variants"
-}
-],
-"impact": "Requests can pass DTO validation yet fail at persistence.",
-"suggested_fix": {
-"approach": "Unify DTO enums with Prisma enum values or normalize before DB writes; remove unsafe enum casts."
-},
-"status": "open"
-},
-{
-"finding_id": "data-f006",
-"type": "bug",
-"category": "validation-gap",
-"severity": "major",
-"priority": "P1",
-"confidence": "evidence",
-"title": "Validation allows decimals for integer money/file-size fields",
-"description": "DTOs use @IsNumber for fields that are Int in Prisma (budgetMin, budgetMax, proposedBudget, milestone amount, payout amount, etc.).",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"file": "apps/api/src/verticals/gigs/dto/gig.dto.ts",
-"summary": "money fields validated as @IsNumber"
-},
-{
-"hook_type": "code_ref",
-"file": "apps/api/src/core/monetization/dto/payout.dto.ts",
-"summary": "payout amount validated as @IsNumber"
-},
-{
-"hook_type": "code_ref",
-"file": "apps/api/prisma/schema.prisma",
-"summary": "corresponding columns are Int"
-}
-],
-"impact": "Inputs can pass validation and then fail at Prisma/DB or create implicit rounding semantics.",
-"suggested_fix": {
-"approach": "Use @IsInt + explicit cent units in DTO docs/messages."
-},
-"status": "open"
-},
-{
-"finding_id": "data-f007",
-"type": "bug",
-"category": "orphaned-data",
-"severity": "major",
-"priority": "P1",
-"confidence": "evidence",
-"title": "Comment soft-delete cascade deletes one level but decrements full descendant count",
-"description": "Service recursively counts descendants but updateMany only soft-deletes root + direct replies.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"file": "apps/api/src/verticals/feeds/content/services/comments.service.ts",
-"summary": "countDescendants recursive; delete query only includes { id } and { parentId: commentId }"
-}
-],
-"impact": "Orphaned deeper replies and denormalized Post.commentCount drift.",
-"suggested_fix": {
-"approach": "Delete/update full subtree within a transaction (recursive CTE SQL or iterative traversal) and recompute count safely."
-},
-"status": "open"
-},
-{
-"finding_id": "data-f008",
-"type": "bug",
-"category": "orphaned-data",
-"severity": "major",
-"priority": "P1",
-"confidence": "evidence",
-"title": "Gig application acceptance flow is non-atomic and race-prone",
-"description": "Accept flow performs updateMany reject, accept single app, mark gig in progress, create escrow, then create milestones as separate operations without a shared transaction/lock.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"file": "apps/api/src/verticals/gigs/services/applications.service.ts",
-"summary": "accept() does multi-step writes across tables/services without transaction"
-}
-],
-"impact": "Partial state (accepted app with missing escrow/milestones) and potential double-accept under concurrency.",
-"suggested_fix": {
-"approach": "Wrap all acceptance side effects in a single serializable transaction and enforce compare-and-set on gig/application statuses."
-},
-"status": "open"
-},
-{
-"finding_id": "data-f009",
-"type": "bug",
-"category": "constraint-violation",
-"severity": "major",
-"priority": "P1",
-"confidence": "evidence",
-"title": "Tip completion uses nested transactions across different Prisma contexts",
-"description": "TipService.completeTip() starts this.prisma.$transaction(tx => ...) but calls transactionService.recordTipTransaction(), which itself opens this.prisma.$transaction(...) and is not bound to tx.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"file": "apps/api/src/core/monetization/services/tip.service.ts",
-"summary": "calls transactionService.recordTipTransaction inside tx callback"
-},
-{
-"hook_type": "code_ref",
-"file": "apps/api/src/core/monetization/services/transaction.service.ts",
-"summary": "recordTipTransaction uses independent this.prisma.$transaction"
-}
-],
-"impact": "Ledger and wallet/tip state can diverge if inner/outer transaction phases fail independently.",
-"suggested_fix": {
-"approach": "Pass transaction client through service methods or centralize all ledger+tip+wallet writes in one transaction boundary."
-},
-"status": "open"
-},
-{
-"finding_id": "data-f010",
-"type": "bug",
-"category": "constraint-violation",
-"severity": "major",
-"priority": "P1",
-"confidence": "evidence",
-"title": "Marketplace checkout/order flow can partially commit and oversell stock",
-"description": "checkout() loops item-by-item creating orders without all-or-nothing transaction. markPaid() decrements listing quantity without guarding against concurrent underflow.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"file": "apps/api/src/verticals/marketplace/services/orders.service.ts",
-"summary": "sequential createOrder loop in checkout; quantity decrement in markPaid without conditional guard"
-}
-],
-"impact": "Partial cart creation, inconsistent customer state, and negative inventory under concurrency.",
-"suggested_fix": {
-"approach": "Use transaction for full checkout and conditional stock decrement (where: { id, quantity: { gte: order.quantity } }) with retry logic."
-},
-"status": "open"
-},
-{
-"finding_id": "data-f011",
-"type": "question",
-"category": "missing-rls",
-"severity": "minor",
-"priority": "P2",
-"confidence": "evidence",
-"title": "No RLS policies found; clarify whether app-layer auth is the intended sole control",
-"description": "No ENABLE ROW LEVEL SECURITY or CREATE POLICY statements were found in migrations; Prisma service uses unrestricted server-side client.",
-"proof_hooks": [
-{
-"hook_type": "code_ref",
-"file": "apps/api/prisma/migrations//migration.sql",
-"summary": "no RLS policy SQL found"
-},
-{
-"hook_type": "code_ref",
-"file": "apps/api/src/core/database/prisma.service.ts",
-"summary": "plain PrismaClient initialization (no per-request DB role scoping)"
-}
-],
-"impact": "If direct DB access paths are introduced later (BI tools, scripts, background jobs), row isolation is not enforced at DB layer.",
-"suggested_fix": {
-"approach": "Human decision required: keep app-only authorization or add RLS for sensitive tables with explicit bypass strategy for trusted services."
-},
-"status": "open"
-}
-],
-"env_keys": [
-"DATABASE_URL",
-"DIRECT_URL",
-"TEST_DATABASE_URL",
-"REDIS_HOST",
-"REDIS_PORT",
-"REDIS_PASSWORD",
-"REDIS_URL",
-"POSTGRES_DB",
-"POSTGRES_USER",
-"POSTGRES_PASSWORD"
-]
+  "schema_version": "1.1.0",
+  "kind": "agent_output",
+  "run_id": "data-20260305-131933",
+  "suite": "data",
+  "agent": {
+    "name": "schema-auditor",
+    "role": "Find schema mismatches, missing or broken RLS policies, migration gaps, data constraint violations, and orphaned data patterns.",
+    "inputs_used": [
+      "audits/open_findings.json",
+      "audits/runs/2025-03-04/logic.20250304-143022.json",
+      "apps/api/prisma/schema.prisma",
+      "apps/api/prisma/migrations//migration.sql",
+      "scripts/seed.ts",
+      "scripts/seed-simple.js",
+      "apps/api/src/core/database/prisma.service.ts",
+      "apps/api/src/core/users/dto/update-user-settings.dto.ts",
+      "apps/api/src/core/users/users.service.ts",
+      "apps/api/src/core/safety/dto/safety.dto.ts",
+      "apps/api/src/core/safety/services/reports.service.ts",
+      "apps/api/src/verticals/gigs/dto/gig.dto.ts",
+      "apps/api/src/verticals/gigs/services/applications.service.ts",
+      "apps/api/src/verticals/gigs/services/escrow.service.ts",
+      "apps/api/src/verticals/feeds/content/services/comments.service.ts",
+      "apps/api/src/verticals/feeds/content/services/scheduled-posts.service.ts",
+      "apps/api/src/core/monetization/dto/payout.dto.ts",
+      "apps/api/src/core/monetization/services/payout.service.ts",
+      "apps/api/src/core/monetization/services/tip.service.ts",
+      "apps/api/src/core/monetization/services/transaction.service.ts",
+      "apps/api/src/verticals/marketplace/services/orders.service.ts",
+      "apps/api/src/core/safety/services/blocking.service.ts",
+      "packages/types/src/.ts",
+      ".env.example",
+      "apps/api/.env.example"
+    ],
+    "stop_conditions_hit": []
+  },
+  "coverage": {
+    "files_examined": [
+      "apps/api/prisma/schema.prisma",
+      "apps/api/prisma/migrations/20260205071952_init/migration.sql",
+      "apps/api/prisma/migrations/20260207042211_init/migration.sql",
+      "apps/api/prisma/migrations/20260225231059_add_device_tracking/migration.sql",
+      "apps/api/prisma/migrations/20260225232035_convert_to_integer_cents/migration.sql",
+      "apps/api/prisma/migrations/20260226000100_fix_monetary_types_and_add_indexes/migration.sql",
+      "apps/api/prisma/migrations/20260227000000_add_social_graph_indexes/migration.sql",
+      "apps/api/prisma/migrations/20260227203522_add_webhook_event_and_playback_policy/migration.sql",
+      "apps/api/prisma/migrations/20260301233811_add_unread_notification_countyes/migration.sql",
+      "apps/api/src/core//dto/.ts",
+      "apps/api/src//services/.ts",
+      "packages/types/src/.ts",
+      "scripts/seed.ts",
+      "scripts/seed-simple.js",
+      ".env.example",
+      "apps/api/.env.example",
+      "audits/open_findings.json",
+      "audits/runs/2025-03-04/logic.20250304-143022.json"
+    ],
+    "files_skipped": [
+      ".archive/ (historical duplicates)",
+      "apps/web/ frontend-only components outside data integrity scope",
+      "node_modules/",
+      "generated runtime artifacts (playwright-report/, dist/)"
+    ],
+    "coverage_complete": false,
+    "incomplete_reason": "Reason not recorded in original output."
+  },
+  "findings": [
+    {
+      "finding_id": "data-f001",
+      "type": "bug",
+      "category": "migration-gap",
+      "severity": "blocker",
+      "priority": "P0",
+      "confidence": "evidence",
+      "title": "Prisma schema contains many models absent from migration history",
+      "description": "Current Prisma schema declares Group/MutualAid/Marketplace/Event/Organizing models, but migration SQL history never creates those tables/enums. Databases built from migrations will not match runtime Prisma client expectations.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/prisma/schema.prisma",
+          "summary": "Models exist: Group, MarketplaceListing, Event, Poll, GroupTreasury and related entities"
+        },
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/prisma/migrations//migration.sql",
+          "summary": "No CREATE TABLE for Group/Marketplace/Event/Poll/GroupTreasury families"
+        }
+      ],
+      "impact": "Runtime query failures and deploy-time schema drift across environments; high risk of production breakage when code touches missing tables.",
+      "suggested_fix": {
+        "approach": "Create reconciliation migrations for all missing models/enums and verify with prisma migrate status on a clean DB and an existing DB snapshot.",
+        "affected_files": [
+          "apps/api/prisma/migrations//migration.sql",
+          "apps/api/prisma/schema.prisma"
+        ]
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:19:33Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "data-f002",
+      "type": "bug",
+      "category": "migration-gap",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Historical migration adds required columns without defaults",
+      "description": "Migration adds Payout.walletId and Transaction.walletId as NOT NULL without defaults/backfill.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/prisma/migrations/20260207042211_init/migration.sql",
+          "summary": "ALTER TABLE adds required walletId on existing tables"
+        }
+      ],
+      "impact": "Migration can fail on non-empty databases, causing partial rollout and schema divergence.",
+      "suggested_fix": {
+        "approach": "Use phased migration: add nullable column, backfill from existing relations, validate, then set NOT NULL."
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:19:33Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "data-f003",
+      "type": "bug",
+      "category": "migration-gap",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Money-type conversions are sequenced in a way that risks irreversible value corruption",
+      "description": "One migration casts monetary columns from float to int directly; a later migration multiplies values by 100 and casts again.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/prisma/migrations/20260207042211_init/migration.sql",
+          "summary": "ALTER COLUMN amount/balance/... SET DATA TYPE INTEGER"
+        },
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/prisma/migrations/20260225232035_convert_to_integer_cents/migration.sql",
+          "summary": "ALTER COLUMN ... TYPE INTEGER USING ROUND(column * 100)"
+        }
+      ],
+      "impact": "Precision loss or 100x scale inconsistencies depending on environment state and migration order history.",
+      "suggested_fix": {
+        "approach": "Run one-time data audit comparing expected cents ranges, then ship corrective migration with explicit source-unit assumptions and rollback notes."
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:19:33Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "data-f004",
+      "type": "bug",
+      "category": "type-drift",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "DTO/service still write dropped Profile columns",
+      "description": "emailNotifications and pushNotifications were dropped from schema, but user settings DTO and service still accept/pass them into prisma.profile.update.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/core/users/dto/update-user-settings.dto.ts",
+          "summary": "DTO includes emailNotifications and pushNotifications"
+        },
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/core/users/users.service.ts",
+          "summary": "passes updateSettingsDto directly to prisma.profile.update"
+        },
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/prisma/migrations/20260207042211_init/migration.sql",
+          "summary": "DROP COLUMN emailNotifications, pushNotifications from Profile"
+        }
+      ],
+      "impact": "Runtime write errors and failed settings updates.",
+      "suggested_fix": {
+        "approach": "Remove obsolete DTO fields and map only schema-valid fields in service."
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:19:33Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "data-f005",
+      "type": "bug",
+      "category": "type-drift",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Safety DTO enums are lowercase while Prisma enums are uppercase",
+      "description": "Safety DTOs validate lowercase enum values (e.g., spam, pending) and services cast directly to Prisma enum types without normalization.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/core/safety/dto/safety.dto.ts",
+          "summary": "ReportReason/ReportStatus/ActionType/AppealStatus lowercase values"
+        },
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/core/safety/services/reports.service.ts",
+          "summary": "casts dto values as unknown as Prisma* during writes"
+        },
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/prisma/schema.prisma",
+          "summary": "Prisma enums are uppercase variants"
+        }
+      ],
+      "impact": "Requests can pass DTO validation yet fail at persistence.",
+      "suggested_fix": {
+        "approach": "Unify DTO enums with Prisma enum values or normalize before DB writes; remove unsafe enum casts."
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:19:33Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "data-f006",
+      "type": "bug",
+      "category": "validation-gap",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Validation allows decimals for integer money/file-size fields",
+      "description": "DTOs use @IsNumber for fields that are Int in Prisma (budgetMin, budgetMax, proposedBudget, milestone amount, payout amount, etc.).",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/verticals/gigs/dto/gig.dto.ts",
+          "summary": "money fields validated as @IsNumber"
+        },
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/core/monetization/dto/payout.dto.ts",
+          "summary": "payout amount validated as @IsNumber"
+        },
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/prisma/schema.prisma",
+          "summary": "corresponding columns are Int"
+        }
+      ],
+      "impact": "Inputs can pass validation and then fail at Prisma/DB or create implicit rounding semantics.",
+      "suggested_fix": {
+        "approach": "Use @IsInt + explicit cent units in DTO docs/messages."
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:19:33Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "data-f007",
+      "type": "bug",
+      "category": "orphaned-data",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Comment soft-delete cascade deletes one level but decrements full descendant count",
+      "description": "Service recursively counts descendants but updateMany only soft-deletes root + direct replies.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/verticals/feeds/content/services/comments.service.ts",
+          "summary": "countDescendants recursive; delete query only includes { id } and { parentId: commentId }"
+        }
+      ],
+      "impact": "Orphaned deeper replies and denormalized Post.commentCount drift.",
+      "suggested_fix": {
+        "approach": "Delete/update full subtree within a transaction (recursive CTE SQL or iterative traversal) and recompute count safely."
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:19:33Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "data-f008",
+      "type": "bug",
+      "category": "orphaned-data",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Gig application acceptance flow is non-atomic and race-prone",
+      "description": "Accept flow performs updateMany reject, accept single app, mark gig in progress, create escrow, then create milestones as separate operations without a shared transaction/lock.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/verticals/gigs/services/applications.service.ts",
+          "summary": "accept() does multi-step writes across tables/services without transaction"
+        }
+      ],
+      "impact": "Partial state (accepted app with missing escrow/milestones) and potential double-accept under concurrency.",
+      "suggested_fix": {
+        "approach": "Wrap all acceptance side effects in a single serializable transaction and enforce compare-and-set on gig/application statuses."
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:19:33Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "data-f009",
+      "type": "bug",
+      "category": "constraint-violation",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Tip completion uses nested transactions across different Prisma contexts",
+      "description": "TipService.completeTip() starts this.prisma.$transaction(tx => ...) but calls transactionService.recordTipTransaction(), which itself opens this.prisma.$transaction(...) and is not bound to tx.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/core/monetization/services/tip.service.ts",
+          "summary": "calls transactionService.recordTipTransaction inside tx callback"
+        },
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/core/monetization/services/transaction.service.ts",
+          "summary": "recordTipTransaction uses independent this.prisma.$transaction"
+        }
+      ],
+      "impact": "Ledger and wallet/tip state can diverge if inner/outer transaction phases fail independently.",
+      "suggested_fix": {
+        "approach": "Pass transaction client through service methods or centralize all ledger+tip+wallet writes in one transaction boundary."
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:19:33Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "data-f010",
+      "type": "bug",
+      "category": "constraint-violation",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Marketplace checkout/order flow can partially commit and oversell stock",
+      "description": "checkout() loops item-by-item creating orders without all-or-nothing transaction. markPaid() decrements listing quantity without guarding against concurrent underflow.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/verticals/marketplace/services/orders.service.ts",
+          "summary": "sequential createOrder loop in checkout; quantity decrement in markPaid without conditional guard"
+        }
+      ],
+      "impact": "Partial cart creation, inconsistent customer state, and negative inventory under concurrency.",
+      "suggested_fix": {
+        "approach": "Use transaction for full checkout and conditional stock decrement (where: { id, quantity: { gte: order.quantity } }) with retry logic."
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:19:33Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    },
+    {
+      "finding_id": "data-f011",
+      "type": "question",
+      "category": "missing-rls",
+      "severity": "minor",
+      "priority": "P2",
+      "confidence": "evidence",
+      "title": "No RLS policies found; clarify whether app-layer auth is the intended sole control",
+      "description": "No ENABLE ROW LEVEL SECURITY or CREATE POLICY statements were found in migrations; Prisma service uses unrestricted server-side client.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/prisma/migrations//migration.sql",
+          "summary": "no RLS policy SQL found"
+        },
+        {
+          "hook_type": "code_ref",
+          "file": "apps/api/src/core/database/prisma.service.ts",
+          "summary": "plain PrismaClient initialization (no per-request DB role scoping)"
+        }
+      ],
+      "impact": "If direct DB access paths are introduced later (BI tools, scripts, background jobs), row isolation is not enforced at DB layer.",
+      "suggested_fix": {
+        "approach": "Human decision required: keep app-only authorization or add RLS for sensitive tables with explicit bypass strategy for trusted services."
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:19:33Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
+    }
+  ],
+  "env_keys": [
+    "DATABASE_URL",
+    "DIRECT_URL",
+    "TEST_DATABASE_URL",
+    "REDIS_HOST",
+    "REDIS_PORT",
+    "REDIS_PASSWORD",
+    "REDIS_URL",
+    "POSTGRES_DB",
+    "POSTGRES_USER",
+    "POSTGRES_PASSWORD"
+  ],
+  "run_metadata": {
+    "timestamp": "2026-03-05T13:19:33Z",
+    "branch": "main",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "claude-sonnet-4-5"
+  },
+  "rollups": {
+    "by_severity": {
+      "blocker": 1,
+      "major": 9,
+      "minor": 1
+    },
+    "by_category": {
+      "migration-gap": 3,
+      "type-drift": 2,
+      "validation-gap": 1,
+      "orphaned-data": 2,
+      "constraint-violation": 2,
+      "missing-rls": 1
+    },
+    "by_type": {
+      "bug": 10,
+      "question": 1
+    },
+    "by_status": {
+      "open": 11
+    }
+  },
+  "next_actions": []
 }

@@ -126,55 +126,62 @@ export class MessagingService {
       skip,
     })) as any[];
 
-    // Transform to conversation previews
-    const conversationPreviews: ConversationPreview[] = await Promise.all(
-      conversations.map(async (conv) => {
-        const otherUser =
-          conv.participant1Id === userId ? conv.participant2 : conv.participant1;
-
-        // Get unread count
-        const unreadCount = await this.prisma.message.count({
-          where: {
-            conversationId: conv.id,
-            senderId: { not: userId },
-            status: { not: MessageStatus.READ },
-          },
-        });
-
-        return {
-          id: conv.id,
-          otherUser: {
-            id: otherUser.id,
-            username: otherUser.username,
-            profile: otherUser.profile,
-          },
-          lastMessage: conv.messages[0]
-            ? {
-                id: conv.messages[0].id,
-                conversationId: conv.messages[0].conversationId,
-                senderId: conv.messages[0].senderId,
-                content: conv.messages[0].content,
-                mediaUrl: conv.messages[0].mediaUrl,
-                mediaType: conv.messages[0].mediaType,
-                fileName: conv.messages[0].fileName,
-                fileSize: conv.messages[0].fileSize,
-                type: conv.messages[0].type as any,
-                status: conv.messages[0].status as any,
-                createdAt: conv.messages[0].createdAt.toISOString(),
-                readAt: conv.messages[0].readAt?.toISOString(),
-                metadata: conv.messages[0].metadata,
-                sender: {
-                  id: conv.messages[0].sender.id,
-                  username: conv.messages[0].sender.username,
-                  profile: conv.messages[0].sender.profile,
-                },
-              }
-            : null,
-          unreadCount,
-          lastMessageAt: conv.lastMessageAt.toISOString(),
-        };
-      }),
+    // Fetch all unread counts for this page of conversations in a single grouped
+    // query instead of one count() per conversation (N+1 fix).
+    const conversationIds = conversations.map((c) => c.id);
+    const unreadGroups = await this.prisma.message.groupBy({
+      by: ['conversationId'],
+      where: {
+        conversationId: { in: conversationIds },
+        senderId: { not: userId },
+        status: { not: MessageStatus.READ },
+      },
+      _count: { id: true },
+    });
+    const unreadCountMap = new Map<string, number>(
+      unreadGroups.map((g) => [g.conversationId, g._count.id]),
     );
+
+    // Transform to conversation previews — synchronous, no per-conversation DB calls.
+    const conversationPreviews: ConversationPreview[] = conversations.map((conv) => {
+      const otherUser =
+        conv.participant1Id === userId ? conv.participant2 : conv.participant1;
+
+      const unreadCount = unreadCountMap.get(conv.id) ?? 0;
+
+      return {
+        id: conv.id,
+        otherUser: {
+          id: otherUser.id,
+          username: otherUser.username,
+          profile: otherUser.profile,
+        },
+        lastMessage: conv.messages[0]
+          ? {
+              id: conv.messages[0].id,
+              conversationId: conv.messages[0].conversationId,
+              senderId: conv.messages[0].senderId,
+              content: conv.messages[0].content,
+              mediaUrl: conv.messages[0].mediaUrl,
+              mediaType: conv.messages[0].mediaType,
+              fileName: conv.messages[0].fileName,
+              fileSize: conv.messages[0].fileSize,
+              type: conv.messages[0].type as any,
+              status: conv.messages[0].status as any,
+              createdAt: conv.messages[0].createdAt.toISOString(),
+              readAt: conv.messages[0].readAt?.toISOString(),
+              metadata: conv.messages[0].metadata,
+              sender: {
+                id: conv.messages[0].sender.id,
+                username: conv.messages[0].sender.username,
+                profile: conv.messages[0].sender.profile,
+              },
+            }
+          : null,
+        unreadCount,
+        lastMessageAt: conv.lastMessageAt.toISOString(),
+      };
+    });
 
     return {
       conversations: conversationPreviews,
@@ -768,6 +775,68 @@ export class MessagingService {
       updatedCount: result.count,
       conversation: conversationWithDetails,
     };
+  }
+
+  /**
+   * Mark all unread messages in multiple conversations as read in bulk.
+   * Uses 3 fixed DB queries regardless of how many conversations are provided,
+   * replacing the previous O(3N) pattern of calling markAsRead() in a loop.
+   */
+  async bulkMarkAsRead(
+    userId: string,
+    conversationIds: string[],
+  ): Promise<{ updatedCount: number; conversationIds: string[]; unreadCounts: Record<string, number> }> {
+    if (conversationIds.length === 0) {
+      return { updatedCount: 0, conversationIds: [], unreadCounts: {} };
+    }
+
+    // 1 query: fetch only conversations where the user is a participant
+    const validConversations = await this.prisma.conversation.findMany({
+      where: {
+        id: { in: conversationIds },
+        OR: [{ participant1Id: userId }, { participant2Id: userId }],
+      },
+      select: { id: true },
+    });
+
+    const validIds = validConversations.map((c) => c.id);
+    if (validIds.length === 0) {
+      return { updatedCount: 0, conversationIds: [], unreadCounts: {} };
+    }
+
+    // 1 query: mark all matching unread messages as read
+    const result = await this.prisma.message.updateMany({
+      where: {
+        conversationId: { in: validIds },
+        senderId: { not: userId },
+        status: { not: MessageStatus.READ },
+      },
+      data: {
+        status: PrismaMessageStatus.READ,
+        readAt: new Date(),
+      },
+    });
+
+    // 1 query: fetch remaining unread counts for all affected conversations
+    const unreadGroups = await this.prisma.message.groupBy({
+      by: ['conversationId'],
+      where: {
+        conversationId: { in: validIds },
+        senderId: { not: userId },
+        status: { not: MessageStatus.READ },
+      },
+      _count: { id: true },
+    });
+
+    const unreadCounts: Record<string, number> = {};
+    for (const id of validIds) {
+      unreadCounts[id] = 0;
+    }
+    for (const g of unreadGroups) {
+      unreadCounts[g.conversationId] = g._count.id;
+    }
+
+    return { updatedCount: result.count, conversationIds: validIds, unreadCounts };
   }
 
   async searchMessages(

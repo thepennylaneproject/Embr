@@ -173,12 +173,41 @@ export class UsersService {
     });
   }
 
-  private sanitizeUser(user: any, includeFinancial = false) {
-    const { passwordHash, googleId, wallet, ...sanitized } = user;
-    // Only include wallet data for the account owner (F-007)
-    if (includeFinancial && wallet) {
-      return { ...sanitized, wallet };
+  private sanitizeUser(user: any, isOwner = false) {
+    // Always strip credentials and Stripe-internal IDs
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash, googleId, stripeCustomerId, wallet, deletedAt, ...base } = user;
+
+    if (isOwner) {
+      // Owner sees their own data (minus credentials/internal Stripe IDs).
+      // Wallet is included for the owner but stripeConnectAccountId is a
+      // Stripe-internal identifier that should not appear in API responses.
+      if (wallet) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { stripeConnectAccountId, ...safeWallet } = wallet;
+        return { ...base, wallet: safeWallet };
+      }
+      return base;
     }
-    return sanitized;
+
+    // Non-owner public view: strip fields that belong only to the account owner.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const {
+      email,
+      suspended,
+      suspendedUntil,
+      lastLoginAt,
+      unreadNotificationCount,
+      ...publicFields
+    } = base;
+
+    // Strip private profile preferences not visible to other users.
+    if (publicFields.profile) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { notificationPreference, ...publicProfile } = publicFields.profile;
+      publicFields.profile = publicProfile;
+    }
+
+    return publicFields;
   }
 }
