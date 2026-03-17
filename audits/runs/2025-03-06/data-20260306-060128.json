@@ -627,27 +627,10 @@
     "model": "claude-sonnet-4-5"
   },
   "rollups": {
-    "by_severity": {
-      "blocker": 1,
-      "major": 12,
-      "minor": 1
-    },
-    "by_category": {
-      "migration-gap": 3,
-      "type-drift": 4,
-      "validation-gap": 1,
-      "orphaned-data": 2,
-      "constraint-violation": 2,
-      "missing-rls": 1,
-      "schema-mismatch": 1
-    },
-    "by_type": {
-      "bug": 13,
-      "question": 1
-    },
-    "by_status": {
-      "open": 14
-    }
+    "by_severity": {},
+    "by_category": {},
+    "by_type": {},
+    "by_status": {}
   },
   "next_actions": []
 }

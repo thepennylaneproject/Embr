@@ -63,7 +63,8 @@
       "node_modules/ - third-party code",
       "dist/ - generated outputs not used as source-of-truth"
     ],
-    "coverage_complete": true
+    "coverage_complete": true,
+    "incomplete_reason": null
   },
   "findings": [
     {

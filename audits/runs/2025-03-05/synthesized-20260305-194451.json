@@ -2214,7 +2214,7 @@
         {
           "timestamp": "2026-03-05T13:26:27Z",
           "actor": "runtime-bug-hunter",
-          "event": "note_added",
+          "event": "created",
           "notes": "No matching open finding in audits/open_findings.json; prior run findings were unrelated ingestion paths."
         }
       ],

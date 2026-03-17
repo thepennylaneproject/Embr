@@ -9,6 +9,13 @@
     "tool_platform": "cursor",
     "model": "claude-sonnet-4-5"
   },
+  "summary": {
+    "total_findings": 89,
+    "open_findings": 80,
+    "resolved_findings": 9,
+    "new_findings": 0,
+    "resolved_this_run": 9
+  },
   "resolved_finding_ids": [
     "f-security-f-001",
     "f-security-f-002",
@@ -37,17 +44,17 @@
       "note": "Move to dedicated UX/content pass."
     }
   ],
-  "suite": "synthesized",
-  "agent": {
-    "name": "synthesizer",
-    "role": "Audit agent \u2014 see suite for scope."
-  },
-  "findings": [],
   "rollups": {
     "by_severity": {},
     "by_category": {},
     "by_type": {},
     "by_status": {}
   },
-  "next_actions": []
+  "next_actions": [],
+  "suite": "security",
+  "agent": {
+    "name": "security-auditor",
+    "role": "Audit agent for the security suite."
+  },
+  "findings": []
 }
