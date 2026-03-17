@@ -2,6 +2,12 @@ import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { RlsContextService } from './rls-context.service';
 
+// Declaration merge: adds PrismaClient's typed model accessors (user, post, wallet, …)
+// to PrismaService so that callers get full type-safety on Prisma operations.
+// The actual runtime values are set via Object.defineProperty in the constructor.
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface PrismaService extends PrismaClient {}
+
 /**
  * PrismaService wraps the Prisma client and automatically injects the RLS
  * session context before every query when the application connects as the
@@ -38,8 +44,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
    */
   private readonly extended: ReturnType<PrismaClient['$extends']>;
 
-  // Model proxy accessors are dynamically assigned in the constructor.
-  [key: string]: unknown;
+  // Model proxy accessors are dynamically assigned in the constructor via Object.defineProperty.
 
   constructor(private readonly rlsContext: RlsContextService) {
     this.base = new PrismaClient();
