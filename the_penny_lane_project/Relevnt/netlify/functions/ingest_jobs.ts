@@ -251,13 +251,74 @@ function normaliseIndeedJob(j: RawIndeedJob): NormalisedJob {
 }
 
 // ---------------------------------------------------------------------------
+// Auth gate
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true when the invocation is permitted to run ingestion.
+ *
+ * Two paths are accepted:
+ *
+ * 1. Netlify scheduler — the cron infrastructure POSTs a JSON body containing
+ *    a `next_run` ISO-date string. We detect this and allow it through because
+ *    Netlify's v1 Handler API does not support injecting custom headers into
+ *    scheduled invocations.
+ *
+ * 2. Authenticated manual trigger — an `X-Ingestion-Key` header whose value
+ *    matches the `INGEST_SECRET` environment variable. Use this for any
+ *    out-of-band trigger (CI, admin scripts, etc.).
+ *
+ * If `INGEST_SECRET` is not configured the function logs a warning and allows
+ * all callers through (backward-compatible fallback). Set `INGEST_SECRET` in
+ * your Netlify environment variables to enforce the gate.
+ */
+function isAuthorized(event: HandlerEvent): boolean {
+  // Path 1: Netlify scheduler invocation — body is JSON with a "next_run" field.
+  try {
+    const raw = event.isBase64Encoded
+      ? Buffer.from(event.body ?? '', 'base64').toString()
+      : (event.body ?? '');
+    if (raw) {
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      if (typeof parsed.next_run === 'string') {
+        return true;
+      }
+    }
+  } catch {
+    // Body is not JSON — fall through to header check.
+  }
+
+  // Path 2: Pre-shared key header for non-scheduler invocations.
+  // Read from process.env at call-time so the value is always current.
+  const ingestSecret = process.env.INGEST_SECRET ?? '';
+  if (!ingestSecret) {
+    console.warn(
+      '[ingest_jobs] INGEST_SECRET env var is not set; the endpoint is ' +
+        'unprotected. Add INGEST_SECRET to your Netlify environment variables.',
+    );
+    return true;
+  }
+
+  const providedKey = event.headers['x-ingestion-key'];
+  return providedKey === ingestSecret;
+}
+
+// ---------------------------------------------------------------------------
 // Handler
 // ---------------------------------------------------------------------------
 
 export const handler: Handler = async (
-  _event: HandlerEvent,
+  event: HandlerEvent,
   _context: HandlerContext,
 ) => {
+  if (!isAuthorized(event)) {
+    console.warn('[ingest_jobs] Rejected unauthorized invocation from', event.headers['x-forwarded-for'] ?? 'unknown');
+    return {
+      statusCode: 401,
+      body: JSON.stringify({ error: 'Unauthorized' }),
+    };
+  }
+
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   const results = {
