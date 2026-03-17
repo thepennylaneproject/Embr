@@ -93,11 +93,8 @@ export default function GigBookingPage() {
           { label: 'Apply' },
         ]}
       >
-        <div style={{ textAlign: 'center', padding: '3rem' }}>
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-500 mx-auto"></div>
-          <p style={{ marginTop: '1rem', color: 'var(--embr-muted-text)' }}>
-            Loading gig details...
-          </p>
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--embr-muted-text)' }}>
+          Loading gig details...
         </div>
       </ProtectedPageShell>
     );
@@ -588,7 +585,7 @@ export default function GigBookingPage() {
 
         {/* Success State */}
         {step === 'success' && (
-          <div className="ui-card" data-padding="lg" style={{ textAlign: 'center' }}>
+          <div className="ui-card" data-padding="lg" style={{ textAlign: 'center', maxWidth: '560px', margin: '0 auto' }}>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
             <h2
               style={{
@@ -699,11 +696,7 @@ export default function GigBookingPage() {
                 <Button style={{ width: '100%' }}>View My Applications</Button>
               </Link>
               <Link href="/gigs" style={{ flex: 1, minWidth: '150px' }}>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  style={{ width: '100%' }}
-                >
+                <Button type="button" variant="secondary" style={{ width: '100%' }}>
                   Browse More Gigs
                 </Button>
               </Link>

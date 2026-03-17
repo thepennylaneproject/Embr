@@ -9,7 +9,7 @@ import { Post } from '@shared/types/content.types';
 import { PostCard } from '@/components/content';
 import { FollowButton } from '@/components/social/FollowButton';
 import { AppShell } from '@/components/layout';
-import { Button } from '@embr/ui';
+import { Button, PageState } from '@embr/ui';
 
 export default function UserProfilePage() {
   const router = useRouter();
@@ -62,7 +62,11 @@ export default function UserProfilePage() {
   if (loading) {
     return (
       <AppShell breadcrumbs={[{ label: 'User Profile' }]}>
-        <p style={{ color: 'var(--embr-muted-text)' }}>Loading profile...</p>
+        <PageState
+          title="Loading profile"
+          description="Please wait while we fetch this profile."
+          isLoading
+        />
       </AppShell>
     );
   }
