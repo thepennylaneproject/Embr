@@ -8,6 +8,7 @@ import {
   GetTrendingCreatorsDto,
   SimilarUsersDto
 } from '../dto/discovery.dto';
+import { sanitizePublicProfile } from '../../../../common/utils/user-sanitizer';
 
 interface SearchRankingFactors {
   textRelevance: number;
@@ -182,7 +183,7 @@ export class UserDiscoveryService {
         id: user.id,
         username: user.username,
         verified: user.isVerified,
-        profile: user.profile,
+        profile: sanitizePublicProfile(user.profile),
         stats: {
           posts: (user as any)._count.posts,
           followers: (user as any)._count.followers,
@@ -470,7 +471,7 @@ export class UserDiscoveryService {
       id: user.id,
       username: user.username,
       verified: user.isVerified,
-      profile: user.profile,
+      profile: sanitizePublicProfile(user.profile),
       reason: 'Similar interests',
       stats: {
         followers: (user as any)._count.followers,
@@ -607,7 +608,7 @@ export class UserDiscoveryService {
       id: user.id,
       username: user.username,
       verified: user.isVerified,
-      profile: user.profile,
+      profile: sanitizePublicProfile(user.profile),
       reason: 'Trending creator',
       stats: {
         followers: (user as any)._count.followers,
@@ -811,7 +812,7 @@ export class UserDiscoveryService {
         id: creator.id,
         username: creator.username,
         verified: creator.isVerified,
-        profile: (creator as any).profile as any,
+        profile: sanitizePublicProfile((creator as any).profile),
         stats: {
           followers: (creator as any)._count.followers,
           posts: (creator as any)._count.posts,
