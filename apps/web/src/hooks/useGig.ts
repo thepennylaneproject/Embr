@@ -55,32 +55,28 @@ export const useGig = (): UseGigResult => {
     setError(null);
     try {
       await gigsApi.cancel(gigId);
-      if (gig) {
-        setGig({ ...gig, status: 'CANCELLED' as any });
-      }
+      setGig((prev) => (prev ? { ...prev, status: 'CANCELLED' as any } : null));
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to cancel gig');
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [gig]);
+  }, []);
 
   const completeGig = useCallback(async (gigId: string) => {
     setLoading(true);
     setError(null);
     try {
       await gigsApi.complete(gigId);
-      if (gig) {
-        setGig({ ...gig, status: 'COMPLETED' as any });
-      }
+      setGig((prev) => (prev ? { ...prev, status: 'COMPLETED' as any } : null));
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to complete gig');
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [gig]);
+  }, []);
 
   return {
     gig,
@@ -141,48 +137,42 @@ export const useApplication = (): UseApplicationResult => {
     setError(null);
     try {
       await applicationsApi.accept(applicationId);
-      if (application) {
-        setApplication({ ...application, status: 'ACCEPTED' as any });
-      }
+      setApplication((prev) => (prev ? { ...prev, status: 'ACCEPTED' as any } : null));
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to accept application');
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [application]);
+  }, []);
 
   const rejectApplication = useCallback(async (applicationId: string) => {
     setLoading(true);
     setError(null);
     try {
       await applicationsApi.reject(applicationId);
-      if (application) {
-        setApplication({ ...application, status: 'REJECTED' as any });
-      }
+      setApplication((prev) => (prev ? { ...prev, status: 'REJECTED' as any } : null));
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to reject application');
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [application]);
+  }, []);
 
   const withdrawApplication = useCallback(async (applicationId: string) => {
     setLoading(true);
     setError(null);
     try {
       await applicationsApi.withdraw(applicationId);
-      if (application) {
-        setApplication({ ...application, status: 'WITHDRAWN' as any });
-      }
+      setApplication((prev) => (prev ? { ...prev, status: 'WITHDRAWN' as any } : null));
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to withdraw application');
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [application]);
+  }, []);
 
   return {
     application,

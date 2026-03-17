@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ProtectedPageShell } from '@/components/layout';
 import { OrderCard } from '@/components/marketplace/OrderCard';
@@ -23,15 +23,15 @@ export default function OrdersPage() {
   const [trackingNumber, setTrackingNumber] = useState('');
   const [shipError, setShipError] = useState('');
 
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     setLoading(true);
     const [buying, selling] = await Promise.all([getBuyingOrders(), getSellingOrders()]);
     setBuyingOrders(buying);
     setSellingOrders(selling);
     setLoading(false);
-  };
+  }, [getBuyingOrders, getSellingOrders]);
 
-  useEffect(() => { loadOrders(); }, []);
+  useEffect(() => { loadOrders(); }, [loadOrders]);
 
   const handleConfirmPayment = async (orderId: string) => {
     try {
