@@ -63,6 +63,7 @@ export class MessagingService {
 
     // Build where clause
     const where: any = {
+      deletedAt: null,
       OR: [{ participant1Id: userId }, { participant2Id: userId }],
     };
 
@@ -223,7 +224,7 @@ export class MessagingService {
       );
     }
 
-    // Check if conversation already exists
+    // Check if conversation already exists (including previously soft-deleted)
     const existingConversation = await this.prisma.conversation.findFirst({
       where: {
         OR: [
@@ -253,7 +254,30 @@ export class MessagingService {
     let message: MessageWithSender | undefined;
 
     if (existingConversation) {
-      conversation = existingConversation;
+      if (existingConversation.deletedAt) {
+        conversation = await this.prisma.conversation.update({
+          where: { id: existingConversation.id },
+          data: { deletedAt: null, lastMessageAt: new Date() },
+          include: {
+            participant1: {
+              include: {
+                profile: true,
+              },
+            },
+            participant2: {
+              include: {
+                profile: true,
+              },
+            },
+            messages: {
+              take: 1,
+              orderBy: { createdAt: 'desc' },
+            },
+          },
+        });
+      } else {
+        conversation = existingConversation;
+      }
     } else {
       // Create new conversation
       conversation = await this.prisma.conversation.create({
@@ -271,6 +295,10 @@ export class MessagingService {
             include: {
               profile: true,
             },
+          },
+          messages: {
+            take: 1,
+            orderBy: { createdAt: 'desc' },
           },
         },
       });
@@ -360,7 +388,7 @@ export class MessagingService {
       where: { id: conversationId },
     });
 
-    if (!conversation) {
+    if (!conversation || conversation.deletedAt) {
       throw new NotFoundException('Conversation not found');
     }
 
@@ -371,11 +399,18 @@ export class MessagingService {
       throw new ForbiddenException('You are not a participant in this conversation');
     }
 
-    // Soft delete: In production, you might want to keep messages for both users
-    // and just hide for the deleting user
-    await this.prisma.conversation.delete({
-      where: { id: conversationId },
+    if (conversation.deletedAt) {
+      throw new NotFoundException('Conversation already deleted');
+    }
+
+    const result = await this.prisma.conversation.updateMany({
+      where: { id: conversationId, deletedAt: null },
+      data: { deletedAt: new Date() },
     });
+
+    if (result.count === 0) {
+      throw new NotFoundException('Conversation not found');
+    }
 
     return { message: 'Conversation deleted successfully' };
   }
@@ -422,7 +457,7 @@ export class MessagingService {
         },
       });
 
-      if (!conversation) {
+      if (!conversation || conversation.deletedAt) {
         throw new NotFoundException('Conversation not found');
       }
 
@@ -541,7 +576,7 @@ export class MessagingService {
       where: { id: conversationId },
     });
 
-    if (!conversation) {
+    if (!conversation || conversation.deletedAt) {
       throw new NotFoundException('Conversation not found');
     }
 
@@ -686,7 +721,7 @@ export class MessagingService {
       },
     });
 
-    if (!conversation) {
+    if (!conversation || conversation.deletedAt) {
       throw new NotFoundException('Conversation not found');
     }
 
@@ -774,7 +809,7 @@ export class MessagingService {
       where: { id: conversationId },
     });
 
-    if (!conversation) {
+    if (!conversation || conversation.deletedAt) {
       throw new NotFoundException('Conversation not found');
     }
 
@@ -889,6 +924,7 @@ export class MessagingService {
       where: {
         conversation: {
           OR: [{ participant1Id: userId }, { participant2Id: userId }],
+          deletedAt: null,
         },
         senderId: { not: userId },
         status: { not: MessageStatus.READ },
@@ -921,6 +957,9 @@ export class MessagingService {
         conversationId,
         senderId: { not: userId },
         status: { not: MessageStatus.READ },
+        conversation: {
+          deletedAt: null,
+        },
       },
     });
 

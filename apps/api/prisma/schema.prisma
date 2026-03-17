@@ -832,6 +832,7 @@ model Conversation {
   participant2   User     @relation("Participant2", fields: [participant2Id], references: [id], onDelete: Cascade)
   lastMessageAt  DateTime @default(now())
   createdAt      DateTime @default(now())
+  deletedAt      DateTime?
 
   // Relations
   messages       Message[]
@@ -840,6 +841,7 @@ model Conversation {
   @@index([participant1Id])
   @@index([participant2Id])
   @@index([lastMessageAt])
+  @@index([deletedAt])
 }
 
 enum MessageType {
@@ -2035,4 +2037,3 @@ model GroupTreasuryTransaction {
   @@index([treasuryId])
   @@index([type])
 }
-
