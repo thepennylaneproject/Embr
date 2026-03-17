@@ -32,7 +32,20 @@ export const envValidationSchema = Joi.object({
   GOOGLE_CLIENT_ID: Joi.string().optional().allow(''),
   GOOGLE_CLIENT_SECRET: Joi.string().optional().allow(''),
   GOOGLE_CALLBACK_URL: Joi.string().uri().optional(),
-  COOKIE_SECURE: Joi.boolean().default(false),
+
+  // Cookie security — must be true in production to prevent cookie hijacking over HTTP.
+  // In development/test, defaults to false so local HTTP servers work without certs.
+  COOKIE_SECURE: Joi.boolean()
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.boolean().valid(true).required().messages({
+        'any.only':
+          'COOKIE_SECURE must be set to "true" in production to prevent auth-cookie transmission over HTTP.',
+        'any.required':
+          'COOKIE_SECURE is required in production. Set COOKIE_SECURE=true in your environment.',
+      }),
+      otherwise: Joi.boolean().default(false),
+    }),
 
   // AWS (optional — S3/SES features degrade gracefully without these)
   AWS_REGION: Joi.string().default('us-east-1'),

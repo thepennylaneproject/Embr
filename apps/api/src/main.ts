@@ -100,6 +100,17 @@ async function bootstrap() {
     );
   }
 
+  // Warn developers explicitly when cookie security is disabled so the
+  // setting is never silently absent.  Production startup is already guarded
+  // by the Joi schema in env.validation.ts (COOKIE_SECURE=true is required).
+  if (process.env.NODE_ENV !== 'production' && process.env.COOKIE_SECURE !== 'true') {
+    startupLogger.warn(
+      'COOKIE_SECURE is not enabled — auth cookies will be transmitted over HTTP. ' +
+        'This is acceptable for local development. ' +
+        'Set COOKIE_SECURE=true for any environment that terminates TLS.',
+    );
+  }
+
   // Graceful shutdown handling for containerized deployments
   process.on('SIGTERM', async () => {
     startupLogger.log('SIGTERM received, starting graceful shutdown...');
