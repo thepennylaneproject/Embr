@@ -5,15 +5,9 @@
   "run_metadata": {
     "timestamp": "2026-03-05T13:20:17Z",
     "branch": "unknown",
-    "commit": "unknown",
     "environment": "local",
     "tool_platform": "cursor",
-    "model": "gpt-5.3-codex",
-    "preflight_artifacts": {
-      "build_output": "audits/artifacts/_run_/build.txt",
-      "bundle_stats": "audits/artifacts/_run_/bundle-stats.txt"
-    },
-    "notes": "History lookup completed: audits/open_findings.json and audits/index.json contain no prior performance findings/runs for tracked categories."
+    "model": "gpt-5.3-codex"
   },
   "suite": "performance",
   "agent": {
@@ -79,8 +73,7 @@
       ".archive/** (non-runtime historical copies)",
       "generated build manifests not present"
     ],
-    "coverage_complete": true,
-    "incomplete_reason": null
+    "coverage_complete": true
   },
   "findings": [
     {
@@ -131,7 +124,14 @@
       "related_ids": [
         "f-perf-002"
       ],
-      "history": [],
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:20:17Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
       "artifacts": []
     },
     {
@@ -177,7 +177,14 @@
       "related_ids": [
         "f-perf-001"
       ],
-      "history": [],
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:20:17Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
       "artifacts": []
     },
     {
@@ -221,7 +228,14 @@
       "owner": "backend",
       "status": "open",
       "related_ids": [],
-      "history": [],
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:20:17Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
       "artifacts": []
     },
     {
@@ -271,7 +285,14 @@
       "owner": "payments",
       "status": "open",
       "related_ids": [],
-      "history": [],
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:20:17Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
       "artifacts": []
     },
     {
@@ -319,7 +340,14 @@
       "owner": "payments",
       "status": "open",
       "related_ids": [],
-      "history": [],
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:20:17Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
       "artifacts": []
     },
     {
@@ -363,7 +391,14 @@
       "owner": "media",
       "status": "open",
       "related_ids": [],
-      "history": [],
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:20:17Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
       "artifacts": []
     },
     {
@@ -413,7 +448,14 @@
       "owner": "frontend",
       "status": "open",
       "related_ids": [],
-      "history": [],
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:20:17Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
       "artifacts": []
     },
     {
@@ -469,7 +511,14 @@
       "owner": "frontend",
       "status": "open",
       "related_ids": [],
-      "history": [],
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:20:17Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
       "artifacts": []
     },
     {
@@ -534,7 +583,14 @@
       "owner": "frontend",
       "status": "open",
       "related_ids": [],
-      "history": [],
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:20:17Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
       "artifacts": []
     },
     {
@@ -604,7 +660,14 @@
       "owner": "frontend",
       "status": "open",
       "related_ids": [],
-      "history": [],
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:20:17Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
       "artifacts": [
         "audits/artifacts/_run_/bundle-stats.txt"
       ]
@@ -654,7 +717,14 @@
       "related_ids": [
         "f-perf-012"
       ],
-      "history": [],
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:20:17Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
       "artifacts": []
     },
     {
@@ -720,7 +790,14 @@
       "related_ids": [
         "f-perf-011"
       ],
-      "history": [],
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:20:17Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
       "artifacts": []
     }
   ],

@@ -32,8 +32,7 @@
       "<15 files examined, list unavailable>"
     ],
     "files_skipped": [],
-    "coverage_complete": true,
-    "incomplete_reason": null
+    "coverage_complete": true
   },
   "findings": [
     {
@@ -584,22 +583,6 @@
       "rationale": "This is a multi-sprint effort. Triage type errors, migrate to Winston/Pino, add Sentry integration. Estimated effort: 8+ days."
     }
   ],
-  "summary": {
-    "total_findings": 12,
-    "critical_issues": 1,
-    "major_issues": 5,
-    "minor_issues": 6,
-    "deployment_readiness": "NOT READY - blocking build failure must be fixed before any deployment",
-    "key_observations": [
-      "Build pipeline is broken: NestJS build fails with TypeScript errors in MessagingService. This blocks all deployments and CI/CD validation.",
-      "CI/CD pipeline is incomplete: API is not built or tested in CI, only web. This means type errors and build failures reach merge without detection.",
-      "Error handling infrastructure is partially in place: web has _error page and error handling, but missing client-side React Error Boundary. API has global exception filter and startup logging but lacks structured logging and external error reporting (Sentry).",
-      "Environment management has gaps: API does not validate required environment variables at startup. Web does not validate NEXT_PUBLIC_API_URL at build time. Missing vars could cause runtime crashes hours after deployment.",
-      "Deployment safety has medium confidence: health check endpoint is referenced but may not be implemented. Database rollback strategy is manual. Docker prod config location is unclear.",
-      "Security-adjacent issue: CSP header uses unsafe-inline for scripts, which defeats XSS protection. Should use nonces before production launch.",
-      "TypeScript ecosystem has pre-existing debt: 666+ type errors in strict mode. Workarounds (transpile-only) allow unsafe code to production. This is a medium-to-long-term refactoring effort."
-    ]
-  },
   "run_metadata": {
     "timestamp": "2026-03-10T15:00:00Z",
     "branch": "main",

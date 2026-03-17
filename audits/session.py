@@ -18,11 +18,14 @@ Usage:
   python3 session.py status           # Full dashboard
   python3 session.py canship          # Am I ready to deploy?
   python3 session.py decide <finding_id> <decision>  # Answer a question finding
+  python3 session.py validate <file.json>            # Validate a run file before ingesting
+  python3 session.py validate --all                  # Validate all run files
 """
 
 import json
 import sys
 import os
+import subprocess
 from datetime import datetime, timezone
 from collections import defaultdict
 
@@ -101,7 +104,54 @@ def load_findings():
     return findings, data
 
 
+SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "schema", "audit-output.schema.json")
+
+VALID_STATUS_SET = {
+    "open", "accepted", "in_progress", "fixed_pending_verify", "fixed_verified",
+    "wont_fix", "deferred", "duplicate", "converted_to_enhancement"
+}
+VALID_TYPE_SET = {"bug", "enhancement", "debt", "question"}
+VALID_SEVERITY_SET = {"blocker", "major", "minor", "nit"}
+VALID_HISTORY_EVENT_SET = {
+    "created", "repro_confirmed", "hypothesis_added", "patch_proposed",
+    "patch_applied", "verification_passed", "verification_failed", "reopened",
+    "deferred", "wont_fix", "linked_duplicate", "scope_changed",
+    "severity_changed", "split_into_children", "converted_type", "note_added"
+}
+
+
+def _validate_finding_enums(finding: dict) -> list[str]:
+    """Check a single finding for invalid enum values. Returns list of error strings."""
+    errs = []
+    fid = finding.get("finding_id", finding.get("id", "?"))
+    t = finding.get("type")
+    if t and t not in VALID_TYPE_SET:
+        errs.append(f"finding {fid}: type '{t}' not in {sorted(VALID_TYPE_SET)}")
+    s = finding.get("severity")
+    if s and s not in VALID_SEVERITY_SET:
+        errs.append(f"finding {fid}: severity '{s}' not in {sorted(VALID_SEVERITY_SET)}")
+    st = finding.get("status")
+    if st and st not in VALID_STATUS_SET:
+        errs.append(f"finding {fid}: status '{st}' not in {sorted(VALID_STATUS_SET)}")
+    for ev in finding.get("history", []):
+        ev_val = ev.get("event", "")
+        if ev_val and ev_val not in VALID_HISTORY_EVENT_SET:
+            errs.append(f"finding {fid}: history.event '{ev_val}' not in valid enum")
+    return errs
+
+
 def save_findings(data, findings):
+    # Validate finding enums before persisting
+    all_errs = []
+    for f in findings:
+        all_errs.extend(_validate_finding_enums(f))
+    if all_errs:
+        print(f"WARNING: {len(all_errs)} schema violation(s) detected in open_findings:")
+        for err in all_errs[:10]:
+            print(f"  {err}")
+        if len(all_errs) > 10:
+            print(f"  ... and {len(all_errs) - 10} more. Run: python3 audits/migrate_run_files.py audits/open_findings.json")
+
     key = "open_findings" if "open_findings" in data else "findings"
     data[key] = findings
     data["last_updated"] = NOW
@@ -426,6 +476,20 @@ def cmd_reaudit():
     print("Scope hint for agents: focus on these files only, not full codebase.")
 
 
+def cmd_validate(args):
+    """Validate one or more run JSON files against LYRA schema v1.1.0 before ingesting."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    validator = os.path.join(script_dir, "validate_output.py")
+
+    if not os.path.exists(validator):
+        print(f"ERROR: Validator not found at {validator}")
+        sys.exit(1)
+
+    cmd = [sys.executable, validator] + args
+    result = subprocess.run(cmd)
+    sys.exit(result.returncode)
+
+
 def cmd_canship():
     findings, _ = load_findings()
 
@@ -599,6 +663,9 @@ def main():
         cmd_reaudit()
     elif cmd == "canship":
         cmd_canship()
+    elif cmd == "validate":
+        validate_args = sys.argv[2:] if len(sys.argv) > 2 else ["--all"]
+        cmd_validate(validate_args)
     elif cmd == "help":
         print(__doc__)
     else:
