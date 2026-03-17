@@ -461,49 +461,81 @@ export class FollowsService {
    * Excludes blocked users
    */
   async getSuggestedFromNetwork(userId: string, limit: number = 10) {
-    // Get users that the people you follow also follow
-    // Excludes blocked users (both directions)
-    const suggestions = await this.prisma.$queryRaw<any[]>`
-      SELECT
-        u.id,
-        u.username,
-        COUNT(DISTINCT f1.follower_id) as mutual_followers,
-        p.avatar_url,
-        p.full_name,
-        p.bio,
-        p.follower_count
-      FROM users u
-      INNER JOIN follows f2 ON f2.following_id = u.id
-      INNER JOIN follows f1 ON f1.following_id = f2.follower_id
-      LEFT JOIN profiles p ON p.user_id = u.id
-      WHERE f1.follower_id = ${userId}
-      AND f2.follower_id != ${userId}
-      AND u.id != ${userId}
-      AND NOT EXISTS (
-        SELECT 1 FROM follows
-        WHERE follower_id = ${userId}
-        AND following_id = u.id
-      )
-      AND NOT EXISTS (
-        SELECT 1 FROM blocked_users
-        WHERE (blocker_id = ${userId} AND blocked_id = u.id)
-           OR (blocker_id = u.id AND blocked_id = ${userId})
-      )
-      GROUP BY u.id, u.username, p.avatar_url, p.full_name, p.bio, p.follower_count
-      ORDER BY mutual_followers DESC, p.follower_count DESC
-      LIMIT ${limit}
-    `;
+    // Get all users the current user already follows
+    const following = await this.prisma.follow.findMany({
+      where: { followerId: userId },
+      select: { followingId: true },
+    });
+    const followingIds = following.map(f => f.followingId);
 
-    return suggestions.map(s => ({
-      id: s.id,
-      username: s.username,
-      profile: {
-        avatarUrl: s.avatar_url,
-        fullName: s.full_name,
-        bio: s.bio,
-        followerCount: s.follower_count,
+    if (followingIds.length === 0) return [];
+
+    // Get blocked user IDs (both directions)
+    const blocked = await this.prisma.blockedUser.findMany({
+      where: {
+        OR: [
+          { blockerId: userId },
+          { blockedId: userId },
+        ],
       },
-      mutualFollowers: parseInt(s.mutual_followers),
+      select: { blockerId: true, blockedId: true },
+    });
+    const blockedIds = blocked.flatMap(b => [b.blockerId, b.blockedId]);
+    const excludedIds = [...followingIds, userId, ...blockedIds];
+
+    // Get 2nd-degree connections: who the people you follow also follow
+    const secondDegree = await this.prisma.follow.findMany({
+      where: {
+        followerId: { in: followingIds },
+        followingId: { notIn: excludedIds },
+      },
+      select: {
+        followingId: true,
+        following: {
+          select: {
+            id: true,
+            username: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                displayName: true,
+                bio: true,
+                followerCount: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Aggregate mutual follower counts per candidate user
+    const mutualCountMap = new Map<string, { user: any; count: number }>();
+    for (const { followingId, following } of secondDegree) {
+      if (!mutualCountMap.has(followingId)) {
+        mutualCountMap.set(followingId, { user: following, count: 0 });
+      }
+      mutualCountMap.get(followingId)!.count++;
+    }
+
+    // Sort by mutual follower count, then by follower count, take top `limit`
+    const sorted = Array.from(mutualCountMap.values())
+      .sort((a, b) => {
+        const countDiff = b.count - a.count;
+        if (countDiff !== 0) return countDiff;
+        return (b.user.profile?.followerCount ?? 0) - (a.user.profile?.followerCount ?? 0);
+      })
+      .slice(0, limit);
+
+    return sorted.map(({ user, count }) => ({
+      id: user.id,
+      username: user.username,
+      profile: {
+        avatarUrl: user.profile?.avatarUrl ?? null,
+        fullName: user.profile?.displayName ?? null,
+        bio: user.profile?.bio ?? null,
+        followerCount: user.profile?.followerCount ?? 0,
+      },
+      mutualFollowers: count,
     }));
   }
 }
