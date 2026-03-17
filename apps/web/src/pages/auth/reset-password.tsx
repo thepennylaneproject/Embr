@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { authApi } from '@/lib/api/auth';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { copy } from '@/lib/copy';
 import { Button, Card, Input, PageState } from '@embr/ui';
 
 export default function ResetPasswordPage() {
@@ -18,15 +19,15 @@ export default function ResetPasswordPage() {
     const nextErrors: Record<string, string> = {};
 
     if (!token) {
-      nextErrors.general = 'Reset token is missing.';
+      nextErrors.general = 'Reset token is missing. Please open the link from your email again.';
     }
 
     if (formData.newPassword.length < 8) {
-      nextErrors.newPassword = 'Password must be at least 8 characters.';
+      nextErrors.newPassword = copy.errors.passwordTooShort;
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      nextErrors.confirmPassword = 'Passwords do not match.';
+      nextErrors.confirmPassword = copy.errors.passwordMismatch;
     }
 
     setErrors(nextErrors);
@@ -50,7 +51,7 @@ export default function ResetPasswordPage() {
         router.push('/auth/login');
       }, 2200);
     } catch (err: any) {
-      setErrors({ general: getApiErrorMessage(err, 'Failed to reset password.') });
+      setErrors({ general: getApiErrorMessage(err, 'Could not reset your password. Please try again or request a new reset link.') });
     } finally {
       setLoading(false);
     }
