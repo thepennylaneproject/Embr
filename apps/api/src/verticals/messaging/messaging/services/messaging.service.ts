@@ -399,17 +399,13 @@ export class MessagingService {
       throw new ForbiddenException('You are not a participant in this conversation');
     }
 
-    if (conversation.deletedAt) {
-      throw new NotFoundException('Conversation already deleted');
-    }
-
     const result = await this.prisma.conversation.updateMany({
       where: { id: conversationId, deletedAt: null },
       data: { deletedAt: new Date() },
     });
 
     if (result.count === 0) {
-      throw new NotFoundException('Conversation not found');
+      throw new NotFoundException('Conversation already deleted');
     }
 
     return { message: 'Conversation deleted successfully' };
