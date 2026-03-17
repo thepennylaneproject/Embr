@@ -60,32 +60,37 @@ export class FollowsService {
       throw new ConflictException('Already following this user');
     }
 
-    // Create follow relationship
-    const follow = await this.prisma.follow.create({
-      data: {
-        followerId,
-        followingId: dto.followingId,
-      },
-      include: {
-        following: {
-          include: {
-            profile: true,
+    // Create follow relationship and update denormalized counts atomically.
+    // All three writes share one transaction: if any fails the whole operation
+    // rolls back, keeping the Follow row and the two Profile counters consistent.
+    const follow = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.follow.create({
+        data: {
+          followerId,
+          followingId: dto.followingId,
+        },
+        include: {
+          following: {
+            include: {
+              profile: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    // Update follower counts (denormalized for performance)
-    await Promise.all([
-      this.prisma.profile.update({
-        where: { userId: followerId },
-        data: { followingCount: { increment: 1 } },
-      }),
-      this.prisma.profile.update({
-        where: { userId: dto.followingId },
-        data: { followerCount: { increment: 1 } },
-      }),
-    ]);
+      await Promise.all([
+        tx.profile.update({
+          where: { userId: followerId },
+          data: { followingCount: { increment: 1 } },
+        }),
+        tx.profile.update({
+          where: { userId: dto.followingId },
+          data: { followerCount: { increment: 1 } },
+        }),
+      ]);
+
+      return created;
+    });
 
     // Audit log successful follow
     this.logger.log(
@@ -135,27 +140,32 @@ export class FollowsService {
       throw new NotFoundException('Follow relationship not found');
     }
 
-    // Delete follow relationship
-    await this.prisma.follow.delete({
-      where: {
-        followerId_followingId: {
-          followerId,
-          followingId,
+    // Delete follow relationship and update denormalized counts atomically.
+    // All three writes share one transaction so a partial failure cannot leave
+    // the Follow row deleted while the Profile counters remain inflated (or
+    // vice-versa). Decrement is floor-clamped at 0 to guard against any
+    // pre-existing counter drift.
+    await this.prisma.$transaction(async (tx) => {
+      await tx.follow.delete({
+        where: {
+          followerId_followingId: {
+            followerId,
+            followingId,
+          },
         },
-      },
-    });
+      });
 
-    // Update follower counts
-    await Promise.all([
-      this.prisma.profile.update({
-        where: { userId: followerId },
-        data: { followingCount: { decrement: 1 } },
-      }),
-      this.prisma.profile.update({
-        where: { userId: followingId },
-        data: { followerCount: { decrement: 1 } },
-      }),
-    ]);
+      await Promise.all([
+        tx.profile.updateMany({
+          where: { userId: followerId, followingCount: { gt: 0 } },
+          data: { followingCount: { decrement: 1 } },
+        }),
+        tx.profile.updateMany({
+          where: { userId: followingId, followerCount: { gt: 0 } },
+          data: { followerCount: { decrement: 1 } },
+        }),
+      ]);
+    });
 
     // Audit log successful unfollow
     this.logger.log(

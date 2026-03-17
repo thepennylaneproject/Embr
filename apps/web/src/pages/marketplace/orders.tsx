@@ -4,6 +4,7 @@ import { ProtectedPageShell } from '@/components/layout';
 import { OrderCard } from '@/components/marketplace/OrderCard';
 import { useMarketplace } from '@/hooks/useMarketplace';
 import { marketplaceApi } from '@shared/api/marketplace.api';
+
 import { PageState } from '@/components/ui/PageState';
 import { useToast } from '@embr/ui';
 import type { MarketplaceOrder } from '@embr/types';
@@ -31,6 +32,26 @@ export default function OrdersPage() {
   };
 
   useEffect(() => { loadOrders(); }, []);
+
+  const handleConfirmPayment = async (orderId: string) => {
+    try {
+      await marketplaceApi.confirmPayment(orderId);
+      showToast({ title: 'Payment confirmed', description: 'The seller has been notified.', kind: 'success' });
+      await loadOrders();
+    } catch (e: any) {
+      showToast({ title: 'Could not confirm payment', description: e.response?.data?.message || 'Please try again.', kind: 'error' });
+    }
+  };
+
+  const handleDeliver = async (orderId: string) => {
+    try {
+      await marketplaceApi.markDelivered(orderId);
+      showToast({ title: 'Order marked as received', kind: 'success' });
+      await loadOrders();
+    } catch (e: any) {
+      showToast({ title: 'Could not update order', description: e.response?.data?.message || 'Please try again.', kind: 'error' });
+    }
+  };
 
   const handleShip = (orderId: string) => {
     setTrackingNumber('');
@@ -123,7 +144,9 @@ export default function OrdersPage() {
               key={order.id}
               order={order}
               role={tab === 'buying' ? 'buyer' : 'seller'}
+              onConfirmPayment={handleConfirmPayment}
               onShip={handleShip}
+              onDeliver={handleDeliver}
               onComplete={handleComplete}
               onReview={(id) => setReviewModal({ orderId: id })}
             />

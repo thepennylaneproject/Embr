@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ProtectedPageShell } from '@/components/layout';
 import { ListingCard } from '@/components/marketplace/ListingCard';
+import { FeatureHint } from '@/components/onboarding';
 import { useMarketplace } from '@/hooks/useMarketplace';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { PaginatedListings, ListingType } from '@embr/types';
@@ -42,6 +43,12 @@ export default function MarketplacePage() {
 
   return (
     <ProtectedPageShell>
+      <FeatureHint
+        pageId="marketplace"
+        icon="🛒"
+        title="Welcome to the Marketplace"
+        description="Buy and sell physical goods, digital downloads, and services. Just a 2% platform fee — nothing hidden. Perfect for prints, merch, presets, and more."
+      />
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>

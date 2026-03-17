@@ -5,7 +5,9 @@ import type { MarketplaceOrder, OrderStatus } from '@embr/types';
 interface OrderCardProps {
   order: MarketplaceOrder;
   role: 'buyer' | 'seller';
+  onConfirmPayment?: (orderId: string) => void;
   onShip?: (orderId: string) => void;
+  onDeliver?: (orderId: string) => void;
   onComplete?: (orderId: string) => void;
   onReview?: (orderId: string) => void;
 }
@@ -24,7 +26,15 @@ const STATUS_COLORS: Record<string, string> = {
   CANCELLED: '#6b7280',
 };
 
-export const OrderCard: React.FC<OrderCardProps> = ({ order, role, onShip, onComplete, onReview }) => {
+export const OrderCard: React.FC<OrderCardProps> = ({
+  order,
+  role,
+  onConfirmPayment,
+  onShip,
+  onDeliver,
+  onComplete,
+  onReview,
+}) => {
   const total = (order.totalAmount / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
   const statusColor = STATUS_COLORS[order.status] || '#6b7280';
   const statusIdx = STATUS_STEPS.indexOf(order.status as OrderStatus);
@@ -86,25 +96,67 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, role, onShip, onCom
       )}
 
       {/* Actions */}
-      <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid var(--embr-border)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        {role === 'seller' && order.status === 'PAID' && onShip && (
-          <button onClick={() => onShip(order.id)} style={{ padding: '0.375rem 0.875rem', borderRadius: 'var(--embr-radius-md)', border: 'none', background: 'var(--embr-accent)', color: '#fff', cursor: 'pointer', fontWeight: '600', fontSize: '0.82rem' }}>
+      <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid var(--embr-border)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* Buyer: confirm payment for PENDING orders */}
+        {role === 'buyer' && order.status === 'PENDING' && onConfirmPayment && (
+          <button
+            onClick={() => onConfirmPayment(order.id)}
+            style={{ padding: '0.375rem 0.875rem', borderRadius: 'var(--embr-radius-md)', border: 'none', background: 'var(--embr-accent)', color: '#fff', cursor: 'pointer', fontWeight: '600', fontSize: '0.82rem' }}
+          >
+            Confirm Payment
+          </button>
+        )}
+
+        {/* Seller: mark shipped when PAID or PROCESSING */}
+        {role === 'seller' && (order.status === 'PAID' || order.status === 'PROCESSING') && onShip && (
+          <button
+            onClick={() => onShip(order.id)}
+            style={{ padding: '0.375rem 0.875rem', borderRadius: 'var(--embr-radius-md)', border: 'none', background: 'var(--embr-accent)', color: '#fff', cursor: 'pointer', fontWeight: '600', fontSize: '0.82rem' }}
+          >
             Mark Shipped
           </button>
         )}
+
+        {/* Buyer: mark delivered when SHIPPED */}
+        {role === 'buyer' && order.status === 'SHIPPED' && onDeliver && (
+          <button
+            onClick={() => onDeliver(order.id)}
+            style={{ padding: '0.375rem 0.875rem', borderRadius: 'var(--embr-radius-md)', border: 'none', background: '#8b5cf6', color: '#fff', cursor: 'pointer', fontWeight: '600', fontSize: '0.82rem' }}
+          >
+            Mark Received
+          </button>
+        )}
+
+        {/* Buyer: confirm received / complete when DELIVERED */}
         {role === 'buyer' && order.status === 'DELIVERED' && onComplete && (
-          <button onClick={() => onComplete(order.id)} style={{ padding: '0.375rem 0.875rem', borderRadius: 'var(--embr-radius-md)', border: 'none', background: '#22c55e', color: '#fff', cursor: 'pointer', fontWeight: '600', fontSize: '0.82rem' }}>
+          <button
+            onClick={() => onComplete(order.id)}
+            style={{ padding: '0.375rem 0.875rem', borderRadius: 'var(--embr-radius-md)', border: 'none', background: '#22c55e', color: '#fff', cursor: 'pointer', fontWeight: '600', fontSize: '0.82rem' }}
+          >
             Confirm Received
           </button>
         )}
+
+        {/* Buyer: leave review when COMPLETED and not yet reviewed */}
         {role === 'buyer' && order.status === 'COMPLETED' && !order.review && onReview && (
-          <button onClick={() => onReview(order.id)} style={{ padding: '0.375rem 0.875rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-accent)', background: 'transparent', color: 'var(--embr-accent)', cursor: 'pointer', fontWeight: '600', fontSize: '0.82rem' }}>
+          <button
+            onClick={() => onReview(order.id)}
+            style={{ padding: '0.375rem 0.875rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-accent)', background: 'transparent', color: 'var(--embr-accent)', cursor: 'pointer', fontWeight: '600', fontSize: '0.82rem' }}
+          >
             Leave Review
           </button>
         )}
+
         {order.review && (
           <span style={{ fontSize: '0.8rem', color: '#22c55e', fontWeight: '600' }}>
             ⭐ {'★'.repeat(order.review.rating)} Reviewed
+          </span>
+        )}
+
+        {/* Pending info hint */}
+        {order.status === 'PENDING' && role === 'seller' && (
+          <span style={{ fontSize: '0.78rem', color: 'var(--embr-muted-text)', fontStyle: 'italic' }}>
+            Awaiting buyer payment confirmation
           </span>
         )}
       </div>
