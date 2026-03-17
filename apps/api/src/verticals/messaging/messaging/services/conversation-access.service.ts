@@ -39,7 +39,7 @@ export class ConversationAccessService {
         },
       });
 
-      if (!conversation) {
+      if (!conversation || conversation.deletedAt) {
         this.logger.debug(`Conversation ${conversationId} not found`);
         return null;
       }
@@ -74,10 +74,11 @@ export class ConversationAccessService {
         select: {
           participant1Id: true,
           participant2Id: true,
+          deletedAt: true,
         },
       });
 
-      if (!conversation) {
+      if (!conversation || conversation.deletedAt) {
         return false;
       }
 
@@ -111,7 +112,7 @@ export class ConversationAccessService {
         },
       });
 
-      if (!conversation) {
+      if (!conversation || conversation.deletedAt) {
         return null;
       }
 
@@ -172,9 +173,14 @@ export class ConversationAccessService {
     try {
       const conversation = await this.prisma.conversation.findUnique({
         where: { id: conversationId },
+        select: {
+          participant1Id: true,
+          participant2Id: true,
+          deletedAt: true,
+        },
       });
 
-      if (!conversation) {
+      if (!conversation || conversation.deletedAt) {
         return { isParticipant: false };
       }
 
@@ -209,6 +215,7 @@ export class ConversationAccessService {
           id: {
             in: conversationIds,
           },
+          deletedAt: null,
         },
         select: {
           id: true,

@@ -718,7 +718,11 @@ export class AuthService {
       throw new UnauthorizedException('Account is suspended');
     }
 
-    return user;
+    // Strip sensitive credentials from the object attached to req.user so they
+    // cannot accidentally be returned by a controller.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash, googleId, stripeCustomerId, ...safeUser } = user;
+    return safeUser;
   }
 
   // =====================
@@ -726,7 +730,18 @@ export class AuthService {
   // =====================
 
   private sanitizeUser(user: any): any {
-    const { passwordHash, googleId, ...sanitized } = user;
+    // Strip credentials and Stripe-internal IDs from owner-facing auth responses.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash, googleId, stripeCustomerId, wallet, ...sanitized } = user;
+
+    if (wallet) {
+      // Strip Stripe Connect account ID from wallet; frontend only needs the
+      // derived status flags (onboardingCompleted, chargesEnabled, etc.).
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { stripeConnectAccountId, ...safeWallet } = wallet;
+      return { ...sanitized, wallet: safeWallet };
+    }
+
     return sanitized;
   }
 }

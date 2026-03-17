@@ -4,7 +4,7 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { TooManyRequestsException } from '@nestjs/common';
+import { HttpException } from '@nestjs/common';
 import { MessageRateLimiterService } from '../services/message-rate-limiter.service';
 import { toRateLimitConfig, MESSAGE_RATE_LIMITS } from '../config/messaging-rate-limits';
 
@@ -54,7 +54,7 @@ describe('MessageRateLimiterService', () => {
       // Third should be rejected
       await expect(
         service.isAllowed(userId, conversationId, config),
-      ).rejects.toThrow(TooManyRequestsException);
+      ).rejects.toThrow(HttpException);
     });
 
     it('should track separate limits per conversation', async () => {
@@ -214,13 +214,13 @@ describe('MessageRateLimiterService', () => {
   });
 
   describe('cleanupStaleBuckets', () => {
-    it('should remove buckets older than 1 hour', () => {
+    it('should remove buckets older than 1 hour', async () => {
       const userId1 = 'user-1';
       const conversationId1 = 'conv-1';
       const config = toRateLimitConfig(MESSAGE_RATE_LIMITS.USER_PER_CONVERSATION);
 
-      // Create a bucket
-      service.getRemainingTokens(userId1, conversationId1, config);
+      // Create a bucket by calling isAllowed (getRemainingTokens does not create one)
+      await service.isAllowed(userId1, conversationId1, config);
 
       // Manually age the bucket
       const bucketKey = `${userId1}:${conversationId1}`;
@@ -230,20 +230,18 @@ describe('MessageRateLimiterService', () => {
       // Cleanup
       service.cleanupStaleBuckets();
 
-      // Bucket should be gone
+      // Bucket should be gone; getRemainingTokens returns maxTokens for an absent bucket
       const remaining = service.getRemainingTokens(userId1, conversationId1, config);
       expect(remaining).toBe(config.maxTokens); // Should be treated as new bucket
     });
 
-    it('should keep recent buckets', () => {
+    it('should keep recent buckets', async () => {
       const userId1 = 'user-1';
       const conversationId1 = 'conv-1';
       const config = toRateLimitConfig(MESSAGE_RATE_LIMITS.USER_PER_CONVERSATION);
 
       // Create a bucket and consume a token
-      (async () => {
-        await service.isAllowed(userId1, conversationId1, config);
-      })();
+      await service.isAllowed(userId1, conversationId1, config);
 
       // Cleanup (bucket is recent)
       service.cleanupStaleBuckets();
@@ -284,21 +282,15 @@ describe('MessageRateLimiterService', () => {
   });
 
   describe('configuration', () => {
-    it('should use environment variables for rate limit settings', () => {
-      const originalMax = process.env.MESSAGING_RATE_LIMIT_MAX;
-      const originalWindow = process.env.MESSAGING_RATE_LIMIT_WINDOW;
-
-      process.env.MESSAGING_RATE_LIMIT_MAX = '30';
-      process.env.MESSAGING_RATE_LIMIT_WINDOW = '30000';
-
-      const config = toRateLimitConfig(MESSAGE_RATE_LIMITS.USER_PER_CONVERSATION);
+    it('should convert messagesPerMinute to token bucket config correctly', () => {
+      // toRateLimitConfig translates { messagesPerMinute, windowMs } into
+      // { maxTokens, refillRate, windowMs }. Verify the conversion is correct.
+      const config = toRateLimitConfig({ messagesPerMinute: 30, windowMs: 30000 });
 
       expect(config.maxTokens).toBe(30);
       expect(config.windowMs).toBe(30000);
-
-      // Restore
-      if (originalMax) process.env.MESSAGING_RATE_LIMIT_MAX = originalMax;
-      if (originalWindow) process.env.MESSAGING_RATE_LIMIT_WINDOW = originalWindow;
+      // refillRate should be tokens per millisecond: 30 / 30000 = 0.001
+      expect(config.refillRate).toBeCloseTo(30 / 30000);
     });
   });
 });

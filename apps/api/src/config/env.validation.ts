@@ -1,62 +1,76 @@
 import * as Joi from 'joi';
 
 /**
- * Joi schema for required environment variables.
- * The application will refuse to start if any of these are missing or invalid.
- * Optional variables use .optional() so they do not block startup.
+ * Joi schema for API environment variables.
+ *
+ * Rules:
+ *  - Variables marked `.required()` will cause the application to refuse to start.
+ *  - Variables marked `.optional()` allow the app to start, but the dependent feature
+ *    will be degraded or unavailable (logged at startup by logStartupSummary in main.ts).
+ *  - `allowUnknown: true` lets pass-through vars (e.g. DIRECT_URL used only by Prisma CLI)
+ *    exist without causing validation errors.
  */
 export const envValidationSchema = Joi.object({
-  // Runtime
+  // ─── Runtime ────────────────────────────────────────────────────────────────
   NODE_ENV: Joi.string()
     .valid('development', 'test', 'production')
     .default('development'),
   PORT: Joi.number().integer().min(1).max(65535).default(3003),
 
-  // Database
+  // ─── URLs ───────────────────────────────────────────────────────────────────
+  // APP_URL is used in outgoing email links (password-reset, verify-email, welcome).
+  // In production a wrong value will produce broken links; require it explicitly.
+  APP_URL: Joi.string()
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.string().uri().required(),
+      otherwise: Joi.string().optional().allow(''),
+    })
+    .default('http://localhost:3004'), // pragma: allowlist secret
+
+  // FRONTEND_URL is used by Stripe Connect OAuth redirect and Google OAuth callback.
+  FRONTEND_URL: Joi.string()
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.string().uri().required(),
+      otherwise: Joi.string().optional().allow(''),
+    })
+    .default('http://localhost:3004'), // pragma: allowlist secret
+
+  // ─── Database ───────────────────────────────────────────────────────────────
   DATABASE_URL: Joi.string().uri().required(),
+  // DIRECT_URL is only used by the Prisma CLI for migrations (bypasses PgBouncer).
   DIRECT_URL: Joi.string().uri().optional(),
 
-  // Redis
-  REDIS_URL: Joi.string().optional(),
+  // ─── Redis ──────────────────────────────────────────────────────────────────
+  REDIS_URL: Joi.string().optional().allow(''),
   REDIS_HOST: Joi.string().default('localhost'),
   REDIS_PORT: Joi.number().integer().default(6379),
   REDIS_PASSWORD: Joi.string().optional().allow(''),
+  // TTLs consumed directly by RedisService (seconds)
+  REDIS_TTL_SOCKET: Joi.number().integer().min(1).default(3600),
+  REDIS_TTL_TYPING: Joi.number().integer().min(1).default(300),
 
-  // JWT — required; application cannot issue tokens without these
+  // ─── JWT ────────────────────────────────────────────────────────────────────
   JWT_SECRET: Joi.string().min(16).required(),
   JWT_EXPIRES_IN: Joi.string().default('7d'),
   JWT_REFRESH_SECRET: Joi.string().min(16).required(),
   JWT_REFRESH_EXPIRES_IN: Joi.string().default('30d'),
 
-  // Google OAuth (optional — OAuth routes simply won't work without them)
+  // ─── Google OAuth ────────────────────────────────────────────────────────────
   GOOGLE_CLIENT_ID: Joi.string().optional().allow(''),
   GOOGLE_CLIENT_SECRET: Joi.string().optional().allow(''),
-  GOOGLE_CALLBACK_URL: Joi.string().uri().optional(),
+  GOOGLE_CALLBACK_URL: Joi.string().uri().optional().allow(''),
+
+  // ─── Cookies ────────────────────────────────────────────────────────────────
   COOKIE_SECURE: Joi.boolean().default(false),
 
-  // AWS (optional — S3/SES features degrade gracefully without these)
-  AWS_REGION: Joi.string().default('us-east-1'),
-  AWS_ACCESS_KEY_ID: Joi.string().optional().allow(''),
-  AWS_SECRET_ACCESS_KEY: Joi.string().optional().allow(''),
-  AWS_S3_BUCKET: Joi.string().optional().allow(''),
-  AWS_S3_URL: Joi.string().uri().optional().allow(''),
+  // ─── CORS ───────────────────────────────────────────────────────────────────
+  ALLOWED_ORIGINS: Joi.string().default(
+    'http://localhost:3000,http://localhost:3004', // pragma: allowlist secret
+  ),
 
-  // Mux (optional)
-  MUX_TOKEN_ID: Joi.string().optional().allow(''),
-  MUX_TOKEN_SECRET: Joi.string().optional().allow(''),
-  MUX_WEBHOOK_SECRET: Joi.string().optional().allow(''),
-
-  // Stripe (optional)
-  STRIPE_SECRET_KEY: Joi.string().optional().allow(''),
-  STRIPE_WEBHOOK_SECRET: Joi.string().optional().allow(''),
-  PLATFORM_FEE_PERCENTAGE: Joi.number().min(0).max(100).default(10),
-
-  // Email
-  SMTP_HOST: Joi.string().default('localhost'),
-  SMTP_PORT: Joi.number().integer().default(1025),
-  SMTP_SECURE: Joi.boolean().default(false),
-  SMTP_USER: Joi.string().optional().allow(''),
-  SMTP_PASSWORD: Joi.string().optional().allow(''),
+  // ─── Email ──────────────────────────────────────────────────────────────────
   EMAIL_FROM: Joi.string()
     .when('NODE_ENV', {
       is: 'production',
@@ -64,16 +78,48 @@ export const envValidationSchema = Joi.object({
       otherwise: Joi.string().optional().allow(''),
     })
     .default('noreply@dev.local'),
+  EMAIL_FROM_NAME: Joi.string().default('Embr'),
 
-  // CORS
-  ALLOWED_ORIGINS: Joi.string().default(
-    'http://localhost:3000,http://localhost:3004',
-  ),
+  // Exactly one of SENDGRID_API_KEY or AWS_SES_REGION should be set in production
+  // to avoid falling back to the mock provider that only logs emails.
+  SENDGRID_API_KEY: Joi.string().optional().allow(''),
+  AWS_SES_REGION: Joi.string().optional().allow(''),
 
-  // Observability (optional)
+  // SMTP settings (used when neither SendGrid nor SES is configured)
+  SMTP_HOST: Joi.string().default('localhost'),
+  SMTP_PORT: Joi.number().integer().default(1025),
+  SMTP_SECURE: Joi.boolean().default(false),
+  SMTP_USER: Joi.string().optional().allow(''),
+  SMTP_PASSWORD: Joi.string().optional().allow(''),
+
+  // ─── AWS / S3 ───────────────────────────────────────────────────────────────
+  AWS_REGION: Joi.string().default('us-east-1'),
+  AWS_ACCESS_KEY_ID: Joi.string().optional().allow(''),
+  AWS_SECRET_ACCESS_KEY: Joi.string().optional().allow(''),
+  AWS_S3_BUCKET: Joi.string().optional().allow(''),
+  AWS_S3_URL: Joi.string().optional().allow(''),
+  AWS_CLOUDFRONT_DOMAIN: Joi.string().optional().allow(''),
+
+  // ─── Mux (video processing) ─────────────────────────────────────────────────
+  MUX_TOKEN_ID: Joi.string().optional().allow(''),
+  MUX_TOKEN_SECRET: Joi.string().optional().allow(''),
+  MUX_WEBHOOK_SECRET: Joi.string().optional().allow(''),
+
+  // ─── Stripe ─────────────────────────────────────────────────────────────────
+  STRIPE_SECRET_KEY: Joi.string().optional().allow(''),
+  STRIPE_WEBHOOK_SECRET: Joi.string().optional().allow(''),
+  PLATFORM_FEE_PERCENTAGE: Joi.number().min(0).max(100).default(10),
+
+  // ─── Messaging rate limits ──────────────────────────────────────────────────
+  // These are read directly from process.env by messaging-rate-limits.ts.
+  // Declaring them here gives them type-checked defaults and surfaces typos.
+  MESSAGING_RATE_LIMIT_ENABLED: Joi.boolean().default(true),
+  MESSAGING_RATE_LIMIT_MAX: Joi.number().integer().min(1).default(60),
+  MESSAGING_RATE_LIMIT_WINDOW: Joi.number().integer().min(100).default(60000),
+  MESSAGING_RATE_LIMIT_BURST: Joi.number().integer().min(1).default(5),
+
+  // ─── Observability ──────────────────────────────────────────────────────────
   SENTRY_DSN: Joi.string().uri().optional().allow(''),
-
-  // Logging
   LOG_LEVEL: Joi.string()
     .valid('error', 'warn', 'log', 'debug', 'verbose')
     .default('debug'),

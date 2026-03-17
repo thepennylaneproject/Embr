@@ -35,11 +35,77 @@ process.on('uncaughtException', (error: Error) => {
   setImmediate(() => process.exit(1));
 });
 
+/**
+ * Log a human-readable summary of which optional integrations are active.
+ * This runs immediately after the NestJS application boots so that operators
+ * can confirm the deployment environment at a glance rather than discovering
+ * misconfigurations hours later when a feature is first exercised.
+ */
+function logStartupSummary(logger: Logger): void {
+  const env = process.env;
+  const isProd = env.NODE_ENV === 'production';
+
+  const check = (label: string, active: boolean, detail?: string): string => {
+    const status = active ? '✓' : isProd ? '✗ (NOT CONFIGURED)' : '- (not configured)';
+    return `  ${label.padEnd(20)} ${status}${detail ? `  [${detail}]` : ''}`;
+  };
+
+  const emailProvider =
+    env.SENDGRID_API_KEY ? 'SendGrid'
+    : env.AWS_SES_REGION ? `AWS SES (${env.AWS_SES_REGION})`
+    : 'mock (logs only)';
+
+  const lines = [
+    '',
+    '┌─ Embr API startup environment summary ─────────────────────────────┐',
+    check('Database', !!env.DATABASE_URL),
+    check('Redis', !!(env.REDIS_URL || env.REDIS_HOST)),
+    check('JWT auth', !!(env.JWT_SECRET && env.JWT_REFRESH_SECRET)),
+    check('Email', !!(env.SENDGRID_API_KEY || env.AWS_SES_REGION), emailProvider),
+    check('Google OAuth', !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)),
+    check('Stripe payments', !!env.STRIPE_SECRET_KEY),
+    check('S3 uploads', !!(env.AWS_ACCESS_KEY_ID && env.AWS_S3_BUCKET)),
+    check('Mux video', !!(env.MUX_TOKEN_ID && env.MUX_TOKEN_SECRET)),
+    check('Sentry', !!env.SENTRY_DSN),
+    check('App URL', !!env.APP_URL, env.APP_URL || 'http://localhost:3004'), // pragma: allowlist secret
+    check('Frontend URL', !!env.FRONTEND_URL, env.FRONTEND_URL || 'http://localhost:3004'), // pragma: allowlist secret
+    '└────────────────────────────────────────────────────────────────────┘',
+    '',
+  ];
+
+  lines.forEach((line) => logger.log(line));
+
+  // In production, escalate missing critical-path integrations to warnings.
+  if (isProd) {
+    if (!env.SENDGRID_API_KEY && !env.AWS_SES_REGION) {
+      logger.warn(
+        'No email provider configured (SENDGRID_API_KEY or AWS_SES_REGION). ' +
+          'Transactional emails (verification, password reset) will not be delivered.',
+      );
+    }
+    if (!env.SENTRY_DSN) {
+      logger.warn(
+        'SENTRY_DSN is not set — unhandled errors will not be reported to Sentry.',
+      );
+    }
+    if (!env.STRIPE_SECRET_KEY) {
+      logger.warn(
+        'STRIPE_SECRET_KEY is not set — payment and payout features will be unavailable.',
+      );
+    }
+  }
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Security middleware
-  app.use(helmet());
+  // Security middleware - relaxed for local development
+  if (process.env.NODE_ENV === 'production') {
+    app.use(helmet());
+  } else {
+    // Development: disable CSP to allow localhost cross-port requests
+    app.use(helmet({ contentSecurityPolicy: false }));
+  }
   app.use(cookieParser());
 
   // Global prefix for all routes
@@ -65,9 +131,19 @@ async function bootstrap() {
   if (process.env.NODE_ENV === 'production' && !allowedOrigins) {
     throw new Error('ALLOWED_ORIGINS must be explicitly set in production');
   }
-  const origins = (allowedOrigins || 'http://localhost:3000,http://localhost:3001,http://localhost:3004')
+  const origins = (allowedOrigins || 'http://localhost:3000,http://localhost:3001')
     .split(',')
     .filter(Boolean);
+  // Include web URL from environment if configured
+  const webUrl = process.env.WEB_URL || process.env.FRONTEND_URL || '';
+  if (webUrl && !origins.includes(webUrl)) origins.push(webUrl);
+  // In development, allow all common localhost dev-server ports (3000-3010)
+  if (process.env.NODE_ENV !== 'production') {
+    for (let port = 3000; port <= 3010; port++) {
+      const o = `http://localhost:${port}`;
+      if (!origins.includes(o)) origins.push(o);
+    }
+  }
   app.enableCors({
     origin: origins,
     credentials: true,
@@ -78,10 +154,16 @@ async function bootstrap() {
 
   startupLogger.log(`🚀 Embr API running on http://localhost:${port}/api`);
 
-  if (process.env.NODE_ENV === 'production' && !process.env.SENTRY_DSN) {
+  logStartupSummary(startupLogger);
+
+  // Warn developers explicitly when cookie security is disabled so the
+  // setting is never silently absent.  Production startup is already guarded
+  // by the Joi schema in env.validation.ts (COOKIE_SECURE=true is required).
+  if (process.env.NODE_ENV !== 'production' && process.env.COOKIE_SECURE !== 'true') {
     startupLogger.warn(
-      'SENTRY_DSN is not set — unhandled errors will not be reported to an external sink. ' +
-        'Set SENTRY_DSN in your production environment variables.',
+      'COOKIE_SECURE is not enabled — auth cookies will be transmitted over HTTP. ' +
+        'This is acceptable for local development. ' +
+        'Set COOKIE_SECURE=true for any environment that terminates TLS.',
     );
   }
 

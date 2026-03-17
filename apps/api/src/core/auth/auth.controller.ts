@@ -15,6 +15,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 
+import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import {
   SignUpDto,
@@ -35,18 +36,26 @@ const REFRESH_TOKEN_COOKIE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   /**
-   * Get cookie options for secure token transmission
-   * In production, cookies are always secure (HTTPS only)
-   * In development, secure flag can be controlled via COOKIE_SECURE env var
+   * Build cookie options for secure token transmission.
+   *
+   * `secure` is derived from the Joi-validated COOKIE_SECURE env var (required
+   * to be true in production; defaults to false in development/test).  The
+   * NODE_ENV fallback keeps existing behaviour for any edge-case deployment that
+   * sets NODE_ENV=production without an explicit COOKIE_SECURE value (although
+   * that scenario will now be blocked at startup by the Joi schema).
    */
   private getCookieOptions(maxAge: number) {
-    const isSecure = process.env.NODE_ENV === 'production' || process.env.COOKIE_SECURE === 'true';
+    const cookieSecure = this.configService.get<boolean>('COOKIE_SECURE') ?? false;
+    const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
     return {
       httpOnly: true,
-      secure: isSecure,
+      secure: isProduction || cookieSecure,
       sameSite: 'strict' as const,
       maxAge,
     };
