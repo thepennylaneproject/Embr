@@ -297,10 +297,9 @@ export class MessagingService {
       });
 
       // Update conversation last message time
-      const updatedAt = new Date();
       conversation = await this.prisma.conversation.update({
         where: { id: conversation.id },
-        data: { lastMessageAt: updatedAt },
+        data: { lastMessageAt: new Date() },
         include: conversationInclude,
       });
 
@@ -374,13 +373,16 @@ export class MessagingService {
       throw new ForbiddenException('You are not a participant in this conversation');
     }
 
-    const result = await this.prisma.conversation.updateMany({
-      where: { id: conversationId, deletedAt: null },
-      data: { deletedAt: new Date() },
-    });
-
-    if (result.count === 0) {
-      throw new NotFoundException('Conversation not found or already deleted');
+    try {
+      await this.prisma.conversation.update({
+        where: { id: conversationId },
+        data: { deletedAt: new Date() },
+      });
+    } catch (error: any) {
+      if (error?.code === 'P2025') {
+        throw new NotFoundException('Conversation not found or already deleted');
+      }
+      throw error;
     }
 
     return { message: 'Conversation deleted successfully' };
