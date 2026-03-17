@@ -265,6 +265,9 @@ model Post {
   @@index([groupId])
   @@index([createdAt])
   @@index([deletedAt])
+  // Compound index for the most common query pattern: a user's posts sorted by newest
+  // Covers: profile page, home feed, following feed (authorId=X OR authorId IN [...]) + ORDER BY createdAt DESC
+  @@index([authorId, createdAt])
   // Full-text search handled via pg_trgm GIN index in init.sql
   // Note: @@fulltext is not supported on PostgreSQL in Prisma 5. Use raw SQL GIN/tsvector for full-text search.
 }
@@ -315,6 +318,11 @@ model Comment {
   @@index([authorId])
   @@index([parentId])
   @@index([createdAt])
+  // Compound index for fetching top-level comments or replies on a post sorted by date.
+  // Covers the core getComments() and getReplies() query: WHERE postId=X AND parentId=Y ORDER BY createdAt DESC
+  @@index([postId, parentId, createdAt])
+  // Compound index for the recursive comment-tree walk on delete: WHERE parentId=X AND deletedAt IS NULL
+  @@index([parentId, deletedAt])
 }
 
 model Like {
@@ -879,6 +887,12 @@ model Message {
   @@index([conversationId])
   @@index([senderId])
   @@index([createdAt])
+  // Compound index for paginated message thread loading and cursor-based queries.
+  // Covers: getMessages() and hasMoreBefore/hasMoreAfter counts — WHERE conversationId=X AND createdAt < cursor ORDER BY createdAt DESC
+  @@index([conversationId, createdAt])
+  // Compound index for unread-count queries, the hottest read path in messaging.
+  // Covers: getUnreadCountForConversation() and markAsRead() — WHERE conversationId=X AND senderId != Y AND status != READ
+  @@index([conversationId, senderId, status])
 }
 
 // ============================================
