@@ -1,24 +1,9 @@
-/**
- * supabase.ts
- *
- * Auto-generated Supabase TypeScript types for the Relevnt database schema.
- *
- * Regenerate with:
- *   supabase gen types typescript --local > src/types/supabase.ts
- *
- * Tables covered:
- *   - users
- *   - user_professional_profiles
- *   - job_preferences
- *   - resumes
- *   - persona_preferences
- *   - job_listings
- *   - email_queue
- *   - market_snapshots          (added by 20260305220000)
- *   - admin_config              (added by 20260305220000)
- *   - signal_classifications    (added by 20260305220000)
- *   - cache_invalidation_log    (added by 20260305220000)
- */
+// Auto-generated Supabase types for Relevnt
+// Schema reflects all migrations up to and including:
+//   20260226000000_cover_letters_add_missing_columns.sql
+//
+// To regenerate, run:
+//   npx supabase gen types typescript --project-id <project-id> > src/types/supabase.ts
 
 export type Json =
   | string
@@ -31,459 +16,208 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      users: {
+      profiles: {
         Row: {
           id: string;
           email: string;
-          display_name: string | null;
-          job_alerts_enabled: boolean;
+          full_name: string | null;
+          avatar_url: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
-          id?: string;
+          id: string;
           email: string;
-          display_name?: string | null;
-          job_alerts_enabled?: boolean;
+          full_name?: string | null;
+          avatar_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
           email?: string;
-          display_name?: string | null;
-          job_alerts_enabled?: boolean;
+          full_name?: string | null;
+          avatar_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Relationships: [];
       };
-
-      user_professional_profiles: {
-        Row: {
-          id: string;
-          user_id: string;
-          title: string | null;
-          bio: string | null;
-          skills: string[] | null;
-          experience_years: number | null;
-          location: string | null;
-          open_to_work: boolean | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          title?: string | null;
-          bio?: string | null;
-          skills?: string[] | null;
-          experience_years?: number | null;
-          location?: string | null;
-          open_to_work?: boolean | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          title?: string | null;
-          bio?: string | null;
-          skills?: string[] | null;
-          experience_years?: number | null;
-          location?: string | null;
-          open_to_work?: boolean | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'user_professional_profiles_user_id_fkey';
-            columns: ['user_id'];
-            isOneToOne: true;
-            referencedRelation: 'users';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-
-      job_preferences: {
-        Row: {
-          id: string;
-          user_id: string;
-          preferred_roles: string[] | null;
-          preferred_locations: string[] | null;
-          min_salary: number | null;
-          max_salary: number | null;
-          remote_ok: boolean | null;
-          full_time: boolean | null;
-          part_time: boolean | null;
-          contract: boolean | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          preferred_roles?: string[] | null;
-          preferred_locations?: string[] | null;
-          min_salary?: number | null;
-          max_salary?: number | null;
-          remote_ok?: boolean | null;
-          full_time?: boolean | null;
-          part_time?: boolean | null;
-          contract?: boolean | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          preferred_roles?: string[] | null;
-          preferred_locations?: string[] | null;
-          min_salary?: number | null;
-          max_salary?: number | null;
-          remote_ok?: boolean | null;
-          full_time?: boolean | null;
-          part_time?: boolean | null;
-          contract?: boolean | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'job_preferences_user_id_fkey';
-            columns: ['user_id'];
-            isOneToOne: true;
-            referencedRelation: 'users';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-
       resumes: {
         Row: {
           id: string;
           user_id: string;
+          title: string;
+          content: string | null;
           file_url: string | null;
-          raw_text: string | null;
-          skills_extracted: string[] | null;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
+          title: string;
+          content?: string | null;
           file_url?: string | null;
-          raw_text?: string | null;
-          skills_extracted?: string[] | null;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
+          title?: string;
+          content?: string | null;
           file_url?: string | null;
-          raw_text?: string | null;
-          skills_extracted?: string[] | null;
           created_at?: string;
+          updated_at?: string;
         };
         Relationships: [
           {
             foreignKeyName: 'resumes_user_id_fkey';
             columns: ['user_id'];
             isOneToOne: false;
-            referencedRelation: 'users';
+            referencedRelation: 'profiles';
             referencedColumns: ['id'];
           },
         ];
       };
-
-      persona_preferences: {
+      applications: {
         Row: {
           id: string;
           user_id: string;
-          persona_id: string;
-          weight: number | null;
-          created_at: string;
+          company_name: string;
+          role: string;
+          status: 'applied' | 'reviewing' | 'interviewing' | 'in_review' | 'offer' | 'accepted' | 'rejected';
+          applied_at: string;
+          updated_at: string;
+          location: string | null;
+          salary: string | null;
+          notes: string | null;
+          url: string | null;
         };
         Insert: {
           id?: string;
           user_id: string;
-          persona_id: string;
-          weight?: number | null;
-          created_at?: string;
+          company_name: string;
+          role: string;
+          status?: 'applied' | 'reviewing' | 'interviewing' | 'in_review' | 'offer' | 'accepted' | 'rejected';
+          applied_at?: string;
+          updated_at?: string;
+          location?: string | null;
+          salary?: string | null;
+          notes?: string | null;
+          url?: string | null;
         };
         Update: {
           id?: string;
           user_id?: string;
-          persona_id?: string;
-          weight?: number | null;
-          created_at?: string;
+          company_name?: string;
+          role?: string;
+          status?: 'applied' | 'reviewing' | 'interviewing' | 'in_review' | 'offer' | 'accepted' | 'rejected';
+          applied_at?: string;
+          updated_at?: string;
+          location?: string | null;
+          salary?: string | null;
+          notes?: string | null;
+          url?: string | null;
         };
         Relationships: [
           {
-            foreignKeyName: 'persona_preferences_user_id_fkey';
+            foreignKeyName: 'applications_user_id_fkey';
             columns: ['user_id'];
             isOneToOne: false;
-            referencedRelation: 'users';
+            referencedRelation: 'profiles';
             referencedColumns: ['id'];
           },
         ];
       };
-
-      job_listings: {
+      cover_letters: {
         Row: {
           id: string;
+          user_id: string;
+          application_id: string | null;
+          job_id: string | null;
           title: string;
-          company: string;
-          location: string | null;
-          remote: boolean;
-          salary_min: number | null;
-          salary_max: number | null;
-          skills_required: string[] | null;
-          posted_at: string;
-          status: string;
+          content: string;
+          ai_generated: boolean;
+          template_used: string | null;
+          // Added by migration 20260226000000_cover_letters_add_missing_columns.sql
+          resume_id: string | null;
+          job_description: string | null;
+          company_name: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
+          user_id: string;
+          application_id?: string | null;
+          job_id?: string | null;
           title: string;
-          company: string;
-          location?: string | null;
-          remote?: boolean;
-          salary_min?: number | null;
-          salary_max?: number | null;
-          skills_required?: string[] | null;
-          posted_at?: string;
-          status?: string;
+          content: string;
+          ai_generated?: boolean;
+          template_used?: string | null;
+          resume_id?: string | null;
+          job_description?: string | null;
+          company_name?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
+          user_id?: string;
+          application_id?: string | null;
+          job_id?: string | null;
           title?: string;
-          company?: string;
-          location?: string | null;
-          remote?: boolean;
-          salary_min?: number | null;
-          salary_max?: number | null;
-          skills_required?: string[] | null;
-          posted_at?: string;
-          status?: string;
+          content?: string;
+          ai_generated?: boolean;
+          template_used?: string | null;
+          resume_id?: string | null;
+          job_description?: string | null;
+          company_name?: string | null;
           created_at?: string;
           updated_at?: string;
-        };
-        Relationships: [];
-      };
-
-      email_queue: {
-        Row: {
-          id: string;
-          to_user_id: string;
-          to_email: string;
-          template: string;
-          payload: Json;
-          created_at: string;
-          sent_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          to_user_id: string;
-          to_email: string;
-          template: string;
-          payload: Json;
-          created_at?: string;
-          sent_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          to_user_id?: string;
-          to_email?: string;
-          template?: string;
-          payload?: Json;
-          created_at?: string;
-          sent_at?: string | null;
         };
         Relationships: [
           {
-            foreignKeyName: 'email_queue_to_user_id_fkey';
-            columns: ['to_user_id'];
+            foreignKeyName: 'cover_letters_user_id_fkey';
+            columns: ['user_id'];
             isOneToOne: false;
-            referencedRelation: 'users';
+            referencedRelation: 'profiles';
             referencedColumns: ['id'];
           },
-        ];
-      };
-
-      /**
-       * market_snapshots — added by migration 20260305220000
-       *
-       * Periodic snapshots of job-market conditions keyed by category and date.
-       * Used by the scoring engine to weight signals against current demand.
-       */
-      market_snapshots: {
-        Row: {
-          id: string;
-          snapshot_date: string;
-          category: string;
-          total_jobs: number;
-          avg_salary_min: number | null;
-          avg_salary_max: number | null;
-          top_skills: string[] | null;
-          metadata: Json | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          snapshot_date: string;
-          category: string;
-          total_jobs?: number;
-          avg_salary_min?: number | null;
-          avg_salary_max?: number | null;
-          top_skills?: string[] | null;
-          metadata?: Json | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          snapshot_date?: string;
-          category?: string;
-          total_jobs?: number;
-          avg_salary_min?: number | null;
-          avg_salary_max?: number | null;
-          top_skills?: string[] | null;
-          metadata?: Json | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-
-      /**
-       * admin_config — added by migration 20260305220000
-       *
-       * Key/value store for admin-controlled runtime configuration.
-       * Only the service role may write; authenticated users may read.
-       */
-      admin_config: {
-        Row: {
-          key: string;
-          value: Json;
-          description: string | null;
-          updated_at: string;
-          updated_by: string | null;
-        };
-        Insert: {
-          key: string;
-          value: Json;
-          description?: string | null;
-          updated_at?: string;
-          updated_by?: string | null;
-        };
-        Update: {
-          key?: string;
-          value?: Json;
-          description?: string | null;
-          updated_at?: string;
-          updated_by?: string | null;
-        };
-        Relationships: [
           {
-            foreignKeyName: 'admin_config_updated_by_fkey';
-            columns: ['updated_by'];
+            foreignKeyName: 'cover_letters_application_id_fkey';
+            columns: ['application_id'];
             isOneToOne: false;
-            referencedRelation: 'users';
+            referencedRelation: 'applications';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'cover_letters_resume_id_fkey';
+            columns: ['resume_id'];
+            isOneToOne: false;
+            referencedRelation: 'resumes';
             referencedColumns: ['id'];
           },
         ];
-      };
-
-      /**
-       * signal_classifications — added by migration 20260305220000
-       *
-       * Classification rules for job-relevance signals consumed by the scoring
-       * engine.  Maps a signal_type to a classification label and weight.
-       */
-      signal_classifications: {
-        Row: {
-          id: string;
-          signal_type: string;
-          classification: string;
-          weight: number;
-          active: boolean;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          signal_type: string;
-          classification: string;
-          weight?: number;
-          active?: boolean;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          signal_type?: string;
-          classification?: string;
-          weight?: number;
-          active?: boolean;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-
-      /**
-       * cache_invalidation_log — added by migration 20260305220000
-       *
-       * Audit trail for cache invalidation events triggered by the system,
-       * admin actions, or automated scheduled jobs.
-       */
-      cache_invalidation_log: {
-        Row: {
-          id: string;
-          cache_key: string;
-          invalidated_by: string;
-          reason: string | null;
-          invalidated_at: string;
-        };
-        Insert: {
-          id?: string;
-          cache_key: string;
-          invalidated_by: string;
-          reason?: string | null;
-          invalidated_at?: string;
-        };
-        Update: {
-          id?: string;
-          cache_key?: string;
-          invalidated_by?: string;
-          reason?: string | null;
-          invalidated_at?: string;
-        };
-        Relationships: [];
       };
     };
-
     Views: Record<string, never>;
-
     Functions: Record<string, never>;
-
     Enums: Record<string, never>;
-
     CompositeTypes: Record<string, never>;
   };
 };
 
-// ---------------------------------------------------------------------------
-// Convenience helpers (mirrors the pattern from @supabase/supabase-js)
-// ---------------------------------------------------------------------------
-
-type PublicSchema = Database['public'];
-
-export type Tables<T extends keyof PublicSchema['Tables']> =
-  PublicSchema['Tables'][T]['Row'];
-
-export type TablesInsert<T extends keyof PublicSchema['Tables']> =
-  PublicSchema['Tables'][T]['Insert'];
-
-export type TablesUpdate<T extends keyof PublicSchema['Tables']> =
-  PublicSchema['Tables'][T]['Update'];
+// Convenience type aliases
+export type Profile = Database['public']['Tables']['profiles']['Row'];
+export type Resume = Database['public']['Tables']['resumes']['Row'];
+export type ResumeInsert = Database['public']['Tables']['resumes']['Insert'];
+export type ResumeUpdate = Database['public']['Tables']['resumes']['Update'];
+export type Application = Database['public']['Tables']['applications']['Row'];
+export type ApplicationInsert = Database['public']['Tables']['applications']['Insert'];
+export type ApplicationUpdate = Database['public']['Tables']['applications']['Update'];
+export type CoverLetter = Database['public']['Tables']['cover_letters']['Row'];
+export type CoverLetterInsert = Database['public']['Tables']['cover_letters']['Insert'];
+export type CoverLetterUpdate = Database['public']['Tables']['cover_letters']['Update'];
