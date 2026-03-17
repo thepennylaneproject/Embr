@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../../core/database/prisma.service';
-import { BlockingService } from '../../../../core/safety/services/blocking.service';
 import { NOTIFICATION_TYPES } from '../../../../core/notifications/notifications.constants';
 import {
   FollowUserDto,
@@ -15,10 +14,7 @@ import {
 export class FollowsService {
   private readonly logger = new Logger(FollowsService.name);
 
-  constructor(
-    private prisma: PrismaService,
-    private blockingService: BlockingService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   /**
    * Follow a user
@@ -29,30 +25,36 @@ export class FollowsService {
       throw new BadRequestException('Cannot follow yourself');
     }
 
-    // Check if target user exists
-    const targetUser = await this.prisma.user.findUnique({
-      where: { id: dto.followingId },
-    });
+    // Run all three pre-flight checks in parallel to avoid 3 sequential round-trips
+    // (user existence + block status + existing follow were previously serial).
+    const [targetUser, existingBlock, existingFollow] = await Promise.all([
+      this.prisma.user.findUnique({ where: { id: dto.followingId } }),
+      this.prisma.blockedUser.findFirst({
+        where: {
+          OR: [
+            { blockerId: followerId, blockedId: dto.followingId },
+            { blockerId: dto.followingId, blockedId: followerId },
+          ],
+        },
+        select: { id: true },
+      }),
+      this.prisma.follow.findUnique({
+        where: {
+          followerId_followingId: {
+            followerId,
+            followingId: dto.followingId,
+          },
+        },
+      }),
+    ]);
 
     if (!targetUser) {
       throw new NotFoundException('User not found');
     }
 
-    // Check if user is blocked
-    const isBlocked = await this.blockingService.isBlocked(followerId, dto.followingId);
-    if (isBlocked) {
+    if (existingBlock) {
       throw new ForbiddenException('Cannot follow a blocked user or a user who has blocked you');
     }
-
-    // Check if already following
-    const existingFollow = await this.prisma.follow.findUnique({
-      where: {
-        followerId_followingId: {
-          followerId,
-          followingId: dto.followingId,
-        },
-      },
-    });
 
     if (existingFollow) {
       throw new ConflictException('Already following this user');
