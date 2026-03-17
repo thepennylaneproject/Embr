@@ -32,7 +32,7 @@ export default function ListingDetailPage() {
   useEffect(() => {
     if (!id) return;
     getListing(id as string).then(setListing).catch((e) => setError(e.response?.data?.message || 'Not found')).finally(() => setPageLoading(false));
-  }, [id]);
+  }, [id, getListing]);
 
   const handleBuy = async () => {
     if (!listing) return;

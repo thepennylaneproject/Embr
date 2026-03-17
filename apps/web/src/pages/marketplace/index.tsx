@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ProtectedPageShell } from '@/components/layout';
@@ -24,7 +24,9 @@ export default function MarketplacePage() {
   // Debounce the free-text query to avoid a fetch on every keystroke
   const debouncedQuery = useDebounce(query, 300);
 
-  const load = async (reset = true) => {
+  // cursor is passed explicitly so `load` does not close over `result` state,
+  // preventing it from being recreated on every result update.
+  const load = useCallback(async (reset: boolean, cursor?: string | null) => {
     const params: any = {};
     if (debouncedQuery) params.q = debouncedQuery;
     if (typeFilter) params.type = typeFilter;
@@ -32,13 +34,13 @@ export default function MarketplacePage() {
     if (minPrice) params.minPrice = parseFloat(minPrice) * 100;
     if (maxPrice) params.maxPrice = parseFloat(maxPrice) * 100;
     if (groupId) params.groupId = groupId;
-    if (!reset && result.nextCursor) params.cursor = result.nextCursor;
+    if (!reset && cursor) params.cursor = cursor;
 
     const data = await getListings(params);
-    setResult(reset ? data : { ...data, items: [...result.items, ...data.items] });
-  };
+    setResult((prev) => (reset ? data : { ...data, items: [...prev.items, ...data.items] }));
+  }, [debouncedQuery, typeFilter, category, minPrice, maxPrice, groupId, getListings]);
 
-  useEffect(() => { load(true); }, [debouncedQuery, typeFilter, category, minPrice, maxPrice, groupId]);
+  useEffect(() => { load(true); }, [load]);
 
   return (
     <ProtectedPageShell>
@@ -108,7 +110,7 @@ export default function MarketplacePage() {
           </div>
           {result.hasMore && (
             <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-              <button onClick={() => load(false)} disabled={loading} style={{ padding: '0.625rem 2rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'transparent', cursor: 'pointer', fontWeight: '600' }}>
+              <button onClick={() => load(false, result.nextCursor)} disabled={loading} style={{ padding: '0.625rem 2rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'transparent', cursor: 'pointer', fontWeight: '600' }}>
                 {loading ? 'Loading...' : 'Load More'}
               </button>
             </div>
