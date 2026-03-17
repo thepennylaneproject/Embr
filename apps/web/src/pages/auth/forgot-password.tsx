@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import Head from 'next/head';
 import { authApi } from '@/lib/api/auth';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
+import AuthShell from '@/components/auth/AuthShell';
 import { getApiErrorMessage } from '@/lib/api/error';
 import { Button, Card, Input, PageState } from '@embr/ui';
 import { copy } from '@/lib/copy';
@@ -29,7 +31,10 @@ export default function ForgotPasswordPage() {
 
   return (
     <ProtectedRoute requireAuth={false}>
-      <main className="embr-page" style={{ display: 'grid', placeItems: 'center', padding: '1rem' }}>
+      <Head>
+        <title>{copy.brand.pageTitle(copy.onboarding.resetPassword)}</title>
+      </Head>
+      <AuthShell backHref="/auth/login">
         <Card padding="lg" style={{ width: 'min(460px, 100%)' }}>
           {success ? (
             <PageState
@@ -67,11 +72,11 @@ export default function ForgotPasswordPage() {
 
           <p style={{ marginTop: '1rem' }}>
             <Link href="/auth/login" style={{ color: 'var(--embr-muted-text)', textDecoration: 'underline' }}>
-              {copy.actions.back} to {copy.onboarding.signIn}
+              {copy.onboarding.backToSignIn}
             </Link>
           </p>
         </Card>
-      </main>
+      </AuthShell>
     </ProtectedRoute>
   );
 }

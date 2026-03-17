@@ -42,6 +42,11 @@ export class OrdersController {
     return this.ordersService.getSellerOrders(req.user.id, status);
   }
 
+  @Put(':id/pay')
+  async confirmPayment(@Param('id') id: string, @Request() req) {
+    return this.ordersService.confirmPayment(id, req.user.id);
+  }
+
   @Put(':id/ship')
   async markShipped(
     @Param('id') id: string,

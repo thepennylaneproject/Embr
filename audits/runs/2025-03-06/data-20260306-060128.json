@@ -82,10 +82,10 @@
       "audits/runs/2025-03-05/data-20260305-131933.json"
     ],
     "files_skipped": [
-      "apps/web/ — frontend-only components outside data integrity scope",
+      "apps/web/ \u2014 frontend-only components outside data integrity scope",
       "node_modules/",
       "generated runtime artifacts (playwright-report/, dist/)",
-      ".archive/ — historical duplicates"
+      ".archive/ \u2014 historical duplicates"
     ],
     "coverage_complete": true
   },
@@ -120,7 +120,15 @@
         ]
       },
       "status": "open",
-      "prev_finding_id": "f-data-data-f001"
+      "prev_finding_id": "f-data-data-f001",
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:01:28Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
       "finding_id": "data-f002",
@@ -143,7 +151,15 @@
         "approach": "Use phased migration: add nullable column, backfill from existing relations, validate, then set NOT NULL."
       },
       "status": "open",
-      "prev_finding_id": "f-data-data-f002"
+      "prev_finding_id": "f-data-data-f002",
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:01:28Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
       "finding_id": "data-f003",
@@ -171,7 +187,15 @@
         "approach": "Run one-time data audit comparing expected cents ranges, then ship corrective migration with explicit source-unit assumptions and rollback notes."
       },
       "status": "open",
-      "prev_finding_id": "f-data-data-f003"
+      "prev_finding_id": "f-data-data-f003",
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:01:28Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
       "finding_id": "data-f004",
@@ -204,7 +228,15 @@
         "approach": "Remove obsolete DTO fields and map only schema-valid fields in service."
       },
       "status": "open",
-      "prev_finding_id": "f-data-data-f004"
+      "prev_finding_id": "f-data-data-f004",
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:01:28Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
       "finding_id": "data-f005",
@@ -237,7 +269,15 @@
         "approach": "Unify DTO enums with Prisma enum values or normalize before DB writes; remove unsafe enum casts."
       },
       "status": "open",
-      "prev_finding_id": "f-data-data-f005"
+      "prev_finding_id": "f-data-data-f005",
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:01:28Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
       "finding_id": "data-f006",
@@ -270,7 +310,15 @@
         "approach": "Use @IsInt + explicit cent units in DTO docs/messages."
       },
       "status": "open",
-      "prev_finding_id": "f-data-data-f006"
+      "prev_finding_id": "f-data-data-f006",
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:01:28Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
       "finding_id": "data-f007",
@@ -293,7 +341,15 @@
         "approach": "Delete/update full subtree within a transaction (recursive CTE SQL or iterative traversal) and recompute count safely."
       },
       "status": "open",
-      "prev_finding_id": "f-data-data-f007"
+      "prev_finding_id": "f-data-data-f007",
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:01:28Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
       "finding_id": "data-f008",
@@ -316,7 +372,15 @@
         "approach": "Wrap all acceptance side effects in a single serializable transaction and enforce compare-and-set on gig/application statuses."
       },
       "status": "open",
-      "prev_finding_id": "f-data-data-f008"
+      "prev_finding_id": "f-data-data-f008",
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:01:28Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
       "finding_id": "data-f009",
@@ -344,7 +408,15 @@
         "approach": "Pass transaction client through service methods or centralize all ledger+tip+wallet writes in one transaction boundary."
       },
       "status": "open",
-      "prev_finding_id": "f-data-data-f009"
+      "prev_finding_id": "f-data-data-f009",
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:01:28Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
       "finding_id": "data-f010",
@@ -367,7 +439,15 @@
         "approach": "Use transaction for full checkout and conditional stock decrement (where: { id, quantity: { gte: order.quantity } }) with retry logic."
       },
       "status": "open",
-      "prev_finding_id": "f-data-data-f010"
+      "prev_finding_id": "f-data-data-f010",
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:01:28Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
       "finding_id": "data-f011",
@@ -395,7 +475,15 @@
         "approach": "Human decision required: keep app-only authorization or add RLS for sensitive tables with explicit bypass strategy for trusted services."
       },
       "status": "open",
-      "prev_finding_id": "f-data-data-f011"
+      "prev_finding_id": "f-data-data-f011",
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:01:28Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
       "finding_id": "data-f012",
@@ -404,7 +492,7 @@
       "severity": "major",
       "priority": "P1",
       "confidence": "evidence",
-      "title": "revenueService.recordStream() stores a USD float as TrackPlay.royaltyAmount which is declared Int (cents) in Prisma schema",
+      "title": "revenueService.recordStream() stores a USD float as TrackPlay.royaltyAmount which is declared Int (cents) in Prisma s...",
       "description": "revenueService.recordStream() computes royaltyAmount = isValidStream ? 0.003 : 0 (a USD dollar float) and persists it to TrackPlay.royaltyAmount. The Prisma schema declares TrackPlay.royaltyAmount as Int (integer cents). Prisma silently truncates the float to 0, making all stream royalty earnings zero regardless of playback.",
       "proof_hooks": [
         {
@@ -415,17 +503,25 @@
         {
           "hook_type": "code_ref",
           "file": "apps/api/prisma/schema.prisma",
-          "summary": "TrackPlay.royaltyAmount is Int — amount artist earned from this play (in cents)"
+          "summary": "TrackPlay.royaltyAmount is Int \u2014 amount artist earned from this play (in cents)"
         }
       ],
       "impact": "Every stream play will have royaltyAmount = 0, silently zeroing all artist royalty earnings from streaming.",
       "suggested_fix": {
-        "approach": "Two fixes required: (1) store royaltyAmount in integer cents consistently with the schema (multiply by 100). (2) Note that $0.003/stream = 0.3 cents, which truncates to 0 even in cents — the royalty rate must be raised to at least $0.01/stream, or the schema must use millicents (Int) with documentation.",
+        "approach": "Two fixes required: (1) store royaltyAmount in integer cents consistently with the schema (multiply by 100). (2) Note that $0.003/stream = 0.3 cents, which truncates to 0 even in cents \u2014 the royalty rate must be raised to at least $0.01/stream, or the schema must use millicents (Int) with documentation.",
         "affected_files": [
           "apps/api/src/music/services/musicService.ts"
         ]
       },
-      "status": "open"
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:01:28Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
       "finding_id": "data-f013",
@@ -434,7 +530,7 @@
       "severity": "major",
       "priority": "P1",
       "confidence": "evidence",
-      "title": "Music AudioQuality type uses lowercase/mismatched values vs. Prisma enum; service writes unvalidated string with `as any` cast",
+      "title": "Music AudioQuality type uses lowercase/mismatched values vs. Prisma enum; service writes unvalidated string with `as ...",
       "description": "The music module's TypeScript AudioQuality interface defines quality as 'low'|'standard'|'high'|'lossless' while the Prisma enum uses LOW|STANDARD|HIGH|HIRES. The value 'lossless' has no DB equivalent (HIRES is the closest). revenueService.recordStream() accepts quality as a raw string and writes quality: quality as any, bypassing all enum validation. Any caller using the TypeScript type values directly will get runtime DB errors.",
       "proof_hooks": [
         {
@@ -461,7 +557,15 @@
           "apps/api/src/music/types/index.ts"
         ]
       },
-      "status": "open"
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:01:28Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     },
     {
       "finding_id": "data-f014",
@@ -470,7 +574,7 @@
       "severity": "major",
       "priority": "P1",
       "confidence": "evidence",
-      "title": "ArtistStat.revenue and Track.price use Float (USD) while the rest of the platform uses Int (integer cents) for all monetary values",
+      "title": "ArtistStat.revenue and Track.price use Float (USD) while the rest of the platform uses Int (integer cents) for all mo...",
       "description": "The music vertical introduced ArtistStat.revenue (Float, in USD) and Track.price (Float, in USD). Every other monetary field in the schema (Wallet.balance, Transaction.amount, Payout.amount, Escrow.amount, GigMilestone.amount, MarketplaceListing.price, VideoUsage.totalRevenue, VideoUsage.originalArtistShare, etc.) uses Int (integer cents). This creates a dual-unit money model where cross-domain revenue aggregation code will produce 100x scaling errors.",
       "proof_hooks": [
         {
@@ -481,7 +585,7 @@
         {
           "hook_type": "code_ref",
           "file": "apps/api/prisma/schema.prisma",
-          "summary": "VideoUsage.totalRevenue Int, VideoUsage.originalArtistShare Int, VideoUsage.creatorShare Int, VideoUsage.platformShare Int — all in cents"
+          "summary": "VideoUsage.totalRevenue Int, VideoUsage.originalArtistShare Int, VideoUsage.creatorShare Int, VideoUsage.platformShare Int \u2014 all in cents"
         }
       ],
       "impact": "Cross-domain revenue aggregation code will produce 100x incorrect totals. Float storage introduces rounding errors. Inconsistent units make financial auditing and correctness verification impossible without field-level unit tracking.",
@@ -492,7 +596,15 @@
           "apps/api/src/music/services/musicService.ts"
         ]
       },
-      "status": "open"
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-03-06T06:01:28Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ]
     }
   ],
   "env_keys": [
@@ -506,5 +618,36 @@
     "POSTGRES_DB",
     "POSTGRES_USER",
     "POSTGRES_PASSWORD"
-  ]
+  ],
+  "run_metadata": {
+    "timestamp": "2026-03-06T06:01:28Z",
+    "branch": "main",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "claude-sonnet-4-5"
+  },
+  "rollups": {
+    "by_severity": {
+      "blocker": 1,
+      "major": 12,
+      "minor": 1
+    },
+    "by_category": {
+      "migration-gap": 3,
+      "type-drift": 4,
+      "validation-gap": 1,
+      "orphaned-data": 2,
+      "constraint-violation": 2,
+      "missing-rls": 1,
+      "schema-mismatch": 1
+    },
+    "by_type": {
+      "bug": 13,
+      "question": 1
+    },
+    "by_status": {
+      "open": 14
+    }
+  },
+  "next_actions": []
 }

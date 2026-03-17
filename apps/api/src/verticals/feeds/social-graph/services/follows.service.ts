@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../../core/database/prisma.service';
-import { BlockingService } from '../../../../core/safety/services/blocking.service';
 import { NOTIFICATION_TYPES } from '../../../../core/notifications/notifications.constants';
 import {
   FollowUserDto,
@@ -10,15 +9,13 @@ import {
   GetMutualConnectionsDto,
   BatchFollowCheckDto
 } from '../dto/follow.dto';
+import { sanitizePublicProfile } from '../../../../common/utils/user-sanitizer';
 
 @Injectable()
 export class FollowsService {
   private readonly logger = new Logger(FollowsService.name);
 
-  constructor(
-    private prisma: PrismaService,
-    private blockingService: BlockingService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   /**
    * Follow a user
@@ -29,61 +26,72 @@ export class FollowsService {
       throw new BadRequestException('Cannot follow yourself');
     }
 
-    // Check if target user exists
-    const targetUser = await this.prisma.user.findUnique({
-      where: { id: dto.followingId },
-    });
+    // Run all three pre-flight checks in parallel to avoid 3 sequential round-trips
+    // (user existence + block status + existing follow were previously serial).
+    const [targetUser, existingBlock, existingFollow] = await Promise.all([
+      this.prisma.user.findUnique({ where: { id: dto.followingId } }),
+      this.prisma.blockedUser.findFirst({
+        where: {
+          OR: [
+            { blockerId: followerId, blockedId: dto.followingId },
+            { blockerId: dto.followingId, blockedId: followerId },
+          ],
+        },
+        select: { id: true },
+      }),
+      this.prisma.follow.findUnique({
+        where: {
+          followerId_followingId: {
+            followerId,
+            followingId: dto.followingId,
+          },
+        },
+      }),
+    ]);
 
     if (!targetUser) {
       throw new NotFoundException('User not found');
     }
 
-    // Check if user is blocked
-    const isBlocked = await this.blockingService.isBlocked(followerId, dto.followingId);
-    if (isBlocked) {
+    if (existingBlock) {
       throw new ForbiddenException('Cannot follow a blocked user or a user who has blocked you');
     }
-
-    // Check if already following
-    const existingFollow = await this.prisma.follow.findUnique({
-      where: {
-        followerId_followingId: {
-          followerId,
-          followingId: dto.followingId,
-        },
-      },
-    });
 
     if (existingFollow) {
       throw new ConflictException('Already following this user');
     }
 
-    // Create follow relationship
-    const follow = await this.prisma.follow.create({
-      data: {
-        followerId,
-        followingId: dto.followingId,
-      },
-      include: {
-        following: {
-          include: {
-            profile: true,
+    // Create follow relationship and update denormalized counts atomically.
+    // All three writes share one transaction: if any fails the whole operation
+    // rolls back, keeping the Follow row and the two Profile counters consistent.
+    const follow = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.follow.create({
+        data: {
+          followerId,
+          followingId: dto.followingId,
+        },
+        include: {
+          following: {
+            include: {
+              profile: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    // Update follower counts (denormalized for performance)
-    await Promise.all([
-      this.prisma.profile.update({
-        where: { userId: followerId },
-        data: { followingCount: { increment: 1 } },
-      }),
-      this.prisma.profile.update({
-        where: { userId: dto.followingId },
-        data: { followerCount: { increment: 1 } },
-      }),
-    ]);
+      await Promise.all([
+        tx.profile.update({
+          where: { userId: followerId },
+          data: { followingCount: { increment: 1 } },
+        }),
+        tx.profile.update({
+          where: { userId: dto.followingId },
+          data: { followerCount: { increment: 1 } },
+        }),
+      ]);
+
+      return created;
+    });
 
     // Audit log successful follow
     this.logger.log(
@@ -111,7 +119,7 @@ export class FollowsService {
       user: {
         id: follow.following.id,
         username: follow.following.username,
-        profile: follow.following.profile,
+        profile: sanitizePublicProfile(follow.following.profile),
       },
     };
   }
@@ -133,27 +141,32 @@ export class FollowsService {
       throw new NotFoundException('Follow relationship not found');
     }
 
-    // Delete follow relationship
-    await this.prisma.follow.delete({
-      where: {
-        followerId_followingId: {
-          followerId,
-          followingId,
+    // Delete follow relationship and update denormalized counts atomically.
+    // All three writes share one transaction so a partial failure cannot leave
+    // the Follow row deleted while the Profile counters remain inflated (or
+    // vice-versa). Decrement is floor-clamped at 0 to guard against any
+    // pre-existing counter drift.
+    await this.prisma.$transaction(async (tx) => {
+      await tx.follow.delete({
+        where: {
+          followerId_followingId: {
+            followerId,
+            followingId,
+          },
         },
-      },
-    });
+      });
 
-    // Update follower counts
-    await Promise.all([
-      this.prisma.profile.update({
-        where: { userId: followerId },
-        data: { followingCount: { decrement: 1 } },
-      }),
-      this.prisma.profile.update({
-        where: { userId: followingId },
-        data: { followerCount: { decrement: 1 } },
-      }),
-    ]);
+      await Promise.all([
+        tx.profile.updateMany({
+          where: { userId: followerId, followingCount: { gt: 0 } },
+          data: { followingCount: { decrement: 1 } },
+        }),
+        tx.profile.updateMany({
+          where: { userId: followingId, followerCount: { gt: 0 } },
+          data: { followerCount: { decrement: 1 } },
+        }),
+      ]);
+    });
 
     // Audit log successful unfollow
     this.logger.log(
@@ -227,7 +240,7 @@ export class FollowsService {
       followers: followers.map(f => ({
         id: f.follower.id,
         username: f.follower.username,
-        profile: f.follower.profile,
+        profile: sanitizePublicProfile(f.follower.profile),
         followedAt: f.createdAt,
       })),
       pagination: {
@@ -287,7 +300,7 @@ export class FollowsService {
       following: following.map(f => ({
         id: f.following.id,
         username: f.following.username,
-        profile: f.following.profile,
+        profile: sanitizePublicProfile(f.following.profile),
         followedAt: f.createdAt,
       })),
       pagination: {
@@ -427,12 +440,12 @@ export class FollowsService {
       mutualFollowing: mutualFollowing.map(f => ({
         id: f.following.id,
         username: f.following.username,
-        profile: f.following.profile,
+        profile: sanitizePublicProfile(f.following.profile),
       })),
       mutualFollowers: mutualFollowers.map(f => ({
         id: f.follower.id,
         username: f.follower.username,
-        profile: f.follower.profile,
+        profile: sanitizePublicProfile(f.follower.profile),
       })),
       count: {
         following: mutualFollowing.length,

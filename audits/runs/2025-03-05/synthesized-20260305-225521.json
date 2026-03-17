@@ -4,9 +4,10 @@
   "run_id": "synthesized-20260305-225521",
   "run_metadata": {
     "timestamp": "2026-03-05T22:55:21Z",
+    "branch": "main",
     "environment": "local",
     "tool_platform": "cursor",
-    "notes": "Fresh audit pass on changes since f6f5acd; scope limited to audits artifacts."
+    "model": "claude-sonnet-4-5"
   },
   "coverage": {
     "baseline": "f6f5acd..HEAD",
@@ -18,13 +19,6 @@
       "audits/runs/**/*.summary.md"
     ]
   },
-  "summary": {
-    "new_findings": 0,
-    "resolved_findings": 0,
-    "changed_status": 0,
-    "open_findings_total": 80,
-    "resolved_findings_total": 9
-  },
   "triage": {
     "p0_blockers_fix_now": [],
     "p0_p1_small_fix_this_session": [],
@@ -32,5 +26,18 @@
     "notes_only": [
       "No application or deployment code changed in scope; no new triage actions required."
     ]
-  }
+  },
+  "suite": "synthesized",
+  "agent": {
+    "name": "synthesizer",
+    "role": "Audit agent \u2014 see suite for scope."
+  },
+  "findings": [],
+  "rollups": {
+    "by_severity": {},
+    "by_category": {},
+    "by_type": {},
+    "by_status": {}
+  },
+  "next_actions": []
 }
