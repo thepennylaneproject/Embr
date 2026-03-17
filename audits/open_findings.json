@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-03-16T22:46:47Z",
+  "last_updated": "2026-03-16T22:09:55Z",
   "run_id": "synthesizer-v2-20260310-011114",
   "open_findings": [
     {
@@ -2397,29 +2397,17 @@
       "priority": "P2",
       "status": "open",
       "title": "Error messages don't provide recovery instructions",
-      "agent": "ux-flow-auditor",
-      "proof_hooks": [
-        {
-          "hook_type": "code_ref",
-          "summary": "See description: "
-        }
-      ],
-      "impact": "Severity minor issue. See description for details.",
-      "suggested_fix": {
-        "approach": "See description for details.",
-        "estimated_effort": "small"
-      },
-      "history": [
-        {
-          "timestamp": "2026-03-10T01:11:14Z",
-          "actor": "schema-auditor",
-          "event": "created",
-          "notes": "Finding created during audit run."
-        }
-      ],
-      "category": "uncategorized",
-      "confidence": "inference",
-      "description": "Error messages don't provide recovery instructions"
+      "agent": "ux-flow-auditor"
+    },
+    {
+      "finding_id": "f-60ee7aca",
+      "type": "debt",
+      "severity": "major",
+      "priority": "P1",
+      "status": "fixed_verified",
+      "title": "runtime-bug-hunter agent output missing required run_metadata object (schema v1.1.0 violation)",
+      "agent": "synthesizer",
+      "linear_issue": "PLP-32"
     }
   ],
   "kind": "synthesizer_output",

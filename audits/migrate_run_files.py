@@ -282,12 +282,17 @@ def fix_severity(value: str) -> str:
         "informational": "nit",
         "warning": "minor",
         "error": "blocker",
-        "resolved": "minor",  # re-audit "fix" records that misuse severity
-        # Priority-as-severity (old format before v1.1.0)
+        # Priority-style severity labels (P0/p0 = blocker, etc.)
         "p0": "blocker",
         "p1": "major",
         "p2": "minor",
         "p3": "nit",
+        "p4": "nit",
+        # Other common non-standard values
+        "moderate": "minor",
+        "severe": "blocker",
+        # 'resolved' is a status value misused as severity; treat as nit
+        "resolved": "nit",
     }
     result = SEVERITY_MAP.get(v, v)
     # Ensure the result is a valid enum value; default to minor if not
@@ -301,16 +306,34 @@ def fix_confidence(value: str) -> str:
     CONFIDENCE_MAP = {
         "confirmed": "evidence",
         "verified": "evidence",
-        "proven": "evidence",
-        "observed": "evidence",
-        "deduced": "inference",
-        "inferred": "inference",
+        "certain": "evidence",
+        "probable": "inference",
         "likely": "inference",
-        "suspected": "speculation",
         "possible": "speculation",
-        "unconfirmed": "speculation",
+        "suspected": "speculation",
+        "unknown": "speculation",
     }
     return CONFIDENCE_MAP.get(v, v)
+
+
+def fix_status(value: str) -> str:
+    v = value.lower() if isinstance(value, str) else value
+    STATUS_MAP = {
+        "resolved": "fixed_verified",
+        "closed": "fixed_verified",
+        "done": "fixed_verified",
+        "fixed": "fixed_pending_verify",
+        "pending": "open",
+        "new": "open",
+        "active": "in_progress",
+        "investigating": "in_progress",
+        "rejected": "wont_fix",
+        "ignored": "wont_fix",
+        "skipped": "wont_fix",
+        "postponed": "deferred",
+        "enhancement": "converted_to_enhancement",
+    }
+    return STATUS_MAP.get(v, v)
 
 
 def fix_type(value: str) -> str:
@@ -667,7 +690,30 @@ def fix_findings(findings: list, run_timestamp: str) -> list:
             else:
                 finding["priority"] = pri
 
-        # 2. type: normalize enum (lowercase, remap invalid values); default to "bug" if missing
+        # 1b. description: map legacy description fields
+        if "description" not in finding:
+            finding["description"] = (
+                finding.get("details", {}).get("description", "")
+                if isinstance(finding.get("details"), dict)
+                else finding.get("detail", "No description available.")
+            )
+
+        # 1c. proof_hooks: also handle 'evidence' field from old security agent
+        if "proof_hooks" not in finding and "code_refs" not in finding:
+            if "evidence" in finding:
+                evidence = finding.pop("evidence")
+                if isinstance(evidence, str) and evidence:
+                    finding["proof_hooks"] = [{"hook_type": "artifact_ref", "summary": evidence[:300]}]
+                elif isinstance(evidence, list):
+                    finding["proof_hooks"] = [
+                        {"hook_type": "artifact_ref", "summary": str(e)[:300]} for e in evidence if e
+                    ] or [{"hook_type": "code_ref", "summary": "See description."}]
+
+        # 1d. suggested_fix: map 'fix' -> 'suggested_fix'
+        if "suggested_fix" not in finding and "fix" in finding:
+            finding["suggested_fix"] = finding.pop("fix")
+
+        # 2. type: normalize enum (lowercase, remap invalid values)
         if "type" in finding:
             finding["type"] = fix_type(finding["type"])
         if "type" not in finding or finding["type"] not in VALID_TYPE:
@@ -682,33 +728,32 @@ def fix_findings(findings: list, run_timestamp: str) -> list:
             else:
                 finding["type"] = "bug"
 
-        # 3. severity: must be lowercase
+        # 3. severity: must be lowercase valid enum; infer from "label" if present
+        if "severity" not in finding and "label" in finding:
+            finding["severity"] = finding.pop("label")
         if "severity" in finding:
             finding["severity"] = fix_severity(finding["severity"])
-        if "severity" not in finding or finding["severity"] not in VALID_SEVERITY:
-            # Derive from label or priority fields if present
-            label = finding.get("label", "")
-            priority = finding.get("priority", "")
-            if label:
-                finding["severity"] = fix_severity(label)
-            elif priority:
-                finding["severity"] = fix_severity(priority)
-            else:
-                finding["severity"] = "minor"
-        # Re-validate after derivation
-        if finding["severity"] not in VALID_SEVERITY:
+        else:
             finding["severity"] = "minor"
 
-        # 4. priority: add if missing; derive from severity
-        if "priority" not in finding:
-            SEV_TO_PRIORITY = {"blocker": "P0", "major": "P1", "minor": "P2", "nit": "P3"}
-            finding["priority"] = SEV_TO_PRIORITY.get(finding.get("severity", "minor"), "P2")
-
-        # 5. confidence: must be lowercase; default to "evidence" if missing
+        # 4. confidence: must be lowercase; default to "inference" if missing
         if "confidence" in finding:
             finding["confidence"] = fix_confidence(finding["confidence"])
-        if "confidence" not in finding or finding["confidence"] not in VALID_CONFIDENCE:
-            finding["confidence"] = "evidence"
+        else:
+            finding["confidence"] = "inference"
+
+        # 4b. type: default to "bug" if missing
+        if "type" not in finding:
+            finding["type"] = "bug"
+
+        # 4c. priority: default based on severity if missing
+        if "priority" not in finding:
+            SEVERITY_TO_PRIORITY = {
+                "blocker": "P0", "major": "P1", "minor": "P2", "nit": "P3",
+            }
+            finding["priority"] = SEVERITY_TO_PRIORITY.get(
+                finding.get("severity", "minor"), "P2"
+            )
 
         # 6. proof_hooks: build from evidence/attack_scenario/fix or code_refs
         if "proof_hooks" not in finding:
@@ -762,27 +807,11 @@ def fix_findings(findings: list, run_timestamp: str) -> list:
         # 9. history: build if missing or fix existing
         finding["history"] = build_history(finding, run_timestamp)
 
-        # 9. status: default to open if missing; normalize non-standard values
-        STATUS_MAP = {
-            "resolved": "fixed_verified",
-            "fixed": "fixed_verified",
-            "done": "fixed_verified",
-            "closed": "fixed_verified",
-            "complete": "fixed_verified",
-            "completed": "fixed_verified",
-            "pending": "fixed_pending_verify",
-            "fix_pending_verify": "fixed_pending_verify",
-            "needs_review": "fixed_pending_verify",
-            "skipped": "deferred",
-            "ignored": "wont_fix",
-            "dismissed": "wont_fix",
-            "rejected": "wont_fix",
-        }
+        # 9. status: normalize enum or default to open if missing
         if "status" not in finding:
             finding["status"] = "open"
         else:
-            raw_status = finding["status"]
-            finding["status"] = STATUS_MAP.get(raw_status, raw_status)
+            finding["status"] = fix_status(finding["status"])
 
         # 11. category: if missing, derive from type or default
         if "category" not in finding:
@@ -808,9 +837,9 @@ def fix_findings(findings: list, run_timestamp: str) -> list:
 
         # Remove non-standard root-level fields that were migrated
         for old in ("estimated_effort", "estimated_effort_days", "recommendation",
-                    "details", "agent_source", "code_refs", "label",
-                    "fix_applied", "attack_scenario", "evidence",
-                    "affected_files", "affected_lines", "introduced_in_commit"):
+                    "details", "agent_source", "code_refs", "evidence", "fix",
+                    "affected_files", "affected_lines", "introduced_in_commit",
+                    "attack_scenario", "label", "detail"):
             finding.pop(old, None)
 
         fixed.append(finding)
@@ -1006,51 +1035,46 @@ def fix_file(filepath: str, dry_run: bool = False) -> tuple[bool, list[str], lis
     # Determine run timestamp for history events
     run_timestamp = derive_timestamp(data, filepath)
 
-    # 0. schema_version: required constant "1.1.0"
+    # 0. schema_version — must be "1.1.0"
     if "schema_version" not in data:
         data["schema_version"] = "1.1.0"
-        changes.append("Added schema_version '1.1.0'")
-    elif data["schema_version"] != "1.1.0":
-        data["schema_version"] = "1.1.0"
-        changes.append(f"Updated schema_version to '1.1.0'")
+        changes.append("Added missing schema_version '1.1.0'")
 
-    # 0b. kind: default to agent_output
-    if "kind" not in data:
-        run_id = data.get("run_id", "")
-        data["kind"] = "synthesizer_output" if "synthesi" in run_id else "agent_output"
-        changes.append(f"Added kind '{data['kind']}'")
+    # 0a. Merge legacy 'metadata' block into run_metadata candidates
+    if "metadata" in data and isinstance(data["metadata"], dict) and "run_metadata" not in data:
+        data["run_metadata"] = data.pop("metadata")
+        changes.append("Promoted legacy 'metadata' field to 'run_metadata'")
 
-    # 0c. suite: derive from run_id if missing
-    if "suite" not in data:
-        run_id = data.get("run_id", "")
-        suite = run_id.split("-")[0] if run_id else "unknown"
-        if suite in ("synthesized", "synthesizer"):
-            suite = "security"  # best guess for unlabeled synthesized files
-        data["suite"] = suite
-        changes.append(f"Added suite '{suite}'")
+    # 0b. agent.role — required field
+    ROLE_BY_SUITE = {
+        "logic": "Find runtime errors, logic bugs, null-safety violations, unhandled edge cases, dead code paths, and error handling gaps.",
+        "data": "Find schema violations, data integrity issues, and data flow problems.",
+        "ux": "Find UX flow issues, copy violations, and accessibility gaps.",
+        "performance": "Find performance bottlenecks, memory leaks, and cost inefficiencies.",
+        "security": "Find security vulnerabilities, privacy issues, and authentication/authorization gaps.",
+        "deploy": "Find build, deploy, and infrastructure issues.",
+        "synthesized": "Synthesize findings from all specialist agents into a unified report.",
+    }
+    suite = data.get("suite", "")
+    if "agent" in data and isinstance(data["agent"], dict):
+        if not data["agent"].get("role"):
+            data["agent"]["role"] = ROLE_BY_SUITE.get(suite, "Audit agent.")
+            changes.append(f"Added missing agent.role for suite '{suite}'")
 
-    # 0d. agent: add if missing or fix missing fields
-    if "agent" not in data:
-        run_id = data.get("run_id", "")
-        suite = data.get("suite", "unknown")
-        data["agent"] = {
-            "name": f"{suite}-auditor",
-            "role": f"Audit agent for the {suite} suite.",
-        }
-        changes.append("Added missing agent object")
-    else:
-        ag = data["agent"]
-        if "name" not in ag:
-            ag["name"] = data.get("suite", "unknown") + "-auditor"
-            changes.append("Added missing agent.name")
-        if "role" not in ag:
-            ag["role"] = f"Audit agent for the {data.get('suite', 'unknown')} suite."
-            changes.append("Added missing agent.role")
-
-    # 0e. findings: add empty array if missing (some synthesized files omit it)
-    if "findings" not in data:
-        data["findings"] = []
-        changes.append("Added missing findings (empty array)")
+    # 0c. synthesizer_output kind without suite/agent/findings — add stubs
+    if data.get("kind") == "synthesizer_output":
+        if "suite" not in data:
+            data["suite"] = "synthesized"
+            changes.append("Added missing suite='synthesized' for synthesizer_output")
+        if "agent" not in data:
+            data["agent"] = {
+                "name": "synthesizer",
+                "role": ROLE_BY_SUITE.get("synthesized", "Synthesize findings from all specialist agents into a unified report.")
+            }
+            changes.append("Added missing agent stub for synthesizer_output")
+        if "findings" not in data:
+            data["findings"] = []
+            changes.append("Added missing findings=[] stub for synthesizer_output (delta format)")
 
     # 1. run_metadata
     if "run_metadata" not in data or not isinstance(data.get("run_metadata"), dict):

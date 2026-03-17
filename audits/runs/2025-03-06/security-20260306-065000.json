@@ -6,32 +6,33 @@
     "name": "security-privacy-auditor",
     "version": "1.1.0",
     "lyra_suite_version": "v1.1",
-    "role": "Audit agent \u2014 see suite for scope."
+    "role": "Find security vulnerabilities, privacy issues, and authentication/authorization gaps."
+  },
+  "metadata": {
+    "timestamp": "2026-03-06T06:51:16Z",
+    "app_description": "Embr: creator-focused social media and freelance marketplace monorepo. NestJS API (port 3003) + Next.js frontend (port 3004). PostgreSQL 16 + Redis 7 via Docker Compose.",
+    "threat_model_summary": "Embr handles user PII (email, full name, location), financial data (wallet balances, Stripe Connect IDs, payout history, tip amounts), and user-generated content. Three privilege tiers: anonymous visitors, authenticated users (USER/CREATOR), and privileged staff (MODERATOR/ADMIN). Highest-value targets are auth tokens, creator financial accounts, and admin moderation functions. Most likely attack vectors: XSS-based token exfiltration (mitigated by new CSP), IDOR on financial and appeal endpoints (fixed), privilege escalation through role manipulation (fixed isCreator).",
+    "prior_open_findings_filtered": 20,
+    "stop_condition_triggered": false,
+    "stop_condition_note": "All identified P0/P1/P2 security findings from the previous audit have been remediated in this implementation pass."
   },
   "findings": [
     {
       "category": "auth-bypass",
-      "severity": "minor",
+      "severity": "nit",
       "title": "Suspension checks added to login(), googleLogin(), and validateUser()",
       "fix_applied": "Added `if (user.suspended || (user.suspendedUntil && user.suspendedUntil > new Date()))` check in all three authentication paths.",
-      "finding_id": "f-004-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-004-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/api/src/core/auth/auth.service.ts"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/api/src/core/auth/auth.service.ts"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -42,31 +43,27 @@
         }
       ],
       "status": "open",
-      "description": "Suspension checks added to login(), googleLogin(), and validateUser()"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "data-leakage",
-      "severity": "minor",
+      "severity": "nit",
       "title": "Refresh tokens now stored as SHA-256 hashes in the database",
       "fix_applied": "generateTokens() now stores createHash('sha256').update(token).digest('hex') in the DB. refreshTokens() and logout() hash the incoming token before DB lookup.",
-      "finding_id": "f-005-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-005-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/api/src/core/auth/auth.service.ts"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/api/src/core/auth/auth.service.ts"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -77,31 +74,27 @@
         }
       ],
       "status": "open",
-      "description": "Refresh tokens now stored as SHA-256 hashes in the database"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "data-leakage",
-      "severity": "minor",
+      "severity": "nit",
       "title": "Wallet data removed from non-owner profile responses",
       "fix_applied": "sanitizeUser() now accepts includeFinancial flag. getProfile() passes true (owner context); getUserByUsername() passes isOwner check.",
-      "finding_id": "f-007-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-007-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/api/src/core/users/users.service.ts"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/api/src/core/users/users.service.ts"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -112,31 +105,27 @@
         }
       ],
       "status": "open",
-      "description": "Wallet data removed from non-owner profile responses"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "missing-validation",
-      "severity": "minor",
+      "severity": "nit",
       "title": "isCreator removed from UpdateUserSettingsDto",
       "fix_applied": "Removed isCreator field from DTO. Creator status must be assigned via admin endpoint.",
-      "finding_id": "f-008-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-008-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/api/src/core/users/dto/update-user-settings.dto.ts"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/api/src/core/users/dto/update-user-settings.dto.ts"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -147,31 +136,27 @@
         }
       ],
       "status": "open",
-      "description": "isCreator removed from UpdateUserSettingsDto"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "auth-bypass",
-      "severity": "minor",
+      "severity": "nit",
       "title": "Stripe webhook controller decorated with @Public()",
       "fix_applied": "Added @Public() class decorator. Webhook already verifies Stripe signature via stripe.webhooks.constructEvent.",
-      "finding_id": "f-009-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-009-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/api/src/core/monetization/webhooks/stripe-webhook.controller.ts"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/api/src/core/monetization/webhooks/stripe-webhook.controller.ts"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -182,31 +167,27 @@
         }
       ],
       "status": "open",
-      "description": "Stripe webhook controller decorated with @Public()"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "data-leakage",
-      "severity": "minor",
+      "severity": "nit",
       "title": "Tip endpoints restricted to resource owners",
       "fix_applied": "getTipsReceivedByUser() now checks req.user.id === userId. getTipsByPost() now uses req.user.id as the caller context.",
-      "finding_id": "f-010-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-010-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/api/src/core/monetization/controllers/tip.controller.ts"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/api/src/core/monetization/controllers/tip.controller.ts"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -217,31 +198,27 @@
         }
       ],
       "status": "open",
-      "description": "Tip endpoints restricted to resource owners"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "secrets-exposure",
-      "severity": "minor",
+      "severity": "nit",
       "title": "Hardcoded 'dev-secret' removed from notifications module",
       "fix_applied": "Replaced JwtModule.register({secret: ... || 'dev-secret'}) with JwtModule.registerAsync using ConfigService. Throws if JWT_SECRET is not set.",
-      "finding_id": "f-011-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-011-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/api/src/core/notifications/notifications.module.ts"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/api/src/core/notifications/notifications.module.ts"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -252,31 +229,27 @@
         }
       ],
       "status": "open",
-      "description": "Hardcoded 'dev-secret' removed from notifications module"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "data-leakage",
-      "severity": "minor",
+      "severity": "nit",
       "title": "changePassword and verifyEmail set tokens as httpOnly cookies",
       "fix_applied": "Both handlers now accept @Res() and set tokens via res.cookie() with httpOnly=true, then return only user data in the JSON body.",
-      "finding_id": "f-012-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-012-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/api/src/core/auth/auth.controller.ts"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/api/src/core/auth/auth.controller.ts"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -287,31 +260,27 @@
         }
       ],
       "status": "open",
-      "description": "changePassword and verifyEmail set tokens as httpOnly cookies"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "data-leakage",
-      "severity": "minor",
+      "severity": "nit",
       "title": "localStorage token references removed from web client",
       "fix_applied": "Removed clearAuthStorage() helper that called localStorage.removeItem() for token keys.",
-      "finding_id": "f-013-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-013-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/web/src/lib/api/client.ts"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/web/src/lib/api/client.ts"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -322,31 +291,27 @@
         }
       ],
       "status": "open",
-      "description": "localStorage token references removed from web client"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "missing-validation",
-      "severity": "minor",
+      "severity": "nit",
       "title": "Token lookups scoped to userId via prefixed token format",
       "fix_applied": "Tokens are now generated as userId.randomHex. resetPassword() and verifyEmail() extract userId prefix and scope DB lookups to that user.",
-      "finding_id": "f-014-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-014-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/api/src/core/auth/auth.service.ts"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/api/src/core/auth/auth.service.ts"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -357,31 +322,27 @@
         }
       ],
       "status": "open",
-      "description": "Token lookups scoped to userId via prefixed token format"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "cors-misconfiguration",
-      "severity": "minor",
+      "severity": "nit",
       "title": "CORS throws in production if ALLOWED_ORIGINS is unset",
       "fix_applied": "Added startup check: if NODE_ENV=production and ALLOWED_ORIGINS is unset, throws Error rather than falling back to localhost.",
-      "finding_id": "f-015-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-015-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/api/src/main.ts"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/api/src/main.ts"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -392,31 +353,27 @@
         }
       ],
       "status": "open",
-      "description": "CORS throws in production if ALLOWED_ORIGINS is unset"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "data-leakage",
-      "severity": "minor",
+      "severity": "nit",
       "title": "Restriction status endpoint restricted to owner or admin/moderator",
       "fix_applied": "checkUserRestriction() now checks req.user.id === userId || role is ADMIN/MODERATOR, throws ForbiddenException otherwise.",
-      "finding_id": "f-016-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-016-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/api/src/core/safety/controllers/safety.controller.ts"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/api/src/core/safety/controllers/safety.controller.ts"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -427,31 +384,27 @@
         }
       ],
       "status": "open",
-      "description": "Restriction status endpoint restricted to owner or admin/moderator"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "data-leakage",
-      "severity": "minor",
+      "severity": "nit",
       "title": "Appeal IDOR fixed: ownership check added",
       "fix_applied": "getAppealById() now verifies appeal.userId === req.user.id or role is ADMIN/MODERATOR before returning the appeal.",
-      "finding_id": "f-017-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-017-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/api/src/core/safety/controllers/safety.controller.ts"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/api/src/core/safety/controllers/safety.controller.ts"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -462,31 +415,27 @@
         }
       ],
       "status": "open",
-      "description": "Appeal IDOR fixed: ownership check added"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "secrets-exposure",
-      "severity": "minor",
+      "severity": "nit",
       "title": "Actual Redis password removed from apps/api/.env.example",
       "fix_applied": "Replaced embr_redis_password with your_redis_password placeholder.",
-      "finding_id": "f-018-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-018-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/api/.env.example"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/api/.env.example"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -497,31 +446,27 @@
         }
       ],
       "status": "open",
-      "description": "Actual Redis password removed from apps/api/.env.example"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "missing-validation",
-      "severity": "minor",
+      "severity": "nit",
       "title": "Auth cookies now use sameSite=strict and COOKIE_SECURE env var",
       "fix_applied": "Changed sameSite from 'lax' to 'strict'. Changed secure from NODE_ENV=production check to process.env.COOKIE_SECURE === 'true'. Added COOKIE_SECURE=false to .env.example.",
-      "finding_id": "f-019-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-019-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/api/src/core/auth/auth.controller.ts"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/api/src/core/auth/auth.controller.ts"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -532,31 +477,27 @@
         }
       ],
       "status": "open",
-      "description": "Auth cookies now use sameSite=strict and COOKIE_SECURE env var"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "secrets-exposure",
-      "severity": "minor",
+      "severity": "nit",
       "title": "ENABLE_DETAILED_ERRORS and ENABLE_SWAGGER default to false in .env.example",
       "fix_applied": "Changed ENABLE_SWAGGER, ENABLE_REQUEST_LOGGING, and ENABLE_DETAILED_ERRORS defaults to false in .env.example.",
-      "finding_id": "f-020-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-020-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": ".env.example"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          ".env.example"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -567,31 +508,27 @@
         }
       ],
       "status": "open",
-      "description": "ENABLE_DETAILED_ERRORS and ENABLE_SWAGGER default to false in .env.example"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "missing-validation",
-      "severity": "minor",
+      "severity": "nit",
       "title": "Content-Security-Policy and HSTS headers added to Next.js",
       "fix_applied": "Added CSP header restricting script-src, connect-src, frame-src. Added Strict-Transport-Security header. Removed deprecated X-XSS-Protection.",
-      "finding_id": "f-021-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-021-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/web/next.config.js"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/web/next.config.js"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -602,31 +539,27 @@
         }
       ],
       "status": "open",
-      "description": "Content-Security-Policy and HSTS headers added to Next.js"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "missing-validation",
-      "severity": "minor",
+      "severity": "nit",
       "title": "FRONTEND_URL validated before OAuth redirect",
       "fix_applied": "googleAuthCallback() now checks that FRONTEND_URL is set and returns 500 if not, preventing open redirect potential.",
-      "finding_id": "f-022-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-022-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/api/src/core/auth/auth.controller.ts"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/api/src/core/auth/auth.controller.ts"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -637,32 +570,27 @@
         }
       ],
       "status": "open",
-      "description": "FRONTEND_URL validated before OAuth redirect"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     },
     {
       "category": "data-leakage",
-      "severity": "minor",
+      "severity": "nit",
       "title": "paymentIntentId removed from sessionStorage",
       "fix_applied": "Removed sessionStorage.setItem('paymentIntentId', ...) calls. State is managed in React component state only.",
-      "finding_id": "f-023-fix",
-      "priority": "P2",
-      "type": "bug",
-      "confidence": "inference",
+      "finding_id": "F-023-fix",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "See description: ",
-          "file": "apps/web/src/pages/gigs/booking/[gigId].tsx"
+          "summary": "See description: "
         }
       ],
-      "impact": "Severity minor issue. See description for details.",
+      "impact": "Severity resolved issue. See description for details.",
       "suggested_fix": {
         "approach": "See description for details.",
-        "estimated_effort": "small",
-        "affected_files": [
-          "apps/web/src/pages/gigs/booking/[gigId].tsx",
-          "apps/web/src/pages/music/licensing/[trackId].tsx"
-        ]
+        "estimated_effort": "small"
       },
       "history": [
         {
@@ -673,34 +601,25 @@
         }
       ],
       "status": "open",
-      "description": "paymentIntentId removed from sessionStorage"
+      "description": "No description available.",
+      "confidence": "inference",
+      "type": "bug",
+      "priority": "P2"
     }
   ],
-  "schema_version": "1.1.0",
   "run_metadata": {
-    "timestamp": "2026-03-06T06:51:16Z",
+    "timestamp": "2026-03-06T06:50:00Z",
     "branch": "main",
     "environment": "local",
     "tool_platform": "cursor",
     "model": "claude-sonnet-4-5"
   },
   "rollups": {
-    "by_severity": {
-      "minor": 19
-    },
-    "by_category": {
-      "auth-bypass": 2,
-      "data-leakage": 8,
-      "missing-validation": 5,
-      "secrets-exposure": 3,
-      "cors-misconfiguration": 1
-    },
-    "by_type": {
-      "bug": 19
-    },
-    "by_status": {
-      "open": 19
-    }
+    "by_severity": {},
+    "by_category": {},
+    "by_type": {},
+    "by_status": {}
   },
-  "next_actions": []
+  "next_actions": [],
+  "schema_version": "1.1.0"
 }

@@ -51,10 +51,10 @@
     "by_status": {}
   },
   "next_actions": [],
-  "suite": "security",
+  "suite": "synthesized",
   "agent": {
-    "name": "security-auditor",
-    "role": "Audit agent for the security suite."
+    "name": "synthesizer",
+    "role": "Synthesize findings from all specialist agents into a unified report."
   },
   "findings": []
 }

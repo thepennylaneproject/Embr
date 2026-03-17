@@ -43,7 +43,7 @@
       "category": "a11y-gap",
       "severity": "major",
       "priority": "P1",
-      "confidence": "inference",
+      "confidence": "evidence",
       "title": "No `<title>` element set on any page \u2014 screen readers announce no page name",
       "description": "Fixed: Added `<Head><title>...</title></Head>` to _app.tsx (default 'Embr'), index.tsx ('Embr \u2014 Creator Community'), auth/login.tsx ('Sign in \u2014 Embr'), auth/signup.tsx ('Create account \u2014 Embr'), and feed.tsx ('Feed \u2014 Embr'). Screen readers will now announce the page name on navigation.",
       "proof_hooks": [
@@ -81,7 +81,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "note_added",
+          "event": "created",
           "notes": "Titles added to _app.tsx and key pages."
         }
       ],
@@ -93,7 +93,7 @@
       "category": "nav-dead-end",
       "severity": "major",
       "priority": "P1",
-      "confidence": "inference",
+      "confidence": "evidence",
       "title": "marketplace/sell.tsx has no post-publish navigation \u2014 user stranded after listing",
       "description": "Re-examined: CreateListingForm.tsx already calls router.push(`/marketplace/${listing.id}`) in its handleSubmit function after calling onPublish. The finding was a false positive \u2014 navigation is handled inside the form component. No code change needed.",
       "proof_hooks": [
@@ -124,7 +124,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "note_added",
+          "event": "created",
           "notes": "Re-examined. Navigation already exists in CreateListingForm."
         }
       ],
@@ -136,7 +136,7 @@
       "category": "a11y-gap",
       "severity": "major",
       "priority": "P1",
-      "confidence": "inference",
+      "confidence": "evidence",
       "title": "alert() and prompt() across 7 files block screen readers and break UX flow",
       "description": "Fixed: All alert() and prompt() calls replaced with accessible alternatives. marketplace/[id].tsx: 3 alerts \u2192 inline error state + success toast. marketplace/orders.tsx: 1 prompt \u2192 ship-tracking modal with inline validation. groups/[id]/settings.tsx: 1 alert + 1 confirm \u2192 inline confirmation UI + toast. components/gigs/GigManagementDashboard.tsx: 4 alerts + 2 confirms \u2192 toasts. components/monetization/TipButton.tsx: 2 alerts \u2192 inline validationError state. components/monetization/PayoutRequest.tsx: 2 alerts \u2192 inline validationError state. components/messaging/MessageInput.tsx: 3 alerts \u2192 inline fileError and sendError states. components/monetization/StripeConnectOnboarding.tsx: 1 prompt \u2192 inline email form.",
       "proof_hooks": [
@@ -174,7 +174,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "note_added",
+          "event": "created",
           "notes": "All alert/prompt/confirm calls replaced."
         }
       ],
@@ -186,7 +186,7 @@
       "category": "a11y-gap",
       "severity": "major",
       "priority": "P1",
-      "confidence": "inference",
+      "confidence": "evidence",
       "title": "Inline modals in marketplace/[id].tsx and orders.tsx missing ARIA dialog semantics",
       "description": "Fixed: Added role='dialog', aria-modal='true', and aria-labelledby referencing the modal title h2 to all inline modals: buy modal, offer modal (marketplace/[id].tsx), ship modal, review modal (orders.tsx). Backdrop overlays also have aria-hidden='true'. Labels for form inputs inside modals now use htmlFor.",
       "proof_hooks": [
@@ -224,7 +224,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "note_added",
+          "event": "created",
           "notes": "ARIA dialog semantics added."
         }
       ],
@@ -236,7 +236,7 @@
       "category": "missing-state",
       "severity": "major",
       "priority": "P1",
-      "confidence": "inference",
+      "confidence": "evidence",
       "title": "Toast system supports only 'info' | 'error' \u2014 no 'success' or 'warning' variant",
       "description": "Fixed: Added 'success' and 'warning' to ToastKind in both packages/ui/src/components/Toast.tsx and apps/web/src/components/ui/Toast.tsx. Updated screen-reader announcement text for each new kind. New success toasts are now used in orders.tsx, GigManagementDashboard.tsx, and marketplace/[id].tsx.",
       "proof_hooks": [
@@ -268,7 +268,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "note_added",
+          "event": "created",
           "notes": "success and warning ToastKind variants added."
         }
       ],
@@ -280,7 +280,7 @@
       "category": "copy-mismatch",
       "severity": "major",
       "priority": "P1",
-      "confidence": "inference",
+      "confidence": "evidence",
       "title": "FeaturePlaceholder component leaks developer issue IDs in user-visible text",
       "description": "Fixed: Removed 'TODO: ${issueId}' and '${issueId}' references from all three stateContent descriptions in FeaturePlaceholder.tsx. Also removed the 'Tracking note: <code>{issuePath}</code>' paragraph from the component UI. State descriptions are now generic user-friendly copy.",
       "proof_hooks": [
@@ -312,7 +312,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "note_added",
+          "event": "created",
           "notes": "Issue IDs removed from FeaturePlaceholder."
         }
       ],
@@ -324,7 +324,7 @@
       "category": "copy-mismatch",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "inference",
+      "confidence": "evidence",
       "title": "Homepage H1 reads 'Embr Frontend' \u2014 developer placeholder visible to all users",
       "description": "Fixed: Changed h1 from 'Embr Frontend' to 'Welcome to Embr' and updated the subtitle from 'Cohesive UI foundation is active. Social, messaging, monetization, and safety slices are staged next.' to 'A creator-focused social platform for your community.'",
       "proof_hooks": [
@@ -356,7 +356,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "note_added",
+          "event": "created",
           "notes": "H1 and subtitle updated."
         }
       ],
@@ -368,7 +368,7 @@
       "category": "inconsistent-label",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "inference",
+      "confidence": "evidence",
       "title": "'Sign in' vs 'Sign Out' \u2014 inconsistent capitalisation for the same auth concept",
       "description": "Fixed: Changed 'Sign Out' to 'Sign out' in AppShell.tsx dropdown menu to match the sentence-case style of 'Sign in' used on auth/login.tsx.",
       "proof_hooks": [
@@ -400,7 +400,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "note_added",
+          "event": "created",
           "notes": "Capitalisation made consistent."
         }
       ],
@@ -412,7 +412,7 @@
       "category": "copy-mismatch",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "inference",
+      "confidence": "evidence",
       "title": "Safety page exposes raw internal 'user ID' input fields \u2014 not user-addressable",
       "description": "Fixed: Changed placeholder text from 'Enter user ID' to 'Enter username' for both block and mute inputs in pages/safety/index.tsx. Also changed 'Entity ID' placeholder for the report input to 'Content URL or ID'.",
       "proof_hooks": [
@@ -444,7 +444,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "note_added",
+          "event": "created",
           "notes": "Placeholder text updated."
         }
       ],
@@ -456,7 +456,7 @@
       "category": "a11y-gap",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "inference",
+      "confidence": "evidence",
       "title": "Avatar upload clickable div in settings lacks keyboard support and ARIA role",
       "description": "Fixed: The avatar div in pages/settings/index.tsx now has role='button', tabIndex={0}, aria-label='Change profile photo', and an onKeyDown handler that triggers the file input on Enter or Space key press. The old title attribute was replaced with the accessible aria-label.",
       "proof_hooks": [
@@ -467,7 +467,7 @@
           "start_line": 214
         }
       ],
-  "repro_steps": [],
+      "repro_steps": [],
       "impact": "Keyboard-only users can now activate the avatar upload using Enter or Space.",
       "suggested_fix": {
         "approach": "Applied.",
@@ -488,7 +488,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "note_added",
+          "event": "created",
           "notes": "Keyboard support and ARIA role added."
         }
       ],
@@ -500,7 +500,7 @@
       "category": "missing-state",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "inference",
+      "confidence": "evidence",
       "title": "music/artist/[id].tsx error state is dead code \u2014 `_setError` prefixed, never called",
       "description": "Fixed: Renamed `_setError` to `setError` and updated the useEffect to call `setError('Artist not found.')` and `setLoading(false)` when router.query.id is defined but artistId is empty (meaning the id was not a valid string).",
       "proof_hooks": [
@@ -532,7 +532,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "note_added",
+          "event": "created",
           "notes": "Error state now reachable."
         }
       ],
@@ -544,7 +544,7 @@
       "category": "inconsistent-label",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "inference",
+      "confidence": "evidence",
       "title": "Loading states inconsistent \u2014 plain `<p>` text on 3 pages, PageState component on others",
       "description": "Fixed: Replaced `<p className='text-gray-600'>Loading profile...</p>` in pages/profile/index.tsx with `<PageState title='Loading profile' description='Please wait while we load your profile.' />`. Added PageState to the Button import from @embr/ui.",
       "proof_hooks": [
@@ -576,7 +576,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "note_added",
+          "event": "created",
           "notes": "Loading state standardized."
         }
       ],
@@ -588,7 +588,7 @@
       "category": "inconsistent-label",
       "severity": "minor",
       "priority": "P3",
-      "confidence": "inference",
+      "confidence": "evidence",
       "title": "profile/index.tsx mixes Tailwind class `text-gray-600` with the CSS variable design system",
       "description": "Fixed: The `text-gray-600` Tailwind class was the loading-state paragraph text. By replacing the loading state with <PageState>, the `text-gray-600` usage is removed. Profile page now exclusively uses CSS variable design tokens.",
       "proof_hooks": [
@@ -622,7 +622,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "note_added",
+          "event": "created",
           "notes": "Tailwind class removed."
         }
       ],
@@ -634,7 +634,7 @@
       "category": "inconsistent-label",
       "severity": "minor",
       "priority": "P3",
-      "confidence": "inference",
+      "confidence": "evidence",
       "title": "DiscoveryPage.tsx uses hardcoded hex colors and Tailwind \u2014 isolated from design token system",
       "description": "Partially fixed: Replaced hardcoded bg-[#F4F1F1] page background with style={{ background: 'var(--embr-bg)' }}, and text-gray-900 / text-gray-600 heading/subheading with CSS variable equivalents (var(--embr-text), var(--embr-muted-text)) in the page header. Interior component-level Tailwind colors (TrendingCreators, SuggestedUsers sub-components) remain and would require a larger refactor.",
       "proof_hooks": [
@@ -666,7 +666,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "note_added",
+          "event": "created",
           "notes": "Partial fix: page wrapper and header now use CSS variables."
         }
       ],
@@ -678,7 +678,7 @@
       "category": "copy-mismatch",
       "severity": "minor",
       "priority": "P2",
-      "confidence": "inference",
+      "confidence": "evidence",
       "title": "Order/offer error messages provide no actionable next step",
       "description": "Fixed: Error messages in marketplace/[id].tsx now read 'Order failed. Please try again or contact support.' and 'Failed to send offer. Please try again.' instead of bare 'Order failed' / 'Offer failed'. In orders.tsx, handleComplete and handleShipSubmit now show descriptive toast messages. All are shown inline in the modal so the user can see them without dismissing.",
       "proof_hooks": [
@@ -710,7 +710,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "note_added",
+          "event": "created",
           "notes": "Actionable error messages added."
         }
       ],

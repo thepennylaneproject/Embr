@@ -1,6 +1,6 @@
 # Finding: f-debt-schema-logic-doc
 
-> **Status:** open | **Severity:** major | **Priority:** P1 | **Type:** debt | **Confidence:** evidence
+> **Status:** fixed_verified | **Severity:** major | **Priority:** P1 | **Type:** debt | **Confidence:** evidence
 
 ## Title
 
@@ -45,12 +45,14 @@ Invalid agent payloads reduce trust in automation and can hide findings from dow
 
 ## Related Findings
 
-_(none)_
+- `f-60ee7aca` — Canonical Linear-synced finding for this violation (PLP-32)
 
 
 ## Timeline
 
 - 2026-03-05T19:44:51.494026Z | synthesizer | created | Auto-created due to schema validation errors in source output.
+- 2026-03-16T00:00:00Z | schema-migrator | patch_applied | `run_metadata` added via migrate_run_files.py; invalid history event fixed.
+- 2026-03-16T00:00:00Z | schema-migrator | verification_passed | `python3 audits/validate_output.py audits/runs/2025-03-05/logic-20260305-132627.json` exits 0.
 
 
 ## Artifacts
