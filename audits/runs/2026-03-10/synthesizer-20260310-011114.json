@@ -3144,52 +3144,52 @@
     "top_fixes": [
       {
         "finding_id": "f-log-001",
-        "why_now": "Finding ranked as high priority.",
+        "why_now": "High priority finding from audit run.",
         "estimated_effort": "small"
       },
       {
         "finding_id": "f-schema-rls-coverage-001",
-        "why_now": "Finding ranked as high priority.",
+        "why_now": "High priority finding from audit run.",
         "estimated_effort": "small"
       },
       {
         "finding_id": "f-deploy-build-failure-nestjs-001",
-        "why_now": "Finding ranked as high priority.",
+        "why_now": "High priority finding from audit run.",
         "estimated_effort": "small"
       },
       {
         "finding_id": "sec-001",
-        "why_now": "Finding ranked as high priority.",
+        "why_now": "High priority finding from audit run.",
         "estimated_effort": "small"
       },
       {
         "finding_id": "sec-002",
-        "why_now": "Finding ranked as high priority.",
+        "why_now": "High priority finding from audit run.",
         "estimated_effort": "small"
       },
       {
         "finding_id": "sec-003",
-        "why_now": "Finding ranked as high priority.",
+        "why_now": "High priority finding from audit run.",
         "estimated_effort": "small"
       },
       {
         "finding_id": "sec-004",
-        "why_now": "Finding ranked as high priority.",
+        "why_now": "High priority finding from audit run.",
         "estimated_effort": "small"
       },
       {
         "finding_id": "sec-005",
-        "why_now": "Finding ranked as high priority.",
+        "why_now": "High priority finding from audit run.",
         "estimated_effort": "small"
       },
       {
         "finding_id": "f-perf-003",
-        "why_now": "Finding ranked as high priority.",
+        "why_now": "High priority finding from audit run.",
         "estimated_effort": "small"
       },
       {
         "finding_id": "f-perf-013",
-        "why_now": "Finding ranked as high priority.",
+        "why_now": "High priority finding from audit run.",
         "estimated_effort": "small"
       }
     ],

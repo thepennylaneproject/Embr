@@ -2140,7 +2140,7 @@
       "priority": "P2",
       "confidence": "inference",
       "title": "CORS falls back to localhost origins if ALLOWED_ORIGINS is unset in production",
-      "description": "The CORS origin whitelist defaults to 'http://localhost:3000,http://localhost:3001,http://localhost:3004' if ALLOWED_ORIGINS is not set. In a production deployment where this env var is absent, legitimate production-domain requests are blocked while localhost origins are permitted.",
+      "description": "The CORS origin whitelist defaults to 'http://localhost:3000,http://localhost:3001,http://app.example.com' if ALLOWED_ORIGINS is not set. In a production deployment where this env var is absent, legitimate production-domain requests are blocked while localhost origins are permitted.",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
@@ -3847,7 +3847,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "verification_passed",
+          "event": "note_added",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -3893,7 +3893,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "verification_passed",
+          "event": "note_added",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -3937,7 +3937,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "verification_passed",
+          "event": "note_added",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -3983,7 +3983,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "verification_passed",
+          "event": "note_added",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4029,7 +4029,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "verification_passed",
+          "event": "note_added",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4075,7 +4075,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "verification_passed",
+          "event": "note_added",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4121,7 +4121,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "verification_passed",
+          "event": "note_added",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4165,7 +4165,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "verification_passed",
+          "event": "note_added",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4211,7 +4211,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "verification_passed",
+          "event": "note_added",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4257,7 +4257,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "verification_passed",
+          "event": "note_added",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4303,7 +4303,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "verification_passed",
+          "event": "note_added",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4349,7 +4349,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "verification_passed",
+          "event": "note_added",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],
@@ -4395,7 +4395,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "verification_passed",
+          "event": "note_added",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         },
         {
@@ -4447,7 +4447,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "patch_proposed",
+          "event": "note_added",
           "notes": "Partial fix: page wrapper uses CSS variables. Sub-components still use Tailwind hardcoded colors."
         },
         {
@@ -4545,7 +4545,7 @@
         {
           "timestamp": "2026-03-06T06:20:09Z",
           "actor": "ux-flow-auditor",
-          "event": "verification_passed",
+          "event": "note_added",
           "notes": "Fixed in PR copilot/consistency-audit-ux-flows. See ux-20260306-062009.json."
         }
       ],

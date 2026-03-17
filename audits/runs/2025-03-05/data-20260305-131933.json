@@ -471,10 +471,26 @@
     "model": "claude-sonnet-4-5"
   },
   "rollups": {
-    "by_severity": {},
-    "by_category": {},
-    "by_type": {},
-    "by_status": {}
+    "by_severity": {
+      "blocker": 1,
+      "major": 9,
+      "minor": 1
+    },
+    "by_category": {
+      "migration-gap": 3,
+      "type-drift": 2,
+      "validation-gap": 1,
+      "orphaned-data": 2,
+      "constraint-violation": 2,
+      "missing-rls": 1
+    },
+    "by_type": {
+      "bug": 10,
+      "question": 1
+    },
+    "by_status": {
+      "open": 11
+    }
   },
   "next_actions": []
 }
