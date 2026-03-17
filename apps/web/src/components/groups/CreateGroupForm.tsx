@@ -100,7 +100,11 @@ export const CreateGroupForm: React.FC<CreateGroupFormProps> = ({ onSubmit, load
       setDraftStatus('idle');
       router.push(`/groups/${group.slug}`);
     } catch (e: any) {
-      setError(e.response?.data?.message || 'Something went wrong');
+      const msg = e?.response?.data?.message;
+      setError(
+        Array.isArray(msg) ? msg[0] :
+        msg || 'Could not create the group. Please try again.'
+      );
     }
   };
 

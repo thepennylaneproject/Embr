@@ -15,6 +15,7 @@ import { toRateLimitConfig, MESSAGE_RATE_LIMITS } from '../config/messaging-rate
 import {
   MessageType as PrismaMessageType,
   MessageStatus as PrismaMessageStatus,
+  SortOrder,
 } from '@prisma/client';
 import {
   SendMessageDto,
@@ -63,6 +64,7 @@ export class MessagingService {
 
     // Build where clause
     const where: any = {
+      deletedAt: null,
       OR: [{ participant1Id: userId }, { participant2Id: userId }],
     };
 
@@ -124,55 +126,62 @@ export class MessagingService {
       skip,
     })) as any[];
 
-    // Transform to conversation previews
-    const conversationPreviews: ConversationPreview[] = await Promise.all(
-      conversations.map(async (conv) => {
-        const otherUser =
-          conv.participant1Id === userId ? conv.participant2 : conv.participant1;
-
-        // Get unread count
-        const unreadCount = await this.prisma.message.count({
-          where: {
-            conversationId: conv.id,
-            senderId: { not: userId },
-            status: { not: MessageStatus.READ },
-          },
-        });
-
-        return {
-          id: conv.id,
-          otherUser: {
-            id: otherUser.id,
-            username: otherUser.username,
-            profile: otherUser.profile,
-          },
-          lastMessage: conv.messages[0]
-            ? {
-                id: conv.messages[0].id,
-                conversationId: conv.messages[0].conversationId,
-                senderId: conv.messages[0].senderId,
-                content: conv.messages[0].content,
-                mediaUrl: conv.messages[0].mediaUrl,
-                mediaType: conv.messages[0].mediaType,
-                fileName: conv.messages[0].fileName,
-                fileSize: conv.messages[0].fileSize,
-                type: conv.messages[0].type as any,
-                status: conv.messages[0].status as any,
-                createdAt: conv.messages[0].createdAt.toISOString(),
-                readAt: conv.messages[0].readAt?.toISOString(),
-                metadata: conv.messages[0].metadata,
-                sender: {
-                  id: conv.messages[0].sender.id,
-                  username: conv.messages[0].sender.username,
-                  profile: conv.messages[0].sender.profile,
-                },
-              }
-            : null,
-          unreadCount,
-          lastMessageAt: conv.lastMessageAt.toISOString(),
-        };
-      }),
+    // Fetch all unread counts for this page of conversations in a single grouped
+    // query instead of one count() per conversation (N+1 fix).
+    const conversationIds = conversations.map((c) => c.id);
+    const unreadGroups = await this.prisma.message.groupBy({
+      by: ['conversationId'],
+      where: {
+        conversationId: { in: conversationIds },
+        senderId: { not: userId },
+        status: { not: MessageStatus.READ },
+      },
+      _count: { id: true },
+    });
+    const unreadCountMap = new Map<string, number>(
+      unreadGroups.map((g) => [g.conversationId, g._count.id]),
     );
+
+    // Transform to conversation previews — synchronous, no per-conversation DB calls.
+    const conversationPreviews: ConversationPreview[] = conversations.map((conv) => {
+      const otherUser =
+        conv.participant1Id === userId ? conv.participant2 : conv.participant1;
+
+      const unreadCount = unreadCountMap.get(conv.id) ?? 0;
+
+      return {
+        id: conv.id,
+        otherUser: {
+          id: otherUser.id,
+          username: otherUser.username,
+          profile: otherUser.profile,
+        },
+        lastMessage: conv.messages[0]
+          ? {
+              id: conv.messages[0].id,
+              conversationId: conv.messages[0].conversationId,
+              senderId: conv.messages[0].senderId,
+              content: conv.messages[0].content,
+              mediaUrl: conv.messages[0].mediaUrl,
+              mediaType: conv.messages[0].mediaType,
+              fileName: conv.messages[0].fileName,
+              fileSize: conv.messages[0].fileSize,
+              type: conv.messages[0].type as any,
+              status: conv.messages[0].status as any,
+              createdAt: conv.messages[0].createdAt.toISOString(),
+              readAt: conv.messages[0].readAt?.toISOString(),
+              metadata: conv.messages[0].metadata,
+              sender: {
+                id: conv.messages[0].sender.id,
+                username: conv.messages[0].sender.username,
+                profile: conv.messages[0].sender.profile,
+              },
+            }
+          : null,
+        unreadCount,
+        lastMessageAt: conv.lastMessageAt.toISOString(),
+      };
+    });
 
     return {
       conversations: conversationPreviews,
@@ -223,7 +232,24 @@ export class MessagingService {
       );
     }
 
-    // Check if conversation already exists
+    const conversationInclude = {
+      participant1: {
+        include: {
+          profile: true,
+        },
+      },
+      participant2: {
+        include: {
+          profile: true,
+        },
+      },
+      messages: {
+        take: 1,
+        orderBy: { createdAt: SortOrder.desc },
+      },
+    };
+
+    // Check if conversation already exists (including previously soft-deleted)
     const existingConversation = await this.prisma.conversation.findFirst({
       where: {
         OR: [
@@ -231,29 +257,22 @@ export class MessagingService {
           { participant1Id: participantId, participant2Id: userId },
         ],
       },
-      include: {
-        participant1: {
-          include: {
-            profile: true,
-          },
-        },
-        participant2: {
-          include: {
-            profile: true,
-          },
-        },
-        messages: {
-          take: 1,
-          orderBy: { createdAt: 'desc' },
-        },
-      },
+      include: conversationInclude,
     });
 
     let conversation: any;
     let message: MessageWithSender | undefined;
 
     if (existingConversation) {
-      conversation = existingConversation;
+      if (existingConversation.deletedAt) {
+        conversation = await this.prisma.conversation.update({
+          where: { id: existingConversation.id },
+          data: { deletedAt: null },
+          include: conversationInclude,
+        });
+      } else {
+        conversation = existingConversation;
+      }
     } else {
       // Create new conversation
       conversation = await this.prisma.conversation.create({
@@ -261,18 +280,7 @@ export class MessagingService {
           participant1Id: userId,
           participant2Id: participantId,
         },
-        include: {
-          participant1: {
-            include: {
-              profile: true,
-            },
-          },
-          participant2: {
-            include: {
-              profile: true,
-            },
-          },
-        },
+        include: conversationInclude,
       });
     }
 
@@ -296,9 +304,10 @@ export class MessagingService {
       });
 
       // Update conversation last message time
-      await this.prisma.conversation.update({
+      conversation = await this.prisma.conversation.update({
         where: { id: conversation.id },
         data: { lastMessageAt: new Date() },
+        include: conversationInclude,
       });
 
       message = {
@@ -360,7 +369,7 @@ export class MessagingService {
       where: { id: conversationId },
     });
 
-    if (!conversation) {
+    if (!conversation || conversation.deletedAt) {
       throw new NotFoundException('Conversation not found');
     }
 
@@ -371,11 +380,17 @@ export class MessagingService {
       throw new ForbiddenException('You are not a participant in this conversation');
     }
 
-    // Soft delete: In production, you might want to keep messages for both users
-    // and just hide for the deleting user
-    await this.prisma.conversation.delete({
-      where: { id: conversationId },
-    });
+    try {
+      await this.prisma.conversation.update({
+        where: { id: conversationId },
+        data: { deletedAt: new Date() },
+      });
+    } catch (error: any) {
+      if (error?.code === 'P2025') {
+        throw new NotFoundException('Conversation not found or already deleted');
+      }
+      throw error;
+    }
 
     return { message: 'Conversation deleted successfully' };
   }
@@ -422,7 +437,7 @@ export class MessagingService {
         },
       });
 
-      if (!conversation) {
+      if (!conversation || conversation.deletedAt) {
         throw new NotFoundException('Conversation not found');
       }
 
@@ -541,7 +556,7 @@ export class MessagingService {
       where: { id: conversationId },
     });
 
-    if (!conversation) {
+    if (!conversation || conversation.deletedAt) {
       throw new NotFoundException('Conversation not found');
     }
 
@@ -686,7 +701,7 @@ export class MessagingService {
       },
     });
 
-    if (!conversation) {
+    if (!conversation || conversation.deletedAt) {
       throw new NotFoundException('Conversation not found');
     }
 
@@ -762,6 +777,68 @@ export class MessagingService {
     };
   }
 
+  /**
+   * Mark all unread messages in multiple conversations as read in bulk.
+   * Uses 3 fixed DB queries regardless of how many conversations are provided,
+   * replacing the previous O(3N) pattern of calling markAsRead() in a loop.
+   */
+  async bulkMarkAsRead(
+    userId: string,
+    conversationIds: string[],
+  ): Promise<{ updatedCount: number; conversationIds: string[]; unreadCounts: Record<string, number> }> {
+    if (conversationIds.length === 0) {
+      return { updatedCount: 0, conversationIds: [], unreadCounts: {} };
+    }
+
+    // 1 query: fetch only conversations where the user is a participant
+    const validConversations = await this.prisma.conversation.findMany({
+      where: {
+        id: { in: conversationIds },
+        OR: [{ participant1Id: userId }, { participant2Id: userId }],
+      },
+      select: { id: true },
+    });
+
+    const validIds = validConversations.map((c) => c.id);
+    if (validIds.length === 0) {
+      return { updatedCount: 0, conversationIds: [], unreadCounts: {} };
+    }
+
+    // 1 query: mark all matching unread messages as read
+    const result = await this.prisma.message.updateMany({
+      where: {
+        conversationId: { in: validIds },
+        senderId: { not: userId },
+        status: { not: MessageStatus.READ },
+      },
+      data: {
+        status: PrismaMessageStatus.READ,
+        readAt: new Date(),
+      },
+    });
+
+    // 1 query: fetch remaining unread counts for all affected conversations
+    const unreadGroups = await this.prisma.message.groupBy({
+      by: ['conversationId'],
+      where: {
+        conversationId: { in: validIds },
+        senderId: { not: userId },
+        status: { not: MessageStatus.READ },
+      },
+      _count: { id: true },
+    });
+
+    const unreadCounts: Record<string, number> = {};
+    for (const id of validIds) {
+      unreadCounts[id] = 0;
+    }
+    for (const g of unreadGroups) {
+      unreadCounts[g.conversationId] = g._count.id;
+    }
+
+    return { updatedCount: result.count, conversationIds: validIds, unreadCounts };
+  }
+
   async searchMessages(
     userId: string,
     dto: SearchMessagesDto,
@@ -774,7 +851,7 @@ export class MessagingService {
       where: { id: conversationId },
     });
 
-    if (!conversation) {
+    if (!conversation || conversation.deletedAt) {
       throw new NotFoundException('Conversation not found');
     }
 
@@ -889,6 +966,7 @@ export class MessagingService {
       where: {
         conversation: {
           OR: [{ participant1Id: userId }, { participant2Id: userId }],
+          deletedAt: null,
         },
         senderId: { not: userId },
         status: { not: MessageStatus.READ },
@@ -921,6 +999,9 @@ export class MessagingService {
         conversationId,
         senderId: { not: userId },
         status: { not: MessageStatus.READ },
+        conversation: {
+          deletedAt: null,
+        },
       },
     });
 

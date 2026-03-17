@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-03-16T20:57:21Z",
+  "last_updated": "2026-03-16T22:09:55Z",
   "run_id": "synthesizer-v2-20260310-011114",
   "open_findings": [
     {
@@ -8,9 +8,31 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Transaction and Payout tables have walletId foreign key field but schema marks as nullable",
-      "agent": "schema-auditor"
+      "agent": "schema-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Transaction and Payout tables have walletId foreign key field but schema marks as nullable"
     },
     {
       "finding_id": "f-schema-monetary-cents-001",
@@ -19,7 +41,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Track.price and ArtistStat.revenue were migrated to integer cents but may have pre-existing inconsistencies",
-      "agent": "schema-auditor"
+      "agent": "schema-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Track.price and ArtistStat.revenue were migrated to integer cents but may have pre-existing inconsistencies"
     },
     {
       "finding_id": "f-schema-nullable-refs-001",
@@ -28,7 +72,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Multiple tables allow nullable foreign key references with SetNull cascade, risking orphaned parent-only records",
-      "agent": "schema-auditor"
+      "agent": "schema-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Multiple tables allow nullable foreign key references with SetNull cascade, risking orphaned parent-only records"
     },
     {
       "finding_id": "f-schema-rls-coverage-001",
@@ -45,16 +111,52 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-78): Done -> fixed_verified"
         }
-      ]
+      ],
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity blocker issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Database uses PostgreSQL but no RLS (Row-Level Security) policies defined"
     },
     {
       "finding_id": "f-schema-validation-amount-001",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Monetary amount fields (Wallet, Transaction, Tip, Payout) lack NOT NULL or CHECK constraints in schema",
-      "agent": "schema-auditor"
+      "agent": "schema-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Monetary amount fields (Wallet, Transaction, Tip, Payout) lack NOT NULL or CHECK constraints in schema"
     },
     {
       "finding_id": "f-schema-orphaned-refs-transaction-user-001",
@@ -63,7 +165,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Transaction.userId is optional (nullable) with onDelete: SetNull, risking orphaned transactions",
-      "agent": "schema-auditor"
+      "agent": "schema-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Transaction.userId is optional (nullable) with onDelete: SetNull, risking orphaned transactions"
     },
     {
       "finding_id": "f-schema-wallet-unique-index-001",
@@ -72,7 +196,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Wallet.userId has @unique constraint, but index at line 388 is redundant",
-      "agent": "schema-auditor"
+      "agent": "schema-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Wallet.userId has @unique constraint, but index at line 388 is redundant"
     },
     {
       "finding_id": "f-deploy-build-failure-nestjs-001",
@@ -89,52 +235,176 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-82): Done -> fixed_verified"
         }
-      ]
+      ],
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity blocker issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "NestJS API build fails with TypeScript compilation errors in messaging service"
     },
     {
       "finding_id": "f-deploy-ci-build-api-missing-001",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "CI/CD pipeline does not build or test the API; only web typecheck and build are validated",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "CI/CD pipeline does not build or test the API; only web typecheck and build are validated"
     },
     {
       "finding_id": "f-deploy-typescript-strict-api-001",
       "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "API TypeScript strict mode enabled but hundreds of pre-existing type errors prevent clean builds",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "API TypeScript strict mode enabled but hundreds of pre-existing type errors prevent clean builds"
     },
     {
       "finding_id": "f-deploy-error-boundary-web-001",
       "type": "enhancement",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Web frontend has global _error page but no React Error Boundary component for client-side crashes",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Web frontend has global _error page but no React Error Boundary component for client-side crashes"
     },
     {
       "finding_id": "f-deploy-health-check-api-001",
       "type": "enhancement",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "API health check endpoint referenced in deploy.yml but may not be implemented in NestJS app",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "API health check endpoint referenced in deploy.yml but may not be implemented in NestJS app"
     },
     {
       "finding_id": "f-deploy-env-validation-startup-001",
       "type": "enhancement",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Environment variables are not validated at startup; missing or invalid vars could cause runtime crashes hours after boot",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Environment variables are not validated at startup; missing or invalid vars could cause runtime crashes hours after boot"
     },
     {
       "finding_id": "f-deploy-web-env-validation-001",
@@ -143,7 +413,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Next.js web app does not validate required NEXT_PUBLIC_API_URL at build time",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Next.js web app does not validate required NEXT_PUBLIC_API_URL at build time"
     },
     {
       "finding_id": "f-deploy-logging-structured-001",
@@ -152,7 +444,29 @@
       "priority": "P2",
       "status": "open",
       "title": "API logging uses NestJS built-in Logger (console-based) instead of structured JSON logging",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "API logging uses NestJS built-in Logger (console-based) instead of structured JSON logging"
     },
     {
       "finding_id": "f-deploy-sentry-not-configured-001",
@@ -161,7 +475,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Sentry error reporting is not configured; production errors are not sent to external service",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Sentry error reporting is not configured; production errors are not sent to external service"
     },
     {
       "finding_id": "f-deploy-docker-prod-config-missing-001",
@@ -170,7 +506,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Production Docker compose config (docker-compose.prod.yml) is referenced in deploy.yml but not found in repo",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Production Docker compose config (docker-compose.prod.yml) is referenced in deploy.yml but not found in repo"
     },
     {
       "finding_id": "f-deploy-db-migration-rollback-001",
@@ -179,7 +537,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Database migration rollback plan is not documented; failed deployments could leave database in inconsistent state",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Database migration rollback plan is not documented; failed deployments could leave database in inconsistent state"
     },
     {
       "finding_id": "f-deploy-csp-unsafe-inline-001",
@@ -188,7 +568,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Content Security Policy in web app uses unsafe-inline for scripts and styles; overly permissive for production",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Content Security Policy in web app uses unsafe-inline for scripts and styles; overly permissive for production"
     },
     {
       "finding_id": "f-deploy-no-rollback-strategy-001",
@@ -197,7 +599,29 @@
       "priority": "P2",
       "status": "open",
       "title": "No automated rollback strategy if deployment health check fails",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "No automated rollback strategy if deployment health check fails"
     },
     {
       "finding_id": "f-log-001",
@@ -214,34 +638,114 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-95): Done -> fixed_verified"
         }
-      ]
+      ],
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity blocker issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Missing method: getUnreadCountForConversation in MessagingService"
     },
     {
       "finding_id": "f-log-002",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Potential null dereference in conversation deletion without soft-delete",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Potential null dereference in conversation deletion without soft-delete"
     },
     {
       "finding_id": "f-log-003",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Unsafe profile access in follows.service.ts without existence check",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Unsafe profile access in follows.service.ts without existence check"
     },
     {
       "finding_id": "f-log-004",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Race condition in idempotency check for checkout (orders.service.ts)",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Race condition in idempotency check for checkout (orders.service.ts)"
     },
     {
       "finding_id": "f-log-005",
@@ -250,7 +754,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Silent notification failure in follows.service.ts",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Silent notification failure in follows.service.ts"
     },
     {
       "finding_id": "f-log-006",
@@ -259,7 +785,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Unsafe access to messages[0] in markAsRead without bounds check",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Unsafe access to messages[0] in markAsRead without bounds check"
     },
     {
       "finding_id": "f-log-007",
@@ -268,7 +816,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Missing await on rate limiter check (messaging.service.ts:445)",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Missing await on rate limiter check (messaging.service.ts:445)"
     },
     {
       "finding_id": "f-log-008",
@@ -277,7 +847,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Unsafe property access in message sender mapping (messaging.service.ts:500)",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Unsafe property access in message sender mapping (messaging.service.ts:500)"
     },
     {
       "finding_id": "f-log-009",
@@ -286,7 +878,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Unhandled promise rejection in useMessaging hook error callback",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Unhandled promise rejection in useMessaging hook error callback"
     },
     {
       "finding_id": "f-log-010",
@@ -295,16 +909,60 @@
       "priority": "P3",
       "status": "open",
       "title": "Unsafe access to response.message in createConversation hook",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Unsafe access to response.message in createConversation hook"
     },
     {
       "finding_id": "f-log-011",
-      "type": "dead_code",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
       "status": "open",
       "title": "Unreachable code in markAsRead hook (useMessaging.ts:427-447)",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Unreachable code in markAsRead hook (useMessaging.ts:427-447)"
     },
     {
       "finding_id": "f-log-012",
@@ -313,192 +971,654 @@
       "priority": "P3",
       "status": "open",
       "title": "Unsafe access to data.conversationId in setMessages state update",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Unsafe access to data.conversationId in setMessages state update"
     },
     {
       "finding_id": "f-perf-001",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Potential N+1 query in messaging.service.getConversations with nested includes",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Potential N+1 query in messaging.service.getConversations with nested includes"
     },
     {
       "finding_id": "f-perf-002",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing indexes on frequently-used WHERE columns in messaging and follows tables",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Missing indexes on frequently-used WHERE columns in messaging and follows tables"
     },
     {
       "finding_id": "f-perf-003",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Messaging service N+1: follows.service calls blockingService.isBlocked() and extra findUnique in loop",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Messaging service N+1: follows.service calls blockingService.isBlocked() and extra findUnique in loop"
     },
     {
       "finding_id": "f-perf-004",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P2",
       "status": "open",
       "title": "Frontend: Feed component may re-fetch on every dependency change without debounce",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Frontend: Feed component may re-fetch on every dependency change without debounce"
     },
     {
       "finding_id": "f-perf-005",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
       "status": "open",
       "title": "Cache service falls back to in-memory with no size limit, potential memory leak",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Cache service falls back to in-memory with no size limit, potential memory leak"
     },
     {
       "finding_id": "f-perf-006",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
       "status": "open",
       "title": "Cache service does not handle Redis connection failures gracefully in get/set",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Cache service does not handle Redis connection failures gracefully in get/set"
     },
     {
       "finding_id": "f-perf-007",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Wallet.service queries all transactions without pagination or filtering",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Wallet.service queries all transactions without pagination or filtering"
     },
     {
       "finding_id": "f-perf-008",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
       "status": "open",
       "title": "API client always sends withCredentials=true, adds latency to preflight requests",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "API client always sends withCredentials=true, adds latency to preflight requests"
     },
     {
       "finding_id": "f-perf-009",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Frontend: Marketplace page creates new hooks with unfetched dependencies on every render",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Frontend: Marketplace page creates new hooks with unfetched dependencies on every render"
     },
     {
       "finding_id": "f-perf-010",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
       "status": "open",
       "title": "Frontend: Images in pages lack optimization, no Next.js Image component used consistently",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Frontend: Images in pages lack optimization, no Next.js Image component used consistently"
     },
     {
       "finding_id": "f-perf-011",
-      "type": "cost",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
       "status": "open",
       "title": "Stripe SDK imported but stripe-connect.service appears disabled",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Stripe SDK imported but stripe-connect.service appears disabled"
     },
     {
       "finding_id": "f-perf-012",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
       "status": "open",
       "title": "Messaging hook creates Socket.io connections without connection pooling",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Messaging hook creates Socket.io connections without connection pooling"
     },
     {
       "finding_id": "f-perf-013",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "follows.service denormalizes follower/following counts but no transaction atomicity on update",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "follows.service denormalizes follower/following counts but no transaction atomicity on update"
     },
     {
       "finding_id": "f-perf-014",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
       "status": "open",
       "title": "Rating limiter service may not scale to distributed deployments",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Rating limiter service may not scale to distributed deployments"
     },
     {
       "finding_id": "f-perf-015",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing database indexes on post.authorId, message.senderId, comment.postId (common JOINs)",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Missing database indexes on post.authorId, message.senderId, comment.postId (common JOINs)"
     },
     {
       "finding_id": "f-perf-016",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
       "status": "open",
       "title": "Prisma client instantiated without connection pooling configuration",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Prisma client instantiated without connection pooling configuration"
     },
     {
       "finding_id": "f-perf-017",
-      "type": "cost",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
       "status": "open",
       "title": "AWS SES email service may incur high costs if sending to unvalidated addresses",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "AWS SES email service may incur high costs if sending to unvalidated addresses"
     },
     {
       "finding_id": "f-perf-018",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
       "status": "open",
       "title": "Next.js image remotePatterns allows wildcard subdomains, may bypass CDN optimization",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Next.js image remotePatterns allows wildcard subdomains, may bypass CDN optimization"
     },
     {
       "finding_id": "f-perf-019",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Query: scheduling unknown frequency of scheduled posts processor",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Query: scheduling unknown frequency of scheduled posts processor"
     },
     {
       "finding_id": "f-perf-020",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
       "status": "open",
       "title": "Query: Mux video API usage metering and cost tracking not visible",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Query: Mux video API usage metering and cost tracking not visible"
     },
     {
       "finding_id": "sec-001",
       "type": "bug",
-      "severity": "critical",
+      "severity": "blocker",
       "priority": "P0",
       "status": "fixed_verified",
       "title": "Production secrets committed to git in .env file",
@@ -510,43 +1630,145 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-127): Done -> fixed_verified"
         }
-      ]
+      ],
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity blocker issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Production secrets committed to git in .env file"
     },
     {
       "finding_id": "sec-002",
       "type": "bug",
-      "severity": "high",
+      "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "SQL Injection in $queryRaw without parameterization",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "SQL Injection in $queryRaw without parameterization"
     },
     {
       "finding_id": "sec-003",
       "type": "bug",
-      "severity": "high",
+      "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing COOKIE_SECURE environment variable allows cookie transmission over HTTP",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Missing COOKIE_SECURE environment variable allows cookie transmission over HTTP"
     },
     {
       "finding_id": "sec-004",
       "type": "bug",
-      "severity": "high",
+      "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Over-exposed user data in API responses leaks private fields",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Over-exposed user data in API responses leaks private fields"
     },
     {
       "finding_id": "sec-005",
       "type": "bug",
-      "severity": "high",
+      "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "IDOR in wallet endpoints\u2014no ownership verification",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "IDOR in wallet endpoints\u2014no ownership verification"
     },
     {
       "finding_id": "sec-006",
@@ -555,7 +1777,29 @@
       "priority": "P2",
       "status": "open",
       "title": "CORS credentials exposed with loose origin validation",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "CORS credentials exposed with loose origin validation"
     },
     {
       "finding_id": "sec-007",
@@ -564,7 +1808,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Account enumeration vulnerability via forgot-password and email verification endpoints",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Account enumeration vulnerability via forgot-password and email verification endpoints"
     },
     {
       "finding_id": "sec-008",
@@ -573,7 +1839,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Google OAuth redirect validation incomplete\u2014OPEN_REDIRECT risk if FRONTEND_URL env not set",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Google OAuth redirect validation incomplete\u2014OPEN_REDIRECT risk if FRONTEND_URL env not set"
     },
     {
       "finding_id": "sec-009",
@@ -582,7 +1870,29 @@
       "priority": "P2",
       "status": "open",
       "title": "No rate limiting on login endpoint\u2014brute force vulnerability",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "No rate limiting on login endpoint\u2014brute force vulnerability"
     },
     {
       "finding_id": "sec-010",
@@ -591,7 +1901,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Password reset token leak in email\u2014user ID embedded in plaintext token",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Password reset token leak in email\u2014user ID embedded in plaintext token"
     },
     {
       "finding_id": "sec-011",
@@ -600,34 +1932,122 @@
       "priority": "P3",
       "status": "open",
       "title": "Seed account credentials documented in AGENTS.md allow unauthorized access",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Seed account credentials documented in AGENTS.md allow unauthorized access"
     },
     {
       "finding_id": "f-copy-001",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Inconsistent authentication terminology",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Inconsistent authentication terminology"
     },
     {
       "finding_id": "f-flow-001",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Broken navigation flow: No back button or escape route on auth pages",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Broken navigation flow: No back button or escape route on auth pages"
     },
     {
       "finding_id": "f-state-001",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing loading state on profile page",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Missing loading state on profile page"
     },
     {
       "finding_id": "f-state-002",
@@ -636,25 +2056,91 @@
       "priority": "P2",
       "status": "open",
       "title": "Inconsistent empty state messaging across list views",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Inconsistent empty state messaging across list views"
     },
     {
       "finding_id": "f-a11y-001",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing alt text on decorative images and avatars",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Missing alt text on decorative images and avatars"
     },
     {
       "finding_id": "f-flow-002",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Dead-end page: Marketplace checkout flow incomplete",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Dead-end page: Marketplace checkout flow incomplete"
     },
     {
       "finding_id": "f-flow-003",
@@ -663,16 +2149,60 @@
       "priority": "P2",
       "status": "open",
       "title": "Messaging compose modal lacks clear confirmation feedback",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Messaging compose modal lacks clear confirmation feedback"
     },
     {
       "finding_id": "f-error-001",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Generic error messages don't guide user action",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Generic error messages don't guide user action"
     },
     {
       "finding_id": "f-a11y-002",
@@ -681,16 +2211,60 @@
       "priority": "P2",
       "status": "open",
       "title": "Custom button implementations lack proper ARIA labels and keyboard support",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Custom button implementations lack proper ARIA labels and keyboard support"
     },
     {
       "finding_id": "f-flow-004",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing route: Gigs booking page doesn't display gig detail",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Missing route: Gigs booking page doesn't display gig detail"
     },
     {
       "finding_id": "f-copy-002",
@@ -699,16 +2273,60 @@
       "priority": "P2",
       "status": "open",
       "title": "Mixed tone in CTAs: 'Join the Feed' vs 'Go to feed' vs 'Continue to feed'",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Mixed tone in CTAs: 'Join the Feed' vs 'Go to feed' vs 'Continue to feed'"
     },
     {
       "finding_id": "f-flow-005",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "No visible onboarding or feature discovery for new users",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity major issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "No visible onboarding or feature discovery for new users"
     },
     {
       "finding_id": "f-state-003",
@@ -717,7 +2335,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Post creation doesn't clear state or show success confirmation",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Post creation doesn't clear state or show success confirmation"
     },
     {
       "finding_id": "f-a11y-003",
@@ -726,7 +2366,29 @@
       "priority": "P2",
       "status": "open",
       "title": "Form inputs lack associated labels in some components",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "See description: "
+        }
+      ],
+      "impact": "Severity minor issue. See description for details.",
+      "suggested_fix": {
+        "approach": "See description for details.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-10T01:11:14Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "category": "uncategorized",
+      "confidence": "inference",
+      "description": "Form inputs lack associated labels in some components"
     },
     {
       "finding_id": "f-error-002",
@@ -736,6 +2398,36 @@
       "status": "open",
       "title": "Error messages don't provide recovery instructions",
       "agent": "ux-flow-auditor"
+    },
+    {
+      "finding_id": "f-60ee7aca",
+      "type": "debt",
+      "severity": "major",
+      "priority": "P1",
+      "status": "fixed_verified",
+      "title": "runtime-bug-hunter agent output missing required run_metadata object (schema v1.1.0 violation)",
+      "agent": "synthesizer",
+      "linear_issue": "PLP-32"
     }
-  ]
+  ],
+  "kind": "synthesizer_output",
+  "run_metadata": {
+    "timestamp": "2026-03-10T01:11:14Z",
+    "branch": "main",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "claude-sonnet-4-5"
+  },
+  "rollups": {
+    "by_severity": {},
+    "by_category": {},
+    "by_type": {},
+    "by_status": {}
+  },
+  "suite": "synthesized",
+  "agent": {
+    "name": "unknown-agent",
+    "role": "Audit agent (name/role inferred during migration)."
+  },
+  "next_actions": []
 }

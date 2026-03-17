@@ -37,7 +37,11 @@ export const CreateMutualAidForm: React.FC<CreateMutualAidFormProps> = ({ onSubm
       const post = await onSubmit(form);
       router.push(`/mutual-aid/${post.id}`);
     } catch (e: any) {
-      setError(e.response?.data?.message || 'Something went wrong');
+      const msg = e?.response?.data?.message;
+      setError(
+        Array.isArray(msg) ? msg[0] :
+        msg || 'Could not post your request. Please try again.'
+      );
     }
   };
 

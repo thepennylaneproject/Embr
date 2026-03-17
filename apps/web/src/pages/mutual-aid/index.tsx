@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { ProtectedPageShell } from '@/components/layout';
 import { MutualAidCard } from '@/components/mutual-aid/MutualAidCard';
 import { ResponseModal } from '@/components/mutual-aid/ResponseModal';
+import { FeatureHint } from '@/components/onboarding';
 import { useMutualAid } from '@/hooks/useMutualAid';
 import { useAuth } from '@/contexts/AuthContext';
 import type { MutualAidPost, MutualAidCategory, MutualAidType, PaginatedMutualAidPosts } from '@embr/types';
@@ -50,6 +51,12 @@ export default function MutualAidPage() {
 
   return (
     <ProtectedPageShell>
+      <FeatureHint
+        pageId="mutual-aid"
+        icon="🤝"
+        title="Welcome to Mutual Aid"
+        description="Post a request for help or offer support to others in your community. Embr's mutual aid board is for sharing resources, skills, and solidarity."
+      />
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
