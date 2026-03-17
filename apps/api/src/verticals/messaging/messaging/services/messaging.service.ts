@@ -15,6 +15,7 @@ import { toRateLimitConfig, MESSAGE_RATE_LIMITS } from '../config/messaging-rate
 import {
   MessageType as PrismaMessageType,
   MessageStatus as PrismaMessageStatus,
+  SortOrder,
 } from '@prisma/client';
 import {
   SendMessageDto,
@@ -237,7 +238,7 @@ export class MessagingService {
       },
       messages: {
         take: 1,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: SortOrder.desc },
       },
     };
 
@@ -379,7 +380,7 @@ export class MessagingService {
     });
 
     if (result.count === 0) {
-      throw new NotFoundException('Conversation not found');
+      throw new NotFoundException('Conversation not found or already deleted');
     }
 
     return { message: 'Conversation deleted successfully' };
