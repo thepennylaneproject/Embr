@@ -15,6 +15,7 @@ import { toRateLimitConfig, MESSAGE_RATE_LIMITS } from '../config/messaging-rate
 import {
   MessageType as PrismaMessageType,
   MessageStatus as PrismaMessageStatus,
+  SortOrder,
 } from '@prisma/client';
 import {
   SendMessageDto,
@@ -63,6 +64,7 @@ export class MessagingService {
 
     // Build where clause
     const where: any = {
+      deletedAt: null,
       OR: [{ participant1Id: userId }, { participant2Id: userId }],
     };
 
@@ -230,7 +232,24 @@ export class MessagingService {
       );
     }
 
-    // Check if conversation already exists
+    const conversationInclude = {
+      participant1: {
+        include: {
+          profile: true,
+        },
+      },
+      participant2: {
+        include: {
+          profile: true,
+        },
+      },
+      messages: {
+        take: 1,
+        orderBy: { createdAt: SortOrder.desc },
+      },
+    };
+
+    // Check if conversation already exists (including previously soft-deleted)
     const existingConversation = await this.prisma.conversation.findFirst({
       where: {
         OR: [
@@ -238,29 +257,22 @@ export class MessagingService {
           { participant1Id: participantId, participant2Id: userId },
         ],
       },
-      include: {
-        participant1: {
-          include: {
-            profile: true,
-          },
-        },
-        participant2: {
-          include: {
-            profile: true,
-          },
-        },
-        messages: {
-          take: 1,
-          orderBy: { createdAt: 'desc' },
-        },
-      },
+      include: conversationInclude,
     });
 
     let conversation: any;
     let message: MessageWithSender | undefined;
 
     if (existingConversation) {
-      conversation = existingConversation;
+      if (existingConversation.deletedAt) {
+        conversation = await this.prisma.conversation.update({
+          where: { id: existingConversation.id },
+          data: { deletedAt: null },
+          include: conversationInclude,
+        });
+      } else {
+        conversation = existingConversation;
+      }
     } else {
       // Create new conversation
       conversation = await this.prisma.conversation.create({
@@ -268,18 +280,7 @@ export class MessagingService {
           participant1Id: userId,
           participant2Id: participantId,
         },
-        include: {
-          participant1: {
-            include: {
-              profile: true,
-            },
-          },
-          participant2: {
-            include: {
-              profile: true,
-            },
-          },
-        },
+        include: conversationInclude,
       });
     }
 
@@ -303,9 +304,10 @@ export class MessagingService {
       });
 
       // Update conversation last message time
-      await this.prisma.conversation.update({
+      conversation = await this.prisma.conversation.update({
         where: { id: conversation.id },
         data: { lastMessageAt: new Date() },
+        include: conversationInclude,
       });
 
       message = {
@@ -367,7 +369,7 @@ export class MessagingService {
       where: { id: conversationId },
     });
 
-    if (!conversation) {
+    if (!conversation || conversation.deletedAt) {
       throw new NotFoundException('Conversation not found');
     }
 
@@ -378,11 +380,17 @@ export class MessagingService {
       throw new ForbiddenException('You are not a participant in this conversation');
     }
 
-    // Soft delete: In production, you might want to keep messages for both users
-    // and just hide for the deleting user
-    await this.prisma.conversation.delete({
-      where: { id: conversationId },
-    });
+    try {
+      await this.prisma.conversation.update({
+        where: { id: conversationId },
+        data: { deletedAt: new Date() },
+      });
+    } catch (error: any) {
+      if (error?.code === 'P2025') {
+        throw new NotFoundException('Conversation not found or already deleted');
+      }
+      throw error;
+    }
 
     return { message: 'Conversation deleted successfully' };
   }
@@ -429,7 +437,7 @@ export class MessagingService {
         },
       });
 
-      if (!conversation) {
+      if (!conversation || conversation.deletedAt) {
         throw new NotFoundException('Conversation not found');
       }
 
@@ -548,7 +556,7 @@ export class MessagingService {
       where: { id: conversationId },
     });
 
-    if (!conversation) {
+    if (!conversation || conversation.deletedAt) {
       throw new NotFoundException('Conversation not found');
     }
 
@@ -693,7 +701,7 @@ export class MessagingService {
       },
     });
 
-    if (!conversation) {
+    if (!conversation || conversation.deletedAt) {
       throw new NotFoundException('Conversation not found');
     }
 
@@ -843,7 +851,7 @@ export class MessagingService {
       where: { id: conversationId },
     });
 
-    if (!conversation) {
+    if (!conversation || conversation.deletedAt) {
       throw new NotFoundException('Conversation not found');
     }
 
@@ -958,6 +966,7 @@ export class MessagingService {
       where: {
         conversation: {
           OR: [{ participant1Id: userId }, { participant2Id: userId }],
+          deletedAt: null,
         },
         senderId: { not: userId },
         status: { not: MessageStatus.READ },
@@ -990,6 +999,9 @@ export class MessagingService {
         conversationId,
         senderId: { not: userId },
         status: { not: MessageStatus.READ },
+        conversation: {
+          deletedAt: null,
+        },
       },
     });
 

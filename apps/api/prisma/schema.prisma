@@ -845,6 +845,7 @@ model Conversation {
   participant2   User     @relation("Participant2", fields: [participant2Id], references: [id], onDelete: Cascade)
   lastMessageAt  DateTime @default(now())
   createdAt      DateTime @default(now())
+  deletedAt      DateTime?
 
   // Relations
   messages       Message[]
@@ -853,11 +854,7 @@ model Conversation {
   @@index([participant1Id])
   @@index([participant2Id])
   @@index([lastMessageAt])
-  // Composite indexes for sorted conversation list queries
-  // WHERE participant1Id = X ORDER BY lastMessageAt DESC
-  @@index([participant1Id, lastMessageAt])
-  // WHERE participant2Id = X ORDER BY lastMessageAt DESC
-  @@index([participant2Id, lastMessageAt])
+  @@index([deletedAt])
 }
 
 enum MessageType {
@@ -2061,4 +2058,3 @@ model GroupTreasuryTransaction {
   @@index([treasuryId])
   @@index([type])
 }
-
