@@ -13,6 +13,39 @@ import {
 } from '@embr/types';
 import { GigsService } from './gigs.service';
 
+/**
+ * Prisma select shape for user + profile data that is safe to return publicly.
+ * Mirrors the constant in gigs.service.ts to avoid cross-service import cycles.
+ */
+const PUBLIC_USER_SELECT = {
+  id: true,
+  username: true,
+  isVerified: true,
+  role: true,
+  createdAt: true,
+  profile: {
+    select: {
+      displayName: true,
+      avatarUrl: true,
+      bannerUrl: true,
+      bio: true,
+      location: true,
+      website: true,
+      socialLinks: true,
+      availability: true,
+      skills: true,
+      categories: true,
+      isCreator: true,
+      isPrivate: true,
+      isVerified: true,
+      allowTips: true,
+      followerCount: true,
+      followingCount: true,
+      postCount: true,
+    },
+  },
+} as const;
+
 @Injectable()
 export class ApplicationsService {
   constructor(
@@ -115,7 +148,7 @@ export class ApplicationsService {
       this.prisma.application.findMany({
         where: { gigId },
         include: {
-          applicant: { include: { profile: true } },
+          applicant: { select: PUBLIC_USER_SELECT },
           gig: true,
         },
         orderBy: { createdAt: 'desc' },
@@ -147,8 +180,8 @@ export class ApplicationsService {
       this.prisma.application.findMany({
         where: { applicantId },
         include: {
-          applicant: { include: { profile: true } },
-          gig: { include: { creator: { include: { profile: true } } } },
+          applicant: { select: PUBLIC_USER_SELECT },
+          gig: { include: { creator: { select: PUBLIC_USER_SELECT } } },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -179,8 +212,8 @@ export class ApplicationsService {
     const application = await this.prisma.application.findUnique({
       where: { id },
       include: {
-        applicant: { include: { profile: true } },
-        gig: { include: { creator: { include: { profile: true } } } },
+        applicant: { select: PUBLIC_USER_SELECT },
+        gig: { include: { creator: { select: PUBLIC_USER_SELECT } } },
         escrow: true,
         milestones: true,
       },

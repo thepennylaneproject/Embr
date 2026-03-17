@@ -9,6 +9,7 @@ import {
   GetMutualConnectionsDto,
   BatchFollowCheckDto
 } from '../dto/follow.dto';
+import { sanitizePublicProfile } from '../../../../common/utils/user-sanitizer';
 
 @Injectable()
 export class FollowsService {
@@ -118,7 +119,7 @@ export class FollowsService {
       user: {
         id: follow.following.id,
         username: follow.following.username,
-        profile: follow.following.profile,
+        profile: sanitizePublicProfile(follow.following.profile),
       },
     };
   }
@@ -239,7 +240,7 @@ export class FollowsService {
       followers: followers.map(f => ({
         id: f.follower.id,
         username: f.follower.username,
-        profile: f.follower.profile,
+        profile: sanitizePublicProfile(f.follower.profile),
         followedAt: f.createdAt,
       })),
       pagination: {
@@ -299,7 +300,7 @@ export class FollowsService {
       following: following.map(f => ({
         id: f.following.id,
         username: f.following.username,
-        profile: f.following.profile,
+        profile: sanitizePublicProfile(f.following.profile),
         followedAt: f.createdAt,
       })),
       pagination: {
@@ -439,12 +440,12 @@ export class FollowsService {
       mutualFollowing: mutualFollowing.map(f => ({
         id: f.following.id,
         username: f.following.username,
-        profile: f.following.profile,
+        profile: sanitizePublicProfile(f.following.profile),
       })),
       mutualFollowers: mutualFollowers.map(f => ({
         id: f.follower.id,
         username: f.follower.username,
-        profile: f.follower.profile,
+        profile: sanitizePublicProfile(f.follower.profile),
       })),
       count: {
         following: mutualFollowing.length,

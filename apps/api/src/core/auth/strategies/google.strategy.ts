@@ -12,9 +12,9 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const callbackURL = configService.get<string>('GOOGLE_CALLBACK_URL') || 'http://localhost:3003/api/auth/google/callback'; // pragma: allowlist secret
     
     super({
-      clientID,
-      clientSecret,
-      callbackURL,
+      clientID: configService.get<string>('GOOGLE_CLIENT_ID') || 'disabled',
+      clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET') || 'disabled',
+      callbackURL: configService.get<string>('GOOGLE_CALLBACK_URL') || '/api/auth/google/callback',
       scope: ['email', 'profile'],
       state: true, // Enable state parameter validation to prevent CSRF attacks
     });
