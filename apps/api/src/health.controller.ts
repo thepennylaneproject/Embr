@@ -1,7 +1,18 @@
-import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { Public } from './core/auth/decorators/public.decorator';
 import { PrismaService } from './core/database/prisma.service';
 import { RedisService } from './core/redis/redis.service';
+
+interface HealthStatus {
+  status: 'ok' | 'unhealthy';
+  timestamp: string;
+  uptime: number;
+  dependencies: {
+    database: boolean;
+    redis: boolean;
+  };
+}
 
 @Controller()
 export class HealthController {
@@ -12,23 +23,22 @@ export class HealthController {
 
   @Public()
   @Get('health')
-  async healthCheck() {
+  async healthCheck(@Res() res: Response): Promise<void> {
     const [database, redis] = await Promise.all([
       this.checkDatabase(),
       this.redisService.healthCheck(),
     ]);
 
-    if (!database || !redis) {
-      throw new ServiceUnavailableException({
-        status: 'unhealthy',
-        dependencies: { database, redis },
-      });
-    }
+    const healthy = database && redis;
 
-    return {
-      status: 'ok',
+    const body: HealthStatus = {
+      status: healthy ? 'ok' : 'unhealthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
       dependencies: { database, redis },
     };
+
+    res.status(healthy ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE).json(body);
   }
 
   private async checkDatabase(): Promise<boolean> {
