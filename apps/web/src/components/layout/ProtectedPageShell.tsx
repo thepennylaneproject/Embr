@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppShell, type AppShellProps } from './AppShell';
 import { Card, PageState } from '@embr/ui';
+import { copy } from '@/lib/copy';
 
 interface ProtectedPageShellProps extends AppShellProps {
   requireAuth?: boolean;
@@ -53,7 +54,7 @@ export function ProtectedPageShell({
         .replace(redirectTo)
         .catch((error) => {
           if (!cancelled && error?.cancelled !== true) {
-            console.error('Failed to redirect to login:', error);
+            console.error('Failed to redirect to sign in:', error);
           }
         });
       return () => { cancelled = true; };
@@ -65,7 +66,10 @@ export function ProtectedPageShell({
     return (
       <AppShell title={title} subtitle={subtitle} breadcrumbs={breadcrumbs} accent={accent}>
         <Card padding="lg">
-          <PageState title="Loading session" description="Checking your account details." />
+          <PageState
+            title={copy.onboarding.loadingSession}
+            description={copy.onboarding.checkingAccountDetails}
+          />
         </Card>
       </AppShell>
     );
@@ -76,8 +80,8 @@ export function ProtectedPageShell({
       <AppShell title={title} subtitle={subtitle} breadcrumbs={breadcrumbs} accent={accent}>
         <Card padding="lg">
           <PageState
-            title="Redirecting you to sign in"
-            description="Please wait while we redirect you to the login page. If this page doesn't redirect automatically, you can sign in manually."
+            title={copy.onboarding.redirecting}
+            description={copy.onboarding.redirectingToSignInDesc}
           />
         </Card>
       </AppShell>

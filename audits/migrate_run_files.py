@@ -129,6 +129,10 @@ DEFAULT_RUN_METADATA = {
 VALID_SEVERITY = {"blocker", "major", "minor", "nit"}
 VALID_TYPE = {"bug", "enhancement", "debt", "question"}
 VALID_CONFIDENCE = {"evidence", "inference", "speculation"}
+VALID_STATUS = {
+    "open", "accepted", "in_progress", "fixed_pending_verify", "fixed_verified",
+    "wont_fix", "deferred", "duplicate", "converted_to_enhancement"
+}
 VALID_HISTORY_EVENT = {
     "created", "repro_confirmed", "hypothesis_added", "patch_proposed",
     "patch_applied", "verification_passed", "verification_failed", "reopened",
@@ -136,6 +140,87 @@ VALID_HISTORY_EVENT = {
     "severity_changed", "split_into_children", "converted_type", "note_added"
 }
 VALID_EFFORT = {"trivial", "small", "medium", "large", "epic"}
+
+# Enum remapping tables — agents that emit non-standard values get normalized here.
+SEVERITY_MAP = {
+    "critical": "blocker",
+    "high": "major",
+    "medium": "minor",
+    "moderate": "minor",
+    "low": "nit",
+    "info": "nit",
+    "informational": "nit",
+    "warning": "minor",
+    "error": "blocker",
+    # Priority values mistakenly used as severity
+    "p0": "blocker",
+    "p1": "major",
+    "p2": "minor",
+    "p3": "nit",
+    # Status values mistakenly used as severity
+    "resolved": "minor",
+    "fixed": "minor",
+}
+
+TYPE_MAP = {
+    "performance": "debt",
+    "cost": "debt",
+    "dead_code": "debt",
+    "refactor": "debt",
+    "security": "bug",
+    "vulnerability": "bug",
+    "risk": "bug",
+    "exposure": "bug",
+    "feature": "enhancement",
+    "improvement": "enhancement",
+    "missing_feature": "enhancement",
+}
+
+STATUS_MAP = {
+    "fixed": "fixed_verified",
+    "resolved": "fixed_verified",
+    "closed": "fixed_verified",
+    "done": "fixed_verified",
+    "complete": "fixed_verified",
+    "completed": "fixed_verified",
+    "verified": "fixed_verified",
+    "pending": "fixed_pending_verify",
+    "pending_verify": "fixed_pending_verify",
+    "in-progress": "in_progress",
+    "active": "in_progress",
+    "working": "in_progress",
+    "skipped": "deferred",
+    "ignored": "wont_fix",
+    "invalid": "wont_fix",
+    "false_positive": "wont_fix",
+    "wontfix": "wont_fix",
+    "wont-fix": "wont_fix",
+    "converted": "converted_to_enhancement",
+}
+
+HISTORY_EVENT_MAP = {
+    # Status values mistakenly used as history events
+    "fixed": "patch_applied",
+    "fixed_verified": "verification_passed",
+    "fixed_pending_verify": "patch_applied",
+    "resolved": "verification_passed",
+    "in_progress": "patch_proposed",
+    "deferred_status": "deferred",
+    # Custom/invented event names
+    "history_checked": "note_added",
+    "decision_deferred": "deferred",
+    "re_reported": "note_added",
+    "updated": "note_added",
+    "status_changed": "note_added",
+    "comment": "note_added",
+    "started": "patch_proposed",
+    "verified": "verification_passed",
+    "closed": "verification_passed",
+    "reopened_finding": "reopened",
+    "linked": "linked_duplicate",
+    "split": "split_into_children",
+    "type_changed": "converted_type",
+}
 
 
 def derive_timestamp(data: dict, filepath: str) -> str:
@@ -210,7 +295,21 @@ def fix_severity(value: str) -> str:
 
 
 def fix_confidence(value: str) -> str:
-    return value.lower() if isinstance(value, str) else value
+    v = value.lower() if isinstance(value, str) else str(value).lower()
+    if v in VALID_CONFIDENCE:
+        return v
+    CONFIDENCE_MAP = {
+        "certain": "evidence",
+        "confirmed": "evidence",
+        "observed": "evidence",
+        "likely": "inference",
+        "probable": "inference",
+        "inferred": "inference",
+        "possible": "speculation",
+        "guess": "speculation",
+        "unknown": "speculation",
+    }
+    return CONFIDENCE_MAP.get(v, "inference")
 
 
 def fix_type(value: str) -> str:
@@ -246,14 +345,16 @@ VALID_HOOK_TYPES = {
 def fix_proof_hooks(hooks: list, finding: dict = None) -> list:
     """Normalize proof hooks — ensure each has hook_type and summary."""
     if not hooks:
-        # Build a minimal proof hook from the finding description
+        # Build a minimal proof hook — use a generic reference to avoid copying
+        # description text which may contain sensitive values.
         if finding:
-            desc = finding.get("description", "")[:120]
+            title = finding.get("title", "")[:80]
+            summary = f"See finding: {title}" if title else "See finding description for details."
         else:
-            desc = "See description for details."
+            summary = "See finding description for details."
         return [{
             "hook_type": "code_ref",
-            "summary": desc or "See description for details."
+            "summary": summary
         }]
 
     fixed = []
@@ -445,26 +546,23 @@ def build_history(finding: dict, timestamp: str) -> list:
 
 def derive_impact(finding: dict) -> str:
     """Derive an impact string from existing finding fields."""
-    # Try existing impact
+    # Try existing impact first
     imp = finding.get("impact")
     if imp:
         return imp
 
-    # Construct from details
+    # Construct from details object
     details = finding.get("details", {})
     if isinstance(details, dict) and "impact" in details:
         return details["impact"]
 
-    rec = finding.get("recommendation", "")
-    desc = finding.get("description", "")
+    # Use title-based placeholder rather than copying description/recommendation
+    # content which may contain sensitive values (URLs, tokens, etc.)
+    title = finding.get("title", "")
     severity = finding.get("severity", "minor")
-
-    if rec:
-        return f"{rec[:200]}"
-    if desc:
-        return f"If not fixed: {desc[:200]}"
-
-    return f"Severity {severity} issue. See description for details."
+    if title:
+        return f"Impact not recorded. See finding: {title[:100]}"
+    return f"Severity {severity} issue. See finding description for details."
 
 
 def fix_coverage(cov: dict) -> dict:
@@ -605,7 +703,7 @@ def fix_findings(findings: list, run_timestamp: str) -> list:
             else:
                 finding["proof_hooks"] = [{
                     "hook_type": "code_ref",
-                    "summary": f"See description: {finding.get('description', '')[:120]}"
+                    "summary": f"See finding: {title}" if title else "See finding description for details."
                 }]
                 # Add file references if affected_files is present
                 affected = finding.get("affected_files", [])
@@ -672,6 +770,8 @@ def fix_findings(findings: list, run_timestamp: str) -> list:
             finding["status"] = STATUS_MAP.get(str(status_val).lower(), "open")
         if finding.get("status") not in valid_statuses:
             finding["status"] = "open"
+        else:
+            finding["status"] = fix_status(finding["status"])
 
         # 11. category: if missing, derive from type or default
         if "category" not in finding:
@@ -924,6 +1024,81 @@ def fix_file(filepath: str, dry_run: bool = False) -> tuple[bool, list[str], lis
         data["rollups"] = rebuild_rollups_from_findings(data.get("findings", []))
         changes.append("Added missing rollups (computed from findings)")
 
+    # 3b. Ensure required top-level fields: suite, agent, findings
+    if "suite" not in data:
+        # Infer from run_id
+        run_id = data.get("run_id", "")
+        suite_map = {
+            "security": "security", "logic": "logic", "data": "data",
+            "ux": "ux", "perf": "performance", "performance": "performance",
+            "deploy": "deploy", "synthesiz": "synthesized",
+        }
+        inferred = "logic"
+        for key, val in suite_map.items():
+            if key in run_id.lower():
+                inferred = val
+                break
+        data["suite"] = inferred
+        changes.append(f"Set suite to '{inferred}' (inferred from run_id)")
+    if "agent" not in data or not isinstance(data.get("agent"), dict):
+        agent_name = str(data.get("agent", "")) or "unknown-agent"
+        data["agent"] = {
+            "name": agent_name,
+            "role": "Audit agent (name/role inferred during migration).",
+        }
+        changes.append("Added minimal agent object")
+    else:
+        if "role" not in data["agent"]:
+            data["agent"]["role"] = "Audit agent (role not recorded in original output)."
+            changes.append("Added missing agent.role")
+    if "findings" not in data and "open_findings" not in data:
+        data["findings"] = []
+        changes.append("Added missing findings (empty array)")
+
+    # 4a. ranked_plan: normalize top_fixes array (strings -> objects)
+    if "ranked_plan" in data and isinstance(data.get("ranked_plan"), dict):
+        rp = data["ranked_plan"]
+        if "top_fixes" in rp and isinstance(rp["top_fixes"], list):
+            fixed_top = []
+            for item in rp["top_fixes"]:
+                if isinstance(item, str):
+                    fixed_top.append({
+                        "finding_id": item,
+                        "why_now": "Finding ranked as high priority.",
+                        "estimated_effort": "small",
+                    })
+                else:
+                    fixed_top.append(item)
+            if fixed_top != rp["top_fixes"]:
+                rp["top_fixes"] = fixed_top
+                changes.append("Fixed ranked_plan.top_fixes (converted bare finding_id strings to objects)")
+        # Add missing required ranked_plan sub-fields
+        for req_field, default in [("commit_plan", []), ("regression_checklist", []), ("reaudit_plan", [])]:
+            if req_field not in rp:
+                rp[req_field] = default
+                changes.append(f"Added missing ranked_plan.{req_field}")
+
+    # 4b. diff_summary: normalize changed_severity/changed_status/converted_type arrays
+    if "diff_summary" in data and isinstance(data["diff_summary"], dict):
+        ds = data["diff_summary"]
+        for key in ("changed_severity", "changed_status", "converted_type"):
+            if key in ds and isinstance(ds[key], list):
+                fixed_items = []
+                for item in ds[key]:
+                    if isinstance(item, str):
+                        # String-only entry — convert to minimal conformant object
+                        field_map = {
+                            "changed_severity": {"finding_id": item, "old_severity": "unknown", "new_severity": "unknown"},
+                            "changed_status": {"finding_id": item, "old_status": "unknown", "new_status": "unknown"},
+                            "converted_type": {"finding_id": item, "old_type": "unknown", "new_type": "unknown"},
+                        }
+                        fixed_items.append(field_map[key])
+                    else:
+                        fixed_items.append(item)
+                if fixed_items != ds[key]:
+                    ds[key] = fixed_items
+                    changes.append(f"Fixed diff_summary.{key} (converted bare strings to objects)")
+
     # 5. next_actions
     if "next_actions" not in data:
         data["next_actions"] = []
@@ -956,6 +1131,22 @@ def fix_file(filepath: str, dry_run: bool = False) -> tuple[bool, list[str], lis
 
     new_json = json.dumps(data, sort_keys=True)
     changed = new_json != original
+
+    # Validate fixed output against schema before writing.
+    # open_findings.json uses "open_findings" key (not "findings") and is a live state
+    # file rather than a run output — validate findings-level enums only for it.
+    schema = load_schema()
+    has_open_findings = "open_findings" in data and "findings" not in data
+    if schema and data.get("schema_version") == "1.1.0" and not has_open_findings:
+        validation_errors = validate_against_schema(data, schema)
+        if validation_errors:
+            changes.append(f"WARNING: {len(validation_errors)} schema validation error(s) remain after migration:")
+            for err in validation_errors[:10]:
+                changes.append(f"  schema: {err}")
+            if len(validation_errors) > 10:
+                changes.append(f"  ... and {len(validation_errors) - 10} more")
+        else:
+            changes.append("Schema validation passed (v1.1.0 conformant)")
 
     if changed and not dry_run:
         # Backup original

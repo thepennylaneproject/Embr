@@ -38,8 +38,13 @@ process.on('uncaughtException', (error: Error) => {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Security middleware
-  app.use(helmet());
+  // Security middleware - relaxed for local development
+  if (process.env.NODE_ENV === 'production') {
+    app.use(helmet());
+  } else {
+    // Development: disable CSP to allow localhost cross-port requests
+    app.use(helmet({ contentSecurityPolicy: false }));
+  }
   app.use(cookieParser());
 
   // Global prefix for all routes
@@ -65,9 +70,19 @@ async function bootstrap() {
   if (process.env.NODE_ENV === 'production' && !allowedOrigins) {
     throw new Error('ALLOWED_ORIGINS must be explicitly set in production');
   }
-  const origins = (allowedOrigins || 'http://localhost:3000,http://localhost:3001,http://localhost:3004')
+  const origins = (allowedOrigins || 'http://localhost:3000,http://localhost:3001')
     .split(',')
     .filter(Boolean);
+  // Include web URL from environment if configured
+  const webUrl = process.env.WEB_URL || process.env.FRONTEND_URL || '';
+  if (webUrl && !origins.includes(webUrl)) origins.push(webUrl);
+  // In development, allow all common localhost dev-server ports (3000-3010)
+  if (process.env.NODE_ENV !== 'production') {
+    for (let port = 3000; port <= 3010; port++) {
+      const o = `http://localhost:${port}`;
+      if (!origins.includes(o)) origins.push(o);
+    }
+  }
   app.enableCors({
     origin: origins,
     credentials: true,
@@ -82,6 +97,17 @@ async function bootstrap() {
     startupLogger.warn(
       'SENTRY_DSN is not set — unhandled errors will not be reported to an external sink. ' +
         'Set SENTRY_DSN in your production environment variables.',
+    );
+  }
+
+  // Warn developers explicitly when cookie security is disabled so the
+  // setting is never silently absent.  Production startup is already guarded
+  // by the Joi schema in env.validation.ts (COOKIE_SECURE=true is required).
+  if (process.env.NODE_ENV !== 'production' && process.env.COOKIE_SECURE !== 'true') {
+    startupLogger.warn(
+      'COOKIE_SECURE is not enabled — auth cookies will be transmitted over HTTP. ' +
+        'This is acceptable for local development. ' +
+        'Set COOKIE_SECURE=true for any environment that terminates TLS.',
     );
   }
 

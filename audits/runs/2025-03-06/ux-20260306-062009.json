@@ -467,7 +467,7 @@
           "start_line": 214
         }
       ],
-      "repro_steps": [],
+  "repro_steps": [],
       "impact": "Keyboard-only users can now activate the avatar upload using Enter or Space.",
       "suggested_fix": {
         "approach": "Applied.",
