@@ -107,7 +107,11 @@ export default function MutualAidDetailPage() {
           {/* Author */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
             <Link href={`/${post.author?.username}`} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', textDecoration: 'none' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--embr-warm-1)', flexShrink: 0, backgroundImage: post.author?.profile?.avatarUrl ? `url(${post.author.profile.avatarUrl})` : undefined, backgroundSize: 'cover', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '700', fontSize: '0.875rem' }}>
+              <div
+                role={post.author?.profile?.avatarUrl ? 'img' : undefined}
+                aria-label={post.author?.profile?.avatarUrl ? `${post.author?.profile?.displayName || post.author?.username || 'Author'} avatar` : undefined}
+                style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--embr-warm-1)', flexShrink: 0, backgroundImage: post.author?.profile?.avatarUrl ? `url(${post.author.profile.avatarUrl})` : undefined, backgroundSize: 'cover', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '700', fontSize: '0.875rem' }}
+              >
                 {!post.author?.profile?.avatarUrl && (post.author?.profile?.displayName || post.author?.username || '?')[0].toUpperCase()}
               </div>
               <div>

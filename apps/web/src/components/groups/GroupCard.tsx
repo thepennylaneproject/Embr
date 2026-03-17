@@ -31,25 +31,33 @@ export const GroupCard: React.FC<GroupCardProps> = ({ group, onJoin, joinLoading
       transition: 'box-shadow 0.15s ease',
     }}>
       {/* Cover image */}
-      <div style={{
-        height: '100px',
-        background: group.coverUrl
-          ? `url(${group.coverUrl}) center/cover`
-          : 'linear-gradient(135deg, var(--embr-warm-1), var(--embr-warm-2))',
-        position: 'relative',
-      }}>
+      <div
+        role={group.coverUrl ? 'img' : undefined}
+        aria-label={group.coverUrl ? `${group.name} cover photo` : undefined}
+        style={{
+          height: '100px',
+          background: group.coverUrl
+            ? `url(${group.coverUrl}) center/cover`
+            : 'linear-gradient(135deg, var(--embr-warm-1), var(--embr-warm-2))',
+          position: 'relative',
+        }}
+      >
         {/* Avatar */}
         {group.avatarUrl && (
-          <div style={{
-            position: 'absolute',
-            bottom: '-20px',
-            left: '16px',
-            width: '44px',
-            height: '44px',
-            borderRadius: '50%',
-            border: '3px solid var(--embr-surface)',
-            background: `url(${group.avatarUrl}) center/cover`,
-          }} />
+          <div
+            role="img"
+            aria-label={`${group.name} avatar`}
+            style={{
+              position: 'absolute',
+              bottom: '-20px',
+              left: '16px',
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              border: '3px solid var(--embr-surface)',
+              background: `url(${group.avatarUrl}) center/cover`,
+            }}
+          />
         )}
       </div>
 

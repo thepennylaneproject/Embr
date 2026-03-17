@@ -24,28 +24,36 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   return (
     <div style={{ marginBottom: '1.5rem' }}>
       {/* Banner */}
-      <div style={{
-        height: '160px',
-        borderRadius: 'var(--embr-radius-lg)',
-        background: group.coverUrl
-          ? `url(${group.coverUrl}) center/cover no-repeat`
-          : 'linear-gradient(135deg, var(--embr-warm-1) 0%, var(--embr-warm-2) 100%)',
-        marginBottom: '1rem',
-        position: 'relative',
-      }} />
+      <div
+        role={group.coverUrl ? 'img' : undefined}
+        aria-label={group.coverUrl ? `${group.name} cover photo` : undefined}
+        style={{
+          height: '160px',
+          borderRadius: 'var(--embr-radius-lg)',
+          background: group.coverUrl
+            ? `url(${group.coverUrl}) center/cover no-repeat`
+            : 'linear-gradient(135deg, var(--embr-warm-1) 0%, var(--embr-warm-2) 100%)',
+          marginBottom: '1rem',
+          position: 'relative',
+        }}
+      />
 
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
         {/* Avatar */}
         {group.avatarUrl && (
-          <div style={{
-            width: '72px',
-            height: '72px',
-            borderRadius: '50%',
-            border: '3px solid var(--embr-surface)',
-            background: `url(${group.avatarUrl}) center/cover`,
-            flexShrink: 0,
-            marginTop: '-36px',
-          }} />
+          <div
+            role="img"
+            aria-label={`${group.name} avatar`}
+            style={{
+              width: '72px',
+              height: '72px',
+              borderRadius: '50%',
+              border: '3px solid var(--embr-surface)',
+              background: `url(${group.avatarUrl}) center/cover`,
+              flexShrink: 0,
+              marginTop: '-36px',
+            }}
+          />
         )}
 
         <div style={{ flex: 1, minWidth: 0 }}>

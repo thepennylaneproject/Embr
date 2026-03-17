@@ -413,7 +413,7 @@ const ComposeModal: React.FC<ComposeModalProps> = ({ search, users, loading, onS
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
           >
             {u.profile?.avatarUrl ? (
-              <img src={u.profile.avatarUrl} alt="" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} />
+              <img src={u.profile.avatarUrl} alt={u.profile?.displayName || u.username || 'User'} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} />
             ) : (
               <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--embr-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '0.85rem' }}>
                 {(u.profile?.displayName || u.username || '?')[0].toUpperCase()}

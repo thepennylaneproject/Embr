@@ -189,7 +189,7 @@ export default function EventDetailPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--embr-border)', overflow: 'hidden', flexShrink: 0 }}>
               {event.host?.profile?.avatarUrl ? (
-                <img src={event.host.profile.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={event.host.profile.avatarUrl} alt={event.host?.profile?.displayName || event.host?.username || 'Event host'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', color: 'var(--embr-muted-text)' }}>
                   {(event.host?.profile?.displayName || event.host?.username || '?')[0].toUpperCase()}

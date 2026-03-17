@@ -48,7 +48,7 @@ export const MemberList: React.FC<MemberListProps> = ({
               {member.user?.profile?.avatarUrl ? (
                 <img
                   src={member.user.profile.avatarUrl}
-                  alt=""
+                  alt={member.user?.profile?.displayName || member.user?.username || 'Member'}
                   style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
                 />
               ) : (

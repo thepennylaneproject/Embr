@@ -192,7 +192,11 @@ export default function GroupDetailPage() {
               {posts.map((post: any) => (
                 <div key={post.id} style={{ padding: '1rem', background: 'var(--embr-surface)', border: '1px solid var(--embr-border)', borderRadius: 'var(--embr-radius-md)' }}>
                   <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.625rem' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--embr-warm-1)', flexShrink: 0, backgroundImage: post.author?.profile?.avatarUrl ? `url(${post.author.profile.avatarUrl})` : undefined, backgroundSize: 'cover' }} />
+                    <div
+                      role={post.author?.profile?.avatarUrl ? 'img' : undefined}
+                      aria-label={post.author?.profile?.avatarUrl ? `${post.author?.profile?.displayName || post.author?.username || 'Author'} avatar` : undefined}
+                      style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--embr-warm-1)', flexShrink: 0, backgroundImage: post.author?.profile?.avatarUrl ? `url(${post.author.profile.avatarUrl})` : undefined, backgroundSize: 'cover' }}
+                    />
                     <div>
                       <Link href={`/${post.author?.username}`} style={{ textDecoration: 'none', fontWeight: '600', fontSize: '0.875rem', color: 'var(--embr-text)' }}>
                         {post.author?.profile?.displayName || post.author?.username}

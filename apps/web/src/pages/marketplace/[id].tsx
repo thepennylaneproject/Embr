@@ -98,7 +98,7 @@ export default function ListingDetailPage() {
               <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto' }}>
                 {listing.images.map((img, i) => (
                   <div key={i} onClick={() => setActiveImageIdx(i)} style={{ width: '64px', height: '64px', borderRadius: 'var(--embr-radius-md)', cursor: 'pointer', overflow: 'hidden', border: `2px solid ${i === activeImageIdx ? 'var(--embr-accent)' : 'var(--embr-border)'}`, flexShrink: 0 }}>
-                    <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={img} alt={`${listing.title} photo ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                 ))}
               </div>

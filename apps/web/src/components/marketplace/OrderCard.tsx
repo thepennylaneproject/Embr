@@ -80,7 +80,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, role, onShip, onCom
       {/* Listing thumbnail */}
       {order.listing?.images?.[0] && (
         <div style={{ padding: '0.625rem 1rem', display: 'flex', gap: '0.75rem', alignItems: 'center', borderTop: '1px solid var(--embr-border)' }}>
-          <img src={order.listing.images[0]} alt="" style={{ width: '48px', height: '48px', borderRadius: 'var(--embr-radius-md)', objectFit: 'cover' }} />
+          <img src={order.listing.images[0]} alt={order.listing?.title || 'Order item'} style={{ width: '48px', height: '48px', borderRadius: 'var(--embr-radius-md)', objectFit: 'cover' }} />
           <div style={{ fontSize: '0.8rem', color: 'var(--embr-muted-text)' }}>Qty: {order.quantity} · {total}</div>
         </div>
       )}

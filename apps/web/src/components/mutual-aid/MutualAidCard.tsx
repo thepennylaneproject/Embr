@@ -89,11 +89,15 @@ export const MutualAidCard: React.FC<MutualAidCardProps> = ({ post, onRespond, c
       {/* Author */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{
-            width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
-            background: post.author?.profile?.avatarUrl ? `url(${post.author.profile.avatarUrl}) center/cover` : 'var(--embr-warm-1)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.7rem', fontWeight: '700',
-          }}>
+          <div
+            role={post.author?.profile?.avatarUrl ? 'img' : undefined}
+            aria-label={post.author?.profile?.avatarUrl ? `${post.author?.profile?.displayName || post.author?.username || 'Author'} avatar` : undefined}
+            style={{
+              width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
+              background: post.author?.profile?.avatarUrl ? `url(${post.author.profile.avatarUrl}) center/cover` : 'var(--embr-warm-1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.7rem', fontWeight: '700',
+            }}
+          >
             {!post.author?.profile?.avatarUrl && (post.author?.profile?.displayName || post.author?.username || '?')[0].toUpperCase()}
           </div>
           <span style={{ fontSize: '0.8rem', color: 'var(--embr-muted-text)' }}>

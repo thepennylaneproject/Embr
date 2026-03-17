@@ -28,14 +28,18 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
         cursor: 'pointer',
       }}>
         {/* Image */}
-        <div style={{
-          height: '180px',
-          background: mainImage ? `url(${mainImage}) center/cover no-repeat` : 'linear-gradient(135deg, var(--embr-bg) 0%, var(--embr-border) 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-        }}>
+        <div
+          role={mainImage ? 'img' : undefined}
+          aria-label={mainImage ? listing.title : undefined}
+          style={{
+            height: '180px',
+            background: mainImage ? `url(${mainImage}) center/cover no-repeat` : 'linear-gradient(135deg, var(--embr-bg) 0%, var(--embr-border) 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+          }}
+        >
           {!mainImage && <span style={{ fontSize: '2.5rem', opacity: 0.4 }}>{TYPE_ICON[listing.type]}</span>}
           {listing.status !== 'ACTIVE' && (
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -77,7 +81,11 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
 
           {/* Seller */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.625rem' }}>
-            <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: listing.seller?.profile?.avatarUrl ? `url(${listing.seller.profile.avatarUrl}) center/cover` : 'var(--embr-warm-1)', flexShrink: 0 }} />
+            <div
+              role={listing.seller?.profile?.avatarUrl ? 'img' : undefined}
+              aria-label={listing.seller?.profile?.avatarUrl ? `${listing.seller?.profile?.displayName || listing.seller?.username || 'Seller'} avatar` : undefined}
+              style={{ width: '20px', height: '20px', borderRadius: '50%', background: listing.seller?.profile?.avatarUrl ? `url(${listing.seller.profile.avatarUrl}) center/cover` : 'var(--embr-warm-1)', flexShrink: 0 }}
+            />
             <span style={{ fontSize: '0.75rem', color: 'var(--embr-muted-text)' }}>
               {listing.seller?.profile?.displayName || listing.seller?.username}
             </span>
