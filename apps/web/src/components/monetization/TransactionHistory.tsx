@@ -3,7 +3,14 @@ import { useWallet } from '@/hooks/useWallet';
 import type { TransactionType } from '@shared/types/monetization.types';
 
 export const TransactionHistory: React.FC = () => {
-  const { transactions, isLoading, loadTransactions } = useWallet();
+  const {
+    transactions,
+    pagination,
+    isLoading,
+    isLoadingTransactions,
+    loadTransactions,
+    loadNextPage,
+  } = useWallet();
   const [filter, setFilter] = useState<TransactionType | 'ALL'>('ALL');
 
   useEffect(() => {
@@ -21,6 +28,7 @@ export const TransactionHistory: React.FC = () => {
       case 'DEBIT':
         return '↑';
       case 'FEE':
+      case 'PLATFORM_FEE':
         return '⚡';
       case 'REFUND':
         return '↩';
@@ -42,6 +50,15 @@ export const TransactionHistory: React.FC = () => {
       minute: 'numeric',
     }).format(new Date(date));
   };
+
+  /** Convert integer cents to a formatted dollar string, e.g. 500 → "$5.00" */
+  const formatAmount = (cents: number) => {
+    const dollars = Math.abs(cents) / 100;
+    return dollars.toFixed(2);
+  };
+
+  const hasMorePages =
+    pagination !== null && pagination.page < pagination.totalPages;
 
   if (isLoading) {
     return (
@@ -69,9 +86,9 @@ export const TransactionHistory: React.FC = () => {
       {/* Header with Filters */}
       <div className="p-6 border-b border-gray-200">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Transaction History</h2>
-        
+
         <div className="flex gap-2 overflow-x-auto pb-2">
-          {['ALL', 'TIP_RECEIVED', 'TIP_SENT', 'PAYOUT', 'FEE', 'REFUND'].map((type) => (
+          {['ALL', 'TIP_RECEIVED', 'TIP_SENT', 'PAYOUT', 'PLATFORM_FEE', 'REFUND'].map((type) => (
             <button
               key={type}
               onClick={() => setFilter(type as TransactionType | 'ALL')}
@@ -82,7 +99,7 @@ export const TransactionHistory: React.FC = () => {
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
             >
-              {type.replace('_', ' ')}
+              {type.replace(/_/g, ' ')}
             </button>
           ))}
         </div>
@@ -134,18 +151,17 @@ export const TransactionHistory: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Amount */}
+                {/* Amount — stored as integer cents, displayed as dollars */}
                 <div className="text-right ml-4">
                   <p
                     className={`text-lg font-semibold ${getTransactionColor(
                       transaction.amount,
                     )}`}
                   >
-                    {transaction.amount > 0 ? '+' : ''}$
-                    {Math.abs(transaction.amount).toFixed(2)}
+                    {transaction.amount > 0 ? '+' : '-'}${formatAmount(transaction.amount)}
                   </p>
                   <p className="text-xs text-gray-500 uppercase">
-                    {transaction.type.replace('_', ' ')}
+                    {transaction.type.replace(/_/g, ' ')}
                   </p>
                 </div>
               </div>
@@ -165,15 +181,21 @@ export const TransactionHistory: React.FC = () => {
         )}
       </div>
 
-      {/* Load More */}
-      {transactions.length > 0 && (
+      {/* Load More — only shown when more pages exist */}
+      {hasMorePages && (
         <div className="p-4 border-t border-gray-200 text-center">
           <button
-            onClick={() => loadTransactions({ page: 2 })}
-            className="text-sm text-[#E8998D] hover:text-[#d88578] font-medium"
+            onClick={loadNextPage}
+            disabled={isLoadingTransactions}
+            className="text-sm text-[#E8998D] hover:text-[#d88578] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Load more transactions
+            {isLoadingTransactions ? 'Loading…' : 'Load more transactions'}
           </button>
+          {pagination && (
+            <p className="mt-1 text-xs text-gray-400">
+              Showing {transactions.length} of {pagination.total}
+            </p>
+          )}
         </div>
       )}
     </div>

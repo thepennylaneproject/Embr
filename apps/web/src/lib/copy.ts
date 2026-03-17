@@ -297,17 +297,62 @@ export const copy = {
     failedToSave: 'Could not save',
     failedToSaveDesc: 'Please try again.',
     uploadFailed: 'Upload failed',
-    uploadFailedDesc: 'Please try a smaller image.',
-    deletionFailed: 'Deletion failed',
-    deletionFailedDesc: 'Contact support if this continues.',
-    resetEmailFailed: 'Failed to send reset email.',
-    failedToLoadPosts: 'Failed to load posts',
-    validationFailed: 'Please check the form and try again.',
+    uploadFailedDesc: 'Please try a smaller file or check your connection.',
+    deletionFailed: 'Could not delete',
+    deletionFailedDesc: 'Please try again or contact support if the issue continues.',
+    resetEmailFailed:
+      'Could not send the reset email. Please check the address and try again.',
+    failedToLoadPosts: 'Could not load posts. Please refresh.',
+    validationFailed: 'Please correct the highlighted fields and try again.',
     passwordTooShort: 'Password must be at least 8 characters.',
     passwordMismatch: 'Passwords do not match.',
     usernameTooShort: 'Username must be at least 3 characters.',
-    unauthorized: 'You are not authorized to do that.',
-    notFound: 'Not found.',
+    unauthorized: "You don't have permission to do this.",
+    notFound: "We couldn't find what you were looking for.",
+    sessionExpired: 'Your session has expired. Please sign in again.',
+    tooManyAttempts: 'Too many attempts. Please wait a moment and try again.',
+    serverError: 'A server error occurred. Please try again in a moment.',
+    conflictError: 'A conflict occurred. Please refresh and try again.',
+    // Group errors
+    failedToCreateGroup: 'Could not create the group. Please try again.',
+    failedToLoadGroup: 'Could not load the group. Please refresh.',
+    failedToUpdateGroup: 'Could not save group changes. Please try again.',
+    failedToDeleteGroup:
+      'Could not delete the group. Please try again or contact support.',
+    failedToJoinGroup: 'Could not join the group. Please try again.',
+    failedToLeaveGroup: 'Could not leave the group. Please try again.',
+    // Marketplace / listing errors
+    failedToCreateListing:
+      'Could not create the listing. Please check your input and try again.',
+    failedToLoadListing: 'Could not load this listing. Please refresh.',
+    failedToPlaceOrder:
+      'Could not place the order. Please try again or contact support.',
+    // Mutual aid errors
+    failedToCreateMutualAidPost:
+      'Could not post your request. Please try again.',
+    // Event errors
+    failedToLoadEvents: 'Could not load events. Please refresh.',
+    failedToCreateEvent: 'Could not create the event. Please try again.',
+    failedToUpdateEvent: 'Could not update the event. Please try again.',
+    failedToCancelEvent: 'Could not cancel the event. Please try again.',
+    failedToDeleteEvent: 'Could not delete the event. Please try again.',
+    failedToRsvp: 'Could not save your RSVP. Please try again.',
+    failedToCancelRsvp: 'Could not cancel your RSVP. Please try again.',
+    // Organizing errors
+    failedToCreateAlert: 'Could not create the alert. Please try again.',
+    failedToCreatePoll: 'Could not create the poll. Please try again.',
+    failedToVote: 'Could not submit your vote. Please try again.',
+    failedToLoadTreasury: 'Could not load treasury info. Please refresh.',
+    failedToContribute: 'Could not process the contribution. Please try again.',
+    // Safety errors
+    failedToSubmitReport:
+      'Could not submit your report. Please try again.',
+    failedToBlockUser: 'Could not block this user. Please try again.',
+    failedToUnblockUser: 'Could not unblock this user. Please try again.',
+    failedToMuteUser: 'Could not mute this user. Please try again.',
+    failedToUnmuteUser: 'Could not unmute this user. Please try again.',
+    failedToLoadSafetySettings:
+      'Could not load your safety settings. Please refresh.',
   },
 
   success: {
