@@ -7,12 +7,14 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(private readonly configService: ConfigService) {
-    // Use placeholder values when OAuth credentials are not configured (e.g. local dev without Google login).
-    // The strategy will still be registered but Google login routes will return 401.
+    const clientID = configService.get<string>('GOOGLE_CLIENT_ID') || 'placeholder';
+    const clientSecret = configService.get<string>('GOOGLE_CLIENT_SECRET') || 'placeholder';
+    const callbackURL = configService.get<string>('GOOGLE_CALLBACK_URL') || 'http://localhost:3003/api/auth/google/callback'; // pragma: allowlist secret
+    
     super({
-      clientID: configService.get<string>('GOOGLE_CLIENT_ID') || 'not-configured',
-      clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET') || 'not-configured',
-      callbackURL: configService.get<string>('GOOGLE_CALLBACK_URL') || '/api/auth/google/callback',
+      clientID,
+      clientSecret,
+      callbackURL,
       scope: ['email', 'profile'],
       state: true, // Enable state parameter validation to prevent CSRF attacks
     });

@@ -70,9 +70,19 @@ async function bootstrap() {
   if (process.env.NODE_ENV === 'production' && !allowedOrigins) {
     throw new Error('ALLOWED_ORIGINS must be explicitly set in production');
   }
-  const origins = (allowedOrigins || 'http://localhost:3000,http://localhost:3001,http://localhost:3004')
+  const origins = (allowedOrigins || 'http://localhost:3000,http://localhost:3001')
     .split(',')
     .filter(Boolean);
+  // Include web URL from environment if configured
+  const webUrl = process.env.WEB_URL || process.env.FRONTEND_URL || '';
+  if (webUrl && !origins.includes(webUrl)) origins.push(webUrl);
+  // In development, allow all common localhost dev-server ports (3000-3010)
+  if (process.env.NODE_ENV !== 'production') {
+    for (let port = 3000; port <= 3010; port++) {
+      const o = `http://localhost:${port}`;
+      if (!origins.includes(o)) origins.push(o);
+    }
+  }
   app.enableCors({
     origin: origins,
     credentials: true,

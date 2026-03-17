@@ -1,4 +1,7 @@
 /** @type {import('next').NextConfig} */
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+const apiOrigin = apiUrl ? new URL(apiUrl.replace('/api', '')).origin : '';
+
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
@@ -19,9 +22,12 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.imgix.net' },
       { protocol: 'https', hostname: 'gravatar.com' },
       { protocol: 'https', hostname: '*.githubusercontent.com' },
-      // Placeholder and avatar services
-      { protocol: 'https', hostname: 'placehold.co' },
+      // DiceBear avatars (used by seed data)
       { protocol: 'https', hostname: 'api.dicebear.com' },
+      // Placeholder images used in demo/seed content
+      { protocol: 'https', hostname: 'placehold.co' },
+      { protocol: 'https', hostname: 'via.placeholder.com' },
+      { protocol: 'https', hostname: 'picsum.photos' },
     ],
   },
 
@@ -45,8 +51,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self'",
-
-              `connect-src 'self' ${process.env.NEXT_PUBLIC_API_URL || ''} https://api.stripe.com`,
+              `connect-src 'self' https://api.stripe.com${apiOrigin ? ` ${apiOrigin}` : ''}`,
               "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
               "object-src 'none'",
               "base-uri 'self'",
