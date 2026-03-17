@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { gigsApi, applicationsApi, milestonesApi } from '@shared/api/gigs.api';
 import {
@@ -23,11 +23,7 @@ export const GigManagementDashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, [activeView]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -56,7 +52,11 @@ export const GigManagementDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeView]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleCancelGig = async (gigId: string) => {
     try {

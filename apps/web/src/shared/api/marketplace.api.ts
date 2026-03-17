@@ -84,6 +84,11 @@ export const marketplaceApi = {
     return data;
   },
 
+  confirmPayment: async (orderId: string): Promise<MarketplaceOrder> => {
+    const { data } = await apiClient.put(`/marketplace/orders/${orderId}/pay`);
+    return data;
+  },
+
   markShipped: async (orderId: string, trackingNumber: string): Promise<MarketplaceOrder> => {
     const { data } = await apiClient.put(`/marketplace/orders/${orderId}/ship`, { trackingNumber });
     return data;

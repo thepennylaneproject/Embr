@@ -75,108 +75,118 @@ export class OrdersService {
     }
 
     const normalizedKey = dto.idempotencyKey?.trim();
-    if (normalizedKey) {
-      const existingOrders = await this.prisma.marketplaceOrder.findMany({
-        where: {
-          buyerId,
-          notes: { contains: `[checkout:${normalizedKey}]` },
-        },
-        orderBy: { createdAt: 'desc' },
-        include: {
-          listing: { select: { id: true, title: true, images: true } },
-          seller: { select: { id: true, username: true } },
-          buyer: { select: { id: true, username: true } },
-        },
-      });
-
-      if (existingOrders.length > 0) {
-        const totalAmount = existingOrders.reduce((sum, order) => sum + order.totalAmount, 0);
-        return {
-          checkoutId: normalizedKey,
-          status: 'confirmed',
-          idempotentReplay: true,
-          orderCount: existingOrders.length,
-          totalAmount,
-          orders: existingOrders,
-        };
-      }
-    }
-
     const checkoutId = normalizedKey || `checkout_${Date.now()}`;
     const baseNotes = dto.notes?.trim();
     const taggedNotes = [baseNotes, `[checkout:${checkoutId}]`].filter(Boolean).join(' ');
 
-    const orders = await this.prisma.$transaction(async (tx) => {
-      const createdOrders: any[] = [];
-      for (const item of dto.items) {
-        const listing = await tx.marketplaceListing.findFirst({
-          where: { id: item.listingId, status: 'ACTIVE', deletedAt: null },
-        });
-        if (!listing) {
-          throw new NotFoundException('Listing not found or not available');
-        }
-        if (listing.sellerId === buyerId) {
-          throw new BadRequestException('Cannot purchase your own listing');
-        }
-        const qty = item.quantity ?? 1;
-        if (qty > listing.quantity) {
-          throw new BadRequestException('Requested quantity exceeds available stock');
+    // Both the idempotency check and order creation run inside a single serializable
+    // transaction, eliminating the TOCTOU race condition where two concurrent requests
+    // with the same idempotency key could both pass the check and create duplicate orders.
+    // PostgreSQL's Serializable isolation detects concurrent read-write dependencies and
+    // aborts all but one conflicting transaction, ensuring only one checkout commits per key.
+    const { orders, idempotentReplay } = await this.prisma.$transaction(
+      async (tx) => {
+        if (normalizedKey) {
+          const existingOrders = await tx.marketplaceOrder.findMany({
+            where: {
+              buyerId,
+              notes: { contains: `[checkout:${normalizedKey}]` },
+            },
+            orderBy: { createdAt: 'desc' },
+            include: {
+              listing: { select: { id: true, title: true, images: true } },
+              seller: { select: { id: true, username: true } },
+              buyer: { select: { id: true, username: true } },
+            },
+          });
+
+          if (existingOrders.length > 0) {
+            return { orders: existingOrders, idempotentReplay: true };
+          }
         }
 
-        const subtotal = listing.price * qty;
-        const shippingCost = listing.isShippable ? (listing.shippingCost ?? 0) : 0;
-        const totalBeforeFee = subtotal + shippingCost;
-        const platformFee = this.listingsService.getPlatformFee(totalBeforeFee);
-        const totalAmount = totalBeforeFee + platformFee;
+        const createdOrders: any[] = [];
+        for (const item of dto.items) {
+          const listing = await tx.marketplaceListing.findFirst({
+            where: { id: item.listingId, status: 'ACTIVE', deletedAt: null },
+          });
+          if (!listing) {
+            throw new NotFoundException('Listing not found or not available');
+          }
+          if (listing.sellerId === buyerId) {
+            throw new BadRequestException('Cannot purchase your own listing');
+          }
+          const qty = item.quantity ?? 1;
+          if (qty > listing.quantity) {
+            throw new BadRequestException('Requested quantity exceeds available stock');
+          }
 
-        const order = await tx.marketplaceOrder.create({
-          data: {
-            listingId: listing.id,
-            buyerId,
-            sellerId: listing.sellerId,
-            quantity: qty,
-            subtotal,
-            shippingCost,
-            platformFee,
-            totalAmount,
-            shippingAddress: dto.shippingAddress as any,
-            notes: taggedNotes,
-            status: 'PENDING',
-          },
-          include: {
-            listing: { select: { id: true, title: true, images: true } },
-            seller: { select: { id: true, username: true } },
-            buyer: { select: { id: true, username: true } },
-          },
-        });
-        createdOrders.push(order);
-      }
-      return createdOrders;
-    });
+          const subtotal = listing.price * qty;
+          const shippingCost = listing.isShippable ? (listing.shippingCost ?? 0) : 0;
+          const totalBeforeFee = subtotal + shippingCost;
+          const platformFee = this.listingsService.getPlatformFee(totalBeforeFee);
+          const totalAmount = totalBeforeFee + platformFee;
 
-    await Promise.all(
-      orders.map((order) =>
-        this.notifications.create({
-          userId: order.sellerId,
-          type: 'MARKETPLACE_ORDER',
-          title: 'New order',
-          message: `You have a new order for "${order.listing.title}"`,
-          actorId: buyerId,
-          referenceId: order.id,
-          referenceType: 'marketplace_order',
-        }),
-      ),
+          const order = await tx.marketplaceOrder.create({
+            data: {
+              listingId: listing.id,
+              buyerId,
+              sellerId: listing.sellerId,
+              quantity: qty,
+              subtotal,
+              shippingCost,
+              platformFee,
+              totalAmount,
+              shippingAddress: dto.shippingAddress as any,
+              notes: taggedNotes,
+              status: 'PENDING',
+            },
+            include: {
+              listing: { select: { id: true, title: true, images: true } },
+              seller: { select: { id: true, username: true } },
+              buyer: { select: { id: true, username: true } },
+            },
+          });
+          createdOrders.push(order);
+        }
+        return { orders: createdOrders, idempotentReplay: false };
+      },
+      { isolationLevel: 'Serializable' },
     );
+
+    if (!idempotentReplay) {
+      await Promise.all(
+        orders.map((order) =>
+          this.notifications.create({
+            userId: order.sellerId,
+            type: 'MARKETPLACE_ORDER',
+            title: 'New order',
+            message: `You have a new order for "${order.listing.title}"`,
+            actorId: buyerId,
+            referenceId: order.id,
+            referenceType: 'marketplace_order',
+          }),
+        ),
+      );
+    }
 
     const totalAmount = orders.reduce((sum, order) => sum + order.totalAmount, 0);
     return {
       checkoutId,
       status: 'confirmed',
-      idempotentReplay: false,
+      idempotentReplay,
       orderCount: orders.length,
       totalAmount,
       orders,
     };
+  }
+
+  async confirmPayment(orderId: string, buyerId: string) {
+    const order = await this.prisma.marketplaceOrder.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.buyerId !== buyerId) throw new ForbiddenException('Not the buyer');
+    if (order.status !== 'PENDING') throw new BadRequestException('Order is not pending');
+    return this.markPaid(orderId, `simulated_${Date.now()}_${orderId}`);
   }
 
   async markPaid(orderId: string, stripePaymentIntentId: string) {

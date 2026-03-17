@@ -5,7 +5,8 @@
   "agent": {
     "name": "ux-flow-auditor",
     "version": "1.1.0",
-    "description": "UX Flow and Copy Consistency Auditor — LYRA audit suite v1.1"
+    "description": "UX Flow and Copy Consistency Auditor \u2014 LYRA audit suite v1.1",
+    "role": "Audit agent \u2014 see suite for scope."
   },
   "coverage": {
     "coverage_complete": true,
@@ -16,67 +17,154 @@
     "notes": [
       "No i18n/localization files found. All strings are inline.",
       "Design tokens exist only in theme/colorPalette.ts and CSS custom properties in globals.css.",
-      "Product voice guide is undefined — see finding F-019.",
+      "Product voice guide is undefined \u2014 see finding F-019.",
       "Audits/open_findings.json was empty (no prior findings to filter).",
-      "DiscoveryPage.tsx is present but unreachable via normal navigation — see F-004.",
+      "DiscoveryPage.tsx is present but unreachable via normal navigation \u2014 see F-004.",
       "Previous open_findings.json had zero entries (schema_version 1.1.0, last_updated null)."
     ]
   },
   "findings": [
     {
-      "id": "F-001",
       "category": "broken-flow",
-      "severity": "critical",
-      "title": "Broken route `/feeds` in create.tsx — 404 dead end",
+      "severity": "blocker",
+      "title": "Broken route `/feeds` in create.tsx \u2014 404 dead end",
       "description": "pages/create.tsx references the route `/feeds` in two places: the `handleCancel` callback (router.push('/feeds')) and the breadcrumb href. The actual route is `/feed` (singular). A user who cancels a post creation or clicks the breadcrumb is sent to a 404 page with no recovery path.",
       "locations": [
         "apps/web/src/pages/create.tsx:15",
         "apps/web/src/pages/create.tsx:29"
       ],
-      "evidence": "handleCancel: router.push('/feeds'); breadcrumbs: [{ label: 'Feed', href: '/feeds' }]",
-      "recommendation": "Change both `/feeds` references to `/feed` in create.tsx."
+      "finding_id": "f-001",
+      "priority": "P0",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "handleCancel: router.push('/feeds'); breadcrumbs: [{ label: 'Feed', href: '/feeds' }]",
+          "error_text": "handleCancel: router.push('/feeds'); breadcrumbs: [{ label: 'Feed', href: '/feeds' }]"
+        }
+      ],
+      "impact": "Change both `/feeds` references to `/feed` in create.tsx.",
+      "suggested_fix": {
+        "approach": "Change both `/feeds` references to `/feed` in create.tsx.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-002",
       "category": "broken-flow",
-      "severity": "critical",
+      "severity": "blocker",
       "title": "DiscoveryPage.tsx navigates to non-existent route `/profile/${username}`",
-      "description": "DiscoveryPage's handleUserClick calls router.push(`/profile/${user.username}`). No such route exists — the public profile route is `/[username]` (e.g. `/sarahsahl`), not `/profile/sarahsahl`. Every user-click in the discovery UI silently 404s.",
+      "description": "DiscoveryPage's handleUserClick calls router.push(`/profile/${user.username}`). No such route exists \u2014 the public profile route is `/[username]` (e.g. `/sarahsahl`), not `/profile/sarahsahl`. Every user-click in the discovery UI silently 404s.",
       "locations": [
         "apps/web/src/pages/DiscoveryPage.tsx:18"
       ],
-      "evidence": "router.push(`/profile/${user.username}`) — no pages/profile/[username].tsx file exists",
-      "recommendation": "Change to router.push(`/${user.username}`) to match the [username].tsx dynamic route."
+      "finding_id": "f-002",
+      "priority": "P0",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "router.push(`/profile/${user.username}`) \u2014 no pages/profile/[username].tsx file exists",
+          "error_text": "router.push(`/profile/${user.username}`) \u2014 no pages/profile/[username].tsx file exists"
+        }
+      ],
+      "impact": "Change to router.push(`/${user.username}`) to match the [username].tsx dynamic route.",
+      "suggested_fix": {
+        "approach": "Change to router.push(`/${user.username}`) to match the [username].tsx dynamic route.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-003",
       "category": "copy-mismatch",
-      "severity": "critical",
+      "severity": "blocker",
       "title": "API error helper exposes internal localhost URL to end users",
       "description": "lib/api/error.ts returns the string `API unavailable at http://localhost:3003/api. Start the API server and try again.` when a network error occurs. This exposes infrastructure details (localhost, port 3003, path) to production users who have no ability to 'start the API server'. The message is used as the user-visible fallback across login, signup, and all form submissions.",
       "locations": [
         "apps/web/src/lib/api/error.ts:6-9"
       ],
-      "evidence": "return `API unavailable at ${defaultApiUrl}. Start the API server and try again.`",
-      "recommendation": "Return a user-friendly message such as 'Unable to connect. Please check your connection and try again.' Strip the internal URL entirely. Keep the dev detail in console.error only."
+      "finding_id": "f-003",
+      "priority": "P0",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "return `API unavailable at ${defaultApiUrl}. Start the API server and try again.`",
+          "error_text": "return `API unavailable at ${defaultApiUrl}. Start the API server and try again.`"
+        }
+      ],
+      "impact": "Return a user-friendly message such as 'Unable to connect. Please check your connection and try again.' Strip the internal URL entirely. Keep the dev detail in console.error only.",
+      "suggested_fix": {
+        "approach": "Return a user-friendly message such as 'Unable to connect. Please check your connection and try again.' Strip the internal URL entirely. Keep the dev detail in console.error only.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-004",
       "category": "nav-dead-end",
-      "severity": "critical",
-      "title": "DiscoveryPage.tsx creates route `/DiscoveryPage` — unreachable from navigation",
+      "severity": "blocker",
+      "title": "DiscoveryPage.tsx creates route `/DiscoveryPage` \u2014 unreachable from navigation",
       "description": "Next.js pages/ directory routes map case-sensitively to filenames. The file pages/DiscoveryPage.tsx generates the route /DiscoveryPage (capital D, capital P). No nav item, link, or breadcrumb anywhere in the app points to /DiscoveryPage. The entire discovery UI is orphaned and inaccessible to users. AppShell nav does not include a Discover link.",
       "locations": [
         "apps/web/src/pages/DiscoveryPage.tsx"
       ],
-      "evidence": "AppShell navItems array has no href matching /DiscoveryPage or /discovery. File capitalisation creates wrong route.",
-      "recommendation": "Rename file to pages/discover.tsx (or pages/discovery/index.tsx) and add a 'Discover' nav item to AppShell."
+      "finding_id": "f-004",
+      "priority": "P0",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "AppShell navItems array has no href matching /DiscoveryPage or /discovery. File capitalisation creates wrong route.",
+          "error_text": "AppShell navItems array has no href matching /DiscoveryPage or /discovery. File capitalisation creates wrong route."
+        }
+      ],
+      "impact": "Rename file to pages/discover.tsx (or pages/discovery/index.tsx) and add a 'Discover' nav item to AppShell.",
+      "suggested_fix": {
+        "approach": "Rename file to pages/discover.tsx (or pages/discovery/index.tsx) and add a 'Discover' nav item to AppShell.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-005",
       "category": "a11y-gap",
       "severity": "major",
-      "title": "No `<title>` element set on any page — screen readers announce no page name",
+      "title": "No `<title>` element set on any page \u2014 screen readers announce no page name",
       "description": "_app.tsx sets a viewport meta but no <title>. No individual page sets <Head><title>...</title></Head>. Screen reader users navigating between pages receive no page-change announcement. Tab titles remain blank or show the URL, causing disorientation. This also means zero SEO title coverage.",
       "locations": [
         "apps/web/src/pages/_app.tsx:11-13",
@@ -84,24 +172,68 @@
         "apps/web/src/pages/auth/login.tsx",
         "apps/web/src/pages/auth/signup.tsx"
       ],
-      "evidence": "_app.tsx <Head> contains only viewport meta. No page sets next/head <title>.",
-      "recommendation": "Add next/head with a descriptive <title> to each page (e.g. 'Feed — Embr', 'Sign In — Embr'). Consider a shared helper that appends the app name."
+      "finding_id": "f-005",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "_app.tsx <Head> contains only viewport meta. No page sets next/head <title>.",
+          "error_text": "_app.tsx <Head> contains only viewport meta. No page sets next/head <title>."
+        }
+      ],
+      "impact": "Add next/head with a descriptive <title> to each page (e.g. 'Feed \u2014 Embr', 'Sign In \u2014 Embr'). Consider a shared helper that appends the app name.",
+      "suggested_fix": {
+        "approach": "Add next/head with a descriptive <title> to each page (e.g. 'Feed \u2014 Embr', 'Sign In \u2014 Embr'). Consider a shared helper that appends the app name.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-006",
       "category": "nav-dead-end",
       "severity": "major",
-      "title": "marketplace/sell.tsx has no post-publish navigation — user stranded after listing",
+      "title": "marketplace/sell.tsx has no post-publish navigation \u2014 user stranded after listing",
       "description": "pages/marketplace/sell.tsx passes createListing and publishListing to CreateListingForm but provides no onSuccess redirect. After a listing is successfully published the form has no callback to navigate the user. The CreateListingForm component itself (line 65) calls onPublish(listing.id) but sell.tsx never wires a redirect; the user is left on the create form with no feedback and no path forward.",
       "locations": [
         "apps/web/src/pages/marketplace/sell.tsx:13-22",
         "apps/web/src/components/marketplace/CreateListingForm.tsx:65"
       ],
-      "evidence": "CreateListingForm interface accepts onPublish?: (id: string) => Promise<any>. sell.tsx passes publishListing but no router.push in the onPublish callback.",
-      "recommendation": "In sell.tsx, wrap publishListing to also call router.push(`/marketplace/${id}`) on success. Display a toast confirmation."
+      "finding_id": "f-006",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "CreateListingForm interface accepts onPublish?: (id: string) => Promise<any>. sell.tsx passes publishListing but no rout",
+          "error_text": "CreateListingForm interface accepts onPublish?: (id: string) => Promise<any>. sell.tsx passes publishListing but no router.push in the onPublish callback."
+        }
+      ],
+      "impact": "In sell.tsx, wrap publishListing to also call router.push(`/marketplace/${id}`) on success. Display a toast confirmation.",
+      "suggested_fix": {
+        "approach": "In sell.tsx, wrap publishListing to also call router.push(`/marketplace/${id}`) on success. Display a toast confirmation.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-007",
       "category": "a11y-gap",
       "severity": "major",
       "title": "15 uses of `alert()` and `prompt()` across 7 files block screen readers and break UX flow",
@@ -116,11 +248,33 @@
         "apps/web/src/pages/marketplace/orders.tsx:31",
         "apps/web/src/components/monetization/StripeConnectOnboarding.tsx:41"
       ],
-      "evidence": "grep -rn 'alert(|prompt(' found 15 matches across 7 component/page files",
-      "recommendation": "Replace all alert() calls with showToast({kind:'error',...}). Replace prompt() calls with inline form fields or a proper Modal component (which already exists in components/ui/Modal.tsx with full focus-trap and keyboard support)."
+      "finding_id": "f-007",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "grep -rn 'alert(|prompt(' found 15 matches across 7 component/page files",
+          "error_text": "grep -rn 'alert(|prompt(' found 15 matches across 7 component/page files"
+        }
+      ],
+      "impact": "Replace all alert() calls with showToast({kind:'error',...}). Replace prompt() calls with inline form fields or a proper Modal component (which already exists in components/ui/Modal.tsx with full focu",
+      "suggested_fix": {
+        "approach": "Replace all alert() calls with showToast({kind:'error',...}). Replace prompt() calls with inline form fields or a proper Modal component (which already exists in components/ui/Modal.tsx with full focus-trap and keyboard support).",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-008",
       "category": "a11y-gap",
       "severity": "major",
       "title": "Inline modals in marketplace/[id].tsx and orders.tsx missing ARIA dialog semantics",
@@ -129,23 +283,67 @@
         "apps/web/src/pages/marketplace/[id].tsx:142-230",
         "apps/web/src/pages/marketplace/orders.tsx:88-132"
       ],
-      "evidence": "Modals use <div style={{position:'fixed'...}}> with no role, aria-modal, aria-labelledby, or focus management. Modal.tsx exists with correct implementation.",
-      "recommendation": "Replace all inline modal divs with the existing <Modal> component from components/ui/Modal.tsx."
+      "finding_id": "f-008",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "Modals use <div style={{position:'fixed'...}}> with no role, aria-modal, aria-labelledby, or focus management. Modal.tsx",
+          "error_text": "Modals use <div style={{position:'fixed'...}}> with no role, aria-modal, aria-labelledby, or focus management. Modal.tsx exists with correct implementation."
+        }
+      ],
+      "impact": "Replace all inline modal divs with the existing <Modal> component from components/ui/Modal.tsx.",
+      "suggested_fix": {
+        "approach": "Replace all inline modal divs with the existing <Modal> component from components/ui/Modal.tsx.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-009",
       "category": "missing-state",
       "severity": "major",
-      "title": "Toast system supports only `'info' | 'error'` — no `'success'` or `'warning'` variant",
+      "title": "Toast system supports only `'info' | 'error'` \u2014 no `'success'` or `'warning'` variant",
       "description": "Toast.tsx defines ToastKind as 'info' | 'error'. There is no 'success' kind. Successful operations (profile saved, listing published, group created, order placed) fall back to kind:'info' which uses the same visual style as informational messages. Users cannot distinguish a success confirmation from a neutral notification. There is also no 'warning' kind for soft failures.",
       "locations": [
         "apps/web/src/components/ui/Toast.tsx:4"
       ],
-      "evidence": "export type ToastKind = 'info' | 'error'; — missing 'success' and 'warning'",
-      "recommendation": "Add 'success' and 'warning' to ToastKind. Style them with distinct colors (green for success, amber for warning) using CSS data-kind attribute. Update callers that use kind:'info' for success operations."
+      "finding_id": "f-009",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "export type ToastKind = 'info' | 'error'; \u2014 missing 'success' and 'warning'",
+          "error_text": "export type ToastKind = 'info' | 'error'; \u2014 missing 'success' and 'warning'"
+        }
+      ],
+      "impact": "Add 'success' and 'warning' to ToastKind. Style them with distinct colors (green for success, amber for warning) using CSS data-kind attribute. Update callers that use kind:'info' for success operatio",
+      "suggested_fix": {
+        "approach": "Add 'success' and 'warning' to ToastKind. Style them with distinct colors (green for success, amber for warning) using CSS data-kind attribute. Update callers that use kind:'info' for success operations.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-010",
       "category": "copy-mismatch",
       "severity": "major",
       "title": "FeaturePlaceholder component leaks developer issue IDs in user-visible text",
@@ -154,88 +352,242 @@
         "apps/web/src/components/layout/FeaturePlaceholder.tsx:28",
         "apps/web/src/components/layout/FeaturePlaceholder.tsx:32"
       ],
-      "evidence": "description: `${title} data is loading. TODO: ${issueId}` and `No ${title.toLowerCase()} data yet. TODO: ${issueId}`",
-      "recommendation": "Remove 'TODO: ${issueId}' from user-visible description strings. Keep the issueId as an HTML data attribute or in a code comment only. Replace with a helpful empty-state message guiding the user on what to do next."
+      "finding_id": "f-010",
+      "priority": "P1",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "description: `${title} data is loading. TODO: ${issueId}` and `No ${title.toLowerCase()} data yet. TODO: ${issueId}`",
+          "error_text": "description: `${title} data is loading. TODO: ${issueId}` and `No ${title.toLowerCase()} data yet. TODO: ${issueId}`"
+        }
+      ],
+      "impact": "Remove 'TODO: ${issueId}' from user-visible description strings. Keep the issueId as an HTML data attribute or in a code comment only. Replace with a helpful empty-state message guiding the user on wh",
+      "suggested_fix": {
+        "approach": "Remove 'TODO: ${issueId}' from user-visible description strings. Keep the issueId as an HTML data attribute or in a code comment only. Replace with a helpful empty-state message guiding the user on what to do next.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-011",
       "category": "copy-mismatch",
-      "severity": "moderate",
-      "title": "Homepage H1 reads 'Embr Frontend' — developer placeholder visible to all users",
+      "severity": "minor",
+      "title": "Homepage H1 reads 'Embr Frontend' \u2014 developer placeholder visible to all users",
       "description": "pages/index.tsx renders <h1 className='ui-page-title'>Embr Frontend</h1>. 'Embr Frontend' is a developer label for the app shell scaffold, not a user-facing product name. Every unauthenticated visitor sees this as the first words on the landing page.",
       "locations": [
         "apps/web/src/pages/index.tsx:11"
       ],
-      "evidence": "<h1 className=\"ui-page-title\">Embr Frontend</h1>",
-      "recommendation": "Replace with the product value proposition, e.g. 'Embr — Built for Creators' or simply 'Embr'. Match the mission/brand voice established in MISSION.md."
+      "finding_id": "f-011",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "<h1 className=\"ui-page-title\">Embr Frontend</h1>",
+          "error_text": "<h1 className=\"ui-page-title\">Embr Frontend</h1>"
+        }
+      ],
+      "impact": "Replace with the product value proposition, e.g. 'Embr \u2014 Built for Creators' or simply 'Embr'. Match the mission/brand voice established in MISSION.md.",
+      "suggested_fix": {
+        "approach": "Replace with the product value proposition, e.g. 'Embr \u2014 Built for Creators' or simply 'Embr'. Match the mission/brand voice established in MISSION.md.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-012",
       "category": "inconsistent-label",
-      "severity": "moderate",
-      "title": "'Sign in' vs 'Sign Out' — inconsistent capitalisation for the same auth concept",
+      "severity": "minor",
+      "title": "'Sign in' vs 'Sign Out' \u2014 inconsistent capitalisation for the same auth concept",
       "description": "The login page button, its loading state, and the page title all use 'Sign in' (sentence case, lowercase i). The AppShell user dropdown uses 'Sign Out' (Title Case, capital O). The signup page uses 'Create account' (sentence case). The homepage uses 'Sign in' and 'Create account'. This mixed casing signals lack of a copywriting standard.",
       "locations": [
         "apps/web/src/pages/auth/login.tsx:68-70 (Sign in / Signing in...)",
         "apps/web/src/components/layout/AppShell.tsx:162 (Sign Out)"
       ],
-      "evidence": "login.tsx: 'Sign in', 'Signing in...' — AppShell.tsx: 'Sign Out'",
-      "recommendation": "Standardise on sentence case throughout: 'Sign in' and 'Sign out'. Update AppShell dropdown accordingly. Audit all other action labels for consistency."
+      "finding_id": "f-012",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "login.tsx: 'Sign in', 'Signing in...' \u2014 AppShell.tsx: 'Sign Out'",
+          "error_text": "login.tsx: 'Sign in', 'Signing in...' \u2014 AppShell.tsx: 'Sign Out'"
+        }
+      ],
+      "impact": "Standardise on sentence case throughout: 'Sign in' and 'Sign out'. Update AppShell dropdown accordingly. Audit all other action labels for consistency.",
+      "suggested_fix": {
+        "approach": "Standardise on sentence case throughout: 'Sign in' and 'Sign out'. Update AppShell dropdown accordingly. Audit all other action labels for consistency.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-013",
       "category": "copy-mismatch",
-      "severity": "moderate",
-      "title": "Safety page exposes raw internal 'user ID' input fields — not user-addressable",
+      "severity": "minor",
+      "title": "Safety page exposes raw internal 'user ID' input fields \u2014 not user-addressable",
       "description": "pages/safety/index.tsx presents 'Block a user' and 'Mute a user' forms that ask users to 'Enter user ID'. Internal UUIDs/integer IDs are not something users know or can easily look up. The input also accepts a raw 'Entity ID' for the Report Content action. Users have no contextual help on where to find these IDs, making the safety features functionally unusable.",
       "locations": [
         "apps/web/src/pages/safety/index.tsx:51-64",
         "apps/web/src/pages/safety/index.tsx:68-89",
         "apps/web/src/pages/safety/index.tsx:95-115"
       ],
-      "evidence": "<Input placeholder='Enter user ID' ...> — block/mute forms with raw ID inputs",
-      "recommendation": "Replace ID text inputs with username search (the UserSearchBar component already exists at components/social/UserSearchBar.tsx). Use the resolved user ID internally, never expose it. Report content should be triggered from content cards, not a standalone form requiring IDs."
+      "finding_id": "f-013",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "<Input placeholder='Enter user ID' ...> \u2014 block/mute forms with raw ID inputs",
+          "error_text": "<Input placeholder='Enter user ID' ...> \u2014 block/mute forms with raw ID inputs"
+        }
+      ],
+      "impact": "Replace ID text inputs with username search (the UserSearchBar component already exists at components/social/UserSearchBar.tsx). Use the resolved user ID internally, never expose it. Report content sh",
+      "suggested_fix": {
+        "approach": "Replace ID text inputs with username search (the UserSearchBar component already exists at components/social/UserSearchBar.tsx). Use the resolved user ID internally, never expose it. Report content should be triggered from content cards, not a standalone form requiring IDs.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-014",
       "category": "a11y-gap",
-      "severity": "moderate",
+      "severity": "minor",
       "title": "Avatar upload clickable div in settings lacks keyboard support and ARIA role",
       "description": "pages/settings/index.tsx wraps the avatar image in a <div onClick=...> to trigger the file input. The div has no tabIndex, no role='button', and no keyboard (onKeyDown) handler. Keyboard-only users cannot trigger photo upload. The `title` attribute ('Change profile photo') does not substitute for a proper accessible label on an interactive element.",
       "locations": [
         "apps/web/src/pages/settings/index.tsx:199-225"
       ],
-      "evidence": "<div onClick={() => avatarInputRef.current?.click()} style={{...cursor:'pointer'...}} title='Change profile photo'> — no tabIndex, role, or onKeyDown",
-      "recommendation": "Replace the <div> wrapper with a <button> element, or add role='button', tabIndex={0}, and an onKeyDown handler that triggers click on Enter/Space."
+      "finding_id": "f-014",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "<div onClick={() => avatarInputRef.current?.click()} style={{...cursor:'pointer'...}} title='Change profile photo'> \u2014 no",
+          "error_text": "<div onClick={() => avatarInputRef.current?.click()} style={{...cursor:'pointer'...}} title='Change profile photo'> \u2014 no tabIndex, role, or onKeyDown"
+        }
+      ],
+      "impact": "Replace the <div> wrapper with a <button> element, or add role='button', tabIndex={0}, and an onKeyDown handler that triggers click on Enter/Space.",
+      "suggested_fix": {
+        "approach": "Replace the <div> wrapper with a <button> element, or add role='button', tabIndex={0}, and an onKeyDown handler that triggers click on Enter/Space.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-015",
       "category": "missing-state",
-      "severity": "moderate",
-      "title": "music/artist/[id].tsx error state is dead code — `_setError` prefixed, never called",
+      "severity": "minor",
+      "title": "music/artist/[id].tsx error state is dead code \u2014 `_setError` prefixed, never called",
       "description": "pages/music/artist/[id].tsx declares `const [error, _setError] = useState<string | null>(null)`. The underscore prefix is a TypeScript convention indicating the setter is intentionally unused. The error UI branch (which renders a red error card) can never be shown to the user regardless of what goes wrong loading the artist profile. All failures silently show the skeleton loader forever.",
       "locations": [
         "apps/web/src/pages/music/artist/[id].tsx:9"
       ],
-      "evidence": "const [error, _setError] = useState<string | null>(null); — _setError never invoked",
-      "recommendation": "Wire _setError to the fetchArtist error catch block. Rename to setError. Ensure the error UI is shown when the artist profile fails to load, with a back link to /music."
+      "finding_id": "f-015",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "const [error, _setError] = useState<string | null>(null); \u2014 _setError never invoked",
+          "error_text": "const [error, _setError] = useState<string | null>(null); \u2014 _setError never invoked"
+        }
+      ],
+      "impact": "Wire _setError to the fetchArtist error catch block. Rename to setError. Ensure the error UI is shown when the artist profile fails to load, with a back link to /music.",
+      "suggested_fix": {
+        "approach": "Wire _setError to the fetchArtist error catch block. Rename to setError. Ensure the error UI is shown when the artist profile fails to load, with a back link to /music.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-016",
       "category": "inconsistent-label",
-      "severity": "moderate",
-      "title": "Loading states inconsistent — plain `<p>` text on 3 pages, PageState component on others",
+      "severity": "minor",
+      "title": "Loading states inconsistent \u2014 plain `<p>` text on 3 pages, PageState component on others",
       "description": "Multiple pages show loading feedback as plain paragraph text without the PageState component: pages/gigs/[id].tsx uses '<p>Loading gig...</p>', pages/[username].tsx uses '<p>Loading profile...</p>', pages/profile/index.tsx uses '<p className=\"text-gray-600\">Loading profile...</p>'. Other pages (e.g. feed.tsx via FeedTabs, forgot-password.tsx, reset-password.tsx, marketplace/[id].tsx) use the PageState component. This is visually jarring and creates an inconsistent user experience during data fetches.",
       "locations": [
         "apps/web/src/pages/gigs/[id].tsx:30",
         "apps/web/src/pages/[username].tsx:68",
         "apps/web/src/pages/profile/index.tsx:51"
       ],
-      "evidence": "<p style={{color:'var(--embr-muted-text)'}}>Loading gig...</p> vs <PageState type='loading' title='Loading...' />",
-      "recommendation": "Replace plain loading <p> tags with <PageState type='loading' title='...' /> to ensure visual and semantic consistency across all pages."
+      "finding_id": "f-016",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "<p style={{color:'var(--embr-muted-text)'}}>Loading gig...</p> vs <PageState type='loading' title='Loading...' />",
+          "error_text": "<p style={{color:'var(--embr-muted-text)'}}>Loading gig...</p> vs <PageState type='loading' title='Loading...' />"
+        }
+      ],
+      "impact": "Replace plain loading <p> tags with <PageState type='loading' title='...' /> to ensure visual and semantic consistency across all pages.",
+      "suggested_fix": {
+        "approach": "Replace plain loading <p> tags with <PageState type='loading' title='...' /> to ensure visual and semantic consistency across all pages.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-017",
       "category": "inconsistent-label",
       "severity": "minor",
       "title": "profile/index.tsx mixes Tailwind class `text-gray-600` with the CSS variable design system",
@@ -243,27 +595,71 @@
       "locations": [
         "apps/web/src/pages/profile/index.tsx:51"
       ],
-      "evidence": "<p className=\"text-gray-600\">Loading profile...</p>",
-      "recommendation": "Replace className='text-gray-600' with style={{ color: 'var(--embr-muted-text)' }} to align with the CSS variable token system."
+      "finding_id": "f-017",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "<p className=\"text-gray-600\">Loading profile...</p>",
+          "error_text": "<p className=\"text-gray-600\">Loading profile...</p>"
+        }
+      ],
+      "impact": "Replace className='text-gray-600' with style={{ color: 'var(--embr-muted-text)' }} to align with the CSS variable token system.",
+      "suggested_fix": {
+        "approach": "Replace className='text-gray-600' with style={{ color: 'var(--embr-muted-text)' }} to align with the CSS variable token system.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-018",
       "category": "inconsistent-label",
       "severity": "minor",
-      "title": "DiscoveryPage.tsx uses hardcoded hex colors and Tailwind — isolated from design token system",
+      "title": "DiscoveryPage.tsx uses hardcoded hex colors and Tailwind \u2014 isolated from design token system",
       "description": "DiscoveryPage.tsx uses hardcoded hex colors (#F4F1F1, #E8998D) and Tailwind utility classes (bg-[#F4F1F1], text-[#E8998D]) directly, while all other pages use CSS variables (var(--embr-warm-1), var(--embr-accent)) from the design token system. Also, DiscoveryPage uses Tailwind's responsive grid classes (lg:col-span-2) while the rest of the app uses inline styles for layout.",
       "locations": [
         "apps/web/src/pages/DiscoveryPage.tsx:22-25",
         "apps/web/src/pages/DiscoveryPage.tsx:43-53"
       ],
-      "evidence": "className='min-h-screen bg-[#F4F1F1]' and text-[#E8998D] border-b-2 border-[#E8998D]",
-      "recommendation": "Replace hardcoded hex values with CSS custom properties (var(--embr-accent), var(--embr-bg)). Align layout approach with the rest of the app. This also bundles with F-004 (the page being unreachable)."
+      "finding_id": "f-018",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "className='min-h-screen bg-[#F4F1F1]' and text-[#E8998D] border-b-2 border-[#E8998D]",
+          "error_text": "className='min-h-screen bg-[#F4F1F1]' and text-[#E8998D] border-b-2 border-[#E8998D]"
+        }
+      ],
+      "impact": "Replace hardcoded hex values with CSS custom properties (var(--embr-accent), var(--embr-bg)). Align layout approach with the rest of the app. This also bundles with F-004 (the page being unreachable).",
+      "suggested_fix": {
+        "approach": "Replace hardcoded hex values with CSS custom properties (var(--embr-accent), var(--embr-bg)). Align layout approach with the rest of the app. This also bundles with F-004 (the page being unreachable).",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-019",
       "category": "question",
-      "severity": "moderate",
-      "title": "Product voice is undefined — formal and casual tones coexist without a standard",
+      "severity": "minor",
+      "title": "Product voice is undefined \u2014 formal and casual tones coexist without a standard",
       "description": "No voice guide or copy standard exists in the codebase. Observable tone mismatches: login page is formal ('Continue building with Embr.'), signup is aspirational ('Build your creator space on Embr.'), discovery page is casual ('Find amazing creators and connect with the community'), about page is activist/confrontational ('Spotify takes 70%...Your audience isn't yours.'), settings subtitle is informational ('Manage your account, privacy, and notification preferences.'). Button casing is also mixed: 'Save changes' (sentence case) vs 'View Profile' / 'Edit Profile' / 'Sign Out' (Title Case) in the same dropdown.",
       "locations": [
         "apps/web/src/pages/auth/login.tsx:39",
@@ -272,13 +668,35 @@
         "apps/web/src/pages/about.tsx",
         "apps/web/src/components/layout/AppShell.tsx:154-165"
       ],
-      "evidence": "No VOICE.md, no copy constants file, no style guide referenced in the repo. style-scope-voice.md exists but is not referenced from components.",
-      "recommendation": "Formalise the voice guide in style-scope-voice.md (file already exists) and reference it from AGENTS.md. Define: (a) default tone register, (b) button casing standard (recommend sentence case throughout), (c) error message format, (d) empty-state format. Apply across all pages."
+      "finding_id": "f-019",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "No VOICE.md, no copy constants file, no style guide referenced in the repo. style-scope-voice.md exists but is not refer",
+          "error_text": "No VOICE.md, no copy constants file, no style guide referenced in the repo. style-scope-voice.md exists but is not referenced from components."
+        }
+      ],
+      "impact": "Formalise the voice guide in style-scope-voice.md (file already exists) and reference it from AGENTS.md. Define: (a) default tone register, (b) button casing standard (recommend sentence case througho",
+      "suggested_fix": {
+        "approach": "Formalise the voice guide in style-scope-voice.md (file already exists) and reference it from AGENTS.md. Define: (a) default tone register, (b) button casing standard (recommend sentence case throughout), (c) error message format, (d) empty-state format. Apply across all pages.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     },
     {
-      "id": "F-020",
       "category": "copy-mismatch",
-      "severity": "moderate",
+      "severity": "minor",
       "title": "Order/offer error messages provide no actionable next step",
       "description": "marketplace/[id].tsx uses alert(e.response?.data?.message || 'Order failed') and alert(e.response?.data?.message || 'Offer failed') as the user-visible error message for failed purchases and offers. These fallback strings give the user no guidance on what happened or what to do next. Similarly, MessageInput uses alert('Failed to send message. Please try again.') with no details. Users cannot determine whether to retry, contact support, or check their payment method.",
       "locations": [
@@ -286,8 +704,31 @@
         "apps/web/src/pages/marketplace/[id].tsx:55",
         "apps/web/src/components/messaging/MessageInput.tsx:115"
       ],
-      "evidence": "alert(e.response?.data?.message || 'Order failed') — fallback provides no recovery path",
-      "recommendation": "Replace with inline error display near the relevant button. Use specific fallback messages: 'We couldn't place your order. Please check your payment method and try again.' Include a support link or retry button where appropriate."
+      "finding_id": "f-020",
+      "priority": "P2",
+      "type": "bug",
+      "confidence": "inference",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "alert(e.response?.data?.message || 'Order failed') \u2014 fallback provides no recovery path",
+          "error_text": "alert(e.response?.data?.message || 'Order failed') \u2014 fallback provides no recovery path"
+        }
+      ],
+      "impact": "Replace with inline error display near the relevant button. Use specific fallback messages: 'We couldn't place your order. Please check your payment method and try again.' Include a support link or re",
+      "suggested_fix": {
+        "approach": "Replace with inline error display near the relevant button. Use specific fallback messages: 'We couldn't place your order. Please check your payment method and try again.' Include a support link or retry button where appropriate.",
+        "estimated_effort": "small"
+      },
+      "history": [
+        {
+          "timestamp": "2026-03-05T13:21:11Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": "Finding created during audit run."
+        }
+      ],
+      "status": "open"
     }
   ],
   "rollups": {
@@ -311,80 +752,133 @@
       "Accessibility (5 findings including 15 alert/prompt calls, missing dialog ARIA, missing page titles, keyboard gaps)",
       "Broken navigation (4 critical/major: /feeds 404, /profile/ misroute, DiscoveryPage orphaned, sell page dead-end)",
       "Copy quality (5 findings: localhost URL leak, TODO text, placeholder H1, ID exposure, voice inconsistency)"
-    ]
+    ],
+    "by_type": {},
+    "by_status": {}
   },
   "next_actions": [
     {
-      "priority": 1,
-      "action": "Fix broken route /feeds → /feed in pages/create.tsx (2 lines). Immediate regression — users who cancel post creation hit a 404.",
+      "action": "Fix broken route /feeds \u2192 /feed in pages/create.tsx (2 lines). Immediate regression \u2014 users who cancel post creation hit a 404.",
       "effort": "xs",
-      "findings": ["F-001"]
+      "findings": [
+        "F-001"
+      ],
+      "finding_id": "unknown",
+      "rationale": "Priority 1 action."
     },
     {
-      "priority": 2,
       "action": "Fix DiscoveryPage routing: rename to pages/discover.tsx, fix router.push to use /${username}, add 'Discover' nav item to AppShell.",
       "effort": "s",
-      "findings": ["F-002", "F-004"]
+      "findings": [
+        "F-002",
+        "F-004"
+      ],
+      "finding_id": "unknown",
+      "rationale": "Priority 2 action."
     },
     {
-      "priority": 3,
-      "action": "Replace API error message in lib/api/error.ts — strip the localhost URL, return a user-friendly network error message.",
+      "action": "Replace API error message in lib/api/error.ts \u2014 strip the localhost URL, return a user-friendly network error message.",
       "effort": "xs",
-      "findings": ["F-003"]
+      "findings": [
+        "F-003"
+      ],
+      "finding_id": "unknown",
+      "rationale": "Priority 3 action."
     },
     {
-      "priority": 4,
       "action": "Replace all 15 alert()/prompt() calls with showToast() and the existing Modal component. GigManagementDashboard, PayoutRequest, TipButton, MessageInput, marketplace/[id], groups settings, marketplace/orders, StripeConnectOnboarding.",
       "effort": "m",
-      "findings": ["F-007", "F-020"]
+      "findings": [
+        "F-007",
+        "F-020"
+      ],
+      "finding_id": "unknown",
+      "rationale": "Priority 4 action."
     },
     {
-      "priority": 5,
       "action": "Add next/head <title> to every page using a shared helper. Critical for screen reader page-change announcements and SEO.",
       "effort": "m",
-      "findings": ["F-005"]
+      "findings": [
+        "F-005"
+      ],
+      "finding_id": "unknown",
+      "rationale": "Priority 5 action."
     },
     {
-      "priority": 6,
       "action": "Migrate inline marketplace modal divs to the existing Modal component to gain correct ARIA semantics and focus trapping.",
       "effort": "s",
-      "findings": ["F-008"]
+      "findings": [
+        "F-008"
+      ],
+      "finding_id": "unknown",
+      "rationale": "Priority 6 action."
     },
     {
-      "priority": 7,
       "action": "Add 'success' and 'warning' kinds to Toast system. Update all onSuccess showToast() calls to use kind:'success'.",
       "effort": "s",
-      "findings": ["F-009"]
+      "findings": [
+        "F-009"
+      ],
+      "finding_id": "unknown",
+      "rationale": "Priority 7 action."
     },
     {
-      "priority": 8,
       "action": "Strip TODO:${issueId} from FeaturePlaceholder user-visible description strings.",
       "effort": "xs",
-      "findings": ["F-010"]
+      "findings": [
+        "F-010"
+      ],
+      "finding_id": "unknown",
+      "rationale": "Priority 8 action."
     },
     {
-      "priority": 9,
       "action": "Replace homepage H1 'Embr Frontend' with real product copy. Add sell.tsx post-publish redirect. Fix music/artist/[id] error state wire-up.",
       "effort": "s",
-      "findings": ["F-011", "F-006", "F-015"]
+      "findings": [
+        "F-011",
+        "F-006",
+        "F-015"
+      ],
+      "finding_id": "unknown",
+      "rationale": "Priority 9 action."
     },
     {
-      "priority": 10,
-      "action": "Formalise voice guide in style-scope-voice.md. Standardise button casing (sentence case). Fix Sign Out → Sign out in AppShell.",
+      "action": "Formalise voice guide in style-scope-voice.md. Standardise button casing (sentence case). Fix Sign Out \u2192 Sign out in AppShell.",
       "effort": "m",
-      "findings": ["F-012", "F-019"]
+      "findings": [
+        "F-012",
+        "F-019"
+      ],
+      "finding_id": "unknown",
+      "rationale": "Priority 10 action."
     },
     {
-      "priority": 11,
       "action": "Replace Safety page ID text inputs with UserSearchBar component. Report action should be surfaced from content cards, not a standalone ID-entry form.",
       "effort": "m",
-      "findings": ["F-013"]
+      "findings": [
+        "F-013"
+      ],
+      "finding_id": "unknown",
+      "rationale": "Priority 11 action."
     },
     {
-      "priority": 12,
       "action": "Replace loading <p> tags with PageState component on gigs/[id], [username], profile/index. Fix settings avatar div keyboard accessibility. Fix profile/index Tailwind class.",
       "effort": "s",
-      "findings": ["F-014", "F-016", "F-017"]
+      "findings": [
+        "F-014",
+        "F-016",
+        "F-017"
+      ],
+      "finding_id": "unknown",
+      "rationale": "Priority 12 action."
     }
-  ]
+  ],
+  "schema_version": "1.1.0",
+  "run_metadata": {
+    "timestamp": "2026-03-05T13:21:11Z",
+    "branch": "main",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "claude-sonnet-4-5"
+  }
 }
