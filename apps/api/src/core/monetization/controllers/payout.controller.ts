@@ -108,11 +108,10 @@ export class PayoutController {
 
   /**
    * GET /payouts/:id
-   * Get a specific payout
+   * Get a specific payout — only accessible by the payout owner or an admin
    */
   @Get(':id')
   async getPayout(@Request() req, @Param('id') id: string) {
-    // TODO: Implement single payout fetch with permission check
-    return { id }; // Placeholder
+    return this.payoutService.getPayoutById(id, req.user.id, req.user.role);
   }
 }

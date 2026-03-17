@@ -6,6 +6,7 @@ import { authApi } from '@/lib/api/auth';
 import ProtectedRoute from '@/components/auth/auth/ProtectedRoute';
 import AuthShell from '@/components/auth/AuthShell';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { copy } from '@/lib/copy';
 import { Button, Card, Input, PageState } from '@embr/ui';
 import { copy } from '@/lib/copy';
 
