@@ -4,19 +4,8 @@ import Link from 'next/link';
 import { ProtectedPageShell } from '@/components/layout';
 import { Button } from '@embr/ui';
 import { Calendar, Clock, MapPin, AlertCircle, CheckCircle, Shield } from 'lucide-react';
-import apiClient from '@/lib/api/client';
-
-interface Gig {
-  id: string;
-  title: string;
-  artistName: string;
-  price: number;
-  description: string;
-  category: string;
-  duration: number;
-  location?: string;
-  imageUrl?: string;
-}
+import { gigsApi, applicationsApi } from '@shared/api/gigs.api';
+import type { GigWithDetails } from '@embr/types';
 
 interface BookingStep {
   id: string;
@@ -29,52 +18,59 @@ export default function GigBookingPage() {
   const router = useRouter();
   const { gigId } = router.query;
 
-  const [gig, setGig] = useState<Gig | null>(null);
+  const [gig, setGig] = useState<GigWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [step, setStep] = useState<'details' | 'payment' | 'success'>('details');
-  const [paymentLoading, setPaymentLoading] = useState(false);
-  const [_bookingId, setBookingId] = useState<string>('');
+  const [step, setStep] = useState<'details' | 'success'>('details');
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [applicationId, setApplicationId] = useState<string>('');
+  const [coverLetter, setCoverLetter] = useState('');
+  const [relevantExperience, setRelevantExperience] = useState('');
+  const [formError, setFormError] = useState('');
 
-  // Fetch gig details
   useEffect(() => {
     if (!gigId) return;
-
-    const fetchGig = async () => {
-      try {
-        const { data } = await apiClient.get(`/gigs/${gigId}`);
-        setGig(data);
-        setLoading(false);
-      } catch (err: any) {
-        setError(err.response?.data?.message || err.message || 'Failed to load gig');
-        setLoading(false);
-      }
-    };
-
-    fetchGig();
+    gigsApi
+      .getById(gigId as string)
+      .then(setGig)
+      .catch((err: any) => setError(err.response?.data?.message || err.message || 'Failed to load gig'))
+      .finally(() => setLoading(false));
   }, [gigId]);
 
   const handleBooking = async () => {
     if (!gig) return;
-
-    setPaymentLoading(true);
+    setBookingLoading(true);
     setError('');
+    setFormError('');
+
+    if (coverLetter.trim().length < 100) {
+      setFormError('Please provide a message of at least 100 characters describing your interest.');
+      setBookingLoading(false);
+      return;
+    }
+    if (relevantExperience.trim().length < 50) {
+      setFormError('Please describe your relevant experience (at least 50 characters).');
+      setBookingLoading(false);
+      return;
+    }
 
     try {
-      const { data } = await apiClient.post(`/gigs/bookings/${gig.id}/checkout`, {
-        artistId: gig.id,
+      const application = await applicationsApi.create({
+        gigId: gig.id,
+        coverLetter: coverLetter.trim(),
+        proposedBudget: gig.budgetMin,
+        proposedTimeline: gig.estimatedDuration ?? 7,
+        portfolioLinks: [],
+        relevantExperience: relevantExperience.trim(),
+        milestones: [],
       });
 
-      setBookingId(data.paymentIntentId);
-      // paymentIntentId is kept in component state, not sessionStorage (F-023)
-
-      // In production, integrate Stripe.js for full payment form
-      // For now, show success (immediate for demo)
+      setApplicationId(application.id);
       setStep('success');
     } catch (err: any) {
-      setError(err.message || 'Failed to create booking');
+      setError(err.response?.data?.message || err.message || 'Failed to submit booking request');
     } finally {
-      setPaymentLoading(false);
+      setBookingLoading(false);
     }
   };
 
@@ -87,11 +83,8 @@ export default function GigBookingPage() {
           { label: 'Book' },
         ]}
       >
-        <div style={{ textAlign: 'center', padding: '3rem' }}>
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-500 mx-auto"></div>
-          <p style={{ marginTop: '1rem', color: 'var(--embr-muted-text)' }}>
-            Loading gig details...
-          </p>
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--embr-muted-text)' }}>
+          Loading gig details...
         </div>
       </ProtectedPageShell>
     );
@@ -122,27 +115,27 @@ export default function GigBookingPage() {
 
   const bookingSteps: BookingStep[] = [
     {
-      id: 'payment',
-      title: 'Secure Payment',
-      description: 'Your payment is secured and verified',
+      id: 'apply',
+      title: 'Submit Request',
+      description: 'Send your booking request to the gig creator',
       icon: <Shield size={24} />,
     },
     {
-      id: 'hold',
-      title: '3-Day Hold',
-      description: 'Funds are held safely for 3 days',
+      id: 'review',
+      title: 'Creator Reviews',
+      description: 'Creator reviews and accepts your application',
       icon: <Clock size={24} />,
     },
     {
       id: 'confirm',
       title: 'Confirmed',
-      description: 'Both parties confirm the booking',
+      description: 'Both parties agree on terms and milestones',
       icon: <CheckCircle size={24} />,
     },
     {
-      id: 'release',
-      title: 'Release Funds',
-      description: 'Artist receives payment automatically',
+      id: 'complete',
+      title: 'Get it Done',
+      description: 'Work is completed and payment released',
       icon: <Calendar size={24} />,
     },
   ];
@@ -152,7 +145,8 @@ export default function GigBookingPage() {
       title="Book Gig"
       breadcrumbs={[
         { label: 'Gigs', href: '/gigs' },
-        { label: gig.title },
+        { label: gig.title, href: `/gigs/${gig.id}` },
+        { label: 'Book' },
       ]}
     >
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -166,127 +160,134 @@ export default function GigBookingPage() {
                   <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '1.8rem', fontWeight: '700' }}>
                     {gig.title}
                   </h1>
-                  <p style={{ margin: '0 0 1.5rem 0', color: 'var(--embr-muted-text)', fontSize: '1rem' }}>
-                    By{' '}
-                    <Link href={`/gigs/artist/${gig.artistName}`}>
-                      <span style={{ color: 'var(--embr-accent)', fontWeight: '600' }}>
-                        {gig.artistName}
-                      </span>
-                    </Link>
+                  <p style={{ margin: '0 0 0.5rem 0', color: 'var(--embr-muted-text)', fontSize: '0.9rem' }}>
+                    {gig.category.replace('_', ' ')} ·{' '}
+                    {gig.creator?.profile?.displayName || gig.creator?.username || 'Unknown'}
                   </p>
 
-                  <div style={{ marginBottom: '2rem' }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                      About this gig
-                    </h3>
-                    <p style={{ color: 'var(--embr-text)', lineHeight: '1.6' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', marginBottom: '1.5rem', marginTop: '1rem' }}>
+                    <div style={{ padding: '0.75rem', borderRadius: 'var(--embr-radius-md)', backgroundColor: 'var(--embr-bg)', border: '1px solid var(--embr-border)' }}>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--embr-muted-text)', marginBottom: '0.25rem' }}>Budget Range</div>
+                      <div style={{ fontWeight: '700', color: 'var(--embr-accent)' }}>${gig.budgetMin.toLocaleString()} – ${gig.budgetMax.toLocaleString()}</div>
+                    </div>
+                    {gig.estimatedDuration && (
+                      <div style={{ padding: '0.75rem', borderRadius: 'var(--embr-radius-md)', backgroundColor: 'var(--embr-bg)', border: '1px solid var(--embr-border)' }}>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--embr-muted-text)', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <Clock size={12} /> Timeline
+                        </div>
+                        <div style={{ fontWeight: '600' }}>{gig.estimatedDuration} day{gig.estimatedDuration !== 1 ? 's' : ''}</div>
+                      </div>
+                    )}
+                    {gig.location && (
+                      <div style={{ padding: '0.75rem', borderRadius: 'var(--embr-radius-md)', backgroundColor: 'var(--embr-bg)', border: '1px solid var(--embr-border)' }}>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--embr-muted-text)', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <MapPin size={12} /> Location
+                        </div>
+                        <div style={{ fontWeight: '600' }}>{gig.location}</div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: '600', marginBottom: '0.5rem' }}>About this gig</h3>
+                    <p style={{ color: 'var(--embr-muted-text)', lineHeight: '1.6', fontSize: '0.9rem', whiteSpace: 'pre-wrap' }}>
                       {gig.description}
                     </p>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
-                    <div style={{ padding: '1rem', borderRadius: 'var(--embr-radius-md)', backgroundColor: 'var(--embr-bg)', border: '1px solid var(--embr-border)' }}>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--embr-muted-text)', marginBottom: '0.5rem' }}>
-                        Duration
-                      </div>
-                      <div style={{ fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Clock size={18} />
-                        {gig.duration} min
-                      </div>
+                  <div>
+                    <label htmlFor="cover-letter" style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.375rem' }}>
+                      Why are you interested? <span style={{ color: 'var(--embr-error)' }}>*</span>
+                    </label>
+                    <textarea
+                      id="cover-letter"
+                      value={coverLetter}
+                      onChange={(e) => setCoverLetter(e.target.value)}
+                      rows={4}
+                      placeholder={`Tell the creator about yourself and why you're interested in "${gig.title}"… (min 100 characters)`}
+                      style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'var(--embr-bg)', fontSize: '0.9rem', resize: 'vertical', boxSizing: 'border-box' }}
+                    />
+                    <div style={{ fontSize: '0.75rem', color: coverLetter.length >= 100 ? 'var(--embr-muted-text)' : 'var(--embr-error)', textAlign: 'right', marginTop: '0.25rem' }}>
+                      {coverLetter.length}/100 min
                     </div>
-                    <div style={{ padding: '1rem', borderRadius: 'var(--embr-radius-md)', backgroundColor: 'var(--embr-bg)', border: '1px solid var(--embr-border)' }}>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--embr-muted-text)', marginBottom: '0.5rem' }}>
-                        Category
-                      </div>
-                      <div style={{ fontWeight: '600' }}>{gig.category}</div>
-                    </div>
-                    {gig.location && (
-                      <div style={{ padding: '1rem', borderRadius: 'var(--embr-radius-md)', backgroundColor: 'var(--embr-bg)', border: '1px solid var(--embr-border)' }}>
-                        <div style={{ fontSize: '0.85rem', color: 'var(--embr-muted-text)', marginBottom: '0.5rem' }}>
-                          Location
-                        </div>
-                        <div style={{ fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <MapPin size={18} />
-                          {gig.location}
-                        </div>
-                      </div>
-                    )}
                   </div>
+                  <div>
+                    <label htmlFor="relevant-experience" style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.375rem' }}>
+                      Relevant Experience <span style={{ color: 'var(--embr-error)' }}>*</span>
+                    </label>
+                    <textarea
+                      id="relevant-experience"
+                      value={relevantExperience}
+                      onChange={(e) => setRelevantExperience(e.target.value)}
+                      rows={3}
+                      placeholder="Describe your relevant skills and past work… (min 50 characters)"
+                      style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'var(--embr-bg)', fontSize: '0.9rem', resize: 'vertical', boxSizing: 'border-box' }}
+                    />
+                    <div style={{ fontSize: '0.75rem', color: relevantExperience.length >= 50 ? 'var(--embr-muted-text)' : 'var(--embr-error)', textAlign: 'right', marginTop: '0.25rem' }}>
+                      {relevantExperience.length}/50 min
+                    </div>
+                  </div>
+                  {formError && (
+                    <div style={{ padding: '0.625rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-error)', background: 'color-mix(in srgb, var(--embr-error) 10%, white)', color: 'var(--embr-error)', fontSize: '0.85rem' }}>
+                      {formError}
+                    </div>
+                  )}
                 </div>
 
-                {/* Right: Pricing Summary */}
-                <div className="ui-card" style={{ backgroundColor: 'color-mix(in srgb, var(--embr-accent) 8%, white)', border: '2px solid var(--embr-accent)' }} data-padding="lg">
+                {/* Right: Booking Summary */}
+                <div
+                  className="ui-card"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--embr-accent) 8%, white)', border: '2px solid var(--embr-accent)' }}
+                  data-padding="lg"
+                >
                   <div style={{ marginBottom: '1.5rem' }}>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--embr-muted-text)', marginBottom: '0.5rem' }}>
-                      Price
-                    </div>
-                    <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--embr-accent)' }}>
-                      ${gig.price.toFixed(2)}
+                    <div style={{ fontSize: '0.78rem', color: 'var(--embr-muted-text)', marginBottom: '0.375rem' }}>Budget range</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--embr-accent)' }}>
+                      ${gig.budgetMin.toLocaleString()}–${gig.budgetMax.toLocaleString()}
                     </div>
                   </div>
 
-                  <div style={{ padding: '1rem', borderRadius: 'var(--embr-radius-md)', backgroundColor: 'color-mix(in srgb, var(--embr-sun) 12%, white)', border: '1px solid var(--embr-border)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-                    <p style={{ margin: '0 0 0.5rem 0', fontWeight: '600' }}>
-                      🛡️ Protected Booking
-                    </p>
+                  <div style={{ padding: '0.875rem', borderRadius: 'var(--embr-radius-md)', backgroundColor: 'color-mix(in srgb, var(--embr-sun) 12%, white)', border: '1px solid var(--embr-border)', marginBottom: '1.25rem', fontSize: '0.85rem' }}>
+                    <p style={{ margin: '0 0 0.375rem', fontWeight: '600' }}>🛡️ Protected Booking</p>
                     <p style={{ margin: 0, color: 'var(--embr-muted-text)' }}>
-                      Your payment is held securely for 3 days. Release or dispute until then.
+                      Your request goes to the creator who can accept or negotiate terms.
                     </p>
                   </div>
 
-                  <Button
-                    onClick={handleBooking}
-                    disabled={paymentLoading}
-                    style={{ width: '100%' }}
-                  >
-                    {paymentLoading ? 'Processing...' : 'Book Now'}
+                  <Button onClick={handleBooking} disabled={bookingLoading} style={{ width: '100%' }}>
+                    {bookingLoading ? 'Submitting...' : 'Send Booking Request'}
                   </Button>
+
+                  <Link href={`/gigs/${gig.id}`} style={{ display: 'block', textAlign: 'center', fontSize: '0.8rem', color: 'var(--embr-muted-text)', textDecoration: 'none', marginTop: '0.75rem' }}>
+                    View full gig details
+                  </Link>
                 </div>
               </div>
             </div>
 
             {/* Booking Process Timeline */}
             <div className="ui-card" data-padding="lg" style={{ marginBottom: '2rem' }}>
-              <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.1rem', fontWeight: '700' }}>
-                How Booking Protection Works
+              <h2 style={{ margin: '0 0 1.25rem', fontSize: '1.05rem', fontWeight: '700' }}>
+                How Booking Works
               </h2>
-
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
                 {bookingSteps.map((stepItem, idx) => (
                   <div
                     key={stepItem.id}
                     style={{
-                      padding: '1.5rem',
+                      padding: '1.25rem',
                       borderRadius: 'var(--embr-radius-md)',
-                      border: '2px solid var(--embr-border)',
+                      border: '1px solid var(--embr-border)',
                       backgroundColor: 'var(--embr-bg)',
                       position: 'relative',
                     }}
                   >
-                    {/* Connector Line */}
                     {idx < bookingSteps.length - 1 && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: '50%',
-                          right: '-1rem',
-                          width: '1rem',
-                          height: '2px',
-                          backgroundColor: 'var(--embr-border)',
-                          zIndex: -1,
-                        }}
-                      />
+                      <div style={{ position: 'absolute', top: '50%', right: '-1rem', width: '1rem', height: '2px', backgroundColor: 'var(--embr-border)', zIndex: -1 }} />
                     )}
-
-                    <div style={{ marginBottom: '1rem', color: 'var(--embr-accent)' }}>
-                      {stepItem.icon}
-                    </div>
-                    <h3 style={{ fontSize: '0.95rem', fontWeight: '600', margin: '0 0 0.5rem 0' }}>
-                      {stepItem.title}
-                    </h3>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--embr-muted-text)', margin: 0 }}>
-                      {stepItem.description}
-                    </p>
+                    <div style={{ marginBottom: '0.75rem', color: 'var(--embr-accent)' }}>{stepItem.icon}</div>
+                    <h3 style={{ fontSize: '0.9rem', fontWeight: '600', margin: '0 0 0.375rem' }}>{stepItem.title}</h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--embr-muted-text)', margin: 0 }}>{stepItem.description}</p>
                   </div>
                 ))}
               </div>
@@ -295,117 +296,56 @@ export default function GigBookingPage() {
             {/* Important Info */}
             <div className="ui-card" data-padding="lg" style={{ backgroundColor: 'color-mix(in srgb, var(--embr-warm-2) 10%, white)', marginBottom: '2rem' }}>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                <AlertCircle size={20} style={{ color: 'var(--embr-sun)', flexShrink: 0 }} />
+                <AlertCircle size={20} style={{ color: 'var(--embr-sun)', flexShrink: 0, marginTop: '0.1rem' }} />
                 <div>
-                  <p style={{ margin: 0, fontWeight: '600', marginBottom: '0.5rem' }}>
-                    Payment Protection
-                  </p>
-                  <ul style={{ margin: 0, paddingLeft: '1.5rem', color: 'var(--embr-muted-text)', fontSize: '0.9rem' }}>
-                    <li style={{ marginBottom: '0.25rem' }}>Your payment is securely held for 3 days</li>
-                    <li style={{ marginBottom: '0.25rem' }}>You can file a dispute up to 24 hours before auto-release</li>
-                    <li style={{ marginBottom: '0.25rem' }}>Artist cannot access funds until the hold period expires</li>
-                    <li>No hidden fees or charges</li>
+                  <p style={{ margin: '0 0 0.5rem', fontWeight: '600', fontSize: '0.9rem' }}>Good to know</p>
+                  <ul style={{ margin: 0, paddingLeft: '1.25rem', color: 'var(--embr-muted-text)', fontSize: '0.85rem' }}>
+                    <li style={{ marginBottom: '0.25rem' }}>Sending a booking request does not immediately commit payment</li>
+                    <li style={{ marginBottom: '0.25rem' }}>The creator must accept your request before work begins</li>
+                    <li style={{ marginBottom: '0.25rem' }}>You can negotiate budget and timeline in the messages</li>
+                    <li>Payment is only processed after both parties agree on terms</li>
                   </ul>
                 </div>
               </div>
             </div>
-
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <Link href="/gigs" style={{ flex: 1 }}>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={paymentLoading}
-                  style={{ width: '100%' }}
-                >
-                  Browse Other Gigs
-                </Button>
-              </Link>
-            </div>
-
-            {error && (
-              <div
-                style={{
-                  marginTop: '1rem',
-                  padding: '1rem',
-                  borderRadius: 'var(--embr-radius-md)',
-                  backgroundColor: 'color-mix(in srgb, var(--embr-error) 15%, white)',
-                  border: '1px solid var(--embr-error)',
-                  color: 'var(--embr-error)',
-                  fontSize: '0.9rem',
-                }}
-              >
-                {error}
-              </div>
-            )}
           </>
         )}
 
         {/* Success State */}
         {step === 'success' && (
-          <div className="ui-card" data-padding="lg" style={{ textAlign: 'center' }}>
+          <div className="ui-card" data-padding="lg" style={{ textAlign: 'center', maxWidth: '560px', margin: '0 auto' }}>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem' }}>
-              Booking Confirmed!
+              Booking Request Sent!
             </h2>
             <p style={{ color: 'var(--embr-muted-text)', marginBottom: '2rem' }}>
-              You've successfully booked <strong>{gig.title}</strong> with{' '}
-              <strong>{gig.artistName}</strong>.
+              Your request for <strong>{gig.title}</strong> has been submitted. The creator will review it and get back to you soon.
             </p>
 
-            {/* Booking Timeline */}
-            <div
-              style={{
-                padding: '1.5rem',
-                borderRadius: 'var(--embr-radius-md)',
-                backgroundColor: 'var(--embr-bg)',
-                border: '1px solid var(--embr-border)',
-                marginBottom: '2rem',
-                textAlign: 'left',
-              }}
-            >
-              <h3 style={{ margin: '0 0 1rem 0', fontWeight: '600' }}>
-                🔒 What Happens Next
-              </h3>
-              <div style={{ fontSize: '0.9rem' }}>
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                  <div style={{ fontWeight: '600', color: 'var(--embr-accent)', minWidth: '60px' }}>
-                    Now
-                  </div>
-                  <div style={{ color: 'var(--embr-muted-text)' }}>
-                    Payment confirmed and securely held
-                  </div>
+            <div style={{ padding: '1.25rem', borderRadius: 'var(--embr-radius-md)', backgroundColor: 'var(--embr-bg)', border: '1px solid var(--embr-border)', marginBottom: '2rem', textAlign: 'left' }}>
+              <h3 style={{ margin: '0 0 1rem', fontWeight: '600', fontSize: '0.95rem' }}>🔒 What Happens Next</h3>
+              <div style={{ fontSize: '0.88rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.875rem' }}>
+                  <div style={{ fontWeight: '600', color: 'var(--embr-accent)', minWidth: '50px' }}>Now</div>
+                  <div style={{ color: 'var(--embr-muted-text)' }}>Creator receives your booking request</div>
                 </div>
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                  <div style={{ fontWeight: '600', color: 'var(--embr-accent)', minWidth: '60px' }}>
-                    24h
-                  </div>
-                  <div style={{ color: 'var(--embr-muted-text)' }}>
-                    Last chance to file a dispute (if needed)
-                  </div>
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.875rem' }}>
+                  <div style={{ fontWeight: '600', color: 'var(--embr-accent)', minWidth: '50px' }}>Soon</div>
+                  <div style={{ color: 'var(--embr-muted-text)' }}>Creator accepts or proposes changes</div>
                 </div>
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                  <div style={{ fontWeight: '600', color: 'var(--embr-accent)', minWidth: '60px' }}>
-                    3 days
-                  </div>
-                  <div style={{ color: 'var(--embr-muted-text)' }}>
-                    Funds auto-released to artist
-                  </div>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div style={{ fontWeight: '600', color: 'var(--embr-accent)', minWidth: '50px' }}>Done</div>
+                  <div style={{ color: 'var(--embr-muted-text)' }}>Work begins once both parties confirm</div>
                 </div>
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
               <Link href="/gigs/bookings" style={{ flex: 1, minWidth: '150px' }}>
-                <Button style={{ width: '100%' }}>View Bookings</Button>
+                <Button style={{ width: '100%' }}>View My Bookings</Button>
               </Link>
               <Link href="/gigs" style={{ flex: 1, minWidth: '150px' }}>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  style={{ width: '100%' }}
-                >
+                <Button type="button" variant="secondary" style={{ width: '100%' }}>
                   Browse More Gigs
                 </Button>
               </Link>

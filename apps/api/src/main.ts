@@ -38,8 +38,13 @@ process.on('uncaughtException', (error: Error) => {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Security middleware
-  app.use(helmet());
+  // Security middleware - relaxed for local development
+  if (process.env.NODE_ENV === 'production') {
+    app.use(helmet());
+  } else {
+    // Development: disable CSP to allow localhost cross-port requests
+    app.use(helmet({ contentSecurityPolicy: false }));
+  }
   app.use(cookieParser());
 
   // Global prefix for all routes
