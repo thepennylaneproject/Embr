@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { walletApi } from '@shared/api/monetization.api';
+import { getApiErrorMessage } from '@/lib/api/error';
 import type {
   WalletBalance,
   WalletStats,
@@ -44,8 +45,7 @@ export function useWallet(): UseWalletReturn {
       const data = await walletApi.getBalance();
       setBalance(data);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load balance');
-      console.error('Error fetching balance:', err);
+      setError(getApiErrorMessage(err, 'Could not load your balance. Please refresh.'));
     } finally {
       setIsLoadingBalance(false);
     }
@@ -58,8 +58,7 @@ export function useWallet(): UseWalletReturn {
       const data = await walletApi.getStats();
       setStats(data);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load stats');
-      console.error('Error fetching stats:', err);
+      setError(getApiErrorMessage(err, 'Could not load wallet stats. Please refresh.'));
     } finally {
       setIsLoadingStats(false);
     }
@@ -79,8 +78,7 @@ export function useWallet(): UseWalletReturn {
         const data = await walletApi.getTransactions(filters);
         setTransactions(data.transactions);
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to load transactions');
-        console.error('Error fetching transactions:', err);
+        setError(getApiErrorMessage(err, 'Could not load transactions. Please refresh.'));
       } finally {
         setIsLoadingTransactions(false);
       }

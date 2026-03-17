@@ -27,7 +27,7 @@ export function PageState({
     (type === 'loading'
       ? 'This can take a few seconds.'
       : type === 'error'
-        ? 'Something went wrong. Please retry.'
+        ? 'Something went wrong. Please try refreshing the page.'
         : undefined);
 
   return (
