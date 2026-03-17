@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deploy workflow with SSH-based API deployment and Vercel web deployment
 - Comprehensive security headers (CSP, HSTS, X-Frame-Options) in Next.js config
 - Pre-commit hooks via Husky for secret scanning
+- Merge queue documentation and `merge_group` CI support for batching approved PRs safely
 
 ### Fixed
 - Resolved all P0 security findings from audit (secret rotation, cookie security, email validation)

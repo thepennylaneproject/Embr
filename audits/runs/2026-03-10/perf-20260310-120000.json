@@ -922,7 +922,6 @@
     "Log Redis connection failures and fallback events for 1 week to measure Redis reliability",
     "Measure Mux API calls daily to establish baseline usage and monthly cost trajectory"
   ],
-  "summary": "Embr shows signs of emerging performance issues typical in growing social/marketplace platforms: missing database indexes on high-cardinality keys, potential N+1 queries in core services, unnecessary re-fetches in frontend hooks, and lack of visibility into third-party API costs. Frontend image optimization and caching strategies are not yet optimized. Primary risks are database query performance (slow as post/message tables grow), frontend bundle size (no measurement, likely >500kb), and unmetered API costs (Mux, AWS). None of these are blockers today but will become critical at 10k+ users. Recommend immediate action on database indexes (P1, low effort) and enabling observability infrastructure (P1, high effort but foundational). Findings are inference-based; production profiling data would refine confidence levels.",
   "run_metadata": {
     "timestamp": "2026-03-10T12:00:00Z",
     "branch": "main",

@@ -9,6 +9,33 @@ import { useToast } from '@embr/ui';
 import type { MarketplaceListing } from '@embr/types';
 import { LISTING_CONDITION_LABELS } from '@embr/types';
 
+interface CartItem {
+  productId: string;
+  title: string;
+  price: number;
+  quantity: number;
+  sellerId: string;
+  sellerName: string;
+}
+
+function addToCart(listing: MarketplaceListing) {
+  const existing: CartItem[] = JSON.parse(localStorage.getItem('marketplace_cart') || '[]');
+  const idx = existing.findIndex((i) => i.productId === listing.id);
+  if (idx >= 0) {
+    existing[idx].quantity += 1;
+  } else {
+    existing.push({
+      productId: listing.id,
+      title: listing.title,
+      price: listing.price / 100,
+      quantity: 1,
+      sellerId: listing.sellerId,
+      sellerName: listing.seller?.profile?.displayName || listing.seller?.username || 'Seller',
+    });
+  }
+  localStorage.setItem('marketplace_cart', JSON.stringify(existing));
+}
+
 export default function ListingDetailPage() {
   const router = useRouter();
   const { id } = router.query;
@@ -32,7 +59,7 @@ export default function ListingDetailPage() {
   useEffect(() => {
     if (!id) return;
     getListing(id as string).then(setListing).catch((e) => setError(e.response?.data?.message || 'Not found')).finally(() => setPageLoading(false));
-  }, [id]);
+  }, [id, getListing]);
 
   const handleBuy = async () => {
     if (!listing) return;
@@ -152,11 +179,23 @@ export default function ListingDetailPage() {
                 <button onClick={() => setShowBuyModal(true)} style={{ padding: '0.75rem', borderRadius: 'var(--embr-radius-md)', border: 'none', background: 'var(--embr-accent)', color: '#fff', cursor: 'pointer', fontWeight: '800', fontSize: '1rem' }}>
                   Buy Now
                 </button>
+                <button
+                  onClick={() => {
+                    addToCart(listing);
+                    showToast({ title: 'Added to cart', description: `${listing.title} is in your cart.`, kind: 'success' });
+                  }}
+                  style={{ padding: '0.75rem', borderRadius: 'var(--embr-radius-md)', border: '2px solid var(--embr-accent)', background: 'transparent', color: 'var(--embr-accent)', cursor: 'pointer', fontWeight: '700', fontSize: '0.9rem' }}
+                >
+                  🛒 Add to Cart
+                </button>
                 {listing.allowOffers && (
-                  <button onClick={() => setShowOfferModal(true)} style={{ padding: '0.75rem', borderRadius: 'var(--embr-radius-md)', border: '2px solid var(--embr-accent)', background: 'transparent', color: 'var(--embr-accent)', cursor: 'pointer', fontWeight: '700', fontSize: '0.9rem' }}>
+                  <button onClick={() => setShowOfferModal(true)} style={{ padding: '0.75rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'transparent', color: 'var(--embr-muted-text)', cursor: 'pointer', fontWeight: '600', fontSize: '0.875rem' }}>
                     Make an Offer
                   </button>
                 )}
+                <Link href="/marketplace/cart" style={{ textAlign: 'center', fontSize: '0.8rem', color: 'var(--embr-muted-text)', textDecoration: 'none' }}>
+                  View Cart →
+                </Link>
               </div>
             )}
 

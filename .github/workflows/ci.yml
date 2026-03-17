@@ -5,6 +5,9 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  merge_group:
+    branches: [main, develop]
+    types: [checks_requested]
 
 jobs:
   validate:
@@ -63,6 +66,18 @@ jobs:
 
       - name: Build shared packages
         run: npm run build:types
+
+      - name: Typecheck API
+        run: npx tsc --noEmit --project apps/api/tsconfig.build.json
+
+      - name: Build API
+        run: npm --prefix apps/api run build
+
+      - name: Test API (unit tests)
+        run: npm --prefix apps/api run test:unit
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/embr_test"
+          DIRECT_URL: "postgresql://postgres:postgres@localhost:5432/embr_test"
 
       - name: Typecheck Web
         run: npx tsc --noEmit --project apps/web/tsconfig.json

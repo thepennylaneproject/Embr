@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { safetyApi } from '@shared/api/safety.api';
+import { getApiErrorMessage } from '@/lib/api/error';
 import type {
   CreateReportDto,
   UpdateReportDto,
@@ -32,7 +33,7 @@ export function useSafety() {
       const report = await safetyApi.createReport(dto);
       return report;
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Could not submit your report. Please try again.'));
       throw err;
     } finally {
       setIsSubmitting(false);
@@ -48,7 +49,7 @@ export function useSafety() {
       setReports(data.reports);
       return data;
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Could not load reports. Please refresh.'));
       throw err;
     } finally {
       setIsLoading(false);
@@ -64,7 +65,7 @@ export function useSafety() {
       setReports((prev) => prev.map((r) => (r.id === reportId ? report : r)));
       return report;
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Could not update the report. Please try again.'));
       throw err;
     } finally {
       setIsSubmitting(false);
@@ -77,7 +78,7 @@ export function useSafety() {
       setQueueStats(stats);
       return stats;
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Could not load queue stats. Please refresh.'));
       throw err;
     }
   }, []);
@@ -92,7 +93,7 @@ export function useSafety() {
       setBlockedUsers((prev) => [block, ...prev]);
       return block;
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Could not block this user. Please try again.'));
       throw err;
     } finally {
       setIsSubmitting(false);
@@ -107,7 +108,7 @@ export function useSafety() {
       await safetyApi.unblockUser(userId);
       setBlockedUsers((prev) => prev.filter((b) => b.user.id !== userId));
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Could not unblock this user. Please try again.'));
       throw err;
     } finally {
       setIsSubmitting(false);
@@ -123,7 +124,7 @@ export function useSafety() {
       setBlockedUsers(data.blocks);
       return data;
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Could not load blocked users. Please refresh.'));
       throw err;
     } finally {
       setIsLoading(false);
@@ -140,7 +141,7 @@ export function useSafety() {
       setMutedUsers((prev) => [mute, ...prev]);
       return mute;
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Could not mute this user. Please try again.'));
       throw err;
     } finally {
       setIsSubmitting(false);
@@ -155,7 +156,7 @@ export function useSafety() {
       await safetyApi.unmuteUser(userId);
       setMutedUsers((prev) => prev.filter((m) => m.user.id !== userId));
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Could not unmute this user. Please try again.'));
       throw err;
     } finally {
       setIsSubmitting(false);
@@ -171,7 +172,7 @@ export function useSafety() {
       setMutedUsers(data.mutes);
       return data;
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Could not load muted users. Please refresh.'));
       throw err;
     } finally {
       setIsLoading(false);
@@ -188,7 +189,7 @@ export function useSafety() {
       setMutedKeywords((prev) => [keyword, ...prev]);
       return keyword;
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Could not add the keyword. Please try again.'));
       throw err;
     } finally {
       setIsSubmitting(false);
@@ -203,7 +204,7 @@ export function useSafety() {
       await safetyApi.removeMutedKeyword(keywordId);
       setMutedKeywords((prev) => prev.filter((k) => k.id !== keywordId));
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Could not remove the keyword. Please try again.'));
       throw err;
     } finally {
       setIsSubmitting(false);
@@ -219,7 +220,7 @@ export function useSafety() {
       setMutedKeywords(keywords);
       return keywords;
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Could not load muted keywords. Please refresh.'));
       throw err;
     } finally {
       setIsLoading(false);
@@ -236,7 +237,7 @@ export function useSafety() {
       setAppeals((prev) => [appeal, ...prev]);
       return appeal;
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Could not submit your appeal. Please try again.'));
       throw err;
     } finally {
       setIsSubmitting(false);
@@ -252,7 +253,7 @@ export function useSafety() {
       setAppeals(data.appeals);
       return data;
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Could not load appeals. Please refresh.'));
       throw err;
     } finally {
       setIsLoading(false);
@@ -264,7 +265,7 @@ export function useSafety() {
       const result = await safetyApi.filterContent({ content });
       return result;
     } catch (err: any) {
-      setError(err.message);
+      setError(getApiErrorMessage(err, 'Content filter check failed. Please try again.'));
       throw err;
     }
   }, []);

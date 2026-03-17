@@ -1,6 +1,7 @@
 import {
   IsString,
   IsNumber,
+  IsInt,
   IsOptional,
   IsEnum,
   IsBoolean,
@@ -35,12 +36,12 @@ export class GetTransactionsQueryDto {
   endDate?: string;
 
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(1)
   page?: number = 1;
 
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(1)
   @Max(100)
   limit?: number = 20;
