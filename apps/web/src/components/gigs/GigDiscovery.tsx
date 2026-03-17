@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { gigsApi } from '@shared/api/gigs.api';
 import { GigCard } from './GigCard';
@@ -48,11 +48,9 @@ export const GigDiscovery: React.FC = () => {
 
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    searchGigs();
-  }, [filters.page, filters.sortBy, filters.category]);
-
-  const searchGigs = async () => {
+  // searchGigs is memoized so the useEffect below only re-fires when the
+  // search parameters actually change, not on every render.
+  const searchGigs = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -69,7 +67,11 @@ export const GigDiscovery: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, currentPage]);
+
+  useEffect(() => {
+    searchGigs();
+  }, [searchGigs]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +101,6 @@ export const GigDiscovery: React.FC = () => {
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
-    setFilters({ ...filters, page: newPage });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 

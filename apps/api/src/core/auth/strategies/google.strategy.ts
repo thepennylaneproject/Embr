@@ -7,6 +7,10 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(private readonly configService: ConfigService) {
+    const clientID = configService.get<string>('GOOGLE_CLIENT_ID') || 'placeholder';
+    const clientSecret = configService.get<string>('GOOGLE_CLIENT_SECRET') || 'placeholder';
+    const callbackURL = configService.get<string>('GOOGLE_CALLBACK_URL') || 'http://localhost:3003/api/auth/google/callback'; // pragma: allowlist secret
+    
     super({
       clientID: configService.get<string>('GOOGLE_CLIENT_ID') || 'disabled',
       clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET') || 'disabled',

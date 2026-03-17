@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ProtectedPageShell } from '@/components/layout';
 import { TrackDiscovery } from '@/components/music/discovery/TrackDiscovery';
+import { FeatureHint } from '@/components/onboarding';
 import { Button } from '@embr/ui';
 
 export default function MusicDiscoveryPage() {
@@ -22,6 +23,12 @@ export default function MusicDiscoveryPage() {
       subtitle="Discover and license tracks from creators."
       breadcrumbs={[{ label: 'Music' }]}
     >
+      <FeatureHint
+        pageId="music"
+        icon="🎵"
+        title="Welcome to Music"
+        description="Discover tracks from independent artists, upload your own music, and license songs for your projects. Artists earn when their music is used."
+      />
       {/* Call to Action */}
       <div
         className="ui-card"

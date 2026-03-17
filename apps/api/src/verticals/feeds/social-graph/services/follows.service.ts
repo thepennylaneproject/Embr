@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../../core/database/prisma.service';
-import { BlockingService } from '../../../../core/safety/services/blocking.service';
 import { NOTIFICATION_TYPES } from '../../../../core/notifications/notifications.constants';
 import {
   FollowUserDto,
@@ -16,10 +15,7 @@ import { sanitizePublicProfile } from '../../../../common/utils/user-sanitizer';
 export class FollowsService {
   private readonly logger = new Logger(FollowsService.name);
 
-  constructor(
-    private prisma: PrismaService,
-    private blockingService: BlockingService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   /**
    * Follow a user
@@ -30,61 +26,72 @@ export class FollowsService {
       throw new BadRequestException('Cannot follow yourself');
     }
 
-    // Check if target user exists
-    const targetUser = await this.prisma.user.findUnique({
-      where: { id: dto.followingId },
-    });
+    // Run all three pre-flight checks in parallel to avoid 3 sequential round-trips
+    // (user existence + block status + existing follow were previously serial).
+    const [targetUser, existingBlock, existingFollow] = await Promise.all([
+      this.prisma.user.findUnique({ where: { id: dto.followingId } }),
+      this.prisma.blockedUser.findFirst({
+        where: {
+          OR: [
+            { blockerId: followerId, blockedId: dto.followingId },
+            { blockerId: dto.followingId, blockedId: followerId },
+          ],
+        },
+        select: { id: true },
+      }),
+      this.prisma.follow.findUnique({
+        where: {
+          followerId_followingId: {
+            followerId,
+            followingId: dto.followingId,
+          },
+        },
+      }),
+    ]);
 
     if (!targetUser) {
       throw new NotFoundException('User not found');
     }
 
-    // Check if user is blocked
-    const isBlocked = await this.blockingService.isBlocked(followerId, dto.followingId);
-    if (isBlocked) {
+    if (existingBlock) {
       throw new ForbiddenException('Cannot follow a blocked user or a user who has blocked you');
     }
-
-    // Check if already following
-    const existingFollow = await this.prisma.follow.findUnique({
-      where: {
-        followerId_followingId: {
-          followerId,
-          followingId: dto.followingId,
-        },
-      },
-    });
 
     if (existingFollow) {
       throw new ConflictException('Already following this user');
     }
 
-    // Create follow relationship
-    const follow = await this.prisma.follow.create({
-      data: {
-        followerId,
-        followingId: dto.followingId,
-      },
-      include: {
-        following: {
-          include: {
-            profile: true,
+    // Create follow relationship and update denormalized counts atomically.
+    // All three writes share one transaction: if any fails the whole operation
+    // rolls back, keeping the Follow row and the two Profile counters consistent.
+    const follow = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.follow.create({
+        data: {
+          followerId,
+          followingId: dto.followingId,
+        },
+        include: {
+          following: {
+            include: {
+              profile: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    // Update follower counts (denormalized for performance)
-    await Promise.all([
-      this.prisma.profile.update({
-        where: { userId: followerId },
-        data: { followingCount: { increment: 1 } },
-      }),
-      this.prisma.profile.update({
-        where: { userId: dto.followingId },
-        data: { followerCount: { increment: 1 } },
-      }),
-    ]);
+      await Promise.all([
+        tx.profile.update({
+          where: { userId: followerId },
+          data: { followingCount: { increment: 1 } },
+        }),
+        tx.profile.update({
+          where: { userId: dto.followingId },
+          data: { followerCount: { increment: 1 } },
+        }),
+      ]);
+
+      return created;
+    });
 
     // Audit log successful follow
     this.logger.log(
@@ -134,27 +141,32 @@ export class FollowsService {
       throw new NotFoundException('Follow relationship not found');
     }
 
-    // Delete follow relationship
-    await this.prisma.follow.delete({
-      where: {
-        followerId_followingId: {
-          followerId,
-          followingId,
+    // Delete follow relationship and update denormalized counts atomically.
+    // All three writes share one transaction so a partial failure cannot leave
+    // the Follow row deleted while the Profile counters remain inflated (or
+    // vice-versa). Decrement is floor-clamped at 0 to guard against any
+    // pre-existing counter drift.
+    await this.prisma.$transaction(async (tx) => {
+      await tx.follow.delete({
+        where: {
+          followerId_followingId: {
+            followerId,
+            followingId,
+          },
         },
-      },
-    });
+      });
 
-    // Update follower counts
-    await Promise.all([
-      this.prisma.profile.update({
-        where: { userId: followerId },
-        data: { followingCount: { decrement: 1 } },
-      }),
-      this.prisma.profile.update({
-        where: { userId: followingId },
-        data: { followerCount: { decrement: 1 } },
-      }),
-    ]);
+      await Promise.all([
+        tx.profile.updateMany({
+          where: { userId: followerId, followingCount: { gt: 0 } },
+          data: { followingCount: { decrement: 1 } },
+        }),
+        tx.profile.updateMany({
+          where: { userId: followingId, followerCount: { gt: 0 } },
+          data: { followerCount: { decrement: 1 } },
+        }),
+      ]);
+    });
 
     // Audit log successful unfollow
     this.logger.log(
@@ -462,49 +474,81 @@ export class FollowsService {
    * Excludes blocked users
    */
   async getSuggestedFromNetwork(userId: string, limit: number = 10) {
-    // Get users that the people you follow also follow
-    // Excludes blocked users (both directions)
-    const suggestions = await this.prisma.$queryRaw<any[]>`
-      SELECT
-        u.id,
-        u.username,
-        COUNT(DISTINCT f1.follower_id) as mutual_followers,
-        p.avatar_url,
-        p.full_name,
-        p.bio,
-        p.follower_count
-      FROM users u
-      INNER JOIN follows f2 ON f2.following_id = u.id
-      INNER JOIN follows f1 ON f1.following_id = f2.follower_id
-      LEFT JOIN profiles p ON p.user_id = u.id
-      WHERE f1.follower_id = ${userId}
-      AND f2.follower_id != ${userId}
-      AND u.id != ${userId}
-      AND NOT EXISTS (
-        SELECT 1 FROM follows
-        WHERE follower_id = ${userId}
-        AND following_id = u.id
-      )
-      AND NOT EXISTS (
-        SELECT 1 FROM blocked_users
-        WHERE (blocker_id = ${userId} AND blocked_id = u.id)
-           OR (blocker_id = u.id AND blocked_id = ${userId})
-      )
-      GROUP BY u.id, u.username, p.avatar_url, p.full_name, p.bio, p.follower_count
-      ORDER BY mutual_followers DESC, p.follower_count DESC
-      LIMIT ${limit}
-    `;
+    // Get all users the current user already follows
+    const following = await this.prisma.follow.findMany({
+      where: { followerId: userId },
+      select: { followingId: true },
+    });
+    const followingIds = following.map(f => f.followingId);
 
-    return suggestions.map(s => ({
-      id: s.id,
-      username: s.username,
-      profile: {
-        avatarUrl: s.avatar_url,
-        fullName: s.full_name,
-        bio: s.bio,
-        followerCount: s.follower_count,
+    if (followingIds.length === 0) return [];
+
+    // Get blocked user IDs (both directions)
+    const blocked = await this.prisma.blockedUser.findMany({
+      where: {
+        OR: [
+          { blockerId: userId },
+          { blockedId: userId },
+        ],
       },
-      mutualFollowers: parseInt(s.mutual_followers),
+      select: { blockerId: true, blockedId: true },
+    });
+    const blockedIds = blocked.flatMap(b => [b.blockerId, b.blockedId]);
+    const excludedIds = [...followingIds, userId, ...blockedIds];
+
+    // Get 2nd-degree connections: who the people you follow also follow
+    const secondDegree = await this.prisma.follow.findMany({
+      where: {
+        followerId: { in: followingIds },
+        followingId: { notIn: excludedIds },
+      },
+      select: {
+        followingId: true,
+        following: {
+          select: {
+            id: true,
+            username: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                displayName: true,
+                bio: true,
+                followerCount: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Aggregate mutual follower counts per candidate user
+    const mutualCountMap = new Map<string, { user: any; count: number }>();
+    for (const { followingId, following } of secondDegree) {
+      if (!mutualCountMap.has(followingId)) {
+        mutualCountMap.set(followingId, { user: following, count: 0 });
+      }
+      mutualCountMap.get(followingId)!.count++;
+    }
+
+    // Sort by mutual follower count, then by follower count, take top `limit`
+    const sorted = Array.from(mutualCountMap.values())
+      .sort((a, b) => {
+        const countDiff = b.count - a.count;
+        if (countDiff !== 0) return countDiff;
+        return (b.user.profile?.followerCount ?? 0) - (a.user.profile?.followerCount ?? 0);
+      })
+      .slice(0, limit);
+
+    return sorted.map(({ user, count }) => ({
+      id: user.id,
+      username: user.username,
+      profile: {
+        avatarUrl: user.profile?.avatarUrl ?? null,
+        fullName: user.profile?.displayName ?? null,
+        bio: user.profile?.bio ?? null,
+        followerCount: user.profile?.followerCount ?? 0,
+      },
+      mutualFollowers: count,
     }));
   }
 }
