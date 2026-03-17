@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
 
           <p style={{ marginTop: '1rem' }}>
             <Link href="/auth/login" style={{ color: 'var(--embr-muted-text)', textDecoration: 'underline' }}>
-              {copy.actions.back} to {copy.onboarding.signIn}
+              {copy.onboarding.backToSignIn}
             </Link>
           </p>
         </Card>

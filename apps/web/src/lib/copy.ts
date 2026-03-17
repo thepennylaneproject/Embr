@@ -72,8 +72,22 @@ export const copy = {
     goToFeed: 'Go to feed',
     loading: 'Loading',
     loadingDesc: 'Checking your authentication state.',
+    loadingSession: 'Loading session',
+    checkingAccountDetails: 'Checking your account details.',
     redirecting: 'Redirecting you to sign in',
     redirectingDesc: 'Please wait while we verify your session.',
+    redirectingToSignInDesc:
+      "Please wait while we redirect you to sign in. If this page doesn't redirect automatically, you can sign in manually.",
+    signInToView: 'You need to sign in to view this page.',
+    alreadySignedIn: 'You are already signed in.',
+    setNewPassword: 'Set a new password',
+    setNewPasswordSubtitle: 'Choose a secure password for your Embr account.',
+    passwordReset: 'Password reset',
+    passwordResetSuccess: 'Your password was updated. Redirecting to sign in.',
+    missingResetToken: 'Missing reset token',
+    missingResetTokenDesc: 'Open the password reset link from your email again.',
+    resetting: 'Resetting...',
+    backToSignIn: 'Back to sign in',
   },
 
   dashboard: {
@@ -278,7 +292,7 @@ export const copy = {
     networkError:
       'Unable to connect. Please check your connection and try again.',
     invalidCredentials: 'Invalid credentials.',
-    signupFailed: 'Signup failed.',
+    signupFailed: 'Account creation failed.',
     failedToLoad: 'Failed to load.',
     failedToSave: 'Could not save',
     failedToSaveDesc: 'Please try again.',
