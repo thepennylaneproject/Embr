@@ -257,7 +257,7 @@ export class MessagingService {
       if (existingConversation.deletedAt) {
         conversation = await this.prisma.conversation.update({
           where: { id: existingConversation.id },
-          data: { deletedAt: null, lastMessageAt: new Date() },
+          data: { deletedAt: null },
           include: {
             participant1: {
               include: {
@@ -324,10 +324,12 @@ export class MessagingService {
       });
 
       // Update conversation last message time
+      const updatedAt = new Date();
       await this.prisma.conversation.update({
         where: { id: conversation.id },
-        data: { lastMessageAt: new Date() },
+        data: { lastMessageAt: updatedAt },
       });
+      conversation.lastMessageAt = updatedAt;
 
       message = {
         id: newMessage.id,
@@ -405,7 +407,7 @@ export class MessagingService {
     });
 
     if (result.count === 0) {
-      throw new NotFoundException('Conversation already deleted');
+      throw new NotFoundException('Conversation not found or already deleted');
     }
 
     return { message: 'Conversation deleted successfully' };
