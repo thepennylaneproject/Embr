@@ -23,6 +23,13 @@ const nextConfig = {
   },
 
   async headers() {
+    const isDev = process.env.NODE_ENV !== 'production';
+    // In development, allow cross-port localhost connections (API runs on different port)
+    // In production, 'self' plus the stripe API are sufficient
+    const connectSrc = isDev
+      ? "'self' https://api.stripe.com ws://localhost:* http://localhost:3003 http://localhost:*"  // pragma: allowlist secret
+      : "'self' https://api.stripe.com";
+
     return [
       {
         source: "/:path*",
@@ -33,14 +40,13 @@ const nextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https:",
+              "img-src 'self' data: https: blob:",
               "font-src 'self'",
-              "connect-src 'self' https://api.stripe.com",
+              `connect-src ${connectSrc}`, // pragma: allowlist secret
               "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
-              "upgrade-insecure-requests",
             ].join("; "),
           },
           {
