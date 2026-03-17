@@ -124,55 +124,65 @@ export class MessagingService {
       skip,
     })) as any[];
 
-    // Transform to conversation previews
-    const conversationPreviews: ConversationPreview[] = await Promise.all(
-      conversations.map(async (conv) => {
-        const otherUser =
-          conv.participant1Id === userId ? conv.participant2 : conv.participant1;
+    // Fetch all unread counts in a single grouped query, avoiding N+1
+    const conversationIds = conversations.map((c) => c.id);
+    const unreadGroups =
+      conversationIds.length > 0
+        ? await this.prisma.message.groupBy({
+            by: ['conversationId'],
+            where: {
+              conversationId: { in: conversationIds },
+              senderId: { not: userId },
+              status: { not: MessageStatus.READ },
+            },
+            _count: { id: true },
+          })
+        : [];
 
-        // Get unread count
-        const unreadCount = await this.prisma.message.count({
-          where: {
-            conversationId: conv.id,
-            senderId: { not: userId },
-            status: { not: MessageStatus.READ },
-          },
-        });
-
-        return {
-          id: conv.id,
-          otherUser: {
-            id: otherUser.id,
-            username: otherUser.username,
-            profile: otherUser.profile,
-          },
-          lastMessage: conv.messages[0]
-            ? {
-                id: conv.messages[0].id,
-                conversationId: conv.messages[0].conversationId,
-                senderId: conv.messages[0].senderId,
-                content: conv.messages[0].content,
-                mediaUrl: conv.messages[0].mediaUrl,
-                mediaType: conv.messages[0].mediaType,
-                fileName: conv.messages[0].fileName,
-                fileSize: conv.messages[0].fileSize,
-                type: conv.messages[0].type as any,
-                status: conv.messages[0].status as any,
-                createdAt: conv.messages[0].createdAt.toISOString(),
-                readAt: conv.messages[0].readAt?.toISOString(),
-                metadata: conv.messages[0].metadata,
-                sender: {
-                  id: conv.messages[0].sender.id,
-                  username: conv.messages[0].sender.username,
-                  profile: conv.messages[0].sender.profile,
-                },
-              }
-            : null,
-          unreadCount,
-          lastMessageAt: conv.lastMessageAt.toISOString(),
-        };
-      }),
+    const unreadCountMap = new Map<string, number>(
+      unreadGroups.map((g) => [g.conversationId, g._count.id]),
     );
+
+    // Transform to conversation previews
+    const conversationPreviews: ConversationPreview[] = conversations.map((conv) => {
+      const otherUser =
+        conv.participant1Id === userId ? conv.participant2 : conv.participant1;
+
+      const unreadCount = unreadCountMap.get(conv.id) ?? 0;
+
+      return {
+        id: conv.id,
+        otherUser: {
+          id: otherUser.id,
+          username: otherUser.username,
+          profile: otherUser.profile,
+        },
+        lastMessage: conv.messages[0]
+          ? {
+              id: conv.messages[0].id,
+              conversationId: conv.messages[0].conversationId,
+              senderId: conv.messages[0].senderId,
+              content: conv.messages[0].content,
+              mediaUrl: conv.messages[0].mediaUrl,
+              mediaType: conv.messages[0].mediaType,
+              fileName: conv.messages[0].fileName,
+              fileSize: conv.messages[0].fileSize,
+              type: conv.messages[0].type as any,
+              status: conv.messages[0].status as any,
+              createdAt: conv.messages[0].createdAt.toISOString(),
+              readAt: conv.messages[0].readAt?.toISOString(),
+              metadata: conv.messages[0].metadata,
+              sender: {
+                id: conv.messages[0].sender.id,
+                username: conv.messages[0].sender.username,
+                profile: conv.messages[0].sender.profile,
+              },
+            }
+          : null,
+        unreadCount,
+        lastMessageAt: conv.lastMessageAt.toISOString(),
+      };
+    });
 
     return {
       conversations: conversationPreviews,
