@@ -93,6 +93,20 @@ export class FollowsService {
       return created;
     });
 
+    // Update follower counts (denormalized for performance).
+    // Use updateMany so the operation is a no-op when a profile record does not
+    // yet exist, rather than throwing a Prisma P2025 "record not found" error.
+    await Promise.all([
+      this.prisma.profile.updateMany({
+        where: { userId: followerId },
+        data: { followingCount: { increment: 1 } },
+      }),
+      this.prisma.profile.updateMany({
+        where: { userId: dto.followingId },
+        data: { followerCount: { increment: 1 } },
+      }),
+    ]);
+
     // Audit log successful follow
     this.logger.log(
       `User ${followerId} followed user ${dto.followingId}`,
@@ -167,6 +181,20 @@ export class FollowsService {
         }),
       ]);
     });
+
+    // Update follower counts.
+    // Use updateMany so the operation is a no-op when a profile record does not
+    // yet exist, rather than throwing a Prisma P2025 "record not found" error.
+    await Promise.all([
+      this.prisma.profile.updateMany({
+        where: { userId: followerId },
+        data: { followingCount: { decrement: 1 } },
+      }),
+      this.prisma.profile.updateMany({
+        where: { userId: followingId },
+        data: { followerCount: { decrement: 1 } },
+      }),
+    ]);
 
     // Audit log successful unfollow
     this.logger.log(
