@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-03-16T20:57:21Z",
+  "last_updated": "2026-03-16T22:46:47Z",
   "run_id": "synthesizer-v2-20260310-011114",
   "open_findings": [
     {
@@ -8,7 +8,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Transaction and Payout tables have walletId foreign key field but schema marks as nullable",
       "agent": "schema-auditor",
       "proof_hooks": [
@@ -132,7 +132,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Monetary amount fields (Wallet, Transaction, Tip, Payout) lack NOT NULL or CHECK constraints in schema",
       "agent": "schema-auditor",
       "proof_hooks": [
@@ -256,7 +256,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "CI/CD pipeline does not build or test the API; only web typecheck and build are validated",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -287,7 +287,7 @@
       "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "API TypeScript strict mode enabled but hundreds of pre-existing type errors prevent clean builds",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -318,7 +318,7 @@
       "type": "enhancement",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Web frontend has global _error page but no React Error Boundary component for client-side crashes",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -349,7 +349,7 @@
       "type": "enhancement",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "API health check endpoint referenced in deploy.yml but may not be implemented in NestJS app",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -380,7 +380,7 @@
       "type": "enhancement",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Environment variables are not validated at startup; missing or invalid vars could cause runtime crashes hours after boot",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -659,7 +659,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Potential null dereference in conversation deletion without soft-delete",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -690,7 +690,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Unsafe profile access in follows.service.ts without existence check",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -721,7 +721,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Race condition in idempotency check for checkout (orders.service.ts)",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -1000,7 +1000,7 @@
       "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Potential N+1 query in messaging.service.getConversations with nested includes",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -1031,7 +1031,7 @@
       "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing indexes on frequently-used WHERE columns in messaging and follows tables",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -1062,7 +1062,7 @@
       "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Messaging service N+1: follows.service calls blockingService.isBlocked() and extra findUnique in loop",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -1186,7 +1186,7 @@
       "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Wallet.service queries all transactions without pagination or filtering",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -1248,7 +1248,7 @@
       "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Frontend: Marketplace page creates new hooks with unfetched dependencies on every render",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -1372,7 +1372,7 @@
       "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "follows.service denormalizes follower/following counts but no transaction atomicity on update",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -1434,7 +1434,7 @@
       "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing database indexes on post.authorId, message.senderId, comment.postId (common JOINs)",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -1558,7 +1558,7 @@
       "type": "debt",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Query: scheduling unknown frequency of scheduled posts processor",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -1651,7 +1651,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "SQL Injection in $queryRaw without parameterization",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -1682,7 +1682,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing COOKIE_SECURE environment variable allows cookie transmission over HTTP",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -1713,7 +1713,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Over-exposed user data in API responses leaks private fields",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -1744,7 +1744,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "IDOR in wallet endpoints\u2014no ownership verification",
       "agent": "synthesizer",
       "proof_hooks": [
@@ -1961,7 +1961,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Inconsistent authentication terminology",
       "agent": "ux-flow-auditor",
       "proof_hooks": [
@@ -1992,7 +1992,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Broken navigation flow: No back button or escape route on auth pages",
       "agent": "ux-flow-auditor",
       "proof_hooks": [
@@ -2023,7 +2023,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing loading state on profile page",
       "agent": "ux-flow-auditor",
       "proof_hooks": [
@@ -2085,7 +2085,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing alt text on decorative images and avatars",
       "agent": "ux-flow-auditor",
       "proof_hooks": [
@@ -2116,7 +2116,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Dead-end page: Marketplace checkout flow incomplete",
       "agent": "ux-flow-auditor",
       "proof_hooks": [
@@ -2178,7 +2178,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Generic error messages don't guide user action",
       "agent": "ux-flow-auditor",
       "proof_hooks": [
@@ -2240,7 +2240,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "Missing route: Gigs booking page doesn't display gig detail",
       "agent": "ux-flow-auditor",
       "proof_hooks": [
@@ -2302,7 +2302,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "open",
+      "status": "accepted",
       "title": "No visible onboarding or feature discovery for new users",
       "agent": "ux-flow-auditor",
       "proof_hooks": [
