@@ -1,6 +1,6 @@
 // Auto-generated Supabase types for Relevnt
 // Schema reflects all migrations up to and including:
-//   20260226000000_cover_letters_add_missing_columns.sql
+//   20260319000000_fix_ai_usage_log_fk_constraint.sql
 //
 // To regenerate, run:
 //   npx supabase gen types typescript --project-id <project-id> > src/types/supabase.ts
@@ -203,6 +203,48 @@ export type Database = {
         ];
       };
     };
+      ai_usage_log: {
+        Row: {
+          id: string;
+          user_id: string;
+          feature: string;
+          model: string | null;
+          input_tokens: number | null;
+          output_tokens: number | null;
+          cost_usd: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          feature: string;
+          model?: string | null;
+          input_tokens?: number | null;
+          output_tokens?: number | null;
+          cost_usd?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          feature?: string;
+          model?: string | null;
+          input_tokens?: number | null;
+          output_tokens?: number | null;
+          cost_usd?: number | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'ai_usage_log_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+    };
     Views: Record<string, never>;
     Functions: Record<string, never>;
     Enums: Record<string, never>;
@@ -221,3 +263,5 @@ export type ApplicationUpdate = Database['public']['Tables']['applications']['Up
 export type CoverLetter = Database['public']['Tables']['cover_letters']['Row'];
 export type CoverLetterInsert = Database['public']['Tables']['cover_letters']['Insert'];
 export type CoverLetterUpdate = Database['public']['Tables']['cover_letters']['Update'];
+export type AiUsageLog = Database['public']['Tables']['ai_usage_log']['Row'];
+export type AiUsageLogInsert = Database['public']['Tables']['ai_usage_log']['Insert'];
