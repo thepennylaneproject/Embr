@@ -397,8 +397,6 @@ model Wallet {
   payouts         Payout[]
   tipsSent        Tip[]                @relation("TipSender")
   tipsReceived    Tip[]                @relation("TipReceiver")
-
-  @@index([userId])
 }
 
 model Transaction {
