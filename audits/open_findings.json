@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-03-17T20:32:20Z",
+  "last_updated": "2026-03-19T22:47:21Z",
   "run_id": "synthesizer-v2-20260310-011114",
   "open_findings": [
     {
@@ -23,6 +23,18 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-75): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-17T22:57:41Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-75): In Progress -> in_progress"
+        },
+        {
+          "timestamp": "2026-03-17T23:01:40Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-75): In Review -> fixed_pending_verify"
         }
       ]
     },
@@ -31,18 +43,34 @@
       "type": "enhancement",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "fixed_pending_verify",
       "title": "Track.price and ArtistStat.revenue were migrated to integer cents but may have pre-existing inconsistencies",
-      "agent": "schema-auditor"
+      "agent": "schema-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-76): In Review -> fixed_pending_verify"
+        }
+      ]
     },
     {
       "finding_id": "f-schema-nullable-refs-001",
       "type": "debt",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "fixed_pending_verify",
       "title": "Multiple tables allow nullable foreign key references with SetNull cascade, risking orphaned parent-only records",
-      "agent": "schema-auditor"
+      "agent": "schema-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-77): In Review -> fixed_pending_verify"
+        }
+      ]
     },
     {
       "finding_id": "f-schema-rls-coverage-001",
@@ -81,6 +109,18 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-79): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-17T22:57:41Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-79): In Progress -> in_progress"
+        },
+        {
+          "timestamp": "2026-03-17T23:01:40Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-79): In Review -> fixed_pending_verify"
         }
       ]
     },
@@ -89,18 +129,34 @@
       "type": "debt",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "fixed_pending_verify",
       "title": "Transaction.userId is optional (nullable) with onDelete: SetNull, risking orphaned transactions",
-      "agent": "schema-auditor"
+      "agent": "schema-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-80): In Review -> fixed_pending_verify"
+        }
+      ]
     },
     {
       "finding_id": "f-schema-wallet-unique-index-001",
       "type": "enhancement",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "fixed_pending_verify",
       "title": "Wallet.userId has @unique constraint, but index at line 388 is redundant",
-      "agent": "schema-auditor"
+      "agent": "schema-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-81): In Review -> fixed_pending_verify"
+        }
+      ]
     },
     {
       "finding_id": "f-deploy-build-failure-nestjs-001",
@@ -243,6 +299,18 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-87): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-17T22:57:41Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-87): In Progress -> in_progress"
+        },
+        {
+          "timestamp": "2026-03-17T23:01:40Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-87): In Review -> fixed_pending_verify"
         }
       ]
     },
@@ -251,54 +319,102 @@
       "type": "enhancement",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Next.js web app does not validate required NEXT_PUBLIC_API_URL at build time",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-88): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-deploy-logging-structured-001",
       "type": "debt",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "API logging uses NestJS built-in Logger (console-based) instead of structured JSON logging",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-89): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-deploy-sentry-not-configured-001",
       "type": "enhancement",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Sentry error reporting is not configured; production errors are not sent to external service",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-90): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-deploy-docker-prod-config-missing-001",
       "type": "question",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Production Docker compose config (docker-compose.prod.yml) is referenced in deploy.yml but not found in repo",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-91): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-deploy-db-migration-rollback-001",
       "type": "question",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Database migration rollback plan is not documented; failed deployments could leave database in inconsistent state",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-92): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-deploy-csp-unsafe-inline-001",
       "type": "debt",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Content Security Policy in web app uses unsafe-inline for scripts and styles; overly permissive for production",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-93): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-deploy-no-rollback-strategy-001",
@@ -346,6 +462,18 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-96): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-17T22:57:41Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-96): In Progress -> in_progress"
+        },
+        {
+          "timestamp": "2026-03-17T23:01:40Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-96): In Review -> fixed_pending_verify"
         }
       ]
     },
@@ -369,6 +497,18 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-97): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-17T22:57:41Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-97): In Progress -> in_progress"
+        },
+        {
+          "timestamp": "2026-03-17T23:01:40Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-97): In Review -> fixed_pending_verify"
         }
       ]
     },
@@ -389,6 +529,18 @@
         },
         {
           "timestamp": "2026-03-17T19:52:54Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-98): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-17T22:57:41Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-98): In Progress -> in_progress"
+        },
+        {
+          "timestamp": "2026-03-17T23:01:40Z",
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-98): In Review -> fixed_pending_verify"
@@ -427,18 +579,34 @@
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "status": "open",
+      "status": "fixed_pending_verify",
       "title": "Unsafe property access in message sender mapping (messaging.service.ts:500)",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-102): In Review -> fixed_pending_verify"
+        }
+      ]
     },
     {
       "finding_id": "f-log-009",
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "fixed_pending_verify",
       "title": "Unhandled promise rejection in useMessaging hook error callback",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-103): In Review -> fixed_pending_verify"
+        }
+      ]
     },
     {
       "finding_id": "f-log-010",
@@ -553,18 +721,34 @@
       "type": "performance",
       "severity": "major",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Frontend: Feed component may re-fetch on every dependency change without debounce",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-110): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-perf-005",
       "type": "performance",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Cache service falls back to in-memory with no size limit, potential memory leak",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-111): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-perf-006",
@@ -603,9 +787,17 @@
       "type": "performance",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "API client always sends withCredentials=true, adds latency to preflight requests",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-114): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-perf-009",
@@ -641,18 +833,34 @@
       "type": "performance",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Frontend: Images in pages lack optimization, no Next.js Image component used consistently",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-116): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-perf-011",
       "type": "cost",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Stripe SDK imported but stripe-connect.service appears disabled",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-117): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-perf-012",
@@ -723,9 +931,17 @@
       "type": "performance",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Prisma client instantiated without connection pooling configuration",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-122): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-perf-017",
@@ -741,9 +957,17 @@
       "type": "performance",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Next.js image remotePatterns allows wildcard subdomains, may bypass CDN optimization",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-124): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-perf-019",
@@ -909,9 +1133,17 @@
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "status": "open",
+      "status": "fixed_pending_verify",
       "title": "CORS credentials exposed with loose origin validation",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-132): In Review -> fixed_pending_verify"
+        }
+      ]
     },
     {
       "finding_id": "sec-007",
@@ -927,9 +1159,17 @@
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "status": "open",
+      "status": "fixed_pending_verify",
       "title": "Google OAuth redirect validation incomplete\u2014OPEN_REDIRECT risk if FRONTEND_URL env not set",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-134): In Review -> fixed_pending_verify"
+        }
+      ]
     },
     {
       "finding_id": "sec-009",
@@ -1032,9 +1272,17 @@
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Inconsistent empty state messaging across list views",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-141): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-a11y-001",
@@ -1059,6 +1307,18 @@
         },
         {
           "timestamp": "2026-03-17T20:32:20Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-142): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-17T22:57:41Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-142): In Progress -> in_progress"
+        },
+        {
+          "timestamp": "2026-03-17T23:01:40Z",
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-142): In Review -> fixed_pending_verify"
@@ -1125,9 +1385,17 @@
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Custom button implementations lack proper ARIA labels and keyboard support",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-146): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-flow-004",
@@ -1157,9 +1425,17 @@
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Mixed tone in CTAs: 'Join the Feed' vs 'Go to feed' vs 'Continue to feed'",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-148): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-flow-005",
@@ -1189,27 +1465,51 @@
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Post creation doesn't clear state or show success confirmation",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-150): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-a11y-003",
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Form inputs lack associated labels in some components",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-151): Todo -> accepted"
+        }
+      ]
     },
     {
       "finding_id": "f-error-002",
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "status": "open",
+      "status": "accepted",
       "title": "Error messages don't provide recovery instructions",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-152): Todo -> accepted"
+        }
+      ]
     }
   ]
 }

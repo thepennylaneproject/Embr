@@ -2,7 +2,7 @@
   "name": "embr",
   "version": "0.1.0",
   "description": "Embr — creator monetization platform and social marketplace",
-  "author": "The Penny Lane Project <Sarah@thepennylaneproject.org>",
+  "author": "Embr Team",
   "license": "MIT",
   "private": true,
   "workspaces": [
@@ -75,7 +75,5 @@
     "migrations",
     "docker",
     "ci-cd"
-  ],
-  "author": "Embr Team",
-  "license": "MIT"
+  ]
 }
