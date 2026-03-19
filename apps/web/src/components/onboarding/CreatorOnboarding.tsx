@@ -8,6 +8,7 @@ import { useRouter } from 'next/router';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { AnalyticsEvent } from '@/lib/analytics';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import { copy } from '@/lib/copy';
 
 interface CreatorStep {
   id: 'profile' | 'post' | 'earning';
@@ -33,26 +34,26 @@ export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, on
   const steps: CreatorStep[] = [
     {
       id: 'profile',
-      title: 'Complete Your Profile',
-      description: 'Add a photo and bio so clients know who you are.',
-      icon: '👤',
-      cta: 'Set Up Profile',
+      title: copy.onboardingChecklist.steps.profile.title,
+      description: copy.onboardingChecklist.steps.profile.description,
+      icon: copy.onboardingChecklist.steps.profile.icon,
+      cta: copy.onboardingChecklist.steps.profile.cta,
       ctaAction: () => router.push('/profile/edit'),
     },
     {
       id: 'post',
-      title: 'Post Your First Content',
-      description: 'Share your work to start building your audience.',
-      icon: '✨',
-      cta: 'Create First Post',
+      title: copy.onboardingChecklist.steps.post.title,
+      description: copy.onboardingChecklist.steps.post.description,
+      icon: copy.onboardingChecklist.steps.post.icon,
+      cta: copy.onboardingChecklist.steps.post.cta,
       ctaAction: () => router.push('/create'),
     },
     {
       id: 'earning',
-      title: 'Get Your First Tip',
-      description: 'Browse opportunities and earn money for your work.',
-      icon: '💰',
-      cta: 'Find Work',
+      title: copy.onboardingChecklist.steps.earning.title,
+      description: copy.onboardingChecklist.steps.earning.description,
+      icon: copy.onboardingChecklist.steps.earning.icon,
+      cta: copy.onboardingChecklist.steps.earning.cta,
       ctaAction: () => router.push('/gigs'),
     },
   ];
@@ -116,10 +117,10 @@ export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, on
               margin: '0 0 0.5rem',
             }}
           >
-            Welcome to Embr!
+            {copy.onboardingChecklist.celebration.title}
           </h3>
           <p style={{ fontSize: '1rem', color: 'var(--embr-muted-text)', margin: 0 }}>
-            You're all set. Time to start earning.
+            {copy.onboardingChecklist.celebration.subtitle}
           </p>
         </div>
       )}
@@ -135,7 +136,7 @@ export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, on
               margin: '0 0 0.3rem',
             }}
           >
-            Get Started Earning
+            {copy.onboardingChecklist.title}
           </h2>
           <p
             style={{
@@ -144,7 +145,7 @@ export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, on
               margin: '0 0 1rem',
             }}
           >
-            Complete these 3 steps to earn your first tip
+            {copy.onboardingChecklist.subtitle}
           </p>
 
           {/* Progress bar */}
@@ -177,7 +178,7 @@ export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, on
               margin: 0,
             }}
           >
-            {completedCount} of {steps.length} complete
+            {copy.onboardingChecklist.progressLabel(completedCount, steps.length)}
           </p>
         </div>
       )}
@@ -263,7 +264,7 @@ export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, on
                           margin: 0,
                         }}
                       >
-                        ✓ Complete
+                        {copy.onboardingChecklist.stepCompleteLabel}
                       </p>
                     ) : (
                       <button
@@ -305,7 +306,7 @@ export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, on
               margin: '0 0 0.5rem',
             }}
           >
-            🚀 Ready to earn
+            {copy.onboardingChecklist.readyTitle}
           </p>
           <p
             style={{
@@ -314,7 +315,7 @@ export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, on
               margin: '0 0 1.25rem',
             }}
           >
-            Start applying to gigs and grow your audience
+            {copy.onboardingChecklist.readySubtitle}
           </p>
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
             <button
@@ -322,14 +323,14 @@ export const CreatorOnboarding: React.FC<CreatorOnboardingProps> = ({ userId, on
               data-variant="primary"
               onClick={() => router.push('/gigs')}
             >
-              Browse Gigs
+              {copy.onboardingChecklist.browseGigs}
             </button>
             <button
               className="ui-button"
               data-variant="secondary"
               onClick={() => router.push('/feed')}
             >
-              View Feed
+              {copy.onboardingChecklist.viewFeed}
             </button>
           </div>
         </div>
