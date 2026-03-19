@@ -204,7 +204,24 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      upsert_cover_letter: {
+        Args: {
+          p_id?: string | null;
+          p_user_id?: string | null;
+          p_title?: string | null;
+          p_content?: string | null;
+          p_application_id?: string | null;
+          p_resume_id?: string | null;
+          p_job_id?: string | null;
+          p_job_description?: string | null;
+          p_company_name?: string | null;
+          p_ai_generated?: boolean | null;
+          p_template_used?: string | null;
+        };
+        Returns: Database['public']['Tables']['cover_letters']['Row'];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
