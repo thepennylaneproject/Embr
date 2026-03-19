@@ -100,12 +100,27 @@ export class AuthController {
     res.cookie('accessToken', accessToken, this.getCookieOptions(ACCESS_TOKEN_COOKIE_MAX_AGE_MS));
     res.cookie('refreshToken', refreshToken, this.getCookieOptions(REFRESH_TOKEN_COOKIE_MAX_AGE_MS));
 
-    // Validate FRONTEND_URL before redirecting (F-022)
-    const frontendUrl = process.env.FRONTEND_URL;
+    // Use ConfigService (not process.env) so Joi-validated defaults are applied
+    // and the app-startup validation contract is honoured here too.
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
     if (!frontendUrl) {
       return res.status(503).json({ error: 'Authentication service temporarily unavailable' });
     }
-    const redirectUrl = `${frontendUrl}/auth/callback`;
+
+    // Validate that FRONTEND_URL is an absolute http/https URL before redirecting.
+    // This prevents open-redirect attacks if the env var is set to a non-http value
+    // (e.g. "javascript:…" or a protocol-relative URL like "//evil.com").
+    let parsedFrontendUrl: URL;
+    try {
+      parsedFrontendUrl = new URL(frontendUrl);
+    } catch {
+      return res.status(503).json({ error: 'Authentication service temporarily unavailable' });
+    }
+    if (parsedFrontendUrl.protocol !== 'http:' && parsedFrontendUrl.protocol !== 'https:') {
+      return res.status(503).json({ error: 'Authentication service temporarily unavailable' });
+    }
+
+    const redirectUrl = `${parsedFrontendUrl.origin}/auth/callback`;
     return res.redirect(redirectUrl);
   }
 
