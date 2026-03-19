@@ -79,6 +79,28 @@ export function useMessaging(options: UseMessagingOptions = {}) {
   onTypingIndicatorRef.current = onTypingIndicator;
   onErrorRef.current = onError;
 
+  // Fire-and-forget wrapper that guards against unhandled rejections in user-provided
+  // onError callbacks, logging any callback failures while keeping the latest callback
+  // via ref without re-creating the wrapper.
+  const safelyInvokeOnError = useCallback(
+    (error: unknown) => {
+      try {
+        void Promise.resolve(onErrorRef.current?.(error)).catch((callbackError) => {
+          console.error(
+            "[useMessaging] Unhandled rejection in onError callback:",
+            callbackError,
+          );
+        });
+      } catch (callbackError) {
+        console.error(
+          "[useMessaging] Synchronous error in onError callback:",
+          callbackError,
+        );
+      }
+    },
+    [], // onErrorRef is a ref; latest callback is read without re-creating this wrapper
+  );
+
   // ============================================================
   // WEBSOCKET CONNECTION
   // ============================================================
@@ -107,7 +129,7 @@ export function useMessaging(options: UseMessagingOptions = {}) {
     newSocket.on("connect_error", (err) => {
       console.error("WebSocket connection error:", err);
       setError(err);
-      onErrorRef.current?.(err);
+      safelyInvokeOnError(err);
     });
 
     // Message events
@@ -208,7 +230,7 @@ export function useMessaging(options: UseMessagingOptions = {}) {
     newSocket.on(WebSocketEvent.ERROR, (err) => {
       console.error("WebSocket error:", err);
       setError(err);
-      onErrorRef.current?.(err);
+      safelyInvokeOnError(err);
     });
 
     socketRef.current = newSocket;
@@ -299,13 +321,13 @@ export function useMessaging(options: UseMessagingOptions = {}) {
         return response;
       } catch (err: any) {
         setError(err);
-        onError?.(err);
+        safelyInvokeOnError(err);
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [onError],
+    [safelyInvokeOnError],
   );
 
   const createConversation = useCallback(
@@ -334,13 +356,13 @@ export function useMessaging(options: UseMessagingOptions = {}) {
         return response;
       } catch (err: any) {
         setError(err);
-        onError?.(err);
+        safelyInvokeOnError(err);
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [onError],
+    [safelyInvokeOnError],
   );
 
   const deleteConversation = useCallback(
@@ -359,13 +381,13 @@ export function useMessaging(options: UseMessagingOptions = {}) {
         });
       } catch (err: any) {
         setError(err);
-        onError?.(err);
+        safelyInvokeOnError(err);
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [onError],
+    [safelyInvokeOnError],
   );
 
   // ============================================================
@@ -407,13 +429,13 @@ export function useMessaging(options: UseMessagingOptions = {}) {
         return response;
       } catch (err: any) {
         setError(err);
-        onError?.(err);
+        safelyInvokeOnError(err);
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [onError],
+    [safelyInvokeOnError],
   );
 
   const markAsRead = useCallback(
@@ -435,7 +457,7 @@ export function useMessaging(options: UseMessagingOptions = {}) {
           return response;
         } catch (err: any) {
           setError(err);
-          onError?.(err);
+          safelyInvokeOnError(err);
           throw err;
         }
       }
@@ -454,7 +476,7 @@ export function useMessaging(options: UseMessagingOptions = {}) {
 
       return response;
     },
-    [socket, isConnected, onError, emitWithAck],
+    [socket, isConnected, safelyInvokeOnError, emitWithAck],
   );
 
   const searchMessages = useCallback(
@@ -467,13 +489,13 @@ export function useMessaging(options: UseMessagingOptions = {}) {
         return response;
       } catch (err: any) {
         setError(err);
-        onError?.(err);
+        safelyInvokeOnError(err);
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [onError],
+    [safelyInvokeOnError],
   );
 
   const deleteMessage = useCallback(
@@ -493,13 +515,13 @@ export function useMessaging(options: UseMessagingOptions = {}) {
         }));
       } catch (err: any) {
         setError(err);
-        onError?.(err);
+        safelyInvokeOnError(err);
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [onError],
+    [safelyInvokeOnError],
   );
 
   // ============================================================
@@ -540,10 +562,10 @@ export function useMessaging(options: UseMessagingOptions = {}) {
       return response;
     } catch (err: any) {
       setError(err);
-      onError?.(err);
+      safelyInvokeOnError(err);
       throw err;
     }
-  }, [onError]);
+  }, [safelyInvokeOnError]);
 
   const uploadMedia = useCallback(
     async (file: File, conversationId: string, type: MessageType) => {
@@ -559,13 +581,13 @@ export function useMessaging(options: UseMessagingOptions = {}) {
         return response;
       } catch (err: any) {
         setError(err);
-        onError?.(err);
+        safelyInvokeOnError(err);
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [onError],
+    [safelyInvokeOnError],
   );
 
   return {
