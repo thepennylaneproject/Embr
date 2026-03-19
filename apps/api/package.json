@@ -45,6 +45,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.7",
+    "cron": "^3.2.1",
     "eventemitter2": "^6.4.9",
     "helmet": "^8.1.0",
     "isomorphic-dompurify": "^3.0.0",
@@ -79,15 +80,25 @@
     "typescript": "^5.3.3"
   },
   "jest": {
-    "moduleFileExtensions": ["js", "json", "ts"],
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": ["ts-jest", {
-        "tsconfig": "./tsconfig.json"
-      }]
+      "^.+\\.(t|j)s$": [
+        "ts-jest",
+        {
+          "tsconfig": "./tsconfig.json"
+        }
+      ]
     },
-    "testPathIgnorePatterns": ["/node_modules/", "integration"],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "integration"
+    ],
     "testEnvironment": "node",
     "moduleNameMapper": {
       "^@embr/types$": "<rootDir>/../../../packages/types/dist/index.js"
