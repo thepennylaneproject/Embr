@@ -100,9 +100,15 @@ export const trackController = {
         return res.status(400).json({ error: 'User is not an artist' });
       }
 
+      const { price: rawPrice, ...rest } = req.body;
+      const price = rawPrice !== undefined
+        ? Math.round(parseFloat(String(rawPrice)))
+        : 0;
+
       const track = await trackService.createTrack({
         artistId: artist.id,
-        ...req.body,
+        ...rest,
+        price,
       });
 
       return res.status(201).json(track);

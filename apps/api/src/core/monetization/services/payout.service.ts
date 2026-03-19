@@ -41,8 +41,8 @@ export class PayoutService {
   ): Promise<any> {
     const { amount, note } = dto;
 
-    // Validate minimum payout amount
-    if (amount < 10) {
+    // Validate minimum payout amount (1000 cents = $10)
+    if (amount < 1000) {
       throw new BadRequestException('Minimum payout amount is $10');
     }
 
@@ -72,7 +72,7 @@ export class PayoutService {
     const balance = await this.walletService.getWalletBalance(userId);
     if (balance.available < amount) {
       throw new BadRequestException(
-        `Insufficient balance. Available: $${balance.available.toFixed(2)}`,
+        `Insufficient balance. Available: $${(balance.available / 100).toFixed(2)}`,
       );
     }
 
@@ -122,12 +122,12 @@ export class PayoutService {
       },
     });
 
-    this.logger.log(`Payout request created: ${payout.id} for $${amount}`);
+    this.logger.log(`Payout request created: ${payout.id} for $${(amount / 100).toFixed(2)}`);
 
     // Create notification for admins
     await this.createAdminNotification(
       'PAYOUT_REQUESTED',
-      `New payout request from ${user.profile?.displayName || user.email}: $${amount}`,
+      `New payout request from ${user.profile?.displayName || user.email}: $${(amount / 100).toFixed(2)}`,
       payout.id,
     );
 
@@ -387,7 +387,7 @@ export class PayoutService {
         userId: payout.userId,
         type: 'PAYOUT_COMPLETED',
         title: 'Payout completed',
-        message: `Your payout of $${payout.amount.toFixed(2)} has been sent to your bank`,
+        message: `Your payout of $${(payout.amount / 100).toFixed(2)} has been sent to your bank`,
         referenceId: payout.id,
         referenceType: 'PAYOUT',
       },

@@ -99,6 +99,7 @@ export const trackService = {
     audioUrl: string;
     audioFormat: string;
     licensingModel: LicensingModel;
+    price?: number;
     allowRemix: boolean;
     allowMonetize: boolean;
     attributionRequired: boolean;

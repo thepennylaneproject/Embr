@@ -70,7 +70,7 @@ export class EscrowService {
 
     try {
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(escrow.amount * 100),
+        amount: escrow.amount, // Already stored as integer cents
         currency: escrow.currency.toLowerCase(),
         payment_method: fundEscrowDto.stripePaymentMethodId,
         confirm: true,
@@ -137,7 +137,7 @@ export class EscrowService {
     }
 
     try {
-      const transferAmount = Math.round(milestone.amount * 100);
+      const transferAmount = milestone.amount; // Already stored as integer cents
 
       await stripe.paymentIntents.capture(escrow.stripePaymentIntentId!, {
         amount_to_capture: transferAmount,
