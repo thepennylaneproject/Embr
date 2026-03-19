@@ -498,6 +498,11 @@ export class MessagingService {
       data: { lastMessageAt: new Date() },
     });
 
+    const messageSender = (message as any).sender;
+    if (!messageSender) {
+      throw new NotFoundException('Message sender not found');
+    }
+
     const messageWithSender: MessageWithSender = {
       id: message.id,
       conversationId: message.conversationId,
@@ -513,9 +518,9 @@ export class MessagingService {
       readAt: message.readAt?.toISOString(),
       metadata: message.metadata as Record<string, any>,
       sender: {
-        id: (message as any).sender.id,
-        username: (message as any).sender.username,
-        profile: (message as any).sender.profile as any,
+        id: messageSender.id,
+        username: messageSender.username,
+        profile: messageSender.profile as any,
       },
     };
 
