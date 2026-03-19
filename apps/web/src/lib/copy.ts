@@ -291,6 +291,7 @@ export const copy = {
     generic: 'Something went wrong. Please try again.',
     networkError:
       'Unable to connect. Please check your connection and try again.',
+    badRequest: 'Please check your input and try again.',
     invalidCredentials: 'Invalid credentials.',
     signupFailed: 'Account creation failed.',
     failedToLoad: 'Failed to load.',
@@ -316,6 +317,7 @@ export const copy = {
     // Group errors
     failedToCreateGroup: 'Could not create the group. Please try again.',
     failedToLoadGroup: 'Could not load the group. Please refresh.',
+    failedToLoadGroups: 'Could not load groups. Please refresh.',
     failedToUpdateGroup: 'Could not save group changes. Please try again.',
     failedToDeleteGroup:
       'Could not delete the group. Please try again or contact support.',
@@ -325,8 +327,19 @@ export const copy = {
     failedToCreateListing:
       'Could not create the listing. Please check your input and try again.',
     failedToLoadListing: 'Could not load this listing. Please refresh.',
+    failedToLoadListings: 'Could not load listings. Please refresh.',
+    failedToUpdateListing: 'Could not update the listing. Please try again.',
+    failedToPublishListing: 'Could not publish the listing. Please try again.',
     failedToPlaceOrder:
       'Could not place the order. Please try again or contact support.',
+    failedToMakeOffer: 'Could not submit your offer. Please try again.',
+    checkoutFailed: 'Checkout did not go through. Please try again.',
+    // Post errors
+    failedToCreatePost: 'Could not create the post. Please try again.',
+    failedToUpdatePost: 'Could not update the post. Please try again.',
+    failedToDeletePost: 'Could not delete the post. Please try again.',
+    failedToLoadPost: 'Could not load the post. Please refresh.',
+    failedToUploadMedia: 'Could not upload the media. Please try again.',
     // Mutual aid errors
     failedToCreateMutualAidPost:
       'Could not post your request. Please try again.',
@@ -345,12 +358,20 @@ export const copy = {
     failedToLoadTreasury: 'Could not load treasury info. Please refresh.',
     failedToContribute: 'Could not process the contribution. Please try again.',
     // Safety errors
-    failedToSubmitReport:
-      'Could not submit your report. Please try again.',
+    failedToSubmitReport: 'Could not submit your report. Please try again.',
+    failedToUpdateReport: 'Could not update the report. Please try again.',
+    failedToLoadReports: 'Could not load reports. Please refresh.',
     failedToBlockUser: 'Could not block this user. Please try again.',
     failedToUnblockUser: 'Could not unblock this user. Please try again.',
+    failedToLoadBlockedUsers: 'Could not load blocked users. Please refresh.',
     failedToMuteUser: 'Could not mute this user. Please try again.',
     failedToUnmuteUser: 'Could not unmute this user. Please try again.',
+    failedToLoadMutedUsers: 'Could not load muted users. Please refresh.',
+    failedToAddKeyword: 'Could not add the keyword. Please try again.',
+    failedToRemoveKeyword: 'Could not remove the keyword. Please try again.',
+    failedToLoadMutedKeywords: 'Could not load muted keywords. Please refresh.',
+    failedToSubmitAppeal: 'Could not submit your appeal. Please try again.',
+    failedToLoadAppeals: 'Could not load appeals. Please refresh.',
     failedToLoadSafetySettings:
       'Could not load your safety settings. Please refresh.',
   },
