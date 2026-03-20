@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-03-19T22:47:21Z",
+  "last_updated": "2026-03-20T02:07:13Z",
   "run_id": "synthesizer-v2-20260310-011114",
   "open_findings": [
     {
@@ -43,7 +43,7 @@
       "type": "enhancement",
       "severity": "minor",
       "priority": "P2",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "Track.price and ArtistStat.revenue were migrated to integer cents but may have pre-existing inconsistencies",
       "agent": "schema-auditor",
       "history": [
@@ -52,6 +52,12 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-76): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-20T02:07:13Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-76): Done -> fixed_verified"
         }
       ]
     },
@@ -60,7 +66,7 @@
       "type": "debt",
       "severity": "minor",
       "priority": "P2",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "Multiple tables allow nullable foreign key references with SetNull cascade, risking orphaned parent-only records",
       "agent": "schema-auditor",
       "history": [
@@ -69,6 +75,12 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-77): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-20T02:07:13Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-77): Done -> fixed_verified"
         }
       ]
     },
@@ -129,7 +141,7 @@
       "type": "debt",
       "severity": "minor",
       "priority": "P2",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "Transaction.userId is optional (nullable) with onDelete: SetNull, risking orphaned transactions",
       "agent": "schema-auditor",
       "history": [
@@ -138,6 +150,12 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-80): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-20T02:07:13Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-80): Done -> fixed_verified"
         }
       ]
     },
@@ -146,7 +164,7 @@
       "type": "enhancement",
       "severity": "minor",
       "priority": "P2",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "Wallet.userId has @unique constraint, but index at line 388 is redundant",
       "agent": "schema-auditor",
       "history": [
@@ -155,6 +173,12 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-81): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-20T02:07:13Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-81): Done -> fixed_verified"
         }
       ]
     },

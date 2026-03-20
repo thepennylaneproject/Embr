@@ -12,17 +12,17 @@
       "linear_id": "13c7652d-1be8-437e-ac29-78cbcc359454",
       "identifier": "PLP-76",
       "url": "https://linear.app/the-penny-lane-project/issue/PLP-76/minor-trackprice-and-artiststatrevenue-were-migrated-to-integer-cents",
-      "lyra_status": "fixed_pending_verify",
+      "lyra_status": "fixed_verified",
       "created_at": "2026-03-16T01:26:22Z",
-      "last_synced": "2026-03-19T22:47:21Z"
+      "last_synced": "2026-03-20T02:07:13Z"
     },
     "f-schema-nullable-refs-001": {
       "linear_id": "27449f23-80f8-44ca-9d4b-d04027f6478d",
       "identifier": "PLP-77",
       "url": "https://linear.app/the-penny-lane-project/issue/PLP-77/minor-multiple-tables-allow-nullable-foreign-key-references-with",
-      "lyra_status": "fixed_pending_verify",
+      "lyra_status": "fixed_verified",
       "created_at": "2026-03-16T01:26:22Z",
-      "last_synced": "2026-03-19T22:47:21Z"
+      "last_synced": "2026-03-20T02:07:13Z"
     },
     "f-schema-rls-coverage-001": {
       "linear_id": "b3518c69-faac-4c2f-a478-d119ab0ed648",
@@ -44,17 +44,17 @@
       "linear_id": "fa423dbe-d557-41ad-875a-cfa8c94964f3",
       "identifier": "PLP-80",
       "url": "https://linear.app/the-penny-lane-project/issue/PLP-80/minor-transactionuserid-is-optional-nullable-with-ondelete-setnull",
-      "lyra_status": "fixed_pending_verify",
+      "lyra_status": "fixed_verified",
       "created_at": "2026-03-16T01:26:22Z",
-      "last_synced": "2026-03-19T22:47:21Z"
+      "last_synced": "2026-03-20T02:07:13Z"
     },
     "f-schema-wallet-unique-index-001": {
       "linear_id": "0e2cbdb4-d8b9-4c71-8eec-5073efbdb590",
       "identifier": "PLP-81",
       "url": "https://linear.app/the-penny-lane-project/issue/PLP-81/minor-walletuserid-has-unique-constraint-but-index-at-line-388-is",
-      "lyra_status": "fixed_pending_verify",
+      "lyra_status": "fixed_verified",
       "created_at": "2026-03-16T01:26:22Z",
-      "last_synced": "2026-03-19T22:47:21Z"
+      "last_synced": "2026-03-20T02:07:13Z"
     },
     "f-deploy-build-failure-nestjs-001": {
       "linear_id": "86ddb7cd-1f5f-4076-bf9b-fd1bf02139a4",
@@ -625,5 +625,5 @@
       "last_synced": "2026-03-19T22:47:21Z"
     }
   },
-  "last_sync": "2026-03-19T22:47:21Z"
+  "last_sync": "2026-03-20T02:07:13Z"
 }
