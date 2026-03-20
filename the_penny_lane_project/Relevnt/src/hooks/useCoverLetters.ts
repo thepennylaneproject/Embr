@@ -7,7 +7,7 @@ interface UseCoverLettersResult {
   loading: boolean;
   error: string | null;
   refetch: () => void;
-  upsertCoverLetter: (payload: CoverLetterInsert & { id?: string }) => Promise<CoverLetter>;
+  upsertCoverLetter: (payload: CoverLetterInsert) => Promise<CoverLetter>;
   deleteCoverLetter: (id: string) => Promise<void>;
 }
 
@@ -43,28 +43,22 @@ export function useCoverLetters(applicationId?: string): UseCoverLettersResult {
     setLoading(true);
     setError(null);
     try {
-      let data: CoverLetter[] | null = null;
-      let fetchError: unknown = null;
-
       if (applicationId) {
-        const result = await supabase
+        const { data, error: fetchError } = await supabase
           .from('cover_letters')
           .select('*')
           .eq('application_id', applicationId)
           .order('created_at', { ascending: false });
-        data = result.data as CoverLetter[] | null;
-        fetchError = result.error;
+        if (fetchError) throw fetchError;
+        setCoverLetters(data ?? []);
       } else {
-        const result = await supabase
+        const { data, error: fetchError } = await supabase
           .from('cover_letters')
           .select('*')
           .order('created_at', { ascending: false });
-        data = result.data as CoverLetter[] | null;
-        fetchError = result.error;
+        if (fetchError) throw fetchError;
+        setCoverLetters(data ?? []);
       }
-
-      if (fetchError) throw fetchError;
-      setCoverLetters(data ?? []);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Failed to load cover letters. Please try again.'
@@ -87,15 +81,17 @@ export function useCoverLetters(applicationId?: string): UseCoverLettersResult {
    * catch if RLS policies ever regress.
    */
   const upsertCoverLetter = useCallback(
-    async (payload: CoverLetterInsert & { id?: string }): Promise<CoverLetter> => {
-      const { data, error: rpcError } = await supabase.rpc(
-        'upsert_cover_letter',
-        toRpcArgs(payload)
-      );
+    async (payload: CoverLetterInsert): Promise<CoverLetter> => {
+      const { data, error: upsertError } = await supabase
+        .from('cover_letters')
+        .upsert(payload)
+        .select()
+        .single();
 
-      if (rpcError) throw rpcError;
+      if (upsertError) throw upsertError;
+      if (!data) throw new Error('No data returned from upsert');
       await load();
-      return data as CoverLetter;
+      return data;
     },
     [load]
   );

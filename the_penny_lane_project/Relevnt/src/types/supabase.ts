@@ -203,69 +203,10 @@ export type Database = {
         ];
       };
     };
-      ai_usage_log: {
-        Row: {
-          id: string;
-          user_id: string;
-          feature: string;
-          model: string | null;
-          input_tokens: number | null;
-          output_tokens: number | null;
-          cost_usd: number | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          feature: string;
-          model?: string | null;
-          input_tokens?: number | null;
-          output_tokens?: number | null;
-          cost_usd?: number | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          feature?: string;
-          model?: string | null;
-          input_tokens?: number | null;
-          output_tokens?: number | null;
-          cost_usd?: number | null;
-          created_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'ai_usage_log_user_id_fkey';
-            columns: ['user_id'];
-            isOneToOne: false;
-            referencedRelation: 'profiles';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-    };
-    Views: Record<string, never>;
-    Functions: {
-      upsert_cover_letter: {
-        Args: {
-          p_id?: string | null;
-          p_user_id?: string | null;
-          p_title?: string | null;
-          p_content?: string | null;
-          p_application_id?: string | null;
-          p_resume_id?: string | null;
-          p_job_id?: string | null;
-          p_job_description?: string | null;
-          p_company_name?: string | null;
-          p_ai_generated?: boolean | null;
-          p_template_used?: string | null;
-        };
-        Returns: Database['public']['Tables']['cover_letters']['Row'];
-      };
-    };
-    Enums: Record<string, never>;
-    CompositeTypes: Record<string, never>;
+    Views: Record<never, never>;
+    Functions: Record<never, never>;
+    Enums: Record<never, never>;
+    CompositeTypes: Record<never, never>;
   };
 };
 
