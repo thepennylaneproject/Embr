@@ -43,6 +43,7 @@
 import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { createClient } from '@supabase/supabase-js';
 import { MatchingService, type JobListing } from '../../src/services/MatchingService';
+import { validateMatchJobsRequest } from './utils/jobValidation';
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? '';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
@@ -56,11 +57,6 @@ const MAX_USERS_PER_REQUEST = 500;
 /** Maximum number of open jobs fetched for scoring. */
 const MAX_JOBS_FETCHED = 500;
 
-interface MatchJobsRequestBody {
-  userIds?: unknown;
-  scoreThreshold?: unknown;
-}
-
 export const handler: Handler = async (
   event: HandlerEvent,
   _context: HandlerContext,
@@ -72,10 +68,10 @@ export const handler: Handler = async (
     };
   }
 
-  // ── Parse request body ──────────────────────────────────────────────────────
-  let body: MatchJobsRequestBody;
+  // ── Parse and validate request body ────────────────────────────────────────
+  let rawBody: unknown;
   try {
-    body = JSON.parse(event.body ?? '{}') as MatchJobsRequestBody;
+    rawBody = JSON.parse(event.body ?? '{}');
   } catch {
     return {
       statusCode: 400,
@@ -83,19 +79,19 @@ export const handler: Handler = async (
     };
   }
 
-  if (!Array.isArray(body.userIds) || body.userIds.length === 0) {
+  const bodyResult = validateMatchJobsRequest(rawBody);
+  if (!bodyResult.success) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: 'userIds must be a non-empty array' }),
+      body: JSON.stringify({
+        error: 'Invalid request body',
+        details: bodyResult.errors,
+      }),
     };
   }
 
-  const userIds = (body.userIds as unknown[])
-    .filter((id): id is string => typeof id === 'string')
-    .slice(0, MAX_USERS_PER_REQUEST);
-
-  const scoreThreshold =
-    typeof body.scoreThreshold === 'number' ? body.scoreThreshold : 0;
+  const userIds = bodyResult.data.userIds.slice(0, MAX_USERS_PER_REQUEST);
+  const scoreThreshold = bodyResult.data.scoreThreshold;
 
   // ── Fetch job listings ──────────────────────────────────────────────────────
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);

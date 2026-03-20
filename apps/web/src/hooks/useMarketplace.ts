@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { marketplaceApi } from '@shared/api/marketplace.api';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { copy } from '@/lib/copy';
 import type {
   MarketplaceListing,
   MarketplaceOrder,
@@ -20,7 +21,7 @@ export function useMarketplace() {
     try {
       return await marketplaceApi.createListing(input);
     } catch (e: any) {
-      const msg = getApiErrorMessage(e, 'Failed to create listing');
+      const msg = getApiErrorMessage(e, copy.errors.failedToCreateListing);
       setError(msg);
       throw e;
     } finally {
@@ -33,7 +34,7 @@ export function useMarketplace() {
     try {
       return await marketplaceApi.publishListing(id);
     } catch (e: any) {
-      setError(getApiErrorMessage(e, 'Failed to publish listing'));
+      setError(getApiErrorMessage(e, copy.errors.failedToPublishListing));
       throw e;
     } finally {
       setLoading(false);
@@ -46,7 +47,7 @@ export function useMarketplace() {
     try {
       return await marketplaceApi.getListings(params);
     } catch (e: any) {
-      setError(getApiErrorMessage(e, 'Failed to load listings'));
+      setError(getApiErrorMessage(e, copy.errors.failedToLoadListings));
       throw e;
     } finally {
       setLoading(false);
@@ -58,7 +59,7 @@ export function useMarketplace() {
     try {
       return await marketplaceApi.getListing(id);
     } catch (e: any) {
-      setError(getApiErrorMessage(e, 'Failed to load listing'));
+      setError(getApiErrorMessage(e, copy.errors.failedToLoadListing));
       throw e;
     } finally {
       setLoading(false);
@@ -74,7 +75,7 @@ export function useMarketplace() {
     try {
       return await marketplaceApi.updateListing(id, input);
     } catch (e: any) {
-      setError(getApiErrorMessage(e, 'Failed to update listing'));
+      setError(getApiErrorMessage(e, copy.errors.failedToUpdateListing));
       throw e;
     } finally {
       setLoading(false);
@@ -90,7 +91,7 @@ export function useMarketplace() {
     try {
       return await marketplaceApi.createOrder(input);
     } catch (e: any) {
-      setError(getApiErrorMessage(e, 'Failed to place order'));
+      setError(getApiErrorMessage(e, copy.errors.failedToPlaceOrder));
       throw e;
     } finally {
       setLoading(false);
@@ -110,7 +111,7 @@ export function useMarketplace() {
     try {
       return await marketplaceApi.makeOffer(listingId, { amount, message });
     } catch (e: any) {
-      setError(getApiErrorMessage(e, 'Failed to make offer'));
+      setError(getApiErrorMessage(e, copy.errors.failedToMakeOffer));
       throw e;
     } finally {
       setLoading(false);
@@ -132,7 +133,7 @@ export function useMarketplace() {
     try {
       return await marketplaceApi.checkout(input);
     } catch (e: any) {
-      setError(getApiErrorMessage(e, 'Checkout failed. Please retry.'));
+      setError(getApiErrorMessage(e, copy.errors.checkoutFailed));
       throw e;
     } finally {
       setLoading(false);
