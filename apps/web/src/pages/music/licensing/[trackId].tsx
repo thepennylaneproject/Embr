@@ -203,7 +203,7 @@ export default function MusicLicensingPage() {
                       marginBottom: '1rem',
                     }}
                   >
-                    {track.price === 0 ? '🎁 FREE' : `$${track.price.toFixed(2)}`}
+                    {track.price === 0 ? '🎁 FREE' : `$${(track.price / 100).toFixed(2)}`}
                   </div>
 
                   <span
@@ -293,7 +293,7 @@ export default function MusicLicensingPage() {
                 disabled={paymentLoading}
                 style={{ flex: 1, minWidth: '200px' }}
               >
-                {paymentLoading ? 'Processing...' : `Get License${track.price > 0 ? ` - $${track.price.toFixed(2)}` : ''}`}
+                {paymentLoading ? 'Processing...' : `Get License${track.price > 0 ? ` - $${(track.price / 100).toFixed(2)}` : ''}`}
               </Button>
               <Link href="/music" style={{ flex: 1 }}>
                 <Button

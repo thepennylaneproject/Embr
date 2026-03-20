@@ -1294,7 +1294,7 @@ model Track {
   lyrics            String?   @db.Text
 
   // Pricing & Monetization
-  price             Int       @default(0) // 0 = free, otherwise integer cents
+  price             Int       @default(0) // Integer cents >= 0; 0 = free. CHECK constraint enforced at DB level.
   isPublished       Boolean   @default(false)
   visibility        String    @default("public") // public, private, followers
 
@@ -1391,7 +1391,7 @@ model ArtistStat {
 
   date              DateTime  @default(now())
   streams           BigInt    @default(0)
-  revenue           Int       @default(0) // In cents
+  revenue           Int       @default(0) // Integer cents >= 0. CHECK constraint enforced at DB level.
   listeners         Int       @default(0)
   newFollowers      Int       @default(0)
 

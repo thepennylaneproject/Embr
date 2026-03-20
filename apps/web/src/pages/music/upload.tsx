@@ -117,7 +117,8 @@ export default function MusicUploadPage() {
       body.append('genre', formData.genre);
       body.append('description', formData.description);
       body.append('licensingModel', formData.licensingModel);
-      body.append('price', formData.price || '0');
+      const priceInCents = Math.round(parseFloat(formData.price || '0') * 100);
+      body.append('price', String(priceInCents));
       body.append('allowRemix', String(formData.allowRemix));
       body.append('allowMonetize', String(formData.allowMonetize));
       body.append('attributionRequired', String(formData.attributionRequired));
