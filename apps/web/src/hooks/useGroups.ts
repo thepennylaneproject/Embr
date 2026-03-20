@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { groupsApi } from '@shared/api/groups.api';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { copy } from '@/lib/copy';
 import type {
   Group,
   GroupMember,
@@ -20,7 +21,7 @@ export function useGroups() {
     try {
       return await groupsApi.create(input);
     } catch (e: any) {
-      setError(getApiErrorMessage(e, 'Failed to create group'));
+      setError(getApiErrorMessage(e, copy.errors.failedToCreateGroup));
       throw e;
     } finally {
       setLoading(false);
@@ -33,7 +34,7 @@ export function useGroups() {
     try {
       return await groupsApi.findAll(params);
     } catch (e: any) {
-      setError(getApiErrorMessage(e, 'Failed to load groups'));
+      setError(getApiErrorMessage(e, copy.errors.failedToLoadGroups));
       throw e;
     } finally {
       setLoading(false);
@@ -46,7 +47,7 @@ export function useGroups() {
     try {
       return await groupsApi.findBySlug(slug);
     } catch (e: any) {
-      setError(getApiErrorMessage(e, 'Failed to load group'));
+      setError(getApiErrorMessage(e, copy.errors.failedToLoadGroup));
       throw e;
     } finally {
       setLoading(false);
@@ -58,7 +59,7 @@ export function useGroups() {
     try {
       return await groupsApi.getMyGroups();
     } catch (e: any) {
-      setError(getApiErrorMessage(e, 'Failed to load your groups'));
+      setError(getApiErrorMessage(e, copy.errors.failedToLoadGroups));
       throw e;
     } finally {
       setLoading(false);
@@ -70,7 +71,7 @@ export function useGroups() {
     try {
       return await groupsApi.update(id, input);
     } catch (e: any) {
-      setError(getApiErrorMessage(e, 'Failed to update group'));
+      setError(getApiErrorMessage(e, copy.errors.failedToUpdateGroup));
       throw e;
     } finally {
       setLoading(false);
@@ -82,7 +83,7 @@ export function useGroups() {
     try {
       await groupsApi.delete(id);
     } catch (e: any) {
-      setError(getApiErrorMessage(e, 'Failed to delete group'));
+      setError(getApiErrorMessage(e, copy.errors.failedToDeleteGroup));
       throw e;
     } finally {
       setLoading(false);
@@ -94,7 +95,7 @@ export function useGroups() {
     try {
       return await groupsApi.join(groupId, message);
     } catch (e: any) {
-      setError(getApiErrorMessage(e, 'Failed to join group'));
+      setError(getApiErrorMessage(e, copy.errors.failedToJoinGroup));
       throw e;
     } finally {
       setLoading(false);
@@ -106,7 +107,7 @@ export function useGroups() {
     try {
       return await groupsApi.leave(groupId);
     } catch (e: any) {
-      setError(getApiErrorMessage(e, 'Failed to leave group'));
+      setError(getApiErrorMessage(e, copy.errors.failedToLeaveGroup));
       throw e;
     } finally {
       setLoading(false);
