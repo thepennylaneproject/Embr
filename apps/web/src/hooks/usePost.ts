@@ -6,6 +6,7 @@
 import { useState, useCallback } from 'react';
 import { contentApi } from '@shared/api/content.api';
 import { getApiErrorMessage } from '@/lib/api/error';
+import { copy } from '@/lib/copy';
 import {
   Post,
   CreatePostInput,
@@ -50,7 +51,7 @@ export const usePost = (): UsePostReturn => {
 
       return newPost;
     } catch (err: any) {
-      const errorMessage = getApiErrorMessage(err, 'Could not create post. Please try again.');
+      const errorMessage = getApiErrorMessage(err, copy.errors.failedToCreatePost);
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -72,7 +73,7 @@ export const usePost = (): UsePostReturn => {
         setUploadProgress(null);
         return result;
       } catch (err: any) {
-        const errorMessage = getApiErrorMessage(err, 'Could not upload media. Please try again.');
+        const errorMessage = getApiErrorMessage(err, copy.errors.failedToUploadMedia);
         setError(errorMessage);
         throw new Error(errorMessage);
       } finally {
@@ -93,7 +94,7 @@ export const usePost = (): UsePostReturn => {
 
         return updatedPost;
       } catch (err: any) {
-        const errorMessage = getApiErrorMessage(err, 'Could not update post. Please try again.');
+        const errorMessage = getApiErrorMessage(err, copy.errors.failedToUpdatePost);
         setError(errorMessage);
         throw new Error(errorMessage);
       } finally {
@@ -111,7 +112,7 @@ export const usePost = (): UsePostReturn => {
       await contentApi.deletePost(postId);
       setPost(null);
     } catch (err: any) {
-      const errorMessage = getApiErrorMessage(err, 'Could not delete post. Please try again.');
+      const errorMessage = getApiErrorMessage(err, copy.errors.failedToDeletePost);
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -129,7 +130,7 @@ export const usePost = (): UsePostReturn => {
 
       return fetchedPost;
     } catch (err: any) {
-      const errorMessage = getApiErrorMessage(err, 'Could not load post. Please refresh.');
+      const errorMessage = getApiErrorMessage(err, copy.errors.failedToLoadPost);
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {

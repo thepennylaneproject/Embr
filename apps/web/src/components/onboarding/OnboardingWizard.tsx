@@ -8,77 +8,11 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { copy } from '@/lib/copy';
 
 type WizardRole = 'creator' | 'supporter' | 'explorer';
 
-interface FeatureCard {
-  icon: string;
-  title: string;
-  description: string;
-  href: string;
-}
-
-const FEATURES: FeatureCard[] = [
-  {
-    icon: '📰',
-    title: 'Feed',
-    description: 'Follow creators and see what they are working on in real time.',
-    href: '/feed',
-  },
-  {
-    icon: '💼',
-    title: 'Gigs',
-    description: 'Post or apply to paid creative work — no hidden commissions.',
-    href: '/gigs',
-  },
-  {
-    icon: '🎵',
-    title: 'Music',
-    description: 'Discover, share, and license music from independent artists.',
-    href: '/music',
-  },
-  {
-    icon: '🏘',
-    title: 'Groups',
-    description: 'Connect around shared interests with focused community spaces.',
-    href: '/groups',
-  },
-  {
-    icon: '🗓',
-    title: 'Events',
-    description: 'Host and attend in-person and virtual community events.',
-    href: '/events',
-  },
-  {
-    icon: '🤝',
-    title: 'Mutual Aid',
-    description: 'Give and receive support from people in your community.',
-    href: '/mutual-aid',
-  },
-];
-
 const TOTAL_STEPS = 4;
-
-const ROLE_OPTIONS = [
-  {
-    id: 'creator' as WizardRole,
-    icon: '✨',
-    title: 'Creator',
-    description: 'I make things — art, music, writing, video, code, or anything else.',
-  },
-  {
-    id: 'supporter' as WizardRole,
-    icon: '🙌',
-    title: 'Supporter',
-    description: 'I discover great work and support the creators behind it.',
-  },
-  {
-    id: 'explorer' as WizardRole,
-    icon: '🔍',
-    title: 'Explorer',
-    description: 'I am just looking around to see what Embr has to offer.',
-  },
-];
 
 export function OnboardingWizard() {
   const router = useRouter();
@@ -131,6 +65,19 @@ export function OnboardingWizard() {
 
   if (!mounted || !visible) return null;
 
+  const roleKeys = ['creator', 'supporter', 'explorer'] as const;
+
+  const featureKeys = [
+    { key: 'feed' as const, icon: '📰', href: '/feed' },
+    { key: 'gigs' as const, icon: '💼', href: '/gigs' },
+    { key: 'music' as const, icon: '🎵', href: '/music' },
+    { key: 'groups' as const, icon: '🏘', href: '/groups' },
+    { key: 'events' as const, icon: '🗓', href: '/events' },
+    { key: 'mutualAid' as const, icon: '🤝', href: '/mutual-aid' },
+  ];
+
+  const roleIcons: Record<WizardRole, string> = { creator: '✨', supporter: '🙌', explorer: '🔍' };
+
   const content = (
     <div
       className="embr-onboarding-overlay"
@@ -153,7 +100,7 @@ export function OnboardingWizard() {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Welcome to Embr"
+        aria-label={copy.onboardingWizard.dialogLabel}
         style={{
           background: 'var(--embr-surface, #f7f3ef)',
           borderRadius: 'var(--embr-radius-xl, 24px)',
@@ -168,7 +115,7 @@ export function OnboardingWizard() {
         {/* Close button */}
         <button
           onClick={handleClose}
-          aria-label="Skip onboarding"
+          aria-label={copy.onboardingWizard.skipOnboarding}
           style={{
             position: 'absolute',
             top: '1rem',
@@ -220,7 +167,7 @@ export function OnboardingWizard() {
                 margin: '0 0 0.75rem',
               }}
             >
-              Welcome to Embr, {displayName}!
+              {copy.onboardingWizard.welcomeTitle(displayName)}
             </h1>
             <p
               style={{
@@ -231,8 +178,7 @@ export function OnboardingWizard() {
                 lineHeight: 1.6,
               }}
             >
-              A creator-focused platform built for you — not advertisers. Own your
-              audience, earn fairly, and build real community.
+              {copy.onboardingWizard.welcomeSubtitle}
             </p>
             <div
               style={{
@@ -243,7 +189,11 @@ export function OnboardingWizard() {
                 marginBottom: '2rem',
               }}
             >
-              {['✅ No ads', '✅ 85–90% revenue share', '✅ Open platform'].map((tag) => (
+              {[
+                copy.onboardingWizard.valuePropNoAds,
+                copy.onboardingWizard.valuePropRevenue,
+                copy.onboardingWizard.valuePropOpenPlatform,
+              ].map((tag) => (
                 <span
                   key={tag}
                   style={{
@@ -260,7 +210,7 @@ export function OnboardingWizard() {
               ))}
             </div>
             <button className="ui-button" data-variant="primary" onClick={handleNext} style={{ minWidth: '180px' }}>
-              Get started →
+              {copy.onboardingWizard.getStarted}
             </button>
           </div>
         )}
@@ -276,7 +226,7 @@ export function OnboardingWizard() {
                 margin: '0 0 0.5rem',
               }}
             >
-              What brings you here?
+              {copy.onboardingWizard.roleTitle}
             </h2>
             <p
               style={{
@@ -285,16 +235,17 @@ export function OnboardingWizard() {
                 margin: '0 0 1.5rem',
               }}
             >
-              We will personalise your experience — you can always change this later.
+              {copy.onboardingWizard.roleSubtitle}
             </p>
 
             <div style={{ display: 'grid', gap: '0.75rem', marginBottom: '1.75rem' }}>
-              {ROLE_OPTIONS.map((role) => {
-                const isSelected = selectedRole === role.id;
+              {roleKeys.map((roleKey) => {
+                const role = copy.onboardingWizard.roles[roleKey];
+                const isSelected = selectedRole === roleKey;
                 return (
                   <button
-                    key={role.id}
-                    onClick={() => setSelectedRole(role.id)}
+                    key={roleKey}
+                    onClick={() => setSelectedRole(roleKey)}
                     style={{
                       display: 'flex',
                       alignItems: 'flex-start',
@@ -313,7 +264,7 @@ export function OnboardingWizard() {
                       width: '100%',
                     }}
                   >
-                    <span style={{ fontSize: '1.5rem', lineHeight: 1, flexShrink: 0 }}>{role.icon}</span>
+                    <span style={{ fontSize: '1.5rem', lineHeight: 1, flexShrink: 0 }}>{roleIcons[roleKey]}</span>
                     <div>
                       <div
                         style={{
@@ -353,14 +304,14 @@ export function OnboardingWizard() {
                 data-variant="ghost"
                 onClick={() => setStep((s) => s - 1)}
               >
-                Back
+                {copy.onboardingWizard.back}
               </button>
               <button
                 className="ui-button"
                 data-variant="primary"
                 onClick={handleNext}
               >
-                {selectedRole ? 'Continue' : 'Skip for now'}
+                {selectedRole ? copy.onboardingWizard.continue : copy.onboardingWizard.skipForNow}
               </button>
             </div>
           </div>
@@ -377,7 +328,7 @@ export function OnboardingWizard() {
                 margin: '0 0 0.5rem',
               }}
             >
-              Here's what awaits you
+              {copy.onboardingWizard.discoverTitle}
             </h2>
             <p
               style={{
@@ -386,7 +337,7 @@ export function OnboardingWizard() {
                 margin: '0 0 1.5rem',
               }}
             >
-              Embr is more than a social feed — it's a full platform for creative life.
+              {copy.onboardingWizard.discoverSubtitle}
             </p>
 
             <div
@@ -397,32 +348,35 @@ export function OnboardingWizard() {
                 marginBottom: '1.75rem',
               }}
             >
-              {FEATURES.map((feature) => (
-                <div
-                  key={feature.href}
-                  style={{
-                    padding: '1rem',
-                    borderRadius: 'var(--embr-radius-md)',
-                    border: '1.5px solid var(--embr-border, #e2ded9)',
-                    background: 'var(--embr-bg, #faf7f4)',
-                  }}
-                >
-                  <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{feature.icon}</div>
+              {featureKeys.map(({ key, icon, href }) => {
+                const feature = copy.onboardingWizard.features[key];
+                return (
                   <div
+                    key={href}
                     style={{
-                      fontWeight: 700,
-                      fontSize: '0.9rem',
-                      color: 'var(--embr-text)',
-                      marginBottom: '0.3rem',
+                      padding: '1rem',
+                      borderRadius: 'var(--embr-radius-md)',
+                      border: '1.5px solid var(--embr-border, #e2ded9)',
+                      background: 'var(--embr-bg, #faf7f4)',
                     }}
                   >
-                    {feature.title}
+                    <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{icon}</div>
+                    <div
+                      style={{
+                        fontWeight: 700,
+                        fontSize: '0.9rem',
+                        color: 'var(--embr-text)',
+                        marginBottom: '0.3rem',
+                      }}
+                    >
+                      {feature.title}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--embr-muted-text)', lineHeight: 1.4 }}>
+                      {feature.description}
+                    </div>
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--embr-muted-text)', lineHeight: 1.4 }}>
-                    {feature.description}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
@@ -431,10 +385,10 @@ export function OnboardingWizard() {
                 data-variant="ghost"
                 onClick={() => setStep((s) => s - 1)}
               >
-                Back
+                {copy.onboardingWizard.back}
               </button>
               <button className="ui-button" data-variant="primary" onClick={handleNext}>
-                Almost there →
+                {copy.onboardingWizard.almostThere}
               </button>
             </div>
           </div>
@@ -452,7 +406,7 @@ export function OnboardingWizard() {
                 margin: '0 0 0.75rem',
               }}
             >
-              You're all set!
+              {copy.onboardingWizard.finishTitle}
             </h2>
             <p
               style={{
@@ -463,7 +417,7 @@ export function OnboardingWizard() {
                 lineHeight: 1.6,
               }}
             >
-              Start by completing your profile — it helps the community find and connect with you.
+              {copy.onboardingWizard.finishSubtitle}
             </p>
 
             <div
@@ -483,13 +437,9 @@ export function OnboardingWizard() {
                   margin: '0 0 0.75rem',
                 }}
               >
-                First steps ✅
+                {copy.onboardingWizard.firstStepsLabel}
               </p>
-              {[
-                { label: 'Complete your profile', href: '/profile/edit' },
-                { label: 'Make your first post', href: '/create' },
-                { label: 'Explore the feed', href: '/feed' },
-              ].map((item) => (
+              {copy.onboardingWizard.firstSteps.map((item) => (
                 <div
                   key={item.href}
                   style={{
@@ -521,14 +471,14 @@ export function OnboardingWizard() {
                 data-variant="secondary"
                 onClick={handleGoToFeed}
               >
-                Go to feed
+                {copy.onboardingWizard.goToFeed}
               </button>
               <button
                 className="ui-button"
                 data-variant="primary"
                 onClick={handleFinish}
               >
-                Complete profile →
+                {copy.onboardingWizard.completeProfile}
               </button>
             </div>
           </div>

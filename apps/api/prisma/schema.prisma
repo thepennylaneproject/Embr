@@ -251,6 +251,7 @@ model Post {
   duration      Int?           // Video duration in seconds
   isProcessing  Boolean        @default(false)
   groupId       String?
+  // Intentional SetNull: posts survive group deletion and remain as standalone user posts
   group         Group?         @relation(fields: [groupId], references: [id], onDelete: SetNull)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -397,14 +398,13 @@ model Wallet {
   payouts         Payout[]
   tipsSent        Tip[]                @relation("TipSender")
   tipsReceived    Tip[]                @relation("TipReceiver")
-
-  @@index([userId])
 }
 
 model Transaction {
   id            String          @id @default(uuid())
   walletId      String
   wallet        Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  // Intentional SetNull: financial records are preserved (anonymised) when the associated user is deleted
   userId        String?
   user          User?           @relation("TransactionRelatedUser", fields: [userId], references: [id], onDelete: SetNull)
   
@@ -458,6 +458,7 @@ model Tip {
   sender                Wallet    @relation("TipSender", fields: [senderId], references: [userId], onDelete: Cascade)
   recipientId           String
   recipient             Wallet    @relation("TipReceiver", fields: [recipientId], references: [userId], onDelete: Cascade)
+  // Intentional SetNull: tips are financial records that must be preserved even when the tipped content is deleted
   postId                String?
   post                  Post?     @relation(fields: [postId], references: [id], onDelete: SetNull)
   trackId               String?
@@ -470,8 +471,9 @@ model Tip {
   status                TipStatus @default(PENDING)
   refundReason          String?
 
+  // Intentional SetNull: tip record persists if the linked transaction is removed; transactionId is set on payment completion
   transactionId         String?   @unique
-  transaction           Transaction? @relation(fields: [transactionId], references: [id])
+  transaction           Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
 
   stripePaymentIntentId String?
   createdAt             DateTime  @default(now())
@@ -521,8 +523,9 @@ model Payout {
   approvedBy          String?        // Admin user ID
   paidAt              DateTime?
   
+  // Intentional SetNull: payout record persists if the linked transaction is removed; transactionId is set on payment processing
   transactionId       String?        @unique
-  transaction         Transaction?   @relation(fields: [transactionId], references: [id])
+  transaction         Transaction?   @relation(fields: [transactionId], references: [id], onDelete: SetNull)
 
   createdAt           DateTime       @default(now())
 
@@ -1045,6 +1048,7 @@ enum AnalyticsEventType {
 
 model AnalyticsEvent {
   id           String             @id @default(uuid())
+  // Intentional SetNull: analytics events are preserved anonymously when the user is deleted
   userId       String?
   user         User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
   type         AnalyticsEventType
@@ -1092,7 +1096,8 @@ model Media {
   deletedAt     DateTime?
 
   postId        String?
-  post          Post?     @relation(fields: [postId], references: [id], onDelete: SetNull)
+  // Cascade: media files that are attached to a post have no independent purpose once the post is deleted
+  post          Post?     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
@@ -1263,6 +1268,7 @@ model Track {
   artistId          String
   artist            Artist    @relation(fields: [artistId], references: [id], onDelete: Cascade)
   albumId           String?
+  // Intentional SetNull: tracks can exist as standalone singles/EPs without belonging to an album
   album             Album?    @relation(fields: [albumId], references: [id], onDelete: SetNull)
 
   title             String
@@ -1328,6 +1334,7 @@ model TrackPlay {
   id                String    @id @default(uuid())
   trackId           String
   track             Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  // Intentional SetNull: play records are preserved anonymously when the user is deleted (streaming analytics)
   userId            String?
   user              User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 
@@ -1648,6 +1655,7 @@ model MutualAidPost {
   expiresAt     DateTime?
   tags          String[]             @default([])
   groupId       String?
+  // Intentional SetNull: mutual aid posts survive group deletion and remain discoverable as standalone posts
   group         Group?               @relation(fields: [groupId], references: [id], onDelete: SetNull)
   responseCount Int                  @default(0)
   createdAt     DateTime             @default(now())
@@ -1752,6 +1760,7 @@ model MarketplaceListing {
   location     String?
   viewCount    Int              @default(0)
   groupId      String?
+  // Intentional SetNull: listings survive group deletion and remain active on the marketplace
   group        Group?           @relation(fields: [groupId], references: [id], onDelete: SetNull)
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
@@ -1871,6 +1880,7 @@ model Event {
   hostId         String
   host           User        @relation("EventHost", fields: [hostId], references: [id], onDelete: Cascade)
   groupId        String?
+  // Intentional SetNull: events survive group deletion and remain accessible to their attendees
   group          Group?      @relation(fields: [groupId], references: [id], onDelete: SetNull)
   title          String
   description    String      @db.Text
@@ -1889,6 +1899,7 @@ model Event {
   status         EventStatus @default(DRAFT)
   tags           String[]    @default([])
   linkedMutualAidId String?
+  // Intentional SetNull: events survive mutual aid post deletion; the linkage is informational only
   linkedMutualAid   MutualAidPost? @relation(fields: [linkedMutualAidId], references: [id], onDelete: SetNull)
   attendees      EventAttendee[]
   recap          EventRecap?
@@ -1926,6 +1937,7 @@ model EventRecap {
   eventId   String   @unique
   event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   postId    String?  @unique
+  // Intentional SetNull: recap notes and media belong to the Event, not the linked post; recap survives post deletion
   post      Post?    @relation(fields: [postId], references: [id], onDelete: SetNull)
   notes     String?  @db.Text
   mediaUrls String[] @default([])
@@ -1973,8 +1985,10 @@ model Poll {
   authorId    String
   author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
   groupId     String?
+  // Intentional SetNull: polls can exist as standalone author polls; group/event context is optional
   group       Group?     @relation(fields: [groupId], references: [id], onDelete: SetNull)
   eventId     String?
+  // Intentional SetNull: polls survive event deletion; a poll may also still be associated with a group
   event       Event?     @relation(fields: [eventId], references: [id], onDelete: SetNull)
   question    String
   description String?    @db.Text
@@ -2048,8 +2062,10 @@ model GroupTreasuryTransaction {
   type                  TreasuryTransactionType
   amount                Int                      // cents
   description           String
+  // Intentional SetNull: treasury transaction records are preserved (anonymised) when a contributing user is deleted
   contributorId         String?
   contributor           User?                    @relation("TreasuryContributor", fields: [contributorId], references: [id], onDelete: SetNull)
+  // Intentional SetNull: treasury transaction records are preserved after the associated poll is deleted
   pollId                String?
   poll                  Poll?                    @relation(fields: [pollId], references: [id], onDelete: SetNull)
   stripePaymentIntentId String?
