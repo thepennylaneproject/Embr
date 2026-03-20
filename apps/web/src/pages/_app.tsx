@@ -30,6 +30,7 @@ export default function App({ Component, pageProps }: AppProps) {
       </Head>
       <AuthProvider>
         <ToastProvider>
+          <OnboardingProvider>
           {/*
            * Page-level ErrorBoundary — keyed on the current pathname so it
            * automatically resets (unmounts + remounts) whenever the user
@@ -101,6 +102,7 @@ export default function App({ Component, pageProps }: AppProps) {
           >
             <Component {...pageProps} />
           </ErrorBoundary>
+          </OnboardingProvider>
         </ToastProvider>
       </AuthProvider>
     </ErrorBoundary>
