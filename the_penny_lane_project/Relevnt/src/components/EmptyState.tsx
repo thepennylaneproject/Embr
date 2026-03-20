@@ -1,6 +1,6 @@
 import React from 'react';
 
-type EmptyStateType = 'applications' | 'applications-filtered';
+type EmptyStateType = 'applications' | 'applications-filtered' | 'resumes';
 
 interface EmptyStateProps {
   type: EmptyStateType;
@@ -10,6 +10,23 @@ interface EmptyStateProps {
 }
 
 const illustrations: Record<EmptyStateType, React.ReactNode> = {
+  resumes: (
+    <svg
+      aria-hidden="true"
+      width="80"
+      height="80"
+      viewBox="0 0 80 80"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect x="14" y="10" width="44" height="60" rx="4" fill="#EEF2FF" stroke="#6366F1" strokeWidth="2" />
+      <rect x="22" y="24" width="28" height="4" rx="2" fill="#6366F1" opacity="0.4" />
+      <rect x="22" y="33" width="20" height="4" rx="2" fill="#6366F1" opacity="0.3" />
+      <rect x="22" y="42" width="24" height="4" rx="2" fill="#6366F1" opacity="0.2" />
+      <circle cx="58" cy="58" r="12" fill="#6366F1" />
+      <path d="M53 58h10M58 53v10" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  ),
   applications: (
     <svg
       aria-hidden="true"
@@ -51,6 +68,10 @@ const content: Record<
   EmptyStateType,
   { heading: string; body: (filterLabel?: string) => string }
 > = {
+  resumes: {
+    heading: 'Your story, ready to unfold',
+    body: () => 'Upload a résumé to see how the system sees you.',
+  },
   applications: {
     heading: "You haven't tracked any applications yet",
     body: () =>
