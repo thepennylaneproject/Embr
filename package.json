@@ -2,7 +2,7 @@
   "name": "embr",
   "version": "0.1.0",
   "description": "Embr — creator monetization platform and social marketplace",
-  "author": "The Penny Lane Project <Sarah@thepennylaneproject.org>",
+  "author": "Embr Team",
   "license": "MIT",
   "private": true,
   "workspaces": [
@@ -46,6 +46,7 @@
     "@prisma/client": "^5.8.0",
     "@socket.io/redis-adapter": "^8.3.0",
     "bcrypt": "^5.1.1",
+    "cron": "^4.4.0",
     "isomorphic-dompurify": "^3.0.0",
     "redis": "^5.11.0",
     "sharp": "^0.34.5"
@@ -75,7 +76,5 @@
     "migrations",
     "docker",
     "ci-cd"
-  ],
-  "author": "Embr Team",
-  "license": "MIT"
+  ]
 }

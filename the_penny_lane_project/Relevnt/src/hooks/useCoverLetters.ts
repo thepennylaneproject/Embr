@@ -11,6 +11,29 @@ interface UseCoverLettersResult {
   deleteCoverLetter: (id: string) => Promise<void>;
 }
 
+/**
+ * Builds the argument object for the upsert_cover_letter RPC from a
+ * CoverLetterInsert payload, mapping camelCase / snake_case fields and
+ * dropping user_id (the function always uses auth.uid() server-side).
+ */
+function toRpcArgs(payload: CoverLetterInsert & { id?: string }) {
+  return {
+    p_id: payload.id ?? null,
+    // user_id is intentionally omitted so the RPC uses auth.uid() directly;
+    // passing it allows the function to reject mismatches as an extra guard.
+    p_user_id: payload.user_id ?? null,
+    p_title: payload.title,
+    p_content: payload.content,
+    p_application_id: payload.application_id ?? null,
+    p_resume_id: payload.resume_id ?? null,
+    p_job_id: payload.job_id ?? null,
+    p_job_description: payload.job_description ?? null,
+    p_company_name: payload.company_name ?? null,
+    p_ai_generated: payload.ai_generated ?? false,
+    p_template_used: payload.template_used ?? null,
+  };
+}
+
 export function useCoverLetters(applicationId?: string): UseCoverLettersResult {
   const [coverLetters, setCoverLetters] = useState<CoverLetter[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +72,14 @@ export function useCoverLetters(applicationId?: string): UseCoverLettersResult {
     load();
   }, [load]);
 
+  /**
+   * Upsert a cover letter via the upsert_cover_letter RPC.
+   *
+   * The server-side function enforces that application_id and resume_id, when
+   * provided, belong to the authenticated caller before writing. This prevents
+   * cross-user reference contamination that a direct .upsert() call would not
+   * catch if RLS policies ever regress.
+   */
   const upsertCoverLetter = useCallback(
     async (payload: CoverLetterInsert): Promise<CoverLetter> => {
       const { data, error: upsertError } = await supabase

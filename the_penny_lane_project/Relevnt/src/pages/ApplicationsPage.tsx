@@ -3,6 +3,7 @@ import { useApplications } from '../hooks/useApplications';
 import { EmptyState } from '../components/EmptyState';
 import { ApplicationCard } from '../components/ApplicationCard';
 import { Application, ApplicationStatus, FilterOption } from '../types/application';
+import { generatePDFSummary } from '../services/exportService';
 
 // line 22: FILTER_OPTIONS defines the 8 status filter tabs for the applications view
 const FILTER_OPTIONS: FilterOption[] = [
@@ -27,6 +28,7 @@ function filterApplications(
 export const ApplicationsPage: React.FC = () => {
   const { applications, loading, error, refetch } = useApplications();
   const [activeFilter, setActiveFilter] = useState<ApplicationStatus>('all');
+  const [exporting, setExporting] = useState(false);
 
   const filtered = filterApplications(applications, activeFilter);
 
@@ -40,15 +42,39 @@ export const ApplicationsPage: React.FC = () => {
     alert('Add application flow coming soon.');
   };
 
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      await generatePDFSummary({ applications });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
         {/* Page header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Applications</h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            Track every role you've applied to, from first submission to final decision.
-          </p>
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Applications</h1>
+            <p className="text-gray-500 mt-1 text-sm">
+              Track every role you've applied to, from first submission to final decision.
+            </p>
+          </div>
+          {applications.length > 0 && (
+            <button
+              onClick={handleExportPDF}
+              disabled={exporting || loading}
+              aria-label="Export applications as PDF"
+              className="shrink-0 flex items-center gap-1.5 px-3 py-2 text-sm font-medium border border-gray-200 rounded-lg text-gray-600 hover:border-indigo-300 hover:text-indigo-600 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+            >
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                <path fillRule="evenodd" d="M8 1a.75.75 0 01.75.75v6.19l1.72-1.72a.75.75 0 111.06 1.06l-3 3a.75.75 0 01-1.06 0l-3-3a.75.75 0 011.06-1.06l1.72 1.72V1.75A.75.75 0 018 1zM2.5 10a.75.75 0 000 1.5h11a.75.75 0 000-1.5h-11z" clipRule="evenodd" />
+              </svg>
+              {exporting ? 'Generating…' : 'Export PDF'}
+            </button>
+          )}
         </div>
 
         {/* Error banner — shown when the data fetch fails */}
