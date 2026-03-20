@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useId } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { EmptyState } from '../components/EmptyState';
 
 // ---------------------------------------------------------------------------
 // Supabase client (browser-side, public anon key)
@@ -317,22 +318,7 @@ export const DocumentsPage: React.FC<DocumentsPageProps> = ({ supabaseClient }) 
             ))}
           </div>
         ) : resumes.length === 0 ? (
-          <div
-            role="status"
-            aria-label="No documents found"
-            className="flex flex-col items-center justify-center py-20 px-6 text-center"
-          >
-            <svg aria-hidden="true" width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="14" y="10" width="44" height="60" rx="4" fill="#EEF2FF" stroke="#6366F1" strokeWidth="2" />
-              <rect x="22" y="24" width="28" height="4" rx="2" fill="#6366F1" opacity="0.4" />
-              <rect x="22" y="33" width="20" height="4" rx="2" fill="#6366F1" opacity="0.3" />
-              <rect x="22" y="42" width="24" height="4" rx="2" fill="#6366F1" opacity="0.2" />
-            </svg>
-            <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-2">No resumes yet</h2>
-            <p className="text-gray-500 max-w-sm">
-              Upload a resume to get started. Relevnt will use it to match you with relevant opportunities.
-            </p>
-          </div>
+          <EmptyState type="resumes" />
         ) : (
           <div role="list" aria-label={`${resumes.length} document${resumes.length !== 1 ? 's' : ''}`} className="space-y-4">
             {resumes.map((resume) => {

@@ -10,7 +10,7 @@ export default function HomePage() {
   return (
     <>
       <Head>
-        <title>Embr — Creator Community</title>
+        <title>{copy.brand.pageTitle(copy.brand.name)}</title>
       </Head>
       <main className="embr-page" style={{ display: 'grid', placeItems: 'center', padding: '1rem' }}>
         <Card padding="lg" style={{ width: 'min(740px, 100%)', textAlign: 'center' }}>

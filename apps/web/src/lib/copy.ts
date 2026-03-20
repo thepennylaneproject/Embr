@@ -4,7 +4,8 @@
  * Usage: import { copy } from '@/lib/copy';
  *
  * Sections:
- *   brand, nav, onboarding, dashboard, jobs, applications, resumes,
+ *   brand, nav, onboarding, onboardingWizard, onboardingChecklist, onboardingBanner,
+ *   dashboard, jobs, applications, resumes,
  *   voice, personas, profile, settings, learn, transparency, upgrade,
  *   errors, success, confirmations, actions, emptyStates, pricing, ethics,
  *   eduPromo, marketing, trust
@@ -88,6 +89,143 @@ export const copy = {
     missingResetTokenDesc: 'Open the password reset link from your email again.',
     resetting: 'Resetting...',
     backToSignIn: 'Back to sign in',
+  },
+
+  onboardingWizard: {
+    dialogLabel: 'Welcome to Embr',
+    skipOnboarding: 'Skip onboarding',
+
+    // Step 0 — Welcome
+    welcomeTitle: (displayName: string) => `Welcome to Embr, ${displayName}!`,
+    welcomeSubtitle:
+      'A creator-focused platform built for you — not advertisers. Own your audience, earn fairly, and build real community.',
+    valuePropNoAds: '✅ No ads',
+    valuePropRevenue: '✅ 85–90% revenue share',
+    valuePropOpenPlatform: '✅ Open platform',
+    getStarted: 'Get started →',
+
+    // Step 1 — Role selection
+    roleTitle: 'What brings you here?',
+    roleSubtitle: 'We will personalise your experience — you can always change this later.',
+    roles: {
+      creator: {
+        title: 'Creator',
+        description: 'I make things — art, music, writing, video, code, or anything else.',
+      },
+      supporter: {
+        title: 'Supporter',
+        description: 'I discover great work and support the creators behind it.',
+      },
+      explorer: {
+        title: 'Explorer',
+        description: 'I am just looking around to see what Embr has to offer.',
+      },
+    },
+    continue: 'Continue',
+    skipForNow: 'Skip for now',
+    back: 'Back',
+
+    // Step 2 — Feature discovery
+    discoverTitle: "Here's what awaits you",
+    discoverSubtitle: "Embr is more than a social feed — it's a full platform for creative life.",
+    features: {
+      feed: {
+        title: 'Feed',
+        description: 'Follow creators and see what they are working on in real time.',
+      },
+      gigs: {
+        title: 'Gigs',
+        description: 'Post or apply to paid creative work — no hidden commissions.',
+      },
+      music: {
+        title: 'Music',
+        description: 'Discover, share, and license music from independent artists.',
+      },
+      groups: {
+        title: 'Groups',
+        description: 'Connect around shared interests with focused community spaces.',
+      },
+      events: {
+        title: 'Events',
+        description: 'Host and attend in-person and virtual community events.',
+      },
+      mutualAid: {
+        title: 'Mutual Aid',
+        description: 'Give and receive support from people in your community.',
+      },
+    },
+    almostThere: 'Almost there →',
+
+    // Step 3 — Finish
+    finishTitle: "You're all set!",
+    finishSubtitle:
+      'Start by completing your profile — it helps the community find and connect with you.',
+    firstStepsLabel: 'First steps ✅',
+    firstSteps: [
+      { label: 'Complete your profile', href: '/profile/edit' },
+      { label: 'Make your first post', href: '/create' },
+      { label: 'Explore the feed', href: '/feed' },
+    ] as Array<{ label: string; href: string }>,
+    goToFeed: 'Go to feed',
+    completeProfile: 'Complete profile →',
+  },
+
+  onboardingChecklist: {
+    title: 'Get Started Earning',
+    subtitle: 'Complete these 3 steps to earn your first tip',
+    progressLabel: (completed: number, total: number) => `${completed} of ${total} complete`,
+    stepCompleteLabel: '✓ Complete',
+    celebration: {
+      title: 'Welcome to Embr!',
+      subtitle: "You're all set. Time to start earning.",
+    },
+    readyTitle: '🚀 Ready to earn',
+    readySubtitle: 'Start applying to gigs and grow your audience',
+    browseGigs: 'Browse Gigs',
+    viewFeed: 'View Feed',
+    steps: {
+      profile: {
+        title: 'Complete Your Profile',
+        description: 'Add a photo and bio so clients know who you are.',
+        cta: 'Set Up Profile',
+        icon: '👤',
+      },
+      post: {
+        title: 'Post Your First Content',
+        description: 'Share your work to start building your audience.',
+        cta: 'Create First Post',
+        icon: '✨',
+      },
+      earning: {
+        title: 'Get Your First Tip',
+        description: 'Browse opportunities and earn money for your work.',
+        cta: 'Find Work',
+        icon: '💰',
+      },
+    },
+  },
+
+  onboardingBanner: {
+    regionLabel: 'Getting started checklist',
+    dismissLabel: 'Dismiss getting started checklist',
+    title: 'Get started on Embr',
+    subtitleEmpty: 'Complete these steps to get the most out of Embr.',
+    subtitleProgress: (completed: number, total: number) =>
+      `${completed} of ${total} steps complete — keep going!`,
+    startLabel: 'Start →',
+    checklist: [
+      { id: 'profile' as const, label: 'Complete your profile', href: '/profile/edit', icon: '👤' },
+      { id: 'first_post' as const, label: 'Make your first post', href: '/create', icon: '✍️' },
+      { id: 'follow_creator' as const, label: 'Follow a creator', href: '/discover', icon: '🔍' },
+      { id: 'explore_gigs' as const, label: 'Explore gigs', href: '/gigs', icon: '💼' },
+    ],
+  },
+
+  gettingStartedPage: {
+    title: 'Getting Started',
+    subtitle: 'Complete these steps to get the most out of Embr.',
+    resetPrompt: 'Want to restart the getting-started checklist?',
+    resetButton: 'Reset onboarding progress',
   },
 
   dashboard: {
@@ -291,6 +429,7 @@ export const copy = {
     generic: 'Something went wrong. Please try again.',
     networkError:
       'Unable to connect. Please check your connection and try again.',
+    badRequest: 'Please check your input and try again.',
     invalidCredentials: 'Invalid credentials.',
     signupFailed: 'Account creation failed.',
     failedToLoad: 'Failed to load.',
@@ -316,6 +455,7 @@ export const copy = {
     // Group errors
     failedToCreateGroup: 'Could not create the group. Please try again.',
     failedToLoadGroup: 'Could not load the group. Please refresh.',
+    failedToLoadGroups: 'Could not load groups. Please refresh.',
     failedToUpdateGroup: 'Could not save group changes. Please try again.',
     failedToDeleteGroup:
       'Could not delete the group. Please try again or contact support.',
@@ -325,8 +465,19 @@ export const copy = {
     failedToCreateListing:
       'Could not create the listing. Please check your input and try again.',
     failedToLoadListing: 'Could not load this listing. Please refresh.',
+    failedToLoadListings: 'Could not load listings. Please refresh.',
+    failedToUpdateListing: 'Could not update the listing. Please try again.',
+    failedToPublishListing: 'Could not publish the listing. Please try again.',
     failedToPlaceOrder:
       'Could not place the order. Please try again or contact support.',
+    failedToMakeOffer: 'Could not submit your offer. Please try again.',
+    checkoutFailed: 'Checkout did not go through. Please try again.',
+    // Post errors
+    failedToCreatePost: 'Could not create the post. Please try again.',
+    failedToUpdatePost: 'Could not update the post. Please try again.',
+    failedToDeletePost: 'Could not delete the post. Please try again.',
+    failedToLoadPost: 'Could not load the post. Please refresh.',
+    failedToUploadMedia: 'Could not upload the media. Please try again.',
     // Mutual aid errors
     failedToCreateMutualAidPost:
       'Could not post your request. Please try again.',
@@ -345,12 +496,20 @@ export const copy = {
     failedToLoadTreasury: 'Could not load treasury info. Please refresh.',
     failedToContribute: 'Could not process the contribution. Please try again.',
     // Safety errors
-    failedToSubmitReport:
-      'Could not submit your report. Please try again.',
+    failedToSubmitReport: 'Could not submit your report. Please try again.',
+    failedToUpdateReport: 'Could not update the report. Please try again.',
+    failedToLoadReports: 'Could not load reports. Please refresh.',
     failedToBlockUser: 'Could not block this user. Please try again.',
     failedToUnblockUser: 'Could not unblock this user. Please try again.',
+    failedToLoadBlockedUsers: 'Could not load blocked users. Please refresh.',
     failedToMuteUser: 'Could not mute this user. Please try again.',
     failedToUnmuteUser: 'Could not unmute this user. Please try again.',
+    failedToLoadMutedUsers: 'Could not load muted users. Please refresh.',
+    failedToAddKeyword: 'Could not add the keyword. Please try again.',
+    failedToRemoveKeyword: 'Could not remove the keyword. Please try again.',
+    failedToLoadMutedKeywords: 'Could not load muted keywords. Please refresh.',
+    failedToSubmitAppeal: 'Could not submit your appeal. Please try again.',
+    failedToLoadAppeals: 'Could not load appeals. Please refresh.',
     failedToLoadSafetySettings:
       'Could not load your safety settings. Please refresh.',
   },

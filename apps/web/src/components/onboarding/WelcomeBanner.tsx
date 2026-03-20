@@ -6,21 +6,8 @@
  */
 import React from 'react';
 import Link from 'next/link';
-import { useOnboarding, OnboardingStepId } from '@/contexts/OnboardingContext';
-
-interface ChecklistItem {
-  id: OnboardingStepId;
-  label: string;
-  href: string;
-  icon: string;
-}
-
-const CHECKLIST: ChecklistItem[] = [
-  { id: 'profile', label: 'Complete your profile', href: '/profile/edit', icon: '👤' },
-  { id: 'first_post', label: 'Make your first post', href: '/create', icon: '✍️' },
-  { id: 'follow_creator', label: 'Follow a creator', href: '/discover', icon: '🔍' },
-  { id: 'explore_gigs', label: 'Explore gigs', href: '/gigs', icon: '💼' },
-];
+import { useOnboarding } from '@/contexts/OnboardingContext';
+import { copy } from '@/lib/copy';
 
 export function WelcomeBanner() {
   const { loaded, bannerDismissed, allStepsComplete, isStepComplete, dismissBanner, completeStep } =
@@ -28,8 +15,9 @@ export function WelcomeBanner() {
 
   if (!loaded || bannerDismissed || allStepsComplete) return null;
 
-  const completedCount = CHECKLIST.filter((item) => isStepComplete(item.id)).length;
-  const progressPercent = (completedCount / CHECKLIST.length) * 100;
+  const checklist = copy.onboardingBanner.checklist;
+  const completedCount = checklist.filter((item) => isStepComplete(item.id)).length;
+  const progressPercent = (completedCount / checklist.length) * 100;
 
   return (
     <div
@@ -42,12 +30,12 @@ export function WelcomeBanner() {
         position: 'relative',
       }}
       role="region"
-      aria-label="Getting started checklist"
+      aria-label={copy.onboardingBanner.regionLabel}
     >
       {/* Dismiss button */}
       <button
         onClick={dismissBanner}
-        aria-label="Dismiss getting started checklist"
+        aria-label={copy.onboardingBanner.dismissLabel}
         style={{
           position: 'absolute',
           top: '0.75rem',
@@ -75,7 +63,7 @@ export function WelcomeBanner() {
             margin: '0 0 0.2rem',
           }}
         >
-          Get started on Embr
+          {copy.onboardingBanner.title}
         </h2>
         <p
           style={{
@@ -85,8 +73,8 @@ export function WelcomeBanner() {
           }}
         >
           {completedCount === 0
-            ? 'Complete these steps to get the most out of Embr.'
-            : `${completedCount} of ${CHECKLIST.length} steps complete — keep going!`}
+            ? copy.onboardingBanner.subtitleEmpty
+            : copy.onboardingBanner.subtitleProgress(completedCount, checklist.length)}
         </p>
       </div>
 
@@ -109,9 +97,9 @@ export function WelcomeBanner() {
             transition: 'width 0.4s ease',
           }}
           aria-valuenow={completedCount}
-          aria-valuemax={CHECKLIST.length}
+          aria-valuemax={checklist.length}
           role="progressbar"
-          aria-label={`${completedCount} of ${CHECKLIST.length} steps complete`}
+          aria-label={`${completedCount} of ${checklist.length} steps complete`}
         />
       </div>
 
@@ -122,7 +110,7 @@ export function WelcomeBanner() {
           gap: '0.6rem',
         }}
       >
-        {CHECKLIST.map((item) => {
+        {checklist.map((item) => {
           const done = isStepComplete(item.id);
           return (
             <Link
@@ -189,7 +177,7 @@ export function WelcomeBanner() {
                     fontWeight: 600,
                   }}
                 >
-                  Start →
+                  {copy.onboardingBanner.startLabel}
                 </span>
               )}
             </Link>
