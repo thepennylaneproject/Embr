@@ -20,12 +20,12 @@ export default function OnboardingPage() {
   return (
     <>
       <Head>
-        <title>{copy.brand.pageTitle('Getting Started')}</title>
+        <title>{copy.brand.pageTitle(copy.gettingStartedPage.title)}</title>
       </Head>
       <ProtectedPageShell
-        title="Getting Started"
-        subtitle="Complete these steps to get the most out of Embr."
-        breadcrumbs={[{ label: 'Getting Started' }]}
+        title={copy.gettingStartedPage.title}
+        subtitle={copy.gettingStartedPage.subtitle}
+        breadcrumbs={[{ label: copy.gettingStartedPage.title }]}
       >
         <div style={{ maxWidth: '640px' }}>
           <CreatorOnboarding userId={user.id} />
@@ -44,10 +44,10 @@ export default function OnboardingPage() {
                 marginBottom: '0.75rem',
               }}
             >
-              Want to restart the getting-started checklist?
+              {copy.gettingStartedPage.resetPrompt}
             </p>
             <Button variant="ghost" onClick={resetOnboarding} style={{ fontSize: '0.85rem' }}>
-              Reset onboarding progress
+              {copy.gettingStartedPage.resetButton}
             </Button>
           </div>
         </div>
