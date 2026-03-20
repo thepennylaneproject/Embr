@@ -403,8 +403,8 @@ model Transaction {
   id            String          @id @default(uuid())
   walletId      String
   wallet        Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
-  userId        String?
-  user          User?           @relation("TransactionRelatedUser", fields: [userId], references: [id], onDelete: SetNull)
+  userId        String
+  user          User            @relation("TransactionRelatedUser", fields: [userId], references: [id], onDelete: Cascade)
   
   type          TransactionType
   amount        Int               // In cents
