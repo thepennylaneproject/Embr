@@ -15,7 +15,6 @@ import { toRateLimitConfig, MESSAGE_RATE_LIMITS } from '../config/messaging-rate
 import {
   MessageType as PrismaMessageType,
   MessageStatus as PrismaMessageStatus,
-  SortOrder,
 } from '@prisma/client';
 import {
   SendMessageDto,
@@ -245,7 +244,7 @@ export class MessagingService {
       },
       messages: {
         take: 1,
-        orderBy: { createdAt: SortOrder.desc },
+        orderBy: { createdAt: 'desc' as const },
       },
     };
 
