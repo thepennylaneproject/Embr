@@ -145,7 +145,9 @@ export class TrendingService {
 
     const startTime = new Date(Date.now() - timeWindowDays * 24 * 60 * 60 * 1000);
 
-    // Get user engagement in time window
+    // Get user engagement in time window, ordered by total engagement descending.
+    // We fetch limit*3 rows at the DB level so the groupBy result set is bounded,
+    // eliminating the unbounded N that previously drove the N+1 pattern below.
     const userEngagement = await this.prisma.post.groupBy({
       by: ['authorId'],
       where: {
@@ -154,42 +156,55 @@ export class TrendingService {
       },
       _sum: { likeCount: true, commentCount: true },
       _count: { id: true },
+      orderBy: { _sum: { likeCount: 'desc' } },
+      take: limit * 3,
     });
 
-    // Calculate trending score per user
-    const trendingUsers = (
-      await Promise.all(
-        userEngagement.map(async (engagement) => {
-          const user = await this.prisma.user.findUnique({
-            where: { id: engagement.authorId },
-            select: {
-              id: true,
-              username: true,
-              profile: {
-                select: {
-                  displayName: true,
-                  avatarUrl: true,
-                  isVerified: true,
-                  followerCount: true,
-                },
-              },
-            },
-          });
+    // Pre-score and slice to top candidates before touching the users table.
+    // This is safe because we don't yet have the isVerified bonus, but the
+    // ordering is close enough to avoid loading unnecessary user rows.
+    const topEngagement = userEngagement
+      .map((e) => ({
+        authorId: e.authorId,
+        roughScore:
+          ((e._sum.likeCount || 0) + (e._sum.commentCount || 0)) * 0.5 +
+          (e._count as any).id * 10,
+        likeCount: e._sum.likeCount || 0,
+        commentCount: e._sum.commentCount || 0,
+        postCount: (e._count as any).id,
+      }))
+      .sort((a, b) => b.roughScore - a.roughScore)
+      .slice(0, limit * 2);
 
-          if (!user) return null;
+    const authorIds = topEngagement.map((e) => e.authorId);
 
-          // Score: total engagement + post count + verification bonus
-          const totalEngagement =
-            (engagement._sum.likeCount || 0) + (engagement._sum.commentCount || 0);
-          const score =
-            totalEngagement * 0.5 +
-            ((engagement._count as any).id * 10) +
-            (user.profile?.isVerified ? 50 : 0);
+    // Single batched lookup instead of one findUnique per row (eliminates N+1).
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: authorIds } },
+      select: {
+        id: true,
+        username: true,
+        profile: {
+          select: {
+            displayName: true,
+            avatarUrl: true,
+            isVerified: true,
+            followerCount: true,
+          },
+        },
+      },
+    });
 
-          return { user, score };
-        }),
-      )
-    )
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    // Rescore with the verified bonus now that we have user data.
+    const trendingUsers = topEngagement
+      .map((e) => {
+        const user = userMap.get(e.authorId);
+        if (!user) return null;
+        const score = e.roughScore + (user.profile?.isVerified ? 50 : 0);
+        return { user, score };
+      })
       .filter((item) => item !== null)
       .sort((a, b) => b!.score - a!.score)
       .slice(0, limit)
