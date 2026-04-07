@@ -4,7 +4,7 @@ import { IsNotEmpty, IsString, MinLength, Matches } from 'class-validator';
 export class ResetPasswordDto {
   @IsString()
   @IsNotEmpty({ message: 'Token is required' })
-  token: string;
+  token!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'New password is required' })
@@ -12,5 +12,5 @@ export class ResetPasswordDto {
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
     message: 'Password must contain uppercase, lowercase, number, and special character',
   })
-  newPassword: string;
+  newPassword!: string;
 }

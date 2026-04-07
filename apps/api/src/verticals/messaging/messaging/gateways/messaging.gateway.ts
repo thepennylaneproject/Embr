@@ -51,7 +51,7 @@ export class MessagingGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private readonly logger = new Logger(MessagingGateway.name);
   private userSockets: Map<string, Set<string>> = new Map(); // userId -> Set of socketIds (fallback for in-memory)
@@ -114,13 +114,13 @@ export class MessagingGateway
       // Track user socket (use Redis if available, fallback to in-memory)
       if (this.useRedis && this.redisService) {
         try {
-          await this.redisService.addSocket(client.userId, client.id);
+          await this.redisService.addSocket(client.userId!, client.id);
         } catch (error) {
           this.logger.warn(`Failed to add socket to Redis, using in-memory: ${error.message}`);
-          this.trackSocketInMemory(client.userId, client.id);
+          this.trackSocketInMemory(client.userId!, client.id);
         }
       } else {
-        this.trackSocketInMemory(client.userId, client.id);
+        this.trackSocketInMemory(client.userId!, client.id);
       }
 
       // Join user's personal room for direct messaging

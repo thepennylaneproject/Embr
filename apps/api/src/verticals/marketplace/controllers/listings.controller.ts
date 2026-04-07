@@ -16,6 +16,7 @@ import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
 import { Public } from '../../../core/auth/decorators/public.decorator';
 import { ListingsService } from '../services/listings.service';
 import { CreateListingDto, UpdateListingDto, ListingSearchDto } from '../dto/marketplace.dto';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('marketplace/listings')
 @UseGuards(JwtAuthGuard)
@@ -24,13 +25,13 @@ export class ListingsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Request() req, @Body() dto: CreateListingDto) {
+  async create(@Request() req: RequestWithUser, @Body() dto: CreateListingDto) {
     return this.listingsService.create(req.user.id, dto);
   }
 
   @Post(':id/publish')
   @HttpCode(HttpStatus.OK)
-  async publish(@Param('id') id: string, @Request() req) {
+  async publish(@Param('id') id: string, @Request() req: RequestWithUser) {
     return this.listingsService.publish(id, req.user.id);
   }
 
@@ -41,7 +42,7 @@ export class ListingsController {
   }
 
   @Get('mine')
-  async getMyListings(@Request() req, @Query('status') status?: string) {
+  async getMyListings(@Request() req: RequestWithUser, @Query('status') status?: string) {
     return this.listingsService.getSellerListings(req.user.id, status);
   }
 
@@ -52,12 +53,12 @@ export class ListingsController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Request() req, @Body() dto: UpdateListingDto) {
+  async update(@Param('id') id: string, @Request() req: RequestWithUser, @Body() dto: UpdateListingDto) {
     return this.listingsService.update(id, req.user.id, dto);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string, @Request() req) {
+  async delete(@Param('id') id: string, @Request() req: RequestWithUser) {
     return this.listingsService.delete(id, req.user.id);
   }
 }

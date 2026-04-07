@@ -13,6 +13,7 @@ import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
 import { Public } from '../../../core/auth/decorators/public.decorator';
 import { MarketplaceReviewsService } from '../services/marketplace-reviews.service';
 import { CreateReviewDto } from '../dto/marketplace.dto';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('marketplace')
 @UseGuards(JwtAuthGuard)
@@ -23,7 +24,7 @@ export class MarketplaceReviewsController {
   @HttpCode(HttpStatus.CREATED)
   async createReview(
     @Param('orderId') orderId: string,
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body() dto: CreateReviewDto,
   ) {
     return this.reviewsService.createReview(orderId, req.user.id, dto);

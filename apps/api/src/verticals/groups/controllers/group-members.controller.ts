@@ -15,6 +15,7 @@ import {
 import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
 import { GroupMembersService } from '../services/group-members.service';
 import { UpdateMemberRoleDto, JoinRequestDto, InviteMemberDto } from '../dto/group.dto';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('groups/:groupId/members')
 @UseGuards(JwtAuthGuard)
@@ -32,13 +33,13 @@ export class GroupMembersController {
 
   @Post('join')
   @HttpCode(HttpStatus.OK)
-  async join(@Param('groupId') groupId: string, @Request() req, @Body() dto: JoinRequestDto) {
+  async join(@Param('groupId') groupId: string, @Request() req: RequestWithUser, @Body() dto: JoinRequestDto) {
     return this.groupMembersService.join(groupId, req.user.id, dto.message);
   }
 
   @Post('leave')
   @HttpCode(HttpStatus.OK)
-  async leave(@Param('groupId') groupId: string, @Request() req) {
+  async leave(@Param('groupId') groupId: string, @Request() req: RequestWithUser) {
     return this.groupMembersService.leave(groupId, req.user.id);
   }
 
@@ -46,7 +47,7 @@ export class GroupMembersController {
   async updateRole(
     @Param('groupId') groupId: string,
     @Param('userId') targetUserId: string,
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body() dto: UpdateMemberRoleDto,
   ) {
     return this.groupMembersService.updateMemberRole(groupId, req.user.id, targetUserId, dto.role);
@@ -56,13 +57,13 @@ export class GroupMembersController {
   async removeMember(
     @Param('groupId') groupId: string,
     @Param('userId') targetUserId: string,
-    @Request() req,
+    @Request() req: RequestWithUser,
   ) {
     return this.groupMembersService.removeMember(groupId, req.user.id, targetUserId);
   }
 
   @Get('join-requests')
-  async getJoinRequests(@Param('groupId') groupId: string, @Request() req) {
+  async getJoinRequests(@Param('groupId') groupId: string, @Request() req: RequestWithUser) {
     return this.groupMembersService.getJoinRequests(groupId, req.user.id);
   }
 
@@ -70,7 +71,7 @@ export class GroupMembersController {
   async approveRequest(
     @Param('groupId') groupId: string,
     @Param('requestId') requestId: string,
-    @Request() req,
+    @Request() req: RequestWithUser,
   ) {
     return this.groupMembersService.approveJoinRequest(groupId, req.user.id, requestId);
   }
@@ -79,20 +80,20 @@ export class GroupMembersController {
   async rejectRequest(
     @Param('groupId') groupId: string,
     @Param('requestId') requestId: string,
-    @Request() req,
+    @Request() req: RequestWithUser,
   ) {
     return this.groupMembersService.rejectJoinRequest(groupId, req.user.id, requestId);
   }
 
   @Post('invite')
   @HttpCode(HttpStatus.CREATED)
-  async invite(@Param('groupId') groupId: string, @Request() req, @Body() dto: InviteMemberDto) {
+  async invite(@Param('groupId') groupId: string, @Request() req: RequestWithUser, @Body() dto: InviteMemberDto) {
     return this.groupMembersService.inviteMember(groupId, req.user.id, dto.userId);
   }
 
   @Post('invite/:token/accept')
   @HttpCode(HttpStatus.OK)
-  async acceptInvite(@Param('token') token: string, @Request() req) {
+  async acceptInvite(@Param('token') token: string, @Request() req: RequestWithUser) {
     return this.groupMembersService.acceptInvite(token, req.user.id);
   }
 }

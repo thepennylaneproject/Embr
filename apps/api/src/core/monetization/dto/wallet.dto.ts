@@ -54,7 +54,7 @@ export class CreateStripeConnectAccountDto {
 
   @IsString()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 
   @IsBoolean()
   @IsOptional()
@@ -64,22 +64,22 @@ export class CreateStripeConnectAccountDto {
 export class CompleteStripeOnboardingDto {
   @IsString()
   @IsNotEmpty()
-  accountId: string;
+  accountId!: string;
 }
 
 export class GetStripeAccountLinkDto {
   @IsString()
   @IsNotEmpty()
-  refreshUrl: string;
+  refreshUrl!: string;
 
   @IsString()
   @IsNotEmpty()
-  returnUrl: string;
+  returnUrl!: string;
 }
 
 export class WalletBalanceDto {
-  available: number;
-  pending: number;
-  total: number;
-  currency: string;
+  available!: number;
+  pending!: number;
+  total!: number;
+  currency!: string;
 }

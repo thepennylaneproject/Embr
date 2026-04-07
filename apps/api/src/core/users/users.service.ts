@@ -50,7 +50,7 @@ export class UsersService {
 
     // Update profile fields
     await this.prisma.profile.update({
-      where: { id: user.profile.id },
+      where: { id: user.profile!.id },
       data: sanitizedData,
     });
 
@@ -72,7 +72,7 @@ export class UsersService {
     }
 
     await this.prisma.profile.update({
-      where: { id: user.profile.id },
+      where: { id: user.profile!.id },
       data: { avatarUrl },
     });
 
@@ -108,7 +108,7 @@ export class UsersService {
 
     // Update settings
     await this.prisma.profile.update({
-      where: { id: user.profile.id },
+      where: { id: user.profile!.id },
       data: updateSettingsDto,
     });
 

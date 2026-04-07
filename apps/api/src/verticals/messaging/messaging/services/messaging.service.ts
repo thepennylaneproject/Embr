@@ -15,7 +15,7 @@ import { toRateLimitConfig, MESSAGE_RATE_LIMITS } from '../config/messaging-rate
 import {
   MessageType as PrismaMessageType,
   MessageStatus as PrismaMessageStatus,
-  SortOrder,
+  Prisma,
 } from '@prisma/client';
 import {
   SendMessageDto,
@@ -42,6 +42,7 @@ import {
   MarkAsReadResponse,
   CreateConversationResponse,
   GetUnreadCountResponse,
+  UserPreview,
 } from '../../../../shared/types/messaging.types';
 
 @Injectable()
@@ -161,11 +162,11 @@ export class MessagingService {
               id: conv.messages[0].id,
               conversationId: conv.messages[0].conversationId,
               senderId: conv.messages[0].senderId,
-              content: conv.messages[0].content,
-              mediaUrl: conv.messages[0].mediaUrl,
-              mediaType: conv.messages[0].mediaType,
-              fileName: conv.messages[0].fileName,
-              fileSize: conv.messages[0].fileSize,
+              content: conv.messages[0].content ?? undefined,
+              mediaUrl: conv.messages[0].mediaUrl ?? undefined,
+              mediaType: conv.messages[0].mediaType ?? undefined,
+              fileName: conv.messages[0].fileName ?? undefined,
+              fileSize: conv.messages[0].fileSize ?? undefined,
               type: conv.messages[0].type as any,
               status: conv.messages[0].status as any,
               createdAt: conv.messages[0].createdAt.toISOString(),
@@ -174,7 +175,7 @@ export class MessagingService {
               sender: {
                 id: conv.messages[0].sender.id,
                 username: conv.messages[0].sender.username,
-                profile: conv.messages[0].sender.profile,
+                profile: conv.messages[0].sender.profile as UserPreview['profile'],
               },
             }
           : null,
@@ -245,7 +246,7 @@ export class MessagingService {
       },
       messages: {
         take: 1,
-        orderBy: { createdAt: SortOrder.desc },
+        orderBy: { createdAt: Prisma.SortOrder.desc },
       },
     };
 
@@ -314,11 +315,11 @@ export class MessagingService {
         id: newMessage.id,
         conversationId: newMessage.conversationId,
         senderId: newMessage.senderId,
-        content: newMessage.content,
-        mediaUrl: newMessage.mediaUrl,
-        mediaType: newMessage.mediaType,
-        fileName: newMessage.fileName,
-        fileSize: newMessage.fileSize,
+        content: newMessage.content ?? undefined,
+        mediaUrl: newMessage.mediaUrl ?? undefined,
+        mediaType: newMessage.mediaType ?? undefined,
+        fileName: newMessage.fileName ?? undefined,
+        fileSize: newMessage.fileSize ?? undefined,
         type: newMessage.type as MessageType,
         status: newMessage.status as MessageStatus,
         createdAt: newMessage.createdAt.toISOString(),
@@ -327,7 +328,7 @@ export class MessagingService {
         sender: {
           id: newMessage.sender.id,
           username: newMessage.sender.username,
-          profile: newMessage.sender.profile,
+          profile: newMessage.sender.profile as UserPreview['profile'],
         },
       };
     }
@@ -502,11 +503,11 @@ export class MessagingService {
       id: message.id,
       conversationId: message.conversationId,
       senderId: message.senderId,
-      content: message.content,
-      mediaUrl: message.mediaUrl,
-      mediaType: message.mediaType,
-      fileName: message.fileName,
-      fileSize: message.fileSize,
+      content: message.content ?? undefined,
+      mediaUrl: message.mediaUrl ?? undefined,
+      mediaType: message.mediaType ?? undefined,
+      fileName: message.fileName ?? undefined,
+      fileSize: message.fileSize ?? undefined,
       type: message.type as any,
       status: message.status as any,
       createdAt: message.createdAt.toISOString(),
@@ -613,11 +614,11 @@ export class MessagingService {
       id: msg.id,
       conversationId: msg.conversationId,
       senderId: msg.senderId,
-      content: msg.content,
-      mediaUrl: msg.mediaUrl,
-      mediaType: msg.mediaType,
-      fileName: msg.fileName,
-      fileSize: msg.fileSize,
+      content: msg.content ?? undefined,
+      mediaUrl: msg.mediaUrl ?? undefined,
+      mediaType: msg.mediaType ?? undefined,
+      fileName: msg.fileName ?? undefined,
+      fileSize: msg.fileSize ?? undefined,
       type: msg.type as MessageType,
       status: msg.status as MessageStatus,
       createdAt: msg.createdAt.toISOString(),
@@ -626,7 +627,7 @@ export class MessagingService {
       sender: {
         id: msg.sender.id,
         username: msg.sender.username,
-        profile: msg.sender.profile,
+        profile: msg.sender.profile as UserPreview['profile'],
       },
     }));
 
@@ -744,18 +745,26 @@ export class MessagingService {
       participant2Id: conversation.participant2Id,
       lastMessageAt: conversation.lastMessageAt.toISOString(),
       createdAt: conversation.createdAt.toISOString(),
-      participant1: conversation.participant1,
-      participant2: conversation.participant2,
+      participant1: {
+        id: conversation.participant1.id,
+        username: conversation.participant1.username,
+        profile: conversation.participant1.profile as UserPreview['profile'],
+      },
+      participant2: {
+        id: conversation.participant2.id,
+        username: conversation.participant2.username,
+        profile: conversation.participant2.profile as UserPreview['profile'],
+      },
       lastMessage: conversation.messages[0]
         ? {
             id: conversation.messages[0].id,
             conversationId: conversation.messages[0].conversationId,
             senderId: conversation.messages[0].senderId,
-            content: conversation.messages[0].content,
-            mediaUrl: conversation.messages[0].mediaUrl,
-            mediaType: conversation.messages[0].mediaType,
-            fileName: conversation.messages[0].fileName,
-            fileSize: conversation.messages[0].fileSize,
+            content: conversation.messages[0].content ?? undefined,
+            mediaUrl: conversation.messages[0].mediaUrl ?? undefined,
+            mediaType: conversation.messages[0].mediaType ?? undefined,
+            fileName: conversation.messages[0].fileName ?? undefined,
+            fileSize: conversation.messages[0].fileSize ?? undefined,
             type: conversation.messages[0].type as MessageType,
             status: conversation.messages[0].status as MessageStatus,
             createdAt: conversation.messages[0].createdAt.toISOString(),
@@ -764,7 +773,7 @@ export class MessagingService {
             sender: {
               id: conversation.messages[0].sender.id,
               username: conversation.messages[0].sender.username,
-              profile: conversation.messages[0].sender.profile,
+              profile: conversation.messages[0].sender.profile as UserPreview['profile'],
             },
           }
         : null,
@@ -891,11 +900,11 @@ export class MessagingService {
       id: msg.id,
       conversationId: msg.conversationId,
       senderId: msg.senderId,
-      content: msg.content,
-      mediaUrl: msg.mediaUrl,
-      mediaType: msg.mediaType,
-      fileName: msg.fileName,
-      fileSize: msg.fileSize,
+      content: msg.content ?? undefined,
+      mediaUrl: msg.mediaUrl ?? undefined,
+      mediaType: msg.mediaType ?? undefined,
+      fileName: msg.fileName ?? undefined,
+      fileSize: msg.fileSize ?? undefined,
       type: msg.type as MessageType,
       status: msg.status as MessageStatus,
       createdAt: msg.createdAt.toISOString(),
@@ -904,7 +913,7 @@ export class MessagingService {
       sender: {
         id: msg.sender.id,
         username: msg.sender.username,
-        profile: msg.sender.profile,
+        profile: msg.sender.profile as UserPreview['profile'],
       },
     }));
 

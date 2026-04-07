@@ -3,7 +3,7 @@ import { IsNotEmpty, IsUUID, IsOptional, IsInt, Min, IsEnum } from 'class-valida
 export class FollowUserDto {
   @IsNotEmpty()
   @IsUUID()
-  followingId: string;
+  followingId!: string;
 }
 
 export class GetFollowersDto {
@@ -33,17 +33,17 @@ export class GetFollowingDto {
 export class CheckFollowDto {
   @IsNotEmpty()
   @IsUUID()
-  userId: string;
+  userId!: string;
 
   @IsNotEmpty()
   @IsUUID()
-  targetUserId: string;
+  targetUserId!: string;
 }
 
 export class GetMutualConnectionsDto {
   @IsNotEmpty()
   @IsUUID()
-  userId: string;
+  userId!: string;
 
   @IsOptional()
   @IsInt()
@@ -54,5 +54,5 @@ export class GetMutualConnectionsDto {
 export class BatchFollowCheckDto {
   @IsNotEmpty()
   @IsUUID(undefined, { each: true })
-  userIds: string[];
+  userIds!: string[];
 }

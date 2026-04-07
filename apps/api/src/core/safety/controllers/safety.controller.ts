@@ -36,6 +36,7 @@ import {
   ContentFilterDto,
   CreateContentRuleDto,
 } from '../dto/safety.dto';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('safety')
 @UseGuards(JwtAuthGuard)
@@ -54,21 +55,21 @@ export class SafetyController {
 
   @Post('reports')
   @HttpCode(HttpStatus.CREATED)
-  async createReport(@Req() req, @Body() dto: CreateReportDto) {
+  async createReport(@Req() req: RequestWithUser, @Body() dto: CreateReportDto) {
     return this.reportsService.createReport(req.user.id, dto);
   }
 
   @Get('reports')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'MODERATOR')
-  async getReports(@Query() query: QueryReportsDto, @Req() req) {
+  async getReports(@Query() query: QueryReportsDto, @Req() req: RequestWithUser) {
     return this.reportsService.getReports(query, req.user.id);
   }
 
   @Get('reports/:id')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'MODERATOR')
-  async getReportById(@Param('id') id: string, @Req() req) {
+  async getReportById(@Param('id') id: string, @Req() req: RequestWithUser) {
     return this.reportsService.getReportById(id, req.user.id);
   }
 
@@ -77,7 +78,7 @@ export class SafetyController {
   @Roles('ADMIN', 'MODERATOR')
   async updateReport(
     @Param('id') id: string,
-    @Req() req,
+    @Req() req: RequestWithUser,
     @Body() dto: UpdateReportDto,
   ) {
     return this.reportsService.updateReport(id, req.user.id, dto);
@@ -87,7 +88,7 @@ export class SafetyController {
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'MODERATOR')
   async bulkUpdateReports(
-    @Req() req,
+    @Req() req: RequestWithUser,
     @Body() body: { reportIds: string[]; updates: UpdateReportDto },
   ) {
     return this.reportsService.bulkUpdateReports(
@@ -112,7 +113,7 @@ export class SafetyController {
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'MODERATOR')
   @HttpCode(HttpStatus.CREATED)
-  async createModerationAction(@Req() req, @Body() dto: CreateModerationActionDto) {
+  async createModerationAction(@Req() req: RequestWithUser, @Body() dto: CreateModerationActionDto) {
     return this.moderationActionsService.createAction(req.user.id, dto);
   }
 
@@ -135,7 +136,7 @@ export class SafetyController {
   @Roles('ADMIN')
   async revokeModerationAction(
     @Param('id') id: string,
-    @Req() req,
+    @Req() req: RequestWithUser,
     @Body() body: { reason: string },
   ) {
     return this.moderationActionsService.revokeAction(id, req.user.id, body.reason);
@@ -149,7 +150,7 @@ export class SafetyController {
   }
 
   @Get('moderation/users/:userId/restriction')
-  async checkUserRestriction(@Param('userId') userId: string, @Req() req) {
+  async checkUserRestriction(@Param('userId') userId: string, @Req() req: RequestWithUser) {
     // Users can only check their own restriction status; admins/moderators can check anyone (F-016)
     if (req.user.id !== userId && req.user.role !== 'ADMIN' && req.user.role !== 'MODERATOR') {
       throw new ForbiddenException('Insufficient permissions');
@@ -170,18 +171,18 @@ export class SafetyController {
 
   @Post('blocking/block')
   @HttpCode(HttpStatus.CREATED)
-  async blockUser(@Req() req, @Body() dto: BlockUserDto) {
+  async blockUser(@Req() req: RequestWithUser, @Body() dto: BlockUserDto) {
     return this.blockingService.blockUser(req.user.id, dto);
   }
 
   @Delete('blocking/block/:userId')
-  async unblockUser(@Req() req, @Param('userId') userId: string) {
+  async unblockUser(@Req() req: RequestWithUser, @Param('userId') userId: string) {
     return this.blockingService.unblockUser(req.user.id, userId);
   }
 
   @Get('blocking/blocked')
   async getBlockedUsers(
-    @Req() req,
+    @Req() req: RequestWithUser,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
@@ -193,25 +194,25 @@ export class SafetyController {
   }
 
   @Get('blocking/check/:userId')
-  async checkIfBlocked(@Req() req, @Param('userId') userId: string) {
+  async checkIfBlocked(@Req() req: RequestWithUser, @Param('userId') userId: string) {
     const blocked = await this.blockingService.isBlocked(req.user.id, userId);
     return { blocked };
   }
 
   @Post('muting/mute')
   @HttpCode(HttpStatus.CREATED)
-  async muteUser(@Req() req, @Body() dto: MuteUserDto) {
+  async muteUser(@Req() req: RequestWithUser, @Body() dto: MuteUserDto) {
     return this.blockingService.muteUser(req.user.id, dto);
   }
 
   @Delete('muting/mute/:userId')
-  async unmuteUser(@Req() req, @Param('userId') userId: string) {
+  async unmuteUser(@Req() req: RequestWithUser, @Param('userId') userId: string) {
     return this.blockingService.unmuteUser(req.user.id, userId);
   }
 
   @Get('muting/muted')
   async getMutedUsers(
-    @Req() req,
+    @Req() req: RequestWithUser,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
@@ -223,24 +224,24 @@ export class SafetyController {
   }
 
   @Get('muting/check/:userId')
-  async checkIfMuted(@Req() req, @Param('userId') userId: string) {
+  async checkIfMuted(@Req() req: RequestWithUser, @Param('userId') userId: string) {
     const muted = await this.blockingService.isMuted(req.user.id, userId);
     return { muted };
   }
 
   @Post('muting/keywords')
   @HttpCode(HttpStatus.CREATED)
-  async addMutedKeyword(@Req() req, @Body() dto: MuteKeywordDto) {
+  async addMutedKeyword(@Req() req: RequestWithUser, @Body() dto: MuteKeywordDto) {
     return this.blockingService.addMutedKeyword(req.user.id, dto);
   }
 
   @Delete('muting/keywords/:keywordId')
-  async removeMutedKeyword(@Req() req, @Param('keywordId') keywordId: string) {
+  async removeMutedKeyword(@Req() req: RequestWithUser, @Param('keywordId') keywordId: string) {
     return this.blockingService.removeMutedKeyword(req.user.id, keywordId);
   }
 
   @Get('muting/keywords')
-  async getMutedKeywords(@Req() req) {
+  async getMutedKeywords(@Req() req: RequestWithUser) {
     return this.blockingService.getMutedKeywords(req.user.id);
   }
 
@@ -250,7 +251,7 @@ export class SafetyController {
 
   @Post('appeals')
   @HttpCode(HttpStatus.CREATED)
-  async createAppeal(@Req() req, @Body() dto: CreateAppealDto) {
+  async createAppeal(@Req() req: RequestWithUser, @Body() dto: CreateAppealDto) {
     return this.appealsService.createAppeal(req.user.id, dto);
   }
 
@@ -262,7 +263,7 @@ export class SafetyController {
   }
 
   @Get('appeals/:id')
-  async getAppealById(@Param('id') id: string, @Req() req) {
+  async getAppealById(@Param('id') id: string, @Req() req: RequestWithUser) {
     const appeal = await this.appealsService.getAppealById(id);
     // Only the appeal owner or admins/moderators can read the appeal (F-017)
     if (appeal.userId !== req.user.id && req.user.role !== 'ADMIN' && req.user.role !== 'MODERATOR') {
@@ -276,14 +277,14 @@ export class SafetyController {
   @Roles('ADMIN', 'MODERATOR')
   async updateAppeal(
     @Param('id') id: string,
-    @Req() req,
+    @Req() req: RequestWithUser,
     @Body() dto: UpdateAppealDto,
   ) {
     return this.appealsService.updateAppeal(id, req.user.id, dto);
   }
 
   @Get('appeals/user/my-appeals')
-  async getUserAppeals(@Req() req) {
+  async getUserAppeals(@Req() req: RequestWithUser) {
     return this.appealsService.getUserAppeals(req.user.id);
   }
 
@@ -299,12 +300,12 @@ export class SafetyController {
   // ============================================
 
   @Post('filter/check')
-  async filterContent(@Req() req, @Body() dto: ContentFilterDto) {
+  async filterContent(@Req() req: RequestWithUser, @Body() dto: ContentFilterDto) {
     return this.contentFilterService.filterContent(dto.content, req.user.id);
   }
 
   @Get('filter/user-score')
-  async getUserSpamScore(@Req() req) {
+  async getUserSpamScore(@Req() req: RequestWithUser) {
     const score = await this.contentFilterService.checkUserSpamScore(req.user.id);
     return { score, risk: this.getRiskLevel(score) };
   }

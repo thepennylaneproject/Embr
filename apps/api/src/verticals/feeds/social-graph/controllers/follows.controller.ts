@@ -23,6 +23,7 @@ import {
   GetMutualConnectionsDto,
   BatchFollowCheckDto
 } from '../dto/follow.dto';
+import { RequestWithUser } from '../../../../shared/types/request-with-user';
 
 @Controller('follows')
 @UseGuards(JwtAuthGuard)
@@ -34,7 +35,7 @@ export class FollowsController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async followUser(@Request() req, @Body() dto: FollowUserDto) {
+  async followUser(@Request() req: RequestWithUser, @Body() dto: FollowUserDto) {
     return this.followsService.followUser(req.user.id, dto);
   }
 
@@ -43,7 +44,7 @@ export class FollowsController {
    */
   @Delete(':userId')
   @HttpCode(HttpStatus.OK)
-  async unfollowUser(@Request() req, @Param('userId') userId: string) {
+  async unfollowUser(@Request() req: RequestWithUser, @Param('userId') userId: string) {
     return this.followsService.unfollowUser(req.user.id, userId);
   }
 
@@ -55,7 +56,7 @@ export class FollowsController {
   async getFollowers(
     @Param('userId') userId: string,
     @Query() dto: GetFollowersDto,
-    @Request() req
+    @Request() req: RequestWithUser
   ) {
     const requesterId = req.user?.id || null;
     return this.followsService.getFollowers(userId, requesterId, dto);
@@ -69,7 +70,7 @@ export class FollowsController {
   async getFollowing(
     @Param('userId') userId: string,
     @Query() dto: GetFollowingDto,
-    @Request() req
+    @Request() req: RequestWithUser
   ) {
     const requesterId = req.user?.id || null;
     return this.followsService.getFollowing(userId, requesterId, dto);
@@ -89,7 +90,7 @@ export class FollowsController {
    */
   @Post('batch-check')
   @Throttle({ default: { limit: 30, ttl: 900000 } })
-  async batchCheckFollowStatus(@Request() req, @Body() dto: BatchFollowCheckDto) {
+  async batchCheckFollowStatus(@Request() req: RequestWithUser, @Body() dto: BatchFollowCheckDto) {
     return this.followsService.batchCheckFollowStatus(req.user.id, dto);
   }
 
@@ -97,7 +98,7 @@ export class FollowsController {
    * GET /follows/mutual - Get mutual connections with another user
    */
   @Get('mutual')
-  async getMutualConnections(@Request() req, @Query() dto: GetMutualConnectionsDto) {
+  async getMutualConnections(@Request() req: RequestWithUser, @Query() dto: GetMutualConnectionsDto) {
     return this.followsService.getMutualConnections(req.user.id, dto);
   }
 
@@ -115,7 +116,7 @@ export class FollowsController {
    */
   @Get('suggestions')
   @Throttle({ default: { limit: 20, ttl: 900000 } })
-  async getSuggestedFromNetwork(@Request() req, @Query('limit') limit?: number) {
+  async getSuggestedFromNetwork(@Request() req: RequestWithUser, @Query('limit') limit?: number) {
     return this.followsService.getSuggestedFromNetwork(req.user.id, limit || 10);
   }
 }

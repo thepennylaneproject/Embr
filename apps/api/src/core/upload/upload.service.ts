@@ -17,14 +17,14 @@ export class UploadService {
 
   constructor(private configService: ConfigService) {
     this.region = this.configService.get('AWS_REGION', 'us-east-1');
-    this.bucket = this.configService.get('AWS_S3_BUCKET');
+    this.bucket = this.configService.get<string>('AWS_S3_BUCKET') ?? '';
     this.cdnDomain = this.configService.get('AWS_CLOUDFRONT_DOMAIN');
 
     this.s3Client = new S3Client({
       region: this.region,
       credentials: {
-        accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
-        secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
+        accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID') ?? '',
+        secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY') ?? '',
       },
     });
   }

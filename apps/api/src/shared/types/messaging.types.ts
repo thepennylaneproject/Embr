@@ -63,21 +63,21 @@ export interface Conversation {
   // Populated fields
   participant1?: UserPreview;
   participant2?: UserPreview;
-  lastMessage?: Message;
+  lastMessage?: Message | null;
   unreadCount?: number;
 }
 
 export interface ConversationWithDetails extends Conversation {
   participant1: UserPreview;
   participant2: UserPreview;
-  lastMessage: Message;
+  lastMessage: Message | null;
   unreadCount: number;
 }
 
 export interface ConversationPreview {
   id: string;
   otherUser: UserPreview;
-  lastMessage: Message;
+  lastMessage: Message | null;
   unreadCount: number;
   lastMessageAt: string;
 }

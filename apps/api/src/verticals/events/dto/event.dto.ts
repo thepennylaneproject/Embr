@@ -36,21 +36,21 @@ export class CreateEventDto {
   @IsString()
   @MinLength(3)
   @MaxLength(200)
-  title: string;
+  title!: string;
 
   @IsString()
   @MinLength(10)
   @MaxLength(10000)
-  description: string;
+  description!: string;
 
   @IsEnum(EventType)
-  eventType: EventType;
+  eventType!: EventType;
 
   @IsDateString()
-  startAt: string;
+  startAt!: string;
 
   @IsDateString()
-  endAt: string;
+  endAt!: string;
 
   @IsOptional()
   @IsString()
@@ -220,7 +220,7 @@ export class EventSearchDto {
 
 export class RsvpDto {
   @IsEnum(RsvpStatus)
-  status: RsvpStatus;
+  status!: RsvpStatus;
 
   @IsOptional()
   @IsInt()

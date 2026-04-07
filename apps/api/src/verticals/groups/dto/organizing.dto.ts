@@ -26,12 +26,12 @@ export class CreateAlertDto {
   @IsString()
   @MinLength(3)
   @MaxLength(150)
-  title: string;
+  title!: string;
 
   @IsString()
   @MinLength(10)
   @MaxLength(3000)
-  body: string;
+  body!: string;
 
   @IsOptional()
   @IsEnum(AlertUrgency)
@@ -58,7 +58,7 @@ export class CreatePollDto {
   @IsString()
   @MinLength(3)
   @MaxLength(500)
-  question: string;
+  question!: string;
 
   @IsOptional()
   @IsString()
@@ -69,7 +69,7 @@ export class CreatePollDto {
   @ArrayMinSize(2)
   @ArrayMaxSize(10)
   @IsString({ each: true })
-  options: string[];
+  options!: string[];
 
   @IsOptional()
   @IsBoolean()
@@ -88,7 +88,7 @@ export class VoteDto {
   @IsArray()
   @ArrayMinSize(1)
   @IsString({ each: true })
-  optionIds: string[];
+  optionIds!: string[];
 }
 
 // ─── Treasury ─────────────────────────────────────────────────────────────────
@@ -96,7 +96,7 @@ export class VoteDto {
 export class ContributeDto {
   @IsInt()
   @Min(100) // minimum $1.00
-  amount: number; // cents
+  amount!: number; // cents
 
   @IsOptional()
   @IsString()
@@ -111,12 +111,12 @@ export class ContributeDto {
 export class DisburseDto {
   @IsInt()
   @Min(1)
-  amount: number; // cents
+  amount!: number; // cents
 
   @IsString()
   @MinLength(5)
   @MaxLength(500)
-  purpose: string;
+  purpose!: string;
 
   @IsOptional()
   @IsString()

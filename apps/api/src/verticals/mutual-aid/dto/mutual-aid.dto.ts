@@ -36,20 +36,20 @@ export enum MutualAidUrgency {
 
 export class CreateMutualAidPostDto {
   @IsEnum(MutualAidType)
-  type: MutualAidType;
+  type!: MutualAidType;
 
   @IsEnum(MutualAidCategory)
-  category: MutualAidCategory;
+  category!: MutualAidCategory;
 
   @IsString()
   @MinLength(5)
   @MaxLength(150)
-  title: string;
+  title!: string;
 
   @IsString()
   @MinLength(10)
   @MaxLength(3000)
-  description: string;
+  description!: string;
 
   @IsOptional()
   @IsString()
@@ -157,5 +157,5 @@ export class CreateMutualAidResponseDto {
   @IsString()
   @MinLength(5)
   @MaxLength(2000)
-  message: string;
+  message!: string;
 }
