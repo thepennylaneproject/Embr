@@ -97,6 +97,15 @@ function logStartupSummary(logger: Logger): void {
 }
 
 async function bootstrap() {
+  // Fail fast on critical auth misconfigurations before binding the HTTP server.
+  // The implementation lives in auth-config.util.ts so it can be unit-tested.
+  const { assertAuthConfigSafe } = await import('./config/auth-config.util');
+  assertAuthConfigSafe(
+    process.env,
+    { error: (m) => startupLogger.error(m), warn: (m) => startupLogger.warn(m) },
+    (code) => process.exit(code),
+  );
+
   const app = await NestFactory.create(AppModule);
 
   // Security middleware - relaxed for local development

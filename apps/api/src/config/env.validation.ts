@@ -51,6 +51,36 @@ export const envValidationSchema = Joi.object({
   REDIS_TTL_SOCKET: Joi.number().integer().min(1).default(3600),
   REDIS_TTL_TYPING: Joi.number().integer().min(1).default(300),
 
+  // ─── Auth bypass control ────────────────────────────────────────────────────
+  // AUTH_ENABLED must be true in production.  Setting it to false in production
+  // (or any internet-reachable environment) is a critical misconfiguration:
+  // every request would share the same logical identity or receive no identity
+  // at all, defeating all access-control and audit-log guarantees.
+  //
+  // For local-only developer stacks that genuinely need auth disabled, also set
+  // AUTH_ALLOW_LOCAL_BYPASS=true together with a non-default value for
+  // AUTH_BYPASS_SECRET.  The API validates the X-Dev-Bypass-Secret header on
+  // every request in that mode to prevent accidental internet exposure.
+  AUTH_ENABLED: Joi.boolean()
+    .when('NODE_ENV', {
+      is: 'production',
+      then: Joi.boolean().valid(true).required().messages({
+        'any.only': 'AUTH_ENABLED must be true in production. Disabling authentication in a production environment is a critical security misconfiguration.',
+        'any.required': 'AUTH_ENABLED must be explicitly set to true in production.',
+      }),
+      otherwise: Joi.boolean().default(true),
+    }),
+  AUTH_ALLOW_LOCAL_BYPASS: Joi.boolean().default(false),
+  AUTH_BYPASS_SECRET: Joi.string()
+    .when('AUTH_ALLOW_LOCAL_BYPASS', {
+      is: true,
+      then: Joi.string().min(32).required().messages({
+        'string.min': 'AUTH_BYPASS_SECRET must be at least 32 characters when AUTH_ALLOW_LOCAL_BYPASS is enabled.',
+        'any.required': 'AUTH_BYPASS_SECRET is required when AUTH_ALLOW_LOCAL_BYPASS is enabled.',
+      }),
+      otherwise: Joi.string().optional().allow(''),
+    }),
+
   // ─── JWT ────────────────────────────────────────────────────────────────────
   JWT_SECRET: Joi.string().min(16).required(),
   JWT_EXPIRES_IN: Joi.string().default('7d'),
