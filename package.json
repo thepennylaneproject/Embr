@@ -39,7 +39,9 @@
     "audit:precheck": "node scripts/audit-precheck.js",
     "audit:release-gate": "node scripts/audit-release-gate.js",
     "audit:workflow": "echo \"Run: npm run audit:precheck -> triage -> validate -> npm run audit:release-gate\"",
-    "clean": "npm run docker:down && rm -rf node_modules package-lock.json",
+    "lint:web": "npm --prefix apps/web run lint",
+    "lint:api": "npm --prefix apps/api run lint",
+    "lint": "npm run lint:web && npm run lint:api",
     "backup": "chmod +x scripts/migrate.sh && ./scripts/migrate.sh backup",
     "migrate": "chmod +x scripts/migrate.sh && ./scripts/migrate.sh",
     "test:webhook": "node --test --experimental-strip-types supabase/functions/github-webhook/index.test.ts"
