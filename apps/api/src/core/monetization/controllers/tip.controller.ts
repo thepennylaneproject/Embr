@@ -18,6 +18,7 @@ import { EmailVerifiedGuard } from '../../auth/guards/email-verified.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { TipService } from '../services/tip.service';
 import { CreateTipDto, GetTipsQueryDto } from '../dto/tip.dto';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('tips')
 @UseGuards(JwtAuthGuard, EmailVerifiedGuard, RolesGuard)
@@ -31,7 +32,7 @@ export class TipController {
   @Post()
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
-  async createTip(@Request() req, @Body() dto: CreateTipDto) {
+  async createTip(@Request() req: RequestWithUser, @Body() dto: CreateTipDto) {
     return this.tipService.createTip(req.user.id, dto);
   }
 
@@ -40,7 +41,7 @@ export class TipController {
    * Get tips for current user (sent or received)
    */
   @Get()
-  async getTips(@Request() req, @Query() query: GetTipsQueryDto) {
+  async getTips(@Request() req: RequestWithUser, @Query() query: GetTipsQueryDto) {
     return this.tipService.getTips(req.user.id, query);
   }
 
@@ -50,7 +51,7 @@ export class TipController {
    */
   @Get('stats')
   async getTipStats(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
@@ -65,7 +66,7 @@ export class TipController {
    * Get a specific tip — only accessible by the sender, recipient, or an admin
    */
   @Get(':id')
-  async getTip(@Request() req, @Param('id') id: string) {
+  async getTip(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.tipService.getTipById(id, req.user.id, req.user.role);
   }
 
@@ -90,7 +91,7 @@ export class TipController {
    */
   @Get('post/:postId')
   async getTipsByPost(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('postId') postId: string,
     @Query() query: GetTipsQueryDto,
   ) {
@@ -103,7 +104,7 @@ export class TipController {
    */
   @Get('user/:userId/received')
   async getTipsReceivedByUser(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('userId') userId: string,
     @Query() query: GetTipsQueryDto,
   ) {

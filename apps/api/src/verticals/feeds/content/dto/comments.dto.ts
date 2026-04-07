@@ -16,7 +16,7 @@ export class CreateCommentDto {
   @IsString()
   @MinLength(1, { message: 'Comment cannot be empty' })
   @MaxLength(500, { message: 'Comment must be less than 500 characters' })
-  content: string;
+  content!: string;
 
   @ApiPropertyOptional({
     description: 'Parent comment ID for nested replies',
@@ -37,7 +37,7 @@ export class UpdateCommentDto {
   @IsString()
   @MinLength(1, { message: 'Comment cannot be empty' })
   @MaxLength(500, { message: 'Comment must be less than 500 characters' })
-  content: string;
+  content!: string;
 }
 
 export class CommentQueryDto {

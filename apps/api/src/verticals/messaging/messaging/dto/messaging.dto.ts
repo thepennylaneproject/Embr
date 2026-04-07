@@ -93,7 +93,7 @@ export class SendMessageDto {
     example: MessageType.TEXT,
   })
   @IsEnum(MessageType, { message: 'Invalid message type' })
-  type: MessageType;
+  type!: MessageType;
 
   @ApiPropertyOptional({
     description: 'Additional metadata',
@@ -115,7 +115,7 @@ export class MarkAsReadDto {
   })
   @IsNotEmpty()
   @IsUUID('4', { message: 'Conversation ID must be a valid UUID' })
-  conversationId: string;
+  conversationId!: string;
 
   @ApiPropertyOptional({
     description: 'Specific message IDs to mark as read (if not provided, marks all unread)',
@@ -177,7 +177,7 @@ export class GetMessagesDto {
   })
   @IsNotEmpty()
   @IsUUID('4', { message: 'Conversation ID must be a valid UUID' })
-  conversationId: string;
+  conversationId!: string;
 
   @ApiPropertyOptional({
     description: 'Page number',
@@ -231,7 +231,7 @@ export class SearchMessagesDto {
   })
   @IsNotEmpty()
   @IsUUID('4', { message: 'Conversation ID must be a valid UUID' })
-  conversationId: string;
+  conversationId!: string;
 
   @ApiProperty({
     description: 'Search query',
@@ -243,7 +243,7 @@ export class SearchMessagesDto {
   @IsString()
   @MinLength(1)
   @MaxLength(100)
-  query: string;
+  query!: string;
 
   @ApiPropertyOptional({
     description: 'Page number',
@@ -281,7 +281,7 @@ export class CreateConversationDto {
   })
   @IsNotEmpty()
   @IsUUID('4', { message: 'Participant ID must be a valid UUID' })
-  participantId: string;
+  participantId!: string;
 
   @ApiPropertyOptional({
     description: 'Optional initial message',
@@ -305,7 +305,7 @@ export class DeleteMessageDto {
   })
   @IsNotEmpty()
   @IsUUID('4', { message: 'Message ID must be a valid UUID' })
-  messageId: string;
+  messageId!: string;
 
   @ApiProperty({
     description: 'Conversation ID',
@@ -313,7 +313,7 @@ export class DeleteMessageDto {
   })
   @IsNotEmpty()
   @IsUUID('4', { message: 'Conversation ID must be a valid UUID' })
-  conversationId: string;
+  conversationId!: string;
 }
 
 // ============================================================
@@ -327,7 +327,7 @@ export class DeleteConversationDto {
   })
   @IsNotEmpty()
   @IsUUID('4', { message: 'Conversation ID must be a valid UUID' })
-  conversationId: string;
+  conversationId!: string;
 }
 
 // ============================================================
@@ -341,14 +341,14 @@ export class TypingIndicatorDto {
   })
   @IsNotEmpty()
   @IsUUID('4', { message: 'Conversation ID must be a valid UUID' })
-  conversationId: string;
+  conversationId!: string;
 
   @ApiProperty({
     description: 'Whether user is typing',
     example: true,
   })
   @IsBoolean()
-  isTyping: boolean;
+  isTyping!: boolean;
 }
 
 // ============================================================
@@ -362,7 +362,7 @@ export class MediaUploadDto {
   })
   @IsNotEmpty()
   @IsUUID('4', { message: 'Conversation ID must be a valid UUID' })
-  conversationId: string;
+  conversationId!: string;
 
   @ApiProperty({
     description: 'Media type',
@@ -370,5 +370,5 @@ export class MediaUploadDto {
     example: MessageType.IMAGE,
   })
   @IsEnum(MessageType, { message: 'Invalid media type' })
-  type: MessageType;
+  type!: MessageType;
 }

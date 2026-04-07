@@ -103,7 +103,8 @@ export interface Gig {
   attachments: string[];
   createdAt: Date | string; // ISO 8601
   updatedAt: Date | string; // ISO 8601
-  expiresAt?: Date | string; // ISO 8601
+  expiresAt?: Date | string | null; // ISO 8601
+  deletedAt?: Date | string | null; // ISO 8601
   creator?: PublicProfile;
 }
 
@@ -117,10 +118,10 @@ export interface GigMilestone {
   dueDate: Date | string; // ISO 8601
   status: MilestoneStatus;
   order: number;
-  submittedAt?: Date | string; // ISO 8601
-  approvedAt?: Date | string; // ISO 8601
-  rejectedAt?: Date | string; // ISO 8601
-  feedback?: string;
+  submittedAt?: Date | string | null; // ISO 8601, from Prisma (can be null)
+  approvedAt?: Date | string | null; // ISO 8601
+  rejectedAt?: Date | string | null; // ISO 8601
+  feedback?: string | null;
   createdAt: Date | string; // ISO 8601
   updatedAt: Date | string; // ISO 8601
 }
@@ -158,13 +159,13 @@ export interface Escrow {
   amount: number;
   currency: string;
   status: EscrowStatus;
-  stripePaymentIntentId?: string;
-  stripeFundingMethod?: string;
+  stripePaymentIntentId?: string | null;
+  stripeFundingMethod?: string | null;
   createdAt: Date | string; // ISO 8601
   updatedAt: Date | string; // ISO 8601
-  fundedAt?: Date | string; // ISO 8601
-  releasedAt?: Date | string; // ISO 8601
-  refundedAt?: Date | string; // ISO 8601
+  fundedAt?: Date | string | null; // ISO 8601
+  releasedAt?: Date | string | null; // ISO 8601
+  refundedAt?: Date | string | null; // ISO 8601
 }
 
 export interface Dispute {
@@ -206,8 +207,8 @@ export interface PublicProfile {
   id: string;
   username: string;
   displayName: string;
-  avatar?: string;
-  bio?: string;
+  avatar?: string | null;
+  bio?: string | null;
   verified?: boolean;
 }
 

@@ -4,7 +4,7 @@ import { IsEmail, IsNotEmpty, IsString, MinLength, MaxLength, Matches, IsOptiona
 export class SignUpDto {
   @IsEmail({}, { message: 'Please provide a valid email address' })
   @IsNotEmpty({ message: 'Email is required' })
-  email: string;
+  email!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Username is required' })
@@ -13,7 +13,7 @@ export class SignUpDto {
   @Matches(/^[a-zA-Z0-9_-]+$/, {
     message: 'Username can only contain letters, numbers, underscores, and hyphens',
   })
-  username: string;
+  username!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Password is required' })
@@ -21,7 +21,7 @@ export class SignUpDto {
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
     message: 'Password must contain uppercase, lowercase, number, and special character',
   })
-  password: string;
+  password!: string;
 
   @IsString()
   @IsOptional()

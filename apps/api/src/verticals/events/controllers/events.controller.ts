@@ -19,6 +19,7 @@ import { EventsService } from '../services/events.service';
 import { EventAttendeesService } from '../services/event-attendees.service';
 import { EventRecapService } from '../services/event-recap.service';
 import { CreateEventDto, UpdateEventDto, EventSearchDto, RsvpDto, CreateEventRecapDto } from '../dto/event.dto';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('events')
 @UseGuards(JwtAuthGuard)
@@ -31,13 +32,13 @@ export class EventsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Request() req, @Body() dto: CreateEventDto) {
+  async create(@Request() req: RequestWithUser, @Body() dto: CreateEventDto) {
     return this.eventsService.create(req.user.id, dto);
   }
 
   @Post(':id/publish')
   @HttpCode(HttpStatus.OK)
-  async publish(@Param('id') id: string, @Request() req) {
+  async publish(@Param('id') id: string, @Request() req: RequestWithUser) {
     return this.eventsService.publish(id, req.user.id);
   }
 
@@ -48,42 +49,42 @@ export class EventsController {
   }
 
   @Get('mine')
-  async getMyEvents(@Request() req) {
+  async getMyEvents(@Request() req: RequestWithUser) {
     return this.eventsService.getMyEvents(req.user.id);
   }
 
   @Get(':id')
   @Public()
-  async findOne(@Param('id') id: string, @Request() req) {
+  async findOne(@Param('id') id: string, @Request() req: RequestWithUser) {
     return this.eventsService.findOne(id, req.user?.id);
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Request() req, @Body() dto: UpdateEventDto) {
+  async update(@Param('id') id: string, @Request() req: RequestWithUser, @Body() dto: UpdateEventDto) {
     return this.eventsService.update(id, req.user.id, dto);
   }
 
   @Patch(':id/cancel')
   @HttpCode(HttpStatus.OK)
-  async cancel(@Param('id') id: string, @Request() req) {
+  async cancel(@Param('id') id: string, @Request() req: RequestWithUser) {
     return this.eventsService.cancel(id, req.user.id);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string, @Request() req) {
+  async delete(@Param('id') id: string, @Request() req: RequestWithUser) {
     return this.eventsService.delete(id, req.user.id);
   }
 
   // RSVP
   @Post(':id/rsvp')
   @HttpCode(HttpStatus.OK)
-  async rsvp(@Param('id') id: string, @Request() req, @Body() dto: RsvpDto) {
+  async rsvp(@Param('id') id: string, @Request() req: RequestWithUser, @Body() dto: RsvpDto) {
     return this.attendeesService.rsvp(id, req.user.id, dto);
   }
 
   @Delete(':id/rsvp')
   @HttpCode(HttpStatus.OK)
-  async cancelRsvp(@Param('id') id: string, @Request() req) {
+  async cancelRsvp(@Param('id') id: string, @Request() req: RequestWithUser) {
     return this.attendeesService.cancelRsvp(id, req.user.id);
   }
 
@@ -100,7 +101,7 @@ export class EventsController {
   // Recap
   @Post(':id/recap')
   @HttpCode(HttpStatus.CREATED)
-  async createRecap(@Param('id') id: string, @Request() req, @Body() dto: CreateEventRecapDto) {
+  async createRecap(@Param('id') id: string, @Request() req: RequestWithUser, @Body() dto: CreateEventRecapDto) {
     return this.recapService.createRecap(id, req.user.id, dto);
   }
 

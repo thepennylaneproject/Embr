@@ -15,6 +15,7 @@ import {
   GetTrendingCreatorsDto,
   SimilarUsersDto
 } from '../dto/discovery.dto';
+import { RequestWithUser } from '../../../../shared/types/request-with-user';
 
 @Controller('discovery')
 export class UserDiscoveryController {
@@ -28,7 +29,7 @@ export class UserDiscoveryController {
   @Get('search')
   @UseGuards(OptionalJwtAuthGuard)
   @Throttle({ default: { limit: 60, ttl: 900000 } })
-  async searchUsers(@Request() req, @Query() dto: SearchUsersDto) {
+  async searchUsers(@Request() req: RequestWithUser, @Query() dto: SearchUsersDto) {
     const userId = req.user?.id || null;
     return this.discoveryService.searchUsers(userId, dto);
   }
@@ -41,7 +42,7 @@ export class UserDiscoveryController {
   @Get('recommended')
   @UseGuards(JwtAuthGuard)
   @Throttle({ default: { limit: 30, ttl: 900000 } })
-  async getRecommendedUsers(@Request() req, @Query() dto: GetRecommendedUsersDto) {
+  async getRecommendedUsers(@Request() req: RequestWithUser, @Query() dto: GetRecommendedUsersDto) {
     return this.discoveryService.getRecommendedUsers(req.user.id, dto);
   }
 
@@ -53,7 +54,7 @@ export class UserDiscoveryController {
   @Get('trending')
   @UseGuards(OptionalJwtAuthGuard)
   @Throttle({ default: { limit: 30, ttl: 900000 } })
-  async getTrendingCreators(@Request() req, @Query() dto: GetTrendingCreatorsDto) {
+  async getTrendingCreators(@Request() req: RequestWithUser, @Query() dto: GetTrendingCreatorsDto) {
     const userId = req.user?.id || null;
     return this.discoveryService.getTrendingCreators(userId, dto);
   }
@@ -66,7 +67,7 @@ export class UserDiscoveryController {
   @Get('similar')
   @UseGuards(JwtAuthGuard)
   @Throttle({ default: { limit: 20, ttl: 900000 } })
-  async getSimilarUsers(@Request() req, @Query() dto: SimilarUsersDto) {
+  async getSimilarUsers(@Request() req: RequestWithUser, @Query() dto: SimilarUsersDto) {
     return this.discoveryService.getSimilarUsers(req.user.id, dto);
   }
 }

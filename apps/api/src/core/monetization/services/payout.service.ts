@@ -4,6 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { WalletService } from './wallet.service';
@@ -65,6 +66,21 @@ export class PayoutService {
     if (!user.wallet.payoutsEnabled) {
       throw new BadRequestException(
         'Your account is not yet enabled for payouts',
+      );
+    }
+
+    // Verify wallet integrity before accepting a payout request (defense-in-depth; expectation 4.2)
+    const integrity = await this.transactionService.verifyWalletIntegrity(userId);
+    if (!integrity.valid) {
+      this.logger.error(
+        `Payout request blocked for user ${userId}: wallet integrity check failed. ` +
+        `walletBalance=${integrity.walletBalance}, computedBalance=${integrity.computedBalance}, ` +
+        `difference=${integrity.difference}`,
+      );
+      throw new UnprocessableEntityException(
+        `Wallet integrity check failed: ledger balance does not match stored balance ` +
+        `(difference: ${integrity.difference}). ` +
+        `Please contact support for account reconciliation.`,
       );
     }
 
@@ -162,6 +178,21 @@ export class PayoutService {
     }
 
     if (approve) {
+      // Verify wallet integrity before any payout transfer (expectation 4.2 / out-of-scope rule)
+      const integrity = await this.transactionService.verifyWalletIntegrity(payout.userId);
+      if (!integrity.valid) {
+        this.logger.error(
+          `Payout ${payoutRequestId} blocked: wallet integrity check failed for user ${payout.userId}. ` +
+          `walletBalance=${integrity.walletBalance}, computedBalance=${integrity.computedBalance}, ` +
+          `difference=${integrity.difference}`,
+        );
+        throw new UnprocessableEntityException(
+          `Wallet integrity check failed: ledger balance does not match stored balance ` +
+          `(difference: ${integrity.difference}). ` +
+          `Admin reconciliation required before payout can proceed.`,
+        );
+      }
+
       // Approve and process payout
       await this.prisma.payout.update({
         where: { id: payoutRequestId },
@@ -548,7 +579,7 @@ export class PayoutService {
       totalPayouts: completed._count,
       totalAmount: parseFloat((completed._sum.amount || 0).toFixed(2)),
       pendingAmount: parseFloat((pending._sum.amount || 0).toFixed(2)),
-      lastPayoutDate: lastPayout?.completedAt,
+      lastPayoutDate: lastPayout?.completedAt ?? undefined,
     };
   }
 

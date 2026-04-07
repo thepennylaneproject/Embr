@@ -29,50 +29,50 @@ export class CreateGigDto {
   @IsString()
   @MinLength(10)
   @MaxLength(200)
-  title: string;
+  title!: string;
 
   @IsString()
   @MinLength(50)
   @MaxLength(5000)
-  description: string;
+  description!: string;
 
   @IsEnum(GigCategory)
-  category: GigCategory;
+  category!: GigCategory;
 
   @IsEnum(GigBudgetType)
-  budgetType: GigBudgetType;
+  budgetType!: GigBudgetType;
 
   @IsInt()
   @Min(1)
   @Max(99999999)
-  budgetMin: number;
+  budgetMin!: number;
 
   @IsInt()
   @Min(1)
   @Max(99999999)
-  budgetMax: number;
+  budgetMax!: number;
 
   @IsString()
   @IsOptional()
   currency?: string = 'USD';
 
   @IsEnum(GigExperienceLevel)
-  experienceLevel: GigExperienceLevel;
+  experienceLevel!: GigExperienceLevel;
 
   @IsInt()
   @Min(1)
   @Max(365)
-  estimatedDuration: number;
+  estimatedDuration!: number;
 
   @IsArray()
   @IsString({ each: true })
   @ArrayMinSize(1)
-  skills: string[];
+  skills!: string[];
 
   @IsArray()
   @IsString({ each: true })
   @ArrayMinSize(1)
-  deliverables: string[];
+  deliverables!: string[];
 
   @IsArray()
   @IsString({ each: true })
@@ -211,51 +211,51 @@ export class MilestoneProposalDto {
   @IsString()
   @MinLength(5)
   @MaxLength(200)
-  title: string;
+  title!: string;
 
   @IsString()
   @MinLength(20)
   @MaxLength(1000)
-  description: string;
+  description!: string;
 
   @IsInt()
   @Min(1)
   @Max(99999999)
-  amount: number;
+  amount!: number;
 
   @IsInt()
   @Min(1)
   @Max(365)
-  estimatedDays: number;
+  estimatedDays!: number;
 }
 
 export class CreateApplicationDto {
   @IsString()
-  gigId: string;
+  gigId!: string;
 
   @IsString()
   @MinLength(100)
   @MaxLength(2000)
-  coverLetter: string;
+  coverLetter!: string;
 
   @IsInt()
   @Min(1)
   @Max(99999999)
-  proposedBudget: number;
+  proposedBudget!: number;
 
   @IsInt()
   @Min(1)
   @Max(365)
-  proposedTimeline: number;
+  proposedTimeline!: number;
 
   @IsArray()
   @IsUrl({}, { each: true })
-  portfolioLinks: string[];
+  portfolioLinks!: string[];
 
   @IsString()
   @MinLength(50)
   @MaxLength(2000)
-  relevantExperience: string;
+  relevantExperience!: string;
 
   @IsArray()
   @Type(() => MilestoneProposalDto)
@@ -265,7 +265,7 @@ export class CreateApplicationDto {
 
 export class UpdateApplicationStatusDto {
   @IsEnum(ApplicationStatus)
-  status: ApplicationStatus;
+  status!: ApplicationStatus;
 }
 
 // ============================================================================
@@ -276,24 +276,24 @@ export class CreateMilestoneDto {
   @IsString()
   @MinLength(5)
   @MaxLength(200)
-  title: string;
+  title!: string;
 
   @IsString()
   @MinLength(20)
   @MaxLength(1000)
-  description: string;
+  description!: string;
 
   @IsInt()
   @Min(1)
   @Max(99999999)
-  amount: number;
+  amount!: number;
 
   @IsString()
-  dueDate: string; // ISO 8601 format
+  dueDate!: string; // ISO 8601 format
 
   @IsInt()
   @Min(0)
-  order: number;
+  order!: number;
 }
 
 export class UpdateMilestoneDto {
@@ -314,12 +314,12 @@ export class UpdateMilestoneDto {
 
 export class FundEscrowDto {
   @IsString()
-  stripePaymentMethodId: string;
+  stripePaymentMethodId!: string;
 }
 
 export class ReleaseMilestoneDto {
   @IsString()
-  milestoneId: string;
+  milestoneId!: string;
 }
 
 // ============================================================================
@@ -330,16 +330,16 @@ export class RaiseDisputeDto {
   @IsString()
   @MinLength(10)
   @MaxLength(200)
-  reason: string;
+  reason!: string;
 
   @IsString()
   @MinLength(50)
   @MaxLength(2000)
-  description: string;
+  description!: string;
 
   @IsArray()
   @IsString({ each: true })
-  evidence: string[];
+  evidence!: string[];
 }
 
 // ============================================================================
@@ -350,30 +350,30 @@ export class CreateReviewDto {
   @IsInt()
   @Min(1)
   @Max(5)
-  rating: number;
+  rating!: number;
 
   @IsString()
   @MinLength(20)
   @MaxLength(1000)
-  comment: string;
+  comment!: string;
 
   @IsInt()
   @Min(1)
   @Max(5)
-  professionalism: number;
+  professionalism!: number;
 
   @IsInt()
   @Min(1)
   @Max(5)
-  communication: number;
+  communication!: number;
 
   @IsInt()
   @Min(1)
   @Max(5)
-  quality: number;
+  quality!: number;
 
   @IsInt()
   @Min(1)
   @Max(5)
-  timeliness: number;
+  timeliness!: number;
 }

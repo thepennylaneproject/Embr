@@ -32,14 +32,14 @@ export class InitiateUploadDto {
     example: 'vacation-video.mp4',
   })
   @IsString()
-  fileName: string;
+  fileName!: string;
 
   @ApiProperty({
     description: 'MIME type of the file',
     example: 'video/mp4',
   })
   @IsString()
-  fileType: string;
+  fileType!: string;
 
   @ApiProperty({
     description: 'File size in bytes',
@@ -50,7 +50,7 @@ export class InitiateUploadDto {
   @IsInt()
   @Min(1)
   @Max(1073741824) // 1GB max per file
-  fileSize: number;
+  fileSize!: number;
 
   @ApiProperty({
     description: 'Content type category',
@@ -58,7 +58,7 @@ export class InitiateUploadDto {
     example: ContentType.VIDEO,
   })
   @IsEnum(ContentType)
-  contentType: ContentType;
+  contentType!: ContentType;
 
   @ApiProperty({
     description: 'Whether media should be private (signed URL access) or public',
@@ -78,21 +78,21 @@ export class CompleteUploadDto {
     example: 'videos/2024/11/abc123-1700000000.mp4',
   })
   @IsString()
-  fileKey: string;
+  fileKey!: string;
 
   @ApiProperty({
     description: 'Original file name',
     example: 'vacation-video.mp4',
   })
   @IsString()
-  fileName: string;
+  fileName!: string;
 
   @ApiProperty({
     description: 'Content type category',
     enum: ContentType,
   })
   @IsEnum(ContentType)
-  contentType: ContentType;
+  contentType!: ContentType;
 }
 
 /**
@@ -108,14 +108,14 @@ export class UploadPartDto {
   @IsInt()
   @Min(1)
   @Max(10000)
-  PartNumber: number;
+  PartNumber!: number;
 
   @ApiProperty({
     description: 'ETag returned from S3 after part upload',
     example: '"abc123def456"',
   })
   @IsString()
-  ETag: string;
+  ETag!: string;
 }
 
 /**
@@ -127,28 +127,28 @@ export class CompleteMultipartUploadDto {
     example: 'abc123def456',
   })
   @IsString()
-  uploadId: string;
+  uploadId!: string;
 
   @ApiProperty({
     description: 'File key in S3',
     example: 'videos/2024/11/abc123-1700000000.mp4',
   })
   @IsString()
-  fileKey: string;
+  fileKey!: string;
 
   @ApiProperty({
     description: 'Original file name',
     example: 'vacation-video.mp4',
   })
   @IsString()
-  fileName: string;
+  fileName!: string;
 
   @ApiProperty({
     description: 'Content type category',
     enum: ContentType,
   })
   @IsEnum(ContentType)
-  contentType: ContentType;
+  contentType!: ContentType;
 
   @ApiProperty({
     description: 'Array of uploaded parts with ETags',
@@ -157,7 +157,7 @@ export class CompleteMultipartUploadDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => UploadPartDto)
-  parts: UploadPartDto[];
+  parts!: UploadPartDto[];
 }
 
 /**
@@ -169,7 +169,7 @@ export class AbortUploadDto {
     example: 'abc123def456',
   })
   @IsString()
-  uploadId: string;
+  uploadId!: string;
 
   @ApiProperty({
     description: 'Type of upload to abort',
@@ -177,7 +177,7 @@ export class AbortUploadDto {
     example: 'multipart',
   })
   @IsEnum(['simple', 'multipart', 'mux'])
-  uploadType: 'simple' | 'multipart' | 'mux';
+  uploadType!: 'simple' | 'multipart' | 'mux';
 
   @ApiProperty({
     description: 'File key (for multipart uploads)',
@@ -198,7 +198,7 @@ export class GenerateThumbnailDto {
     example: 'media_abc123',
   })
   @IsString()
-  mediaId: string;
+  mediaId!: string;
 
   @ApiProperty({
     description: 'Thumbnail width in pixels',

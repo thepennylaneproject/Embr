@@ -21,6 +21,7 @@ import {
   Escrow,
   GigMilestone,
 } from '@embr/types';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('escrow')
 @UseGuards(JwtAuthGuard)
@@ -35,7 +36,7 @@ export class EscrowController {
   @Get('application/:applicationId')
   async getByApplication(
     @Param('applicationId') applicationId: string,
-    @Request() req
+    @Request() req: RequestWithUser
   ): Promise<Escrow | null> {
     return await this.escrowService.findByApplication(applicationId, req.user.id);
   }
@@ -48,7 +49,7 @@ export class EscrowController {
   @Get(':id')
   async findOne(
     @Param('id') id: string,
-    @Request() req
+    @Request() req: RequestWithUser
   ): Promise<Escrow> {
     return await this.escrowService.findOne(id, req.user.id);
   }
@@ -59,7 +60,7 @@ export class EscrowController {
    */
   @Post(':id/fund')
   async fund(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string,
     @Body() fundEscrowDto: FundEscrowDto
   ): Promise<Escrow> {
@@ -72,7 +73,7 @@ export class EscrowController {
    */
   @Post(':id/release-milestone')
   async releaseMilestone(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string,
     @Body() releaseMilestoneDto: ReleaseMilestoneDto
   ): Promise<{ escrow: Escrow; milestone: GigMilestone }> {
@@ -87,7 +88,7 @@ export class EscrowController {
   @Get(':id/released-amount')
   async getReleasedAmount(
     @Param('id') id: string,
-    @Request() req
+    @Request() req: RequestWithUser
   ): Promise<{ amount: number }> {
     // Check authorization by fetching escrow
     await this.escrowService.findOne(id, req.user.id);
@@ -109,7 +110,7 @@ export class MilestonesController {
   @Get('application/:applicationId')
   async getMilestones(
     @Param('applicationId') applicationId: string,
-    @Request() req
+    @Request() req: RequestWithUser
   ): Promise<GigMilestone[]> {
     return await this.escrowService.getMilestones(applicationId, req.user.id);
   }
@@ -120,7 +121,7 @@ export class MilestonesController {
    */
   @Post(':id/submit')
   async submit(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string
   ): Promise<GigMilestone> {
     return await this.escrowService.submitMilestone(id, req.user.id);
@@ -132,7 +133,7 @@ export class MilestonesController {
    */
   @Post(':id/approve')
   async approve(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string,
     @Body('feedback') feedback?: string
   ): Promise<GigMilestone> {
@@ -145,7 +146,7 @@ export class MilestonesController {
    */
   @Post(':id/reject')
   async reject(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string,
     @Body('feedback') feedback: string
   ): Promise<GigMilestone> {

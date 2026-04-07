@@ -4,7 +4,7 @@ import { IsNotEmpty, IsString, MinLength, Matches } from 'class-validator';
 export class ChangePasswordDto {
   @IsString()
   @IsNotEmpty({ message: 'Current password is required' })
-  currentPassword: string;
+  currentPassword!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'New password is required' })
@@ -12,5 +12,5 @@ export class ChangePasswordDto {
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
     message: 'Password must contain uppercase, lowercase, number, and special character',
   })
-  newPassword: string;
+  newPassword!: string;
 }

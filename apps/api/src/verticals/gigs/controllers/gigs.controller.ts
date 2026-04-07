@@ -20,6 +20,7 @@ import {
   GigSearchDto 
 } from '../dto/gig.dto';
 import { Gig, PaginatedGigs, GigWithDetails, GigStats } from '@embr/types';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('gigs')
 @UseGuards(JwtAuthGuard)
@@ -33,7 +34,7 @@ export class GigsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body() createGigDto: CreateGigDto
   ): Promise<Gig> {
     return await this.gigsService.create(req.user.id, createGigDto);
@@ -45,7 +46,7 @@ export class GigsController {
    */
   @Post(':id/publish')
   async publish(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string
   ): Promise<Gig> {
     return await this.gigsService.publish(id, req.user.id);
@@ -66,7 +67,7 @@ export class GigsController {
    */
   @Get('my-gigs')
   async getMyGigs(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Query('page') page?: number,
     @Query('limit') limit?: number
   ): Promise<PaginatedGigs> {
@@ -79,7 +80,7 @@ export class GigsController {
    */
   @Get('recommended')
   async getRecommended(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Query('limit') limit?: number
   ): Promise<Gig[]> {
     return await this.gigsService.getRecommendedGigs(req.user.id, limit);
@@ -90,7 +91,7 @@ export class GigsController {
    * Get statistics for the current user's gigs
    */
   @Get('stats')
-  async getStats(@Request() req): Promise<GigStats> {
+  async getStats(@Request() req: RequestWithUser): Promise<GigStats> {
     return await this.gigsService.getCreatorStats(req.user.id);
   }
 
@@ -124,7 +125,7 @@ export class GigsController {
    */
   @Put(':id')
   async update(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string,
     @Body() updateGigDto: UpdateGigDto
   ): Promise<Gig> {
@@ -137,7 +138,7 @@ export class GigsController {
    */
   @Post(':id/cancel')
   async cancel(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string
   ): Promise<Gig> {
     return await this.gigsService.cancel(id, req.user.id);
@@ -149,7 +150,7 @@ export class GigsController {
    */
   @Post(':id/complete')
   async complete(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string
   ): Promise<Gig> {
     return await this.gigsService.markCompleted(id, req.user.id);
@@ -162,7 +163,7 @@ export class GigsController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string
   ): Promise<void> {
     return await this.gigsService.remove(id, req.user.id);

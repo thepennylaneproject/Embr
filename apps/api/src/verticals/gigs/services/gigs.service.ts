@@ -400,7 +400,7 @@ export class GigsService {
       experienceLevel: gig.experienceLevel as GigExperienceLevel,
       creator: gig.creator.profile ? {
         id: gig.creator.id,
-        username: gig.creator.profile.username,
+        username: gig.creator.username,
         displayName: gig.creator.profile.displayName,
         avatar: gig.creator.profile.avatarUrl,
         bio: gig.creator.profile.bio,

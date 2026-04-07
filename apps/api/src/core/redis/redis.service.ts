@@ -8,9 +8,9 @@ import { createClient, RedisClientType } from 'redis';
 
 @Injectable()
 export class RedisService implements OnModuleInit {
-  private redisClient: RedisClientType;
-  private pubClient: RedisClientType;
-  private subClient: RedisClientType;
+  private redisClient!: RedisClientType;
+  private pubClient!: RedisClientType;
+  private subClient!: RedisClientType;
   private readonly logger = new Logger(RedisService.name);
   private isConnected = false;
 

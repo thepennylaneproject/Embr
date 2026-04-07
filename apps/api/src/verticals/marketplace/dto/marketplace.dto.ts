@@ -32,19 +32,19 @@ export class CreateListingDto {
   @IsString()
   @MinLength(3)
   @MaxLength(150)
-  title: string;
+  title!: string;
 
   @IsString()
   @MinLength(10)
   @MaxLength(5000)
-  description: string;
+  description!: string;
 
   @IsInt()
   @Min(1)
-  price: number;
+  price!: number;
 
   @IsEnum(ListingType)
-  type: ListingType;
+  type!: ListingType;
 
   @IsOptional()
   @IsEnum(ListingCondition)
@@ -52,7 +52,7 @@ export class CreateListingDto {
 
   @IsString()
   @MaxLength(100)
-  category: string;
+  category!: string;
 
   @IsOptional()
   @IsArray()
@@ -201,7 +201,7 @@ export class ListingSearchDto {
 
 export class CreateOrderDto {
   @IsString()
-  listingId: string;
+  listingId!: string;
 
   @IsOptional()
   @IsInt()
@@ -227,7 +227,7 @@ export class CreateOrderDto {
 
 export class CheckoutCartItemDto {
   @IsString()
-  listingId: string;
+  listingId!: string;
 
   @IsOptional()
   @IsInt()
@@ -239,7 +239,7 @@ export class CreateCheckoutDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CheckoutCartItemDto)
-  items: CheckoutCartItemDto[];
+  items!: CheckoutCartItemDto[];
 
   @IsOptional()
   shippingAddress?: {
@@ -267,7 +267,7 @@ export class CreateReviewDto {
   @IsInt()
   @Min(1)
   @Max(5)
-  rating: number;
+  rating!: number;
 
   @IsOptional()
   @IsString()
@@ -278,7 +278,7 @@ export class CreateReviewDto {
 export class CreateOfferDto {
   @IsInt()
   @Min(1)
-  amount: number;
+  amount!: number;
 
   @IsOptional()
   @IsString()

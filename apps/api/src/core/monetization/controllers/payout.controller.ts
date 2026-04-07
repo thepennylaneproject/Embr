@@ -21,6 +21,7 @@ import {
   ApprovePayoutDto,
   GetPayoutsQueryDto,
 } from '../dto/payout.dto';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('payouts')
 @UseGuards(JwtAuthGuard, EmailVerifiedGuard, RolesGuard)
@@ -35,7 +36,7 @@ export class PayoutController {
   @Throttle({ default: { limit: 5, ttl: 86400000 } }) // 5 per day
   @HttpCode(HttpStatus.CREATED)
   async createPayoutRequest(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body() dto: CreatePayoutRequestDto,
   ) {
     return this.payoutService.createPayoutRequest(req.user.id, dto);
@@ -46,7 +47,7 @@ export class PayoutController {
    * Get payouts for current user
    */
   @Get()
-  async getPayouts(@Request() req, @Query() query: GetPayoutsQueryDto) {
+  async getPayouts(@Request() req: RequestWithUser, @Query() query: GetPayoutsQueryDto) {
     return this.payoutService.getPayouts(req.user.id, query);
   }
 
@@ -55,7 +56,7 @@ export class PayoutController {
    * Get payout statistics
    */
   @Get('stats')
-  async getPayoutStats(@Request() req) {
+  async getPayoutStats(@Request() req: RequestWithUser) {
     return this.payoutService.getPayoutStats(req.user.id);
   }
 
@@ -77,7 +78,7 @@ export class PayoutController {
   @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   async approvePayout(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string,
     @Body() dto: Partial<ApprovePayoutDto>,
   ) {
@@ -95,7 +96,7 @@ export class PayoutController {
   @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   async rejectPayout(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string,
     @Body('reason') reason?: string,
   ) {
@@ -111,7 +112,7 @@ export class PayoutController {
    * Get a specific payout — only accessible by the payout owner or an admin
    */
   @Get(':id')
-  async getPayout(@Request() req, @Param('id') id: string) {
+  async getPayout(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.payoutService.getPayoutById(id, req.user.id, req.user.role);
   }
 }

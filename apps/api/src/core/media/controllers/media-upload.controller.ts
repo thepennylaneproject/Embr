@@ -365,8 +365,8 @@ export class MediaUploadController {
 
     if (dto.uploadType === 'multipart') {
       // Validate file key ownership
-      this.validateFileKeyOwnership(dto.fileKey, user.id);
-      await this.s3Service.abortMultipartUpload(dto.fileKey, dto.uploadId);
+      this.validateFileKeyOwnership(dto.fileKey ?? '', user.id);
+      await this.s3Service.abortMultipartUpload(dto.fileKey ?? '', dto.uploadId ?? '');
     }
 
     // Update media record status
@@ -515,7 +515,7 @@ export class MediaUploadController {
    * Helper: Validate file type
    */
   private validateFileType(fileType: string, contentType: string): void {
-    const allowedTypes = {
+    const allowedTypes: Record<string, string[]> = {
       image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
       video: [
         'video/mp4',
@@ -541,7 +541,7 @@ export class MediaUploadController {
   /**
    * Helper: Generate image thumbnail
    */
-  private async generateImageThumbnail(_fileKey: string) {
+  private async generateImageThumbnail(_fileKey: string): Promise<{ thumbnailUrl: string } | null> {
     // This would download the file from S3 and generate thumbnail
     // Simplified for example
     return null;

@@ -434,7 +434,7 @@ export class CommentsService {
     let currentCommentId: string | null = commentId;
 
     while (currentCommentId) {
-      const comment = await this.prisma.comment.findUnique({
+      const comment: { parentId: string | null } | null = await this.prisma.comment.findUnique({
         where: { id: currentCommentId },
         select: { parentId: true },
       });

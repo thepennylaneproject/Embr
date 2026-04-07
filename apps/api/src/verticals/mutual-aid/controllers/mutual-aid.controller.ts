@@ -20,6 +20,7 @@ import {
   UpdateMutualAidPostDto,
   MutualAidSearchDto,
 } from '../dto/mutual-aid.dto';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('mutual-aid')
 @UseGuards(JwtAuthGuard)
@@ -28,7 +29,7 @@ export class MutualAidController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Request() req, @Body() dto: CreateMutualAidPostDto) {
+  async create(@Request() req: RequestWithUser, @Body() dto: CreateMutualAidPostDto) {
     return this.mutualAidService.create(req.user.id, dto);
   }
 
@@ -45,18 +46,18 @@ export class MutualAidController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Request() req, @Body() dto: UpdateMutualAidPostDto) {
+  async update(@Param('id') id: string, @Request() req: RequestWithUser, @Body() dto: UpdateMutualAidPostDto) {
     return this.mutualAidService.update(id, req.user.id, dto);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string, @Request() req) {
+  async delete(@Param('id') id: string, @Request() req: RequestWithUser) {
     return this.mutualAidService.delete(id, req.user.id);
   }
 
   @Post(':id/fulfill')
   @HttpCode(HttpStatus.OK)
-  async markFulfilled(@Param('id') id: string, @Request() req) {
+  async markFulfilled(@Param('id') id: string, @Request() req: RequestWithUser) {
     return this.mutualAidService.markFulfilled(id, req.user.id);
   }
 }

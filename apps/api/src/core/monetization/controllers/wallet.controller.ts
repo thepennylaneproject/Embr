@@ -17,6 +17,7 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 import { WalletService } from '../services/wallet.service';
 import { TransactionService } from '../services/transaction.service';
 import { GetTransactionsQueryDto } from '../dto/wallet.dto';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('wallet')
 @UseGuards(JwtAuthGuard, EmailVerifiedGuard, RolesGuard)
@@ -31,7 +32,7 @@ export class WalletController {
    * Get current user's wallet
    */
   @Get()
-  async getWallet(@Request() req) {
+  async getWallet(@Request() req: RequestWithUser) {
     return this.walletService.getWallet(req.user.id);
   }
 
@@ -40,7 +41,7 @@ export class WalletController {
    * Get wallet balance with available/pending breakdown
    */
   @Get('balance')
-  async getBalance(@Request() req) {
+  async getBalance(@Request() req: RequestWithUser) {
     return this.walletService.getWalletBalance(req.user.id);
   }
 
@@ -49,7 +50,7 @@ export class WalletController {
    * Get wallet statistics
    */
   @Get('stats')
-  async getStats(@Request() req) {
+  async getStats(@Request() req: RequestWithUser) {
     return this.walletService.getWalletStats(req.user.id);
   }
 
@@ -59,7 +60,7 @@ export class WalletController {
    */
   @Get('transactions')
   async getTransactions(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Query() query: GetTransactionsQueryDto,
   ) {
     const filters = {
@@ -78,7 +79,7 @@ export class WalletController {
    * Verify wallet balance integrity (admin or user)
    */
   @Get('verify-integrity')
-  async verifyIntegrity(@Request() req) {
+  async verifyIntegrity(@Request() req: RequestWithUser) {
     return this.transactionService.verifyWalletIntegrity(req.user.id);
   }
 
@@ -88,7 +89,7 @@ export class WalletController {
    */
   @Get('financial-summary')
   async getFinancialSummary(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
   ) {
@@ -119,7 +120,7 @@ export class WalletController {
   @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   async addFunds(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body('amount') amount: number,
     @Body('reason') reason: string,
   ) {

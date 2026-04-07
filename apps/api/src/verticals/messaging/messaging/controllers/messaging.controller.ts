@@ -37,6 +37,7 @@ import {
   MESSAGE_CONSTRAINTS,
   MessageType,
 } from '@embr/types';
+import { RequestWithUser } from '../../../../shared/types/request-with-user';
 
 @ApiTags('Messaging')
 @Controller('messaging')
@@ -55,21 +56,21 @@ export class MessagingController {
   @Get('conversations')
   @ApiOperation({ summary: 'Get user conversations with pagination' })
   @ApiResponse({ status: 200, description: 'Returns list of conversations' })
-  async getConversations(@Request() req, @Query() dto: GetConversationsDto) {
+  async getConversations(@Request() req: RequestWithUser, @Query() dto: GetConversationsDto) {
     return this.messagingService.getConversations(req.user.id, dto);
   }
 
   @Post('conversations')
   @ApiOperation({ summary: 'Create or get existing conversation' })
   @ApiResponse({ status: 201, description: 'Conversation created or retrieved' })
-  async createConversation(@Request() req, @Body() dto: CreateConversationDto) {
+  async createConversation(@Request() req: RequestWithUser, @Body() dto: CreateConversationDto) {
     return this.messagingService.getOrCreateConversation(req.user.id, dto);
   }
 
   @Delete('conversations/:conversationId')
   @ApiOperation({ summary: 'Delete a conversation' })
   @ApiResponse({ status: 200, description: 'Conversation deleted' })
-  async deleteConversation(@Request() req, @Param('conversationId') conversationId: string) {
+  async deleteConversation(@Request() req: RequestWithUser, @Param('conversationId') conversationId: string) {
     return this.messagingService.deleteConversation(req.user.id, {
       conversationId,
     });
@@ -82,7 +83,7 @@ export class MessagingController {
   @Post('messages')
   @ApiOperation({ summary: 'Send a message' })
   @ApiResponse({ status: 201, description: 'Message sent successfully' })
-  async sendMessage(@Request() req, @Body() dto: SendMessageDto) {
+  async sendMessage(@Request() req: RequestWithUser, @Body() dto: SendMessageDto) {
     return this.messagingService.sendMessage(req.user.id, dto);
   }
 
@@ -90,7 +91,7 @@ export class MessagingController {
   @ApiOperation({ summary: 'Get messages in a conversation' })
   @ApiResponse({ status: 200, description: 'Returns list of messages' })
   async getMessages(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('conversationId') conversationId: string,
     @Query() query: Omit<GetMessagesDto, 'conversationId'>,
   ) {
@@ -107,7 +108,7 @@ export class MessagingController {
   @Post('messages/read')
   @ApiOperation({ summary: 'Mark messages as read' })
   @ApiResponse({ status: 200, description: 'Messages marked as read' })
-  async markAsRead(@Request() req, @Body() dto: MarkAsReadDto) {
+  async markAsRead(@Request() req: RequestWithUser, @Body() dto: MarkAsReadDto) {
     return this.messagingService.markAsRead(req.user.id, dto);
   }
 
@@ -115,7 +116,7 @@ export class MessagingController {
   @ApiOperation({ summary: 'Delete a message' })
   @ApiResponse({ status: 200, description: 'Message deleted' })
   async deleteMessage(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('messageId') messageId: string,
     @Query('conversationId') conversationId: string,
   ) {
@@ -136,7 +137,7 @@ export class MessagingController {
   @ApiOperation({ summary: 'Search messages within a conversation' })
   @ApiResponse({ status: 200, description: 'Returns matching messages' })
   async searchMessages(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('conversationId') conversationId: string,
     @Query() query: Omit<SearchMessagesDto, 'conversationId'>,
   ) {
@@ -156,7 +157,7 @@ export class MessagingController {
   @Get('unread')
   @ApiOperation({ summary: 'Get unread message count' })
   @ApiResponse({ status: 200, description: 'Returns unread counts' })
-  async getUnreadCount(@Request() req) {
+  async getUnreadCount(@Request() req: RequestWithUser) {
     return this.messagingService.getUnreadCount(req.user.id);
   }
 
@@ -169,7 +170,7 @@ export class MessagingController {
   @ApiResponse({ status: 201, description: 'Media uploaded successfully' })
   @UseInterceptors(FileInterceptor('file'))
   async uploadMedia(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: MediaUploadDto,
   ) {
@@ -203,7 +204,7 @@ export class MessagingController {
         uploadResult = await this.uploadService.uploadVideo(file, req.user.id);
         break;
       case MessageType.FILE:
-        uploadResult = await this.uploadService.uploadFile(file, req.user.id, 'document');
+        uploadResult = await this.uploadService.uploadFile(file, 'document', req.user.id);
         break;
       default:
         throw new BadRequestException('Invalid message type for upload');

@@ -60,14 +60,14 @@ export class S3MultipartService {
 
   constructor(private configService: ConfigService) {
     this.region = this.configService.get('AWS_REGION', 'us-east-1');
-    this.bucket = this.configService.get('AWS_S3_BUCKET');
+    this.bucket = this.configService.get<string>('AWS_S3_BUCKET') ?? '';
     this.cdnDomain = this.configService.get('AWS_CLOUDFRONT_DOMAIN');
 
     this.s3Client = new S3Client({
       region: this.region,
       credentials: {
-        accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
-        secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
+        accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID') ?? '',
+        secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY') ?? '',
       },
     });
   }
@@ -82,7 +82,7 @@ export class S3MultipartService {
     userId: string,
     fileSize: number,
   ): Promise<PresignedUploadResult> {
-    const fileExtension = fileName.split('.').pop();
+    const fileExtension = fileName.split('.').pop() ?? '';
     const fileKey = this.generateFileKey(userId, contentType, fileExtension);
 
     // Calculate dynamic expiry based on file size
@@ -118,7 +118,7 @@ export class S3MultipartService {
     contentType: 'image' | 'video' | 'document',
     userId: string,
   ): Promise<MultipartUploadInitResult> {
-    const fileExtension = fileName.split('.').pop();
+    const fileExtension = fileName.split('.').pop() ?? '';
     const fileKey = this.generateFileKey(userId, contentType, fileExtension);
 
     const command = new CreateMultipartUploadCommand({
@@ -141,7 +141,7 @@ export class S3MultipartService {
     );
 
     return {
-      uploadId: result.UploadId,
+      uploadId: result.UploadId ?? '',
       fileKey,
       partSize: this.PART_SIZE,
       totalParts,
@@ -302,9 +302,9 @@ export class S3MultipartService {
     const response = await this.s3Client.send(command);
 
     return {
-      size: response.ContentLength,
-      contentType: response.ContentType,
-      lastModified: response.LastModified,
+      size: response.ContentLength ?? 0,
+      contentType: response.ContentType ?? '',
+      lastModified: response.LastModified ?? new Date(),
     };
   }
 

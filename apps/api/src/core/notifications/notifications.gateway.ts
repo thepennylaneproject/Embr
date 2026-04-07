@@ -36,7 +36,7 @@ export class NotificationsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private readonly logger = new Logger(NotificationsGateway.name);
   private userSockets: Map<string, Set<string>> = new Map(); // userId -> Set of socketIds
@@ -80,10 +80,10 @@ export class NotificationsGateway
         client.userId = decoded.sub || decoded.id;
 
         // Track user socket connections
-        if (!this.userSockets.has(client.userId)) {
-          this.userSockets.set(client.userId, new Set());
+        if (!this.userSockets.has(client.userId!)) {
+          this.userSockets.set(client.userId!, new Set());
         }
-        this.userSockets.get(client.userId).add(client.id);
+        this.userSockets.get(client.userId!)!.add(client.id);
 
         // Join user-specific room for targeted broadcasts
         client.join(`user:${client.userId}`);
