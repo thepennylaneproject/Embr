@@ -96,7 +96,24 @@ export class PayoutService {
       );
     }
 
-    // Create payout request
+    // Enforce wallet integrity gate before creating a payout request.
+    // This prevents payout against a stale or corrupted ledger balance.
+    const integrityCheck = await this.transactionService.verifyWalletIntegrity(userId);
+    const integrityVerifiedAt = new Date();
+
+    if (!integrityCheck.valid) {
+      this.logger.warn(
+        `Payout request blocked for user ${userId}: wallet integrity check failed. ` +
+        `walletBalance=${integrityCheck.walletBalance}, computedBalance=${integrityCheck.computedBalance}, ` +
+        `difference=${integrityCheck.difference}, reason=${integrityCheck.reason ?? 'ledger drift'}`,
+      );
+      throw new BadRequestException(
+        'Payout request rejected: wallet integrity check failed. ' +
+        'Please contact support to reconcile your account before requesting a payout.',
+      );
+    }
+
+    // Create payout request, recording the integrity verification result for auditability
     const payout = await this.prisma.payout.create({
       data: {
         user: { connect: { id: userId } },
@@ -105,6 +122,8 @@ export class PayoutService {
         note,
         status: PrismaPayoutStatus.PENDING,
         currency: 'USD',
+        integrityVerifiedAt,
+        integrityCheckPassed: true,
       },
       include: {
         user: {

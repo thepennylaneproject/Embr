@@ -522,6 +522,10 @@ model Payout {
   approvedAt          DateTime?
   approvedBy          String?        // Admin user ID
   paidAt              DateTime?
+
+  // Wallet integrity verification audit trail
+  integrityVerifiedAt DateTime?      // When integrity check was performed
+  integrityCheckPassed Boolean?      // Result of integrity check at time of payout request
   
   // Intentional SetNull: payout record persists if the linked transaction is removed; transactionId is set on payment processing
   transactionId       String?        @unique
