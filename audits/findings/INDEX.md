@@ -1,8 +1,8 @@
 # Audit Findings Index
 
-**Last Updated:** 2026-03-16  
-**Total Findings:** 15 | **Completed:** 4 | **Pending:** 11  
-**Sources:** LYRA v1.1 Comprehensive Audit Suite + Investor Readiness Audit 2026-03-16
+**Last Updated:** 2026-04-07  
+**Total Findings:** 16 | **Completed:** 5 | **Pending:** 11  
+**Sources:** LYRA v1.1 Comprehensive Audit Suite + Investor Readiness Audit 2026-03-16 + LYRA finding f-ece9392a (synced from Linear PLP-561)
 
 ---
 
@@ -10,7 +10,7 @@
 
 ### By Status
 
-#### ✅ Completed (4)
+#### ✅ Completed (5)
 
 | Finding ID | Title | Severity | Priority | Commits |
 |-----------|-------|----------|----------|---------|
@@ -18,6 +18,7 @@
 | **f-log-001** | Missing MessagingService Method | Blocker | P0 | 657dcd8 |
 | **f-deploy-build-failure-nestjs-001** | NestJS API Startup Failures | Blocker | P0 | 117711d |
 | **sec-003** | Missing COOKIE_SECURE Configuration | High | P1 | a9e8dd8 |
+| **f-ece9392a** | Disabled auth assigns shared dev user to every request | Major | P1 | _(this PR)_ |
 
 #### ⏳ Pending (11)
 
