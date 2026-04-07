@@ -8,11 +8,14 @@ import { Observable } from 'rxjs';
 import { RlsContextService } from '../../core/database/rls-context.service';
 
 /**
- * Global HTTP interceptor that populates the RLS context from the JWT-authenticated
- * user before any service/database code runs.
+ * Global interceptor that populates the RLS context from the JWT-authenticated
+ * user before any service/database code runs, for both HTTP and WebSocket contexts.
  *
- * - Authenticated requests:  sets `app.current_user_id` to `request.user.id`
- * - Unauthenticated requests: sets no user ID (public-data policies apply)
+ * - HTTP authenticated requests:       sets userId from `request.user.id`
+ * - WebSocket authenticated requests:  sets userId from `socket.userId`
+ *   (populated by the gateway's handleConnection JWT verification)
+ * - Unauthenticated requests:          sets no user ID (public-data policies apply)
+ * - RPC / other contexts:              passes through without setting RLS context
  *
  * Register this as a global APP_INTERCEPTOR in AppModule.
  */
@@ -21,13 +24,23 @@ export class RlsInterceptor implements NestInterceptor {
   constructor(private readonly rlsContext: RlsContextService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    if (context.getType() !== 'http') {
-      // WebSocket / RPC contexts: run without user context (service policies apply)
+    let userId: string | null = null;
+
+    const type = context.getType<string>();
+
+    if (type === 'http') {
+      const request = context.switchToHttp().getRequest();
+      userId = request.user?.id ?? null;
+    } else if (type === 'ws') {
+      // socket.userId is set by the gateway's handleConnection() after JWT verification.
+      // Both MessagingGateway and NotificationsGateway attach this field to their
+      // AuthenticatedSocket when the JWT is validated on first connection.
+      const client = context.switchToWs().getClient<{ userId?: string }>();
+      userId = client.userId ?? null;
+    } else {
+      // RPC / microservice contexts: run without user context (service policies apply)
       return next.handle();
     }
-
-    const request = context.switchToHttp().getRequest();
-    const userId: string | null = request.user?.id ?? null;
 
     // Wrap the entire request handler inside the RLS user context.
     // Observable.create is cold, so we need to start the async context before
