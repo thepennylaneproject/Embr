@@ -1536,25 +1536,40 @@
       ]
     },
     {
-      "finding_id": "f-b73a32d8",
+      "finding_id": "f-a50b7176",
       "type": "bug",
-      "severity": "blocker",
-      "priority": "P0",
+      "severity": "major",
+      "priority": "P1",
       "status": "fixed_pending_verify",
-      "title": "Worker throws on startup: core_system_prompt.md missing at repo audits path",
-      "agent": "lyra-agent",
+      "title": "Tool endpoints use one shared workspace for all authenticated users",
+      "agent": "security-privacy-auditor",
+      "category": "data-leakage",
+      "confidence": "evidence",
+      "suggested_fix": {
+        "approach": "Derive workspace_root from user_id under a base path via WorkspacePolicy.workspace_root_for(user_id)",
+        "affected_files": [
+          "backend/app/tools/policy.py",
+          "backend/app/tools/service.py",
+          "backend/app/api/routes/tools.py",
+          "backend/app/core/auth.py"
+        ],
+        "estimated_effort": "medium",
+        "tests_needed": [
+          "Two users with different JWTs cannot read each other's workspace files"
+        ]
+      },
       "history": [
         {
           "timestamp": "2026-04-07T00:00:00Z",
-          "actor": "lyra-agent",
+          "actor": "security-privacy-auditor",
           "event": "created",
-          "notes": "Reported by LYRA audit suite. loadClusterPrompts throws when audits/prompts/core_system_prompt.md is missing at repo root."
+          "notes": "Imported from LYRA audit suite finding f-a50b7176 (PLP-562)."
         },
         {
-          "timestamp": "2026-04-07T17:00:00Z",
-          "actor": "cursor-agent",
+          "timestamp": "2026-04-07T00:00:00Z",
+          "actor": "solo-dev",
           "event": "patch_applied",
-          "notes": "Created audits/prompts/core_system_prompt.md and apps/worker/ with correct path resolution. Worker starts successfully. Fix referenced in Linear PLP-575."
+          "notes": "Implemented per-user workspace isolation via WorkspacePolicy. All 20 isolation tests pass."
         }
       ]
     }
