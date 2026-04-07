@@ -36,7 +36,7 @@ export class NotificationsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private readonly logger = new Logger(NotificationsGateway.name);
   private userSockets: Map<string, Set<string>> = new Map(); // userId -> Set of socketIds

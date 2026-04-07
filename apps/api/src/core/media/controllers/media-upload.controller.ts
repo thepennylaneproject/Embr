@@ -515,7 +515,7 @@ export class MediaUploadController {
    * Helper: Validate file type
    */
   private validateFileType(fileType: string, contentType: string): void {
-    const allowedTypes = {
+    const allowedTypes: Record<string, string[]> = {
       image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
       video: [
         'video/mp4',

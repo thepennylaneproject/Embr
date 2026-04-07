@@ -44,13 +44,13 @@ export enum ReportEntityType {
 
 export class CreateReportDto {
   @IsEnum(ReportEntityType)
-  entityType: ReportEntityType;
+  entityType!: ReportEntityType;
 
   @IsUUID()
-  entityId: string;
+  entityId!: string;
 
   @IsEnum(ReportReason)
-  reason: ReportReason;
+  reason!: ReportReason;
 
   @IsString()
   @IsOptional()
@@ -126,15 +126,15 @@ export enum ActionType {
 
 export class CreateModerationActionDto {
   @IsUUID()
-  userId: string;
+  userId!: string;
 
   @IsEnum(ActionType)
-  type: ActionType;
+  type!: ActionType;
 
   @IsString()
   @MinLength(10)
   @MaxLength(1000)
-  reason: string;
+  reason!: string;
 
   @IsInt()
   @Min(1)
@@ -191,7 +191,7 @@ export class QueryModerationActionsDto {
 
 export class BlockUserDto {
   @IsUUID()
-  blockedUserId: string;
+  blockedUserId!: string;
 
   @IsString()
   @IsOptional()
@@ -201,7 +201,7 @@ export class BlockUserDto {
 
 export class MuteUserDto {
   @IsUUID()
-  mutedUserId: string;
+  mutedUserId!: string;
 
   @IsInt()
   @Min(1)
@@ -213,7 +213,7 @@ export class MuteKeywordDto {
   @IsString()
   @MinLength(2)
   @MaxLength(50)
-  keyword: string;
+  keyword!: string;
 
   @IsBoolean()
   @IsOptional()
@@ -233,12 +233,12 @@ export enum AppealStatus {
 
 export class CreateAppealDto {
   @IsUUID()
-  actionId: string;
+  actionId!: string;
 
   @IsString()
   @MinLength(50)
   @MaxLength(2000)
-  reason: string;
+  reason!: string;
 
   @IsArray()
   @IsString({ each: true })
@@ -248,12 +248,12 @@ export class CreateAppealDto {
 
 export class UpdateAppealDto {
   @IsEnum(AppealStatus)
-  status: AppealStatus;
+  status!: AppealStatus;
 
   @IsString()
   @MinLength(20)
   @MaxLength(1000)
-  reviewNote: string;
+  reviewNote!: string;
 }
 
 export class QueryAppealsDto {
@@ -286,7 +286,7 @@ export enum FilterAction {
 
 export class ContentFilterDto {
   @IsString()
-  content: string;
+  content!: string;
 
   @IsOptional()
   @IsString()
@@ -297,19 +297,19 @@ export class CreateContentRuleDto {
   @IsString()
   @MinLength(3)
   @MaxLength(100)
-  name: string;
+  name!: string;
 
   @IsString()
   @MaxLength(500)
-  description: string;
+  description!: string;
 
   @IsArray()
   @ArrayMinSize(1)
   @IsString({ each: true })
-  keywords: string[];
+  keywords!: string[];
 
   @IsEnum(FilterAction)
-  action: FilterAction;
+  action!: FilterAction;
 
   @IsBoolean()
   @IsOptional()

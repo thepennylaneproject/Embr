@@ -24,13 +24,13 @@ export class CreateGroupDto {
   @IsString()
   @MinLength(3)
   @MaxLength(100)
-  name: string;
+  name!: string;
 
   @IsString()
   @MinLength(3)
   @MaxLength(50)
   @Matches(/^[a-z0-9-]+$/, { message: 'Slug must be lowercase alphanumeric with hyphens' })
-  slug: string;
+  slug!: string;
 
   @IsOptional()
   @IsString()
@@ -128,7 +128,7 @@ export class GroupSearchDto {
 
 export class UpdateMemberRoleDto {
   @IsEnum(GroupMemberRole)
-  role: GroupMemberRole;
+  role!: GroupMemberRole;
 }
 
 export class JoinRequestDto {
@@ -140,5 +140,5 @@ export class JoinRequestDto {
 
 export class InviteMemberDto {
   @IsString()
-  userId: string;
+  userId!: string;
 }

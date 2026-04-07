@@ -21,6 +21,7 @@ import {
   PaginatedApplications,
   ApplicationWithDetails,
 } from '@embr/types';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('applications')
 @UseGuards(JwtAuthGuard)
@@ -34,7 +35,7 @@ export class ApplicationsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body() createApplicationDto: CreateApplicationDto
   ): Promise<Application> {
     return await this.applicationsService.create(req.user.id, createApplicationDto);
@@ -46,7 +47,7 @@ export class ApplicationsController {
    */
   @Get('my-applications')
   async getMyApplications(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Query('page') page?: number,
     @Query('limit') limit?: number
   ): Promise<PaginatedApplications> {
@@ -59,7 +60,7 @@ export class ApplicationsController {
    */
   @Get('gig/:gigId')
   async getGigApplications(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('gigId') gigId: string,
     @Query('page') page?: number,
     @Query('limit') limit?: number
@@ -72,7 +73,7 @@ export class ApplicationsController {
    * Get application statistics for the current user
    */
   @Get('stats')
-  async getStats(@Request() req) {
+  async getStats(@Request() req: RequestWithUser) {
     return await this.applicationsService.getApplicantStats(req.user.id);
   }
 
@@ -84,7 +85,7 @@ export class ApplicationsController {
   @Get(':id')
   async findOne(
     @Param('id') id: string,
-    @Request() req
+    @Request() req: RequestWithUser
   ): Promise<ApplicationWithDetails> {
     return await this.applicationsService.findOne(id, req.user.id);
   }
@@ -95,7 +96,7 @@ export class ApplicationsController {
    */
   @Post(':id/accept')
   async accept(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string
   ): Promise<Application> {
     return await this.applicationsService.accept(id, req.user.id);
@@ -107,7 +108,7 @@ export class ApplicationsController {
    */
   @Post(':id/reject')
   async reject(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string
   ): Promise<Application> {
     return await this.applicationsService.reject(id, req.user.id);
@@ -119,7 +120,7 @@ export class ApplicationsController {
    */
   @Post(':id/withdraw')
   async withdraw(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string
   ): Promise<Application> {
     return await this.applicationsService.withdraw(id, req.user.id);

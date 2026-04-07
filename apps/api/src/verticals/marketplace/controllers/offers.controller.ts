@@ -13,6 +13,7 @@ import {
 import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
 import { OffersService } from '../services/offers.service';
 import { CreateOfferDto } from '../dto/marketplace.dto';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('marketplace/listings/:listingId/offers')
 @UseGuards(JwtAuthGuard)
@@ -23,32 +24,32 @@ export class OffersController {
   @HttpCode(HttpStatus.CREATED)
   async createOffer(
     @Param('listingId') listingId: string,
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body() dto: CreateOfferDto,
   ) {
     return this.offersService.createOffer(listingId, req.user.id, dto);
   }
 
   @Get()
-  async getOffers(@Param('listingId') listingId: string, @Request() req) {
+  async getOffers(@Param('listingId') listingId: string, @Request() req: RequestWithUser) {
     return this.offersService.getListingOffers(listingId, req.user.id);
   }
 
   @Put(':offerId/accept')
   @HttpCode(HttpStatus.OK)
-  async acceptOffer(@Param('offerId') offerId: string, @Request() req) {
+  async acceptOffer(@Param('offerId') offerId: string, @Request() req: RequestWithUser) {
     return this.offersService.acceptOffer(offerId, req.user.id);
   }
 
   @Put(':offerId/decline')
   @HttpCode(HttpStatus.OK)
-  async declineOffer(@Param('offerId') offerId: string, @Request() req) {
+  async declineOffer(@Param('offerId') offerId: string, @Request() req: RequestWithUser) {
     return this.offersService.declineOffer(offerId, req.user.id);
   }
 
   @Put(':offerId/withdraw')
   @HttpCode(HttpStatus.OK)
-  async withdrawOffer(@Param('offerId') offerId: string, @Request() req) {
+  async withdrawOffer(@Param('offerId') offerId: string, @Request() req: RequestWithUser) {
     return this.offersService.withdrawOffer(offerId, req.user.id);
   }
 }

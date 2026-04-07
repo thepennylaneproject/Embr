@@ -22,7 +22,7 @@ export enum PayoutStatus {
 export class CreatePayoutRequestDto {
   @IsInt()
   @Min(1000) // Minimum $10 payout in cents
-  amount: number;
+  amount!: number;
 
   @IsString()
   @IsOptional()
@@ -32,7 +32,7 @@ export class CreatePayoutRequestDto {
 export class ApprovePayoutDto {
   @IsUUID()
   @IsNotEmpty()
-  payoutRequestId: string;
+  payoutRequestId!: string;
 
   @IsBoolean()
   @IsOptional()
@@ -67,9 +67,9 @@ export class GetPayoutsQueryDto {
 export class ProcessPayoutDto {
   @IsUUID()
   @IsNotEmpty()
-  payoutId: string;
+  payoutId!: string;
 
   @IsString()
   @IsNotEmpty()
-  stripePayoutId: string;
+  stripePayoutId!: string;
 }

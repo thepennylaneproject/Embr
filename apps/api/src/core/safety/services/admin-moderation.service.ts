@@ -338,9 +338,9 @@ export class AdminModerationService {
       },
       stats: {
         totalPosts: user.posts.length,
-        deletedPosts: user.posts.filter((p) => p.deletedAt).length,
+        deletedPosts: user.posts.filter((p: any) => p.deletedAt).length,
         totalComments: user.comments.length,
-        deletedComments: user.comments.filter((c) => c.deletedAt).length,
+        deletedComments: user.comments.filter((c: any) => c.deletedAt).length,
         reportsSubmitted: user.reports.length,
         reportsReceived: user.reportsReceived.length,
         moderationActions: user.moderationActions.length,

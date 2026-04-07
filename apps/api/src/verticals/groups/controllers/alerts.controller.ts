@@ -14,6 +14,7 @@ import {
 import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
 import { AlertsService } from '../services/alerts.service';
 import { CreateAlertDto } from '../dto/organizing.dto';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('groups/:groupId/alerts')
 @UseGuards(JwtAuthGuard)
@@ -22,7 +23,7 @@ export class AlertsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Param('groupId') groupId: string, @Request() req, @Body() dto: CreateAlertDto) {
+  async create(@Param('groupId') groupId: string, @Request() req: RequestWithUser, @Body() dto: CreateAlertDto) {
     return this.alertsService.create(groupId, req.user.id, dto);
   }
 
@@ -39,7 +40,7 @@ export class AlertsController {
   async deactivate(
     @Param('groupId') groupId: string,
     @Param('alertId') alertId: string,
-    @Request() req,
+    @Request() req: RequestWithUser,
   ) {
     return this.alertsService.deactivate(groupId, alertId, req.user.id);
   }

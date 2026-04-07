@@ -15,6 +15,7 @@ import {
   CreateStripeConnectAccountDto,
   GetStripeAccountLinkDto,
 } from '../dto/wallet.dto';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('stripe-connect')
 @UseGuards(JwtAuthGuard)
@@ -28,7 +29,7 @@ export class StripeConnectController {
   @Post('account')
   @HttpCode(HttpStatus.CREATED)
   async createAccount(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body() dto: CreateStripeConnectAccountDto,
   ) {
     return this.stripeConnectService.createConnectAccount(req.user.id, dto);
@@ -39,7 +40,7 @@ export class StripeConnectController {
    * Get Stripe Connect account status
    */
   @Get('status')
-  async getAccountStatus(@Request() req) {
+  async getAccountStatus(@Request() req: RequestWithUser) {
     return this.stripeConnectService.getAccountStatus(req.user.id);
   }
 
@@ -48,7 +49,7 @@ export class StripeConnectController {
    * Get Stripe Connect account details
    */
   @Get('account')
-  async getAccountDetails(@Request() req) {
+  async getAccountDetails(@Request() req: RequestWithUser) {
     return this.stripeConnectService.getAccountDetails(req.user.id);
   }
 
@@ -58,7 +59,7 @@ export class StripeConnectController {
    */
   @Post('account-link')
   @HttpCode(HttpStatus.OK)
-  async getAccountLink(@Request() req, @Body() dto: GetStripeAccountLinkDto) {
+  async getAccountLink(@Request() req: RequestWithUser, @Body() dto: GetStripeAccountLinkDto) {
     return this.stripeConnectService.getAccountLink(req.user.id, dto);
   }
 
@@ -68,7 +69,7 @@ export class StripeConnectController {
    */
   @Post('complete')
   @HttpCode(HttpStatus.OK)
-  async completeOnboarding(@Request() req) {
+  async completeOnboarding(@Request() req: RequestWithUser) {
     return this.stripeConnectService.completeOnboarding(req.user.id);
   }
 
@@ -78,7 +79,7 @@ export class StripeConnectController {
    */
   @Delete('account')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteAccount(@Request() req) {
+  async deleteAccount(@Request() req: RequestWithUser) {
     // TODO: Add admin guard or allow users to delete own account
     await this.stripeConnectService.deleteAccount(req.user.id);
   }

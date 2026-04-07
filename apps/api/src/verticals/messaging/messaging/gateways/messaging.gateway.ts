@@ -51,7 +51,7 @@ export class MessagingGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private readonly logger = new Logger(MessagingGateway.name);
   private userSockets: Map<string, Set<string>> = new Map(); // userId -> Set of socketIds (fallback for in-memory)

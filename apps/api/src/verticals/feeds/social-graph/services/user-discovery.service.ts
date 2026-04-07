@@ -136,7 +136,7 @@ export class UserDiscoveryService {
             },
           },
         },
-      }) as any),
+      }) as any[]),
       this.prisma.user.count({ where }),
     ]);
 
@@ -152,8 +152,8 @@ export class UserDiscoveryService {
         return { user, score };
       });
 
-      usersWithScores.sort((a, b) => b.score - a.score);
-      rankedUsers = usersWithScores.map(u => u.user);
+      usersWithScores.sort((a: { user: typeof users[0]; score: number }, b: { user: typeof users[0]; score: number }) => b.score - a.score);
+      rankedUsers = usersWithScores.map((u: { user: typeof users[0]; score: number }) => u.user);
     }
 
     // Check follow status if user is logged in
@@ -628,8 +628,8 @@ export class UserDiscoveryService {
       },
     });
 
-    const scored = trending.map(user => {
-      const totalEngagement = (user as any).posts.reduce((sum, post) => {
+    const scored = (trending as any[]).map((user: any) => {
+      const totalEngagement = user.posts.reduce((sum: number, post: any) => {
         return sum + post.likeCount + post.commentCount * 2 + 
                post.shareCount * 3 + post.viewCount * 0.1;
       }, 0);
@@ -794,11 +794,11 @@ export class UserDiscoveryService {
           },
         },
       },
-    }) as any);
+    }) as any[]);
 
     // Calculate trending score with time decay and fraud detection
-    const scored = creators.map(creator => {
-      const posts = (creator as any).posts;
+    const scored = creators.map((creator: any) => {
+      const posts = creator.posts as any[];
       let totalEngagement = 0;
       let timeDecayScore = 0;
 

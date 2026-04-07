@@ -19,7 +19,7 @@ export enum TipAmountPreset {
 export class CreateTipDto {
   @IsUUID()
   @IsNotEmpty()
-  recipientId: string;
+  recipientId!: string;
 
   @IsString()
   @IsOptional()
@@ -28,7 +28,7 @@ export class CreateTipDto {
   @IsInt()
   @Min(50) // Minimum $0.50 (50 cents)
   @Max(100000) // Maximum $1000 (100000 cents)
-  amountCents: number; // Amount in integer cents (e.g., 500 = $5.00)
+  amountCents!: number; // Amount in integer cents (e.g., 500 = $5.00)
 
   @IsEnum(TipAmountPreset)
   @IsOptional()
@@ -70,7 +70,7 @@ export class GetTipsQueryDto {
 
 export class TipStatsDto {
   @IsUUID()
-  userId: string;
+  userId!: string;
 
   @IsOptional()
   @IsString()

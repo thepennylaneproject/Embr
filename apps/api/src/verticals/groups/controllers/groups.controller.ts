@@ -17,6 +17,7 @@ import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
 import { Public } from '../../../core/auth/decorators/public.decorator';
 import { GroupsService } from '../services/groups.service';
 import { CreateGroupDto, UpdateGroupDto, GroupSearchDto } from '../dto/group.dto';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 @Controller('groups')
 @UseGuards(JwtAuthGuard)
@@ -25,7 +26,7 @@ export class GroupsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Request() req, @Body() dto: CreateGroupDto) {
+  async create(@Request() req: RequestWithUser, @Body() dto: CreateGroupDto) {
     return this.groupsService.create(req.user.id, dto);
   }
 
@@ -36,24 +37,24 @@ export class GroupsController {
   }
 
   @Get('me')
-  async getMyGroups(@Request() req) {
+  async getMyGroups(@Request() req: RequestWithUser) {
     return this.groupsService.getUserGroups(req.user.id);
   }
 
   @Get(':slug')
   @Public()
-  async findBySlug(@Param('slug') slug: string, @Request() req) {
+  async findBySlug(@Param('slug') slug: string, @Request() req: RequestWithUser) {
     const userId = req.user?.id;
     return this.groupsService.findBySlug(slug, userId);
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Request() req, @Body() dto: UpdateGroupDto) {
+  async update(@Param('id') id: string, @Request() req: RequestWithUser, @Body() dto: UpdateGroupDto) {
     return this.groupsService.update(id, req.user.id, dto);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string, @Request() req) {
+  async delete(@Param('id') id: string, @Request() req: RequestWithUser) {
     return this.groupsService.delete(id, req.user.id);
   }
 }

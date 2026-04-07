@@ -13,9 +13,10 @@ import {
 import { JwtAuthGuard } from '../../../core/auth/guards/jwt-auth.guard';
 import { Public } from '../../../core/auth/decorators/public.decorator';
 import { GroupPostsService } from '../services/group-posts.service';
+import { RequestWithUser } from '../../../shared/types/request-with-user';
 
 class CreateGroupPostDto {
-  content: string;
+  content!: string;
   type?: string;
   mediaUrl?: string;
 }
@@ -29,7 +30,7 @@ export class GroupPostsController {
   @Public()
   async getPosts(
     @Param('groupId') groupId: string,
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Query('cursor') cursor?: string,
     @Query('limit') limit?: number,
   ) {
@@ -41,7 +42,7 @@ export class GroupPostsController {
   @HttpCode(HttpStatus.CREATED)
   async createPost(
     @Param('groupId') groupId: string,
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body() dto: CreateGroupPostDto,
   ) {
     return this.groupPostsService.createGroupPost(groupId, req.user.id, dto.content, dto.type, dto.mediaUrl);
