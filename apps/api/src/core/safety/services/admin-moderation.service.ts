@@ -165,7 +165,7 @@ export class AdminModerationService {
 
       // Suspend user
       await this.prisma.user.update({
-        where: { id: report.reportedUserId },
+        where: { id: report.reportedUserId ?? '' },
         data: {
           suspended: true,
           suspendedUntil: suspendUntil as any,

@@ -80,10 +80,10 @@ export class NotificationsGateway
         client.userId = decoded.sub || decoded.id;
 
         // Track user socket connections
-        if (!this.userSockets.has(client.userId)) {
-          this.userSockets.set(client.userId, new Set());
+        if (!this.userSockets.has(client.userId!)) {
+          this.userSockets.set(client.userId!, new Set());
         }
-        this.userSockets.get(client.userId).add(client.id);
+        this.userSockets.get(client.userId!)!.add(client.id);
 
         // Join user-specific room for targeted broadcasts
         client.join(`user:${client.userId}`);

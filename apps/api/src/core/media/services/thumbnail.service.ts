@@ -87,9 +87,9 @@ export class ThumbnailService {
       return {
         thumbnailUrl,
         thumbnailKey,
-        width: metadata.width,
-        height: metadata.height,
-        format: metadata.format,
+        width: metadata.width ?? 0,
+        height: metadata.height ?? 0,
+        format: metadata.format ?? 'unknown',
         size: thumbnailBuffer.length,
       };
     } catch (error) {
@@ -178,9 +178,9 @@ export class ThumbnailService {
       return {
         thumbnailUrl,
         thumbnailKey,
-        width: metadata.width,
-        height: metadata.height,
-        format: metadata.format,
+        width: metadata.width ?? 0,
+        height: metadata.height ?? 0,
+        format: metadata.format ?? 'unknown',
         size: processedBuffer.length,
       };
     } catch (error) {
@@ -313,11 +313,11 @@ export class ThumbnailService {
       const metadata = await sharp(imageBuffer).metadata();
       const sizeMB = imageBuffer.length / (1024 * 1024);
 
-      if (metadata.width > maxWidth) {
+      if ((metadata.width ?? 0) > maxWidth) {
         errors.push(`Image width ${metadata.width}px exceeds maximum ${maxWidth}px`);
       }
 
-      if (metadata.height > maxHeight) {
+      if ((metadata.height ?? 0) > maxHeight) {
         errors.push(
           `Image height ${metadata.height}px exceeds maximum ${maxHeight}px`,
         );

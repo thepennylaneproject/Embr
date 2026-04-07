@@ -548,7 +548,7 @@ export class PayoutService {
       totalPayouts: completed._count,
       totalAmount: parseFloat((completed._sum.amount || 0).toFixed(2)),
       pendingAmount: parseFloat((pending._sum.amount || 0).toFixed(2)),
-      lastPayoutDate: lastPayout?.completedAt,
+      lastPayoutDate: lastPayout?.completedAt ?? undefined,
     };
   }
 

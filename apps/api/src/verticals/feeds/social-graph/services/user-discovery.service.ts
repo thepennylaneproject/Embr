@@ -136,7 +136,7 @@ export class UserDiscoveryService {
             },
           },
         },
-      }) as any[]),
+      }) as unknown as any[]),
       this.prisma.user.count({ where }),
     ]);
 

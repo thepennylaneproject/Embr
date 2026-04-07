@@ -204,7 +204,7 @@ export class MessagingController {
         uploadResult = await this.uploadService.uploadVideo(file, req.user.id);
         break;
       case MessageType.FILE:
-        uploadResult = await this.uploadService.uploadFile(file, req.user.id, 'document');
+        uploadResult = await this.uploadService.uploadFile(file, 'document', req.user.id);
         break;
       default:
         throw new BadRequestException('Invalid message type for upload');

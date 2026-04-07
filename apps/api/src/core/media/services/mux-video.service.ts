@@ -65,7 +65,7 @@ export class MuxVideoService {
   ) {
     const tokenId = this.configService.get('MUX_TOKEN_ID');
     const tokenSecret = this.configService.get('MUX_TOKEN_SECRET');
-    this.webhookSecret = this.configService.get('MUX_WEBHOOK_SECRET');
+    this.webhookSecret = this.configService.get('MUX_WEBHOOK_SECRET') ?? '';
 
     if (!tokenId || !tokenSecret) {
       this.logger.warn('Mux credentials not configured');
