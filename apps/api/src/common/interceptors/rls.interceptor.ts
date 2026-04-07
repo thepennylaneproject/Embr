@@ -8,11 +8,12 @@ import { Observable } from 'rxjs';
 import { RlsContextService } from '../../core/database/rls-context.service';
 
 /**
- * Global HTTP interceptor that populates the RLS context from the JWT-authenticated
- * user before any service/database code runs.
+ * Global interceptor that populates the RLS context before any service/database
+ * code runs.
  *
- * - Authenticated requests:  sets `app.current_user_id` to `request.user.id`
- * - Unauthenticated requests: sets no user ID (public-data policies apply)
+ * - HTTP authenticated requests:   sets `app.current_user_id` to `request.user.id`
+ * - HTTP unauthenticated requests: sets `app.current_user_id` to '' (public-data policies apply)
+ * - WebSocket / RPC contexts:      runs as explicit service context (RLS bypassed)
  *
  * Register this as a global APP_INTERCEPTOR in AppModule.
  */
@@ -22,8 +23,29 @@ export class RlsInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     if (context.getType() !== 'http') {
-      // WebSocket / RPC contexts: run without user context (service policies apply)
-      return next.handle();
+      // WebSocket / RPC contexts: run as explicit service context so Prisma
+      // operations have an intentional RLS scope rather than failing closed.
+      return new Observable((subscriber) => {
+        this.rlsContext
+          .runAsService(() =>
+            new Promise<void>((resolve, reject) => {
+              next
+                .handle()
+                .subscribe({
+                  next: (value) => subscriber.next(value),
+                  error: (err) => {
+                    reject(err);
+                    subscriber.error(err);
+                  },
+                  complete: () => {
+                    resolve();
+                    subscriber.complete();
+                  },
+                });
+            }),
+          )
+          .catch((err) => subscriber.error(err));
+      });
     }
 
     const request = context.switchToHttp().getRequest();
