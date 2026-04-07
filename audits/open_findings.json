@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-03-20T02:51:55Z",
+  "last_updated": "2026-04-07T17:00:00Z",
   "run_id": "synthesizer-v2-20260310-011114",
   "open_findings": [
     {
@@ -1532,6 +1532,29 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-152): Todo -> accepted"
+        }
+      ]
+    },
+    {
+      "finding_id": "f-b73a32d8",
+      "type": "bug",
+      "severity": "blocker",
+      "priority": "P0",
+      "status": "fixed_pending_verify",
+      "title": "Worker throws on startup: core_system_prompt.md missing at repo audits path",
+      "agent": "lyra-agent",
+      "history": [
+        {
+          "timestamp": "2026-04-07T00:00:00Z",
+          "actor": "lyra-agent",
+          "event": "created",
+          "notes": "Reported by LYRA audit suite. loadClusterPrompts throws when audits/prompts/core_system_prompt.md is missing at repo root."
+        },
+        {
+          "timestamp": "2026-04-07T17:00:00Z",
+          "actor": "cursor-agent",
+          "event": "patch_applied",
+          "notes": "Created audits/prompts/core_system_prompt.md and apps/worker/ with correct path resolution. Worker starts successfully. Fix referenced in Linear PLP-575."
         }
       ]
     }
