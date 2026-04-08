@@ -11,30 +11,32 @@
 
 import type { NextPageContext } from 'next';
 import Head from 'next/head';
+import { copy } from '@/lib/copy';
 
 interface ErrorPageProps {
   statusCode: number | null;
 }
 
 function ErrorPage({ statusCode }: ErrorPageProps) {
-  const title =
-    statusCode === 404
-      ? 'Page Not Found'
-      : statusCode === 500
-        ? 'Internal Server Error'
-        : 'An Error Occurred';
+  const is404 = statusCode === 404;
 
-  const message =
-    statusCode === 404
-      ? "The page you're looking for doesn't exist."
-      : "Something went wrong on our end. We've been notified and are looking into it.";
+  const title = is404
+    ? copy.errors.pageNotFoundTitle
+    : statusCode === 500
+      ? copy.errors.serverErrorTitle
+      : copy.errors.genericErrorTitle;
+
+  const message = is404
+    ? copy.errors.pageNotFoundDesc
+    : copy.errors.serverErrorDesc;
 
   return (
     <>
       <Head>
-        <title>{`${statusCode ?? 'Error'} – Embr`}</title>
+        <title>{`${statusCode ?? 'Error'} – ${copy.brand.name}`}</title>
       </Head>
       <div
+        role="main"
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -56,8 +58,8 @@ function ErrorPage({ statusCode }: ErrorPageProps) {
             textAlign: 'center',
           }}
         >
-          <div style={{ fontSize: '48px', marginBottom: '20px' }}>
-            {statusCode === 404 ? '🔍' : '⚠️'}
+          <div style={{ fontSize: '48px', marginBottom: '20px' }} aria-hidden="true">
+            {is404 ? '🔍' : '⚠️'}
           </div>
           {statusCode && (
             <p
@@ -75,25 +77,62 @@ function ErrorPage({ statusCode }: ErrorPageProps) {
           <h1 style={{ margin: '0 0 10px 0', color: '#1a1a1a', fontSize: '24px' }}>
             {title}
           </h1>
-          <p style={{ margin: '0 0 20px 0', color: '#666', fontSize: '16px' }}>
+          <p style={{ margin: '0 0 24px 0', color: '#666', fontSize: '16px' }}>
             {message}
           </p>
-          <button
-            onClick={() => (window.location.href = '/')}
-            style={{
-              marginTop: '10px',
-              padding: '12px 24px',
-              backgroundColor: '#FF6B35',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '600',
-            }}
-          >
-            Go Home
-          </button>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {is404 ? (
+              <button
+                onClick={() => window.history.back()}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: 'transparent',
+                  color: '#FF6B35',
+                  border: '2px solid #FF6B35',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                }}
+              >
+                {copy.errors.goBack}
+              </button>
+            ) : (
+              <button
+                onClick={() => window.location.reload()}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: 'transparent',
+                  color: '#FF6B35',
+                  border: '2px solid #FF6B35',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                }}
+              >
+                {copy.errors.tryAgain}
+              </button>
+            )}
+            {/* Use window.location.href instead of Next.js router — the router
+                context may not be available when the server/SSR pipeline has
+                already crashed and rendered this page. */}
+            <button
+              onClick={() => { window.location.href = '/'; }}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: '#FF6B35',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: '600',
+              }}
+            >
+              {copy.errors.goHome}
+            </button>
+          </div>
         </div>
       </div>
     </>

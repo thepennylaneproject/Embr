@@ -495,6 +495,15 @@ export const copy = {
     failedToVote: 'Could not submit your vote. Please try again.',
     failedToLoadTreasury: 'Could not load treasury info. Please refresh.',
     failedToContribute: 'Could not process the contribution. Please try again.',
+    // Error page copy
+    pageNotFoundTitle: 'Page not found',
+    pageNotFoundDesc: "The page you're looking for doesn't exist.",
+    serverErrorTitle: 'Internal server error',
+    serverErrorDesc: "Something went wrong on our end. We've been notified and are looking into it.",
+    genericErrorTitle: 'An error occurred',
+    tryAgain: 'Try again',
+    goHome: 'Go home',
+    goBack: 'Go back',
     // Safety errors
     failedToSubmitReport: 'Could not submit your report. Please try again.',
     failedToUpdateReport: 'Could not update the report. Please try again.',
