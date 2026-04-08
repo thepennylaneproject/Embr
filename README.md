@@ -25,13 +25,21 @@ Turborepo monorepo with npm workspaces. Two main applications (`apps/api`, `apps
 
 ## Development
 
+See [ONBOARDING.md](./ONBOARDING.md) for full setup instructions, including the
+**two-role database setup** (`embr` superuser for migrations, `embr_app`
+least-privilege role for the API — required for Row-Level Security to be
+exercised locally).
+
 ```bash
 # Prerequisites: Docker must be running (for PostgreSQL + Redis)
 npm install
-cp .env.example .env   # fill in values
+cp .env.example .env   # fill in values (DATABASE_URL uses embr_app, not embr)
 
 # Start infrastructure
 docker compose -f docker/docker-compose.yml up -d postgres redis
+
+# Run migrations (uses DIRECT_URL / embr superuser)
+npm run db:migrate:deploy
 
 # Start API (transpile-only — strict TS errors are a known WIP)
 cd apps/api
