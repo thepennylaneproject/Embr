@@ -65,11 +65,77 @@ jobs:
       - name: Generate Prisma client
         run: npm run db:generate
 
+      # The add_rls_policies migration contains `GRANT CONNECT ON DATABASE embr
+      # TO embr_app` which is hardcoded to the production database name.  Create
+      # an `embr` database in the CI cluster so that GRANT succeeds when the
+      # migration runs against `embr_test`.
+      - name: Create embr database (migration GRANT CONNECT compatibility)
+        env:
+          PGPASSWORD: postgres
+        run: |
+          # Create the `embr` database only if it doesn't already exist.
+          # `\gexec` sends the SELECT result as a new SQL command, so it's a
+          # no-op (empty result set) when the DB exists and runs CREATE DATABASE
+          # otherwise.  The PGPASSWORD env provides the superuser password.
+          psql -U postgres -h localhost -p 5432 -c \
+            "SELECT 'CREATE DATABASE embr' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'embr')\gexec"
+
       - name: Run database migrations
         run: npm run db:migrate:deploy
 
       - name: Validate Prisma schema
         run: npm run db:validate
+
+      # ── RLS smoke check ──────────────────────────────────────────────────────
+      # Connects as the least-privilege `embr_app` role (non-superuser, subject
+      # to Row-Level Security) and asserts that an unauthenticated query against
+      # the "User" table returns zero rows.  This verifies that RLS policies
+      # created by the add_rls_policies migration are actually enforced and not
+      # silently bypassed by a superuser connection.
+
+      - name: Set up embr_app role for CI test database
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -U postgres -h localhost -p 5432 -d embr_test <<'SQL'
+            DO $$
+            BEGIN
+              IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'embr_app') THEN
+                CREATE ROLE embr_app WITH LOGIN PASSWORD 'embr_app_dev_password';
+              END IF;
+            END
+            $$;
+            GRANT CONNECT ON DATABASE embr_test TO embr_app;
+            GRANT USAGE ON SCHEMA public TO embr_app;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO embr_app;
+            GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO embr_app;
+          SQL
+
+      - name: RLS smoke check – embr_app cannot read User rows without session context
+        env:
+          PGPASSWORD: postgres
+        run: |
+          # Insert a sentinel row as the superuser (superuser bypasses RLS)
+          psql -U postgres -h localhost -p 5432 -d embr_test -c "
+            INSERT INTO \"User\" (id, email, username, \"passwordHash\", role, \"createdAt\", \"updatedAt\")
+            VALUES ('rls-smoke-test-id', 'rls-smoke@test.local', 'rls_smoke_user', 'x', 'user', NOW(), NOW())
+            ON CONFLICT (id) DO NOTHING;
+          "
+          # Connect as the least-privilege embr_app role (non-superuser, no session context)
+          # RLS is enforced: the service-bypass policy requires app.bypass_rls='on'
+          # and the select policy requires app.current_user_id to be set.
+          # Neither is set here, so embr_app must see 0 rows.
+          ROW_COUNT=$(PGPASSWORD=embr_app_dev_password psql -U embr_app -h localhost -p 5432 -d embr_test -t -A -c \
+            "SELECT COUNT(*) FROM \"User\";")
+          echo "embr_app unauthenticated row count: ${ROW_COUNT}"
+          # Clean up sentinel row (as superuser)
+          psql -U postgres -h localhost -p 5432 -d embr_test -c \
+            "DELETE FROM \"User\" WHERE id = 'rls-smoke-test-id';"
+          if [ "${ROW_COUNT}" != "0" ]; then
+            echo "FAIL: embr_app can read User rows without a session context – RLS is not enforced."
+            exit 1
+          fi
+          echo "PASS: RLS is enforced for embr_app."
 
       # ── API ──────────────────────────────────────────────────────────────────
 

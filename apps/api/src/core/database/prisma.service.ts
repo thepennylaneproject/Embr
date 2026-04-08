@@ -24,9 +24,14 @@ export interface PrismaService extends PrismaClient {}
  * Both operations share the same PostgreSQL connection, so `SET LOCAL` is
  * scoped to that transaction and automatically reset when it commits.
  *
- * For unauthenticated or service-mode contexts the interceptor sets
- * `app.bypass_rls = 'on'` instead, which matches the service-bypass policy
- * defined on every table.
+ * For service-mode contexts the interceptor sets `app.bypass_rls = 'on'`
+ * instead, which matches the service-bypass policy defined on every table.
+ * For unauthenticated HTTP requests `app.current_user_id` is set to an empty
+ * string so RLS policies that require a non-null user ID will deny access.
+ *
+ * If no ALS context has been established at all (i.e. code runs outside of
+ * `runWithUser` / `runAsService`) the extension throws to fail closed and
+ * prevent silent privilege escalation.
  *
  * Direct `withUserContext` / `withServiceContext` helpers are also exposed for
  * service code that needs to manage context explicitly (e.g. background jobs).
@@ -71,8 +76,18 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
           }) {
             const ctx = rlsCtx.getContext();
 
-            if (ctx?.bypass) {
-              // Service mode – bypass RLS
+            // No ALS context at all — fail closed to prevent silent privilege
+            // escalation. Every Prisma operation must run inside an explicit
+            // RlsContextService.runWithUser() or runAsService() scope.
+            if (ctx === null) {
+              throw new Error(
+                'No RLS context found. Every Prisma operation must run inside ' +
+                  'RlsContextService.runWithUser() or RlsContextService.runAsService().',
+              );
+            }
+
+            if (ctx.bypass) {
+              // Explicit service mode – bypass RLS
               const [, result] = await base.$transaction([
                 base.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`,
                 query(args),
@@ -80,7 +95,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
               return result;
             }
 
-            if (ctx?.userId) {
+            if (ctx.userId) {
               // Authenticated user – enforce RLS with their ID
               const [, result] = await base.$transaction([
                 base.$executeRaw`SELECT set_config('app.current_user_id', ${ctx.userId}, true)`,
@@ -89,10 +104,11 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
               return result;
             }
 
-            // No context set (startup, health checks, etc.) – run as service bypass
-            // to avoid breaking existing code paths that don't set context yet.
+            // Explicit unauthenticated context (userId is null, bypass is false).
+            // Set current_user_id to empty string so RLS policies that require a
+            // real user ID will deny access rather than granting bypass.
             const [, result] = await base.$transaction([
-              base.$executeRaw`SELECT set_config('app.bypass_rls', 'on', true)`,
+              base.$executeRaw`SELECT set_config('app.current_user_id', '', true)`,
               query(args),
             ]);
             return result;
