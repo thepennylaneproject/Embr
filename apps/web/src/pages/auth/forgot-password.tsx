@@ -59,8 +59,9 @@ export default function ForgotPasswordPage() {
                   autoComplete="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
+                  aria-describedby={error ? 'email-error' : undefined}
                 />
-                {error ? <p className="ui-error-text">{error}</p> : null}
+                {error ? <p id="email-error" role="alert" className="ui-error-text">{error}</p> : null}
                 <div style={{ marginTop: '0.8rem' }}>
                   <Button type="submit" fullWidth disabled={loading}>
                     {loading ? copy.onboarding.sending : copy.onboarding.sendResetLink}
