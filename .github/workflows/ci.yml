@@ -155,6 +155,12 @@ jobs:
       - name: Test API (unit)
         run: npm --prefix apps/api run test:unit
 
+      # The API has pre-existing lint violations. Non-blocking until those are
+      # resolved; new violations are still surfaced in PR diffs.
+      - name: Lint API (non-blocking – pre-existing lint violations)
+        run: npm --prefix apps/api run lint
+        continue-on-error: true
+
       # ── Web ──────────────────────────────────────────────────────────────────
 
       # Build first so next-env.d.ts is generated before tsc runs.
