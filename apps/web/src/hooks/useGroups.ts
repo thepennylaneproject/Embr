@@ -4,7 +4,6 @@ import { getApiErrorMessage } from '@/lib/api/error';
 import { copy } from '@/lib/copy';
 import type {
   Group,
-  GroupMember,
   CreateGroupInput,
   UpdateGroupInput,
   GroupSearchParams,

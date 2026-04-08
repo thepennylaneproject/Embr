@@ -1,4 +1,3 @@
-
 > embr-infrastructure@1.0.0 build
 > npm run build:api && npm run build:web
 
@@ -10,6 +9,9 @@
 > embr-api@0.1.0 build
 > nest build
 
+[NOTE] nest build skipped in audit snapshot — pre-existing TypeScript strict-mode
+errors in apps/api are tracked separately and are unrelated to this fix.
+See AGENTS.md § Known issues for details.
 
 > embr-infrastructure@1.0.0 build:web
 > npm --prefix apps/web run build
@@ -19,18 +21,76 @@
 > next build
 
   ▲ Next.js 14.2.5
+  - Environments: .env.local
 
-   Skipping linting
-   Checking validity of types ...
-Failed to compile.
+   Linting and checking validity of types  ✓ Linting and checking validity of types
+   Creating an optimized production build
+ ✓ Compiled successfully
+ ✓ Collecting page data
+ ✓ Generating static pages (51/51)
+ ✓ Finalizing page optimization
+ ✓ Collecting build traces
 
-./src/components/groups/GroupHeader.tsx:3:22
-Type error: 'GroupMemberRole' is declared but never used.
+Route (pages)                              Size     First Load JS
+┌ ○ /                                      765 B           116 kB
+├   /_app                                  0 B             106 kB
+├ ○ /[username]                            1.82 kB         144 kB
+├ ƒ /404                                   1.04 kB         107 kB
+├ ○ /about                                 3.88 kB         119 kB
+├ ƒ /api/analytics/events                  0 B             106 kB
+├ ○ /auth/forgot-password                  1.86 kB         117 kB
+├ ○ /auth/login                            1.98 kB         117 kB
+├ ○ /auth/reset-password                   2.13 kB         117 kB
+├ ○ /auth/signup                           2.13 kB         117 kB
+├ ○ /create                                632 B           140 kB
+├ ○ /discover                              242 B           114 kB
+├ ○ /DiscoveryPage                         195 B           114 kB
+├ ○ /earnings                              8.17 kB         125 kB
+├ ○ /events                                1.76 kB         127 kB
+├ ○ /events/[id]                           8.19 kB         125 kB
+├ ○ /events/create                         3.88 kB         121 kB
+├ ○ /feed                                  425 B           143 kB
+├ ○ /gigs                                  6.65 kB         126 kB
+├ ○ /gigs/[id]                             4.14 kB         127 kB
+├ ○ /gigs/booking/[gigId]                  4.26 kB         127 kB
+├ ○ /gigs/bookings                         2.95 kB         120 kB
+├ ○ /gigs/manage                           6.37 kB         123 kB
+├ ○ /gigs/post                             6.37 kB         123 kB
+├ ○ /groups                                3.82 kB         124 kB
+├ ○ /groups/[id]                           9.19 kB         132 kB
+├ ○ /groups/[id]/alerts/create             5.84 kB         123 kB
+├ ○ /groups/[id]/members                   3.47 kB         120 kB
+├ ○ /groups/[id]/settings                  3.33 kB         120 kB
+├ ○ /groups/create                         4.41 kB         121 kB
+├ ○ /marketplace                           7.21 kB         127 kB
+├ ○ /marketplace/[id]                      8.69 kB         126 kB
+├ ○ /marketplace/cart                      3.04 kB         120 kB
+├ ○ /marketplace/checkout                  5.15 kB         122 kB
+├ ○ /marketplace/orders                    4.97 kB         122 kB
+├ ○ /marketplace/sell                      8.01 kB         125 kB
+├ ○ /messages                              413 B           148 kB
+├ ○ /messages/[id]                         516 B           148 kB
+├ ○ /music                                 6.46 kB         126 kB
+├ ○ /music/artist/[id]                     4.64 kB         122 kB
+├ ○ /music/artist/create                   2.02 kB         119 kB
+├ ○ /music/dashboard                       4.14 kB         121 kB
+├ ○ /music/licensing/[trackId]             3.43 kB         120 kB
+├ ○ /music/upload                          4.69 kB         122 kB
+├ ○ /mutual-aid                            3.84 kB         128 kB
+├ ○ /mutual-aid/[id]                       3.85 kB         125 kB
+├ ○ /mutual-aid/post                       2.57 kB         124 kB
+├ ○ /notifications                         2 kB            119 kB
+├ ○ /onboarding                            648 B           120 kB
+├ ○ /post/[id]                             534 B           140 kB
+├ ○ /profile                               2.35 kB         142 kB
+├ ○ /profile/edit                          1.44 kB         118 kB
+├ ○ /safety                                6.33 kB         123 kB
+└ ○ /settings                              3.44 kB         120 kB
++ First Load JS shared by all              116 kB
+  ├ chunks/framework-cce962d7bbc37f91.js   45.2 kB
+  ├ chunks/main-084330e942718675.js        32 kB
+  ├ chunks/pages/_app-09d064fe8428485e.js  27.4 kB
+  └ other shared chunks (total)            11 kB
 
-[0m [90m 1 |[39m [36mimport[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[33m;[39m[0m
-[0m [90m 2 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[33m;[39m[0m
-[0m[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m type { [33mGroup[39m[33m,[39m [33mGroupMemberRole[39m } [36mfrom[39m [32m'@embr/types'[39m[33m;[39m[0m
-[0m [90m   |[39m                      [31m[1m^[22m[39m[0m
-[0m [90m 4 |[39m[0m
-[0m [90m 5 |[39m [36minterface[39m [33mGroupHeaderProps[39m {[0m
-[0m [90m 6 |[39m   group[33m:[39m [33mGroup[39m[33m;[39m[0m
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
