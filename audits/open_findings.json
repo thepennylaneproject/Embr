@@ -1,14 +1,14 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-04-07T17:00:00Z",
-  "run_id": "synthesizer-v2-20260310-011114",
+  "last_updated": "2026-04-27T22:41:34Z",
+  "run_id": "synthesized-20260427-223921",
   "open_findings": [
     {
       "finding_id": "f-schema-nullable-walletid-001",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "Transaction and Payout tables have walletId foreign key field but schema marks as nullable",
       "agent": "schema-auditor",
       "history": [
@@ -35,8 +35,48 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-75): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Marked fixed_verified based on this audit pass evidence."
+        },
+        {
+          "timestamp": "2026-04-27T22:41:34Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "fixed_pending_verify",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
         }
-      ]
+      ],
+      "description": "Transaction and Payout tables have walletId foreign key field but schema marks as nullable",
+      "category": "schema-integrity",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "data_shape",
+          "summary": "Prisma schema now declares Transaction.walletId and Payout.walletId as required String fields.",
+          "file": "apps/api/prisma/schema.prisma",
+          "symbol": "Transaction.walletId/Payout.walletId"
+        },
+        {
+          "hook_type": "query",
+          "summary": "Migration backfills unresolved rows and ALTERs both columns SET NOT NULL.",
+          "file": "apps/api/prisma/migrations/20260317000000_enforce_walletid_not_null/migration.sql"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-schema-monetary-cents-001",
@@ -106,7 +146,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "Monetary amount fields (Wallet, Transaction, Tip, Payout) lack NOT NULL or CHECK constraints in schema",
       "agent": "schema-auditor",
       "history": [
@@ -133,8 +173,42 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-79): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Marked fixed_verified based on this audit pass evidence."
+        },
+        {
+          "timestamp": "2026-04-27T22:41:34Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "fixed_pending_verify",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
         }
-      ]
+      ],
+      "description": "Monetary amount fields (Wallet, Transaction, Tip, Payout) lack NOT NULL or CHECK constraints in schema",
+      "category": "schema-integrity",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "query",
+          "summary": "Wallet, Transaction, Tip, and Payout amount fields now have positive/non-negative CHECK constraints.",
+          "file": "apps/api/prisma/migrations/20260317000000_add_monetary_amount_check_constraints/migration.sql"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-schema-orphaned-refs-transaction-user-001",
@@ -308,7 +382,7 @@
       "type": "enhancement",
       "severity": "major",
       "priority": "P1",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "Environment variables are not validated at startup; missing or invalid vars could cause runtime crashes hours after boot",
       "agent": "synthesizer",
       "history": [
@@ -335,15 +409,56 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-87): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Marked fixed_verified based on this audit pass evidence."
+        },
+        {
+          "timestamp": "2026-04-27T22:41:34Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "fixed_pending_verify",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
         }
-      ]
+      ],
+      "description": "Environment variables are not validated at startup; missing or invalid vars could cause runtime crashes hours after boot",
+      "category": "deploy-risk",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "AppModule loads ConfigModule with envValidationSchema and abortEarly=false.",
+          "file": "apps/api/src/app.module.ts",
+          "symbol": "ConfigModule.forRoot"
+        },
+        {
+          "hook_type": "config_key",
+          "summary": "env.validation.ts requires DATABASE_URL, JWT_SECRET, JWT_REFRESH_SECRET and validates production URLs/cookies.",
+          "file": "apps/api/src/config/env.validation.ts",
+          "symbol": "envValidationSchema"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-deploy-web-env-validation-001",
       "type": "enhancement",
       "severity": "minor",
       "priority": "P2",
-      "status": "accepted",
+      "status": "fixed_verified",
       "title": "Next.js web app does not validate required NEXT_PUBLIC_API_URL at build time",
       "agent": "synthesizer",
       "history": [
@@ -352,8 +467,43 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-88): Todo -> accepted"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Marked fixed_verified based on this audit pass evidence."
+        },
+        {
+          "timestamp": "2026-04-27T22:41:34Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "accepted",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
         }
-      ]
+      ],
+      "description": "Next.js web app does not validate required NEXT_PUBLIC_API_URL at build time",
+      "category": "deploy-risk",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Web next.config.js validates NEXT_PUBLIC_API_URL at build/start and throws on missing/invalid values.",
+          "file": "apps/web/next.config.js",
+          "symbol": "validateRequiredEnv"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-deploy-logging-structured-001",
@@ -370,7 +520,26 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-89): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "API logging uses NestJS built-in Logger (console-based) instead of structured JSON logging",
+      "category": "deploy-risk",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-deploy-sentry-not-configured-001",
@@ -387,14 +556,33 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-90): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "Sentry error reporting is not configured; production errors are not sent to external service",
+      "category": "deploy-risk",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-deploy-docker-prod-config-missing-001",
       "type": "question",
       "severity": "minor",
       "priority": "P2",
-      "status": "accepted",
+      "status": "fixed_verified",
       "title": "Production Docker compose config (docker-compose.prod.yml) is referenced in deploy.yml but not found in repo",
       "agent": "synthesizer",
       "history": [
@@ -403,8 +591,42 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-91): Todo -> accepted"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Marked fixed_verified based on this audit pass evidence."
+        },
+        {
+          "timestamp": "2026-04-27T22:41:34Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "accepted",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
         }
-      ]
+      ],
+      "description": "Production Docker compose config (docker-compose.prod.yml) is referenced in deploy.yml but not found in repo",
+      "category": "deploy-risk",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "docker/docker-compose.prod.yml exists and defines production services/health checks.",
+          "file": "docker/docker-compose.prod.yml"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-deploy-db-migration-rollback-001",
@@ -421,7 +643,26 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-92): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "Database migration rollback plan is not documented; failed deployments could leave database in inconsistent state",
+      "category": "deploy-risk",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-deploy-csp-unsafe-inline-001",
@@ -438,7 +679,26 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-93): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "Content Security Policy in web app uses unsafe-inline for scripts and styles; overly permissive for production",
+      "category": "deploy-risk",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-deploy-no-rollback-strategy-001",
@@ -447,7 +707,34 @@
       "priority": "P2",
       "status": "open",
       "title": "No automated rollback strategy if deployment health check fails",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ],
+      "description": "No automated rollback strategy if deployment health check fails",
+      "category": "deploy-risk",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-log-001",
@@ -499,7 +786,26 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-96): In Review -> fixed_pending_verify"
         }
-      ]
+      ],
+      "description": "Potential null dereference in conversation deletion without soft-delete",
+      "category": "runtime-logic",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-log-003",
@@ -533,15 +839,47 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-97): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "verification_failed",
+          "notes": "Fix remains incomplete: profile update path can still fail and now duplicates counter increments."
         }
-      ]
+      ],
+      "description": "Follow user existence is checked, but the profile counter update path still calls tx.profile.update inside the transaction and then updateMany after the transaction. Missing profiles can still throw before the updateMany fallback, and the duplicate block creates counter drift.",
+      "category": "runtime-logic",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Target user existence is checked, but profile update still uses tx.profile.update inside the transaction.",
+          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "symbol": "FollowsService.followUser"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Post-transaction updateMany is present after the transaction, creating duplicate counter mutation.",
+          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "symbol": "lines 96-108"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-log-004",
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "Race condition in idempotency check for checkout (orders.service.ts)",
       "agent": "synthesizer",
       "history": [
@@ -568,8 +906,43 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-98): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Marked fixed_verified based on this audit pass evidence."
+        },
+        {
+          "timestamp": "2026-04-27T22:41:34Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "fixed_pending_verify",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
         }
-      ]
+      ],
+      "description": "Race condition in idempotency check for checkout (orders.service.ts)",
+      "category": "runtime-logic",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "checkout runs idempotency check and order creation in a Serializable transaction.",
+          "file": "apps/api/src/verticals/marketplace/services/orders.service.ts",
+          "symbol": "OrdersService.checkout"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-log-005",
@@ -578,25 +951,138 @@
       "priority": "P2",
       "status": "open",
       "title": "Silent notification failure in follows.service.ts",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ],
+      "description": "Silent notification failure in follows.service.ts",
+      "category": "runtime-logic",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-log-006",
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "status": "open",
+      "status": "fixed_verified",
       "title": "Unsafe access to messages[0] in markAsRead without bounds check",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Marked fixed_verified based on this audit pass evidence."
+        },
+        {
+          "timestamp": "2026-04-27T22:41:34Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "open",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
+        }
+      ],
+      "description": "Unsafe access to messages[0] in markAsRead without bounds check",
+      "category": "runtime-logic",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "markAsRead uses a ternary guard before reading conversation.messages[0] fields.",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "MessagingService.markAsRead"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-log-007",
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "status": "open",
+      "status": "fixed_verified",
       "title": "Missing await on rate limiter check (messaging.service.ts:445)",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Marked fixed_verified based on this audit pass evidence."
+        },
+        {
+          "timestamp": "2026-04-27T22:41:34Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "open",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
+        }
+      ],
+      "description": "Missing await on rate limiter check (messaging.service.ts:445)",
+      "category": "runtime-logic",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "sendMessage awaits rateLimiter.isAllowed before creating the message.",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "MessagingService.sendMessage"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-log-008",
@@ -613,7 +1099,26 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-102): In Review -> fixed_pending_verify"
         }
-      ]
+      ],
+      "description": "Unsafe property access in message sender mapping (messaging.service.ts:500)",
+      "category": "runtime-logic",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-log-009",
@@ -630,25 +1135,130 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-103): In Review -> fixed_pending_verify"
         }
-      ]
+      ],
+      "description": "Unhandled promise rejection in useMessaging hook error callback",
+      "category": "runtime-logic",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-log-010",
       "type": "bug",
       "severity": "minor",
       "priority": "P3",
-      "status": "open",
+      "status": "fixed_verified",
       "title": "Unsafe access to response.message in createConversation hook",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Marked fixed_verified based on this audit pass evidence."
+        },
+        {
+          "timestamp": "2026-04-27T22:41:34Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "open",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
+        }
+      ],
+      "description": "Unsafe access to response.message in createConversation hook",
+      "category": "runtime-logic",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "createConversation maps response.message with a null fallback instead of unsafe access.",
+          "file": "apps/web/src/hooks/useMessaging.ts",
+          "symbol": "createConversation"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-log-011",
-      "type": "dead_code",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
-      "status": "open",
+      "status": "fixed_verified",
       "title": "Unreachable code in markAsRead hook (useMessaging.ts:427-447)",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Marked fixed_verified based on this audit pass evidence."
+        },
+        {
+          "timestamp": "2026-04-27T22:41:34Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "open",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
+        }
+      ],
+      "description": "Unreachable code in markAsRead hook (useMessaging.ts:427-447)",
+      "category": "runtime-logic",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "markAsRead has reachable HTTP fallback and WebSocket ack branches with no unreachable post-return block.",
+          "file": "apps/web/src/hooks/useMessaging.ts",
+          "symbol": "markAsRead"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-log-012",
@@ -657,7 +1267,34 @@
       "priority": "P3",
       "status": "open",
       "title": "Unsafe access to data.conversationId in setMessages state update",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ],
+      "description": "Unsafe access to data.conversationId in setMessages state update",
+      "category": "runtime-logic",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-perf-001",
@@ -742,7 +1379,7 @@
     },
     {
       "finding_id": "f-perf-004",
-      "type": "performance",
+      "type": "debt",
       "severity": "major",
       "priority": "P2",
       "status": "accepted",
@@ -755,11 +1392,30 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-110): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "Frontend: Feed component may re-fetch on every dependency change without debounce",
+      "category": "cache-and-performance",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-perf-005",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
       "status": "accepted",
@@ -772,16 +1428,62 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-111): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "Cache service falls back to in-memory with no size limit, potential memory leak",
+      "category": "cache-and-performance",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-perf-006",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
       "status": "open",
       "title": "Cache service does not handle Redis connection failures gracefully in get/set",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ],
+      "description": "Cache service does not handle Redis connection failures gracefully in get/set",
+      "category": "cache-and-performance",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-perf-007",
@@ -808,7 +1510,7 @@
     },
     {
       "finding_id": "f-perf-008",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
       "status": "accepted",
@@ -821,7 +1523,26 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-114): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "API client always sends withCredentials=true, adds latency to preflight requests",
+      "category": "cache-and-performance",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-perf-009",
@@ -854,7 +1575,7 @@
     },
     {
       "finding_id": "f-perf-010",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
       "status": "accepted",
@@ -867,11 +1588,30 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-116): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "Frontend: Images in pages lack optimization, no Next.js Image component used consistently",
+      "category": "cache-and-performance",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-perf-011",
-      "type": "cost",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
       "status": "accepted",
@@ -884,16 +1624,62 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-117): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "Stripe SDK imported but stripe-connect.service appears disabled",
+      "category": "cache-and-performance",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-perf-012",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
       "status": "open",
       "title": "Messaging hook creates Socket.io connections without connection pooling",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ],
+      "description": "Messaging hook creates Socket.io connections without connection pooling",
+      "category": "cache-and-performance",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-perf-013",
@@ -920,12 +1706,39 @@
     },
     {
       "finding_id": "f-perf-014",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
       "status": "open",
       "title": "Rating limiter service may not scale to distributed deployments",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ],
+      "description": "Rating limiter service may not scale to distributed deployments",
+      "category": "cache-and-performance",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-perf-015",
@@ -952,7 +1765,7 @@
     },
     {
       "finding_id": "f-perf-016",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
       "status": "accepted",
@@ -965,20 +1778,66 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-122): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "Prisma client instantiated without connection pooling configuration",
+      "category": "cache-and-performance",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-perf-017",
-      "type": "cost",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
       "status": "open",
       "title": "AWS SES email service may incur high costs if sending to unvalidated addresses",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ],
+      "description": "AWS SES email service may incur high costs if sending to unvalidated addresses",
+      "category": "cache-and-performance",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-perf-018",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P2",
       "status": "accepted",
@@ -991,7 +1850,26 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-124): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "Next.js image remotePatterns allows wildcard subdomains, may bypass CDN optimization",
+      "category": "cache-and-performance",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-perf-019",
@@ -1024,12 +1902,39 @@
     },
     {
       "finding_id": "f-perf-020",
-      "type": "performance",
+      "type": "debt",
       "severity": "minor",
       "priority": "P3",
       "status": "open",
       "title": "Query: Mux video API usage metering and cost tracking not visible",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ],
+      "description": "Query: Mux video API usage metering and cost tracking not visible",
+      "category": "cache-and-performance",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "sec-001",
@@ -1157,7 +2062,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "CORS credentials exposed with loose origin validation",
       "agent": "synthesizer",
       "history": [
@@ -1166,24 +2071,102 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-132): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Marked fixed_verified based on this audit pass evidence."
+        },
+        {
+          "timestamp": "2026-04-27T22:41:34Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "fixed_pending_verify",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
         }
-      ]
+      ],
+      "description": "CORS credentials exposed with loose origin validation",
+      "category": "auth-and-privacy",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "config_key",
+          "summary": "ALLOWED_ORIGINS is parsed from explicit config and credentials are not paired with wildcard origin in main CORS setup.",
+          "file": "apps/api/src/main.ts",
+          "symbol": "CORS setup"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "sec-007",
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "status": "open",
+      "status": "fixed_verified",
       "title": "Account enumeration vulnerability via forgot-password and email verification endpoints",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Marked fixed_verified based on this audit pass evidence."
+        },
+        {
+          "timestamp": "2026-04-27T22:41:34Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "open",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
+        }
+      ],
+      "description": "Account enumeration vulnerability via forgot-password and email verification endpoints",
+      "category": "auth-and-privacy",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "forgot-password and resend-verification return generic success messages regardless of account existence.",
+          "file": "apps/api/src/core/auth/auth.controller.ts",
+          "symbol": "forgotPassword/resendVerification"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "sec-008",
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "Google OAuth redirect validation incomplete\u2014OPEN_REDIRECT risk if FRONTEND_URL env not set",
       "agent": "synthesizer",
       "history": [
@@ -1192,8 +2175,43 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-134): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Marked fixed_verified based on this audit pass evidence."
+        },
+        {
+          "timestamp": "2026-04-27T22:41:34Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "fixed_pending_verify",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
         }
-      ]
+      ],
+      "description": "Google OAuth redirect validation incomplete\u2014OPEN_REDIRECT risk if FRONTEND_URL env not set",
+      "category": "auth-and-privacy",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Google OAuth callback returns 503 when FRONTEND_URL is missing before constructing redirect.",
+          "file": "apps/api/src/core/auth/auth.controller.ts",
+          "symbol": "googleAuthCallback"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "sec-009",
@@ -1202,7 +2220,34 @@
       "priority": "P2",
       "status": "open",
       "title": "No rate limiting on login endpoint\u2014brute force vulnerability",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ],
+      "description": "No rate limiting on login endpoint\u2014brute force vulnerability",
+      "category": "auth-and-privacy",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "sec-010",
@@ -1211,7 +2256,34 @@
       "priority": "P2",
       "status": "open",
       "title": "Password reset token leak in email\u2014user ID embedded in plaintext token",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ],
+      "description": "Password reset token leak in email\u2014user ID embedded in plaintext token",
+      "category": "auth-and-privacy",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "sec-011",
@@ -1220,7 +2292,34 @@
       "priority": "P3",
       "status": "open",
       "title": "Seed account credentials documented in AGENTS.md allow unauthorized access",
-      "agent": "synthesizer"
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ],
+      "description": "Seed account credentials documented in AGENTS.md allow unauthorized access",
+      "category": "auth-and-privacy",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-copy-001",
@@ -1306,7 +2405,26 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-141): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "Inconsistent empty state messaging across list views",
+      "category": "ux-flow",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-a11y-001",
@@ -1347,7 +2465,26 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-142): In Review -> fixed_pending_verify"
         }
-      ]
+      ],
+      "description": "Missing alt text on decorative images and avatars",
+      "category": "ux-flow",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-flow-002",
@@ -1379,7 +2516,34 @@
       "priority": "P2",
       "status": "open",
       "title": "Messaging compose modal lacks clear confirmation feedback",
-      "agent": "ux-flow-auditor"
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ],
+      "description": "Messaging compose modal lacks clear confirmation feedback",
+      "category": "ux-flow",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-error-001",
@@ -1419,7 +2583,26 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-146): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "Custom button implementations lack proper ARIA labels and keyboard support",
+      "category": "ux-flow",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-flow-004",
@@ -1459,7 +2642,26 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-148): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "Mixed tone in CTAs: 'Join the Feed' vs 'Go to feed' vs 'Continue to feed'",
+      "category": "ux-flow",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-flow-005",
@@ -1499,7 +2701,26 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-150): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "Post creation doesn't clear state or show success confirmation",
+      "category": "ux-flow",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-a11y-003",
@@ -1516,7 +2737,26 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-151): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "Form inputs lack associated labels in some components",
+      "category": "ux-flow",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-error-002",
@@ -1533,7 +2773,26 @@
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-152): Todo -> accepted"
         }
-      ]
+      ],
+      "description": "Error messages don't provide recovery instructions",
+      "category": "ux-flow",
+      "confidence": "inference",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
     },
     {
       "finding_id": "f-a50b7176",
@@ -1570,6 +2829,162 @@
           "actor": "solo-dev",
           "event": "patch_applied",
           "notes": "Implemented per-user workspace isolation via WorkspacePolicy. All 20 isolation tests pass."
+        }
+      ],
+      "description": "Tool endpoints use one shared workspace for all authenticated users",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ]
+    },
+    {
+      "finding_id": "f-6ab75ad8",
+      "type": "bug",
+      "category": "counter-integrity",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Follow creation increments profile counters twice",
+      "description": "FollowsService.followUser increments follower/following profile counters inside the transaction, then immediately performs a second updateMany increment after the transaction. A successful follow can therefore add 2 to each denormalized counter for a single Follow row.",
+      "impact": "Follower/following counts drift upward and user profiles show inflated social proof; any ranking or recommendations based on these counters become unreliable.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Transaction increments both profile counters before returning the created Follow row.",
+          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "symbol": "lines 67-94"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "A second updateMany block increments the same follower/following counters again.",
+          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "symbol": "lines 96-108"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Remove the post-transaction updateMany block or replace the transaction updates with updateMany, but keep exactly one counter increment per successful Follow create.",
+        "affected_files": [
+          "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts"
+        ],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Add or run a follow/unfollow service test that asserts counters change by exactly one."
+        ]
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "runtime-bug-hunter",
+          "event": "created",
+          "notes": "Created during LYRA audit pass."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-eb108209",
+      "type": "bug",
+      "category": "expectation-violation",
+      "severity": "blocker",
+      "priority": "P0",
+      "confidence": "evidence",
+      "title": "Music phase-2 vertical is exposed in production UI without a feature flag",
+      "description": "The project expectations state that the Music phase-2 vertical must not be accessible or visible in production UI until backend models are complete. The web app includes public /music routes, an onboarding link to /music, and Music copy in product pages without an observed production feature flag gate.",
+      "impact": "Production users can enter an incomplete vertical, creating broken or misleading product flows and violating a critical launch constraint.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "/music renders MusicDiscoveryPage and exposes upload and artist-profile CTAs.",
+          "file": "apps/web/src/pages/music/index.tsx",
+          "symbol": "MusicDiscoveryPage"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Onboarding includes a Music step that links to /music.",
+          "file": "apps/web/src/components/onboarding/OnboardingWizard.tsx",
+          "symbol": "music step"
+        },
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Expectation 8.1 forbids exposing Music phase-2 in production without complete backend support.",
+          "file": "audits/expectations.md"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Gate all Music routes and navigation entries behind a production-safe feature flag until the vertical is explicitly ready, or document backend completeness and update the expectation.",
+        "affected_files": [
+          "apps/web/src/pages/music/index.tsx",
+          "apps/web/src/components/onboarding/OnboardingWizard.tsx",
+          "apps/web/src/lib/copy.ts"
+        ],
+        "estimated_effort": "medium",
+        "tests_needed": [
+          "Build web with the flag disabled and verify /music is not reachable from navigation/onboarding."
+        ]
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "ux-flow-auditor",
+          "event": "created",
+          "notes": "Created during LYRA audit pass."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-903a4164",
+      "type": "bug",
+      "category": "ci-gap",
+      "severity": "blocker",
+      "priority": "P0",
+      "confidence": "evidence",
+      "title": "CI and deploy web builds omit required NEXT_PUBLIC_WS_URL",
+      "description": "apps/web/next.config.js now throws when NEXT_PUBLIC_WS_URL is missing, but the CI Build Web step only sets NEXT_PUBLIC_API_URL and the deploy Build Web step sets neither public URL. In a clean GitHub Actions environment without apps/web/.env.local, next build will fail before deployment artifacts are produced.",
+      "impact": "Main-branch deploys can be blocked by environment validation even when application code compiles locally with a checked-in or local .env file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "next.config.js requires NEXT_PUBLIC_WS_URL during build/start.",
+          "file": "apps/web/next.config.js",
+          "symbol": "validateRequiredEnv"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "CI Build Web exports NEXT_PUBLIC_API_URL but not NEXT_PUBLIC_WS_URL.",
+          "file": ".github/workflows/ci.yml",
+          "symbol": "Build Web"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Deploy Build Web runs npm --prefix apps/web run build without NEXT_PUBLIC_* env.",
+          "file": ".github/workflows/deploy.yml",
+          "symbol": "Build Web"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Provide NEXT_PUBLIC_WS_URL and NEXT_PUBLIC_API_URL in CI/deploy build environments, preferably via repository/environment variables or explicit workflow env entries.",
+        "affected_files": [
+          ".github/workflows/ci.yml",
+          ".github/workflows/deploy.yml",
+          "apps/web/next.config.js"
+        ],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Run next build in a clean env with only the workflow-provided variables."
+        ]
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "build-deploy-auditor",
+          "event": "created",
+          "notes": "Created during LYRA audit pass."
         }
       ]
     }

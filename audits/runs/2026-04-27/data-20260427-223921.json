@@ -1,0 +1,215 @@
+{
+  "schema_version": "1.1.0",
+  "kind": "agent_output",
+  "run_id": "data-20260427-223921",
+  "run_metadata": {
+    "timestamp": "2026-04-27T22:39:21Z",
+    "branch": "cursor/audit-lyra-pass-37c2",
+    "commit": "4f2847b",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "gpt-5.5",
+    "preflight_artifacts": {
+      "test_output": "audits/artifacts/_run_/tests.txt",
+      "lint_output": "audits/artifacts/_run_/lint.txt",
+      "build_output": "audits/artifacts/_run_/build.txt",
+      "typecheck_output": "audits/artifacts/_run_/typecheck.txt",
+      "bundle_stats": "audits/artifacts/_run_/bundle-stats.txt"
+    }
+  },
+  "suite": "data",
+  "agent": {
+    "name": "schema-auditor",
+    "role": "Finds schema, migration, constraint, validation, and RLS/data-integrity defects.",
+    "inputs_used": [
+      "audits/expectations.md",
+      "audits/project.json",
+      "audits/open_findings.json",
+      "audits/artifacts/_run_/tests.txt",
+      "audits/artifacts/_run_/lint.txt",
+      "audits/artifacts/_run_/typecheck.txt",
+      "audits/artifacts/_run_/build.txt",
+      "audits/artifacts/_run_/bundle-stats.txt",
+      "audits/prompts/agent-data.md",
+      "apps/api/prisma/schema.prisma",
+      "apps/api/prisma/migrations/20260317000000_enforce_walletid_not_null/migration.sql",
+      "apps/api/prisma/migrations/20260317000000_add_monetary_amount_check_constraints/migration.sql",
+      "apps/api/prisma/migrations/20260316000000_add_rls_policies/migration.sql"
+    ],
+    "stop_conditions_hit": []
+  },
+  "coverage": {
+    "files_examined": [
+      "apps/api/prisma/schema.prisma",
+      "apps/api/prisma/migrations/20260317000000_enforce_walletid_not_null/migration.sql",
+      "apps/api/prisma/migrations/20260317000000_add_monetary_amount_check_constraints/migration.sql",
+      "apps/api/prisma/migrations/20260316000000_add_rls_policies/migration.sql"
+    ],
+    "files_skipped": [
+      "dist/** - generated output",
+      "node_modules/** - dependencies",
+      "playwright-report/** - generated report artifacts"
+    ],
+    "coverage_complete": true
+  },
+  "findings": [
+    {
+      "finding_id": "f-schema-nullable-walletid-001",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P1",
+      "status": "fixed_verified",
+      "title": "Transaction and Payout tables have walletId foreign key field but schema marks as nullable",
+      "agent": "schema-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-75): Todo -> accepted"
+        },
+        {
+          "timestamp": "2026-03-17T19:52:54Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-75): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-17T22:57:41Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-75): In Progress -> in_progress"
+        },
+        {
+          "timestamp": "2026-03-17T23:01:40Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-75): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "schema-auditor",
+          "event": "verification_passed",
+          "notes": "This audit pass found source/config evidence that the prior finding has been remediated."
+        }
+      ],
+      "confidence": "inference",
+      "category": "schema-integrity",
+      "description": "Transaction and Payout tables have walletId foreign key field but schema marks as nullable",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "data_shape",
+          "summary": "Prisma schema now declares Transaction.walletId and Payout.walletId as required String fields.",
+          "file": "apps/api/prisma/schema.prisma",
+          "symbol": "Transaction.walletId/Payout.walletId"
+        },
+        {
+          "hook_type": "query",
+          "summary": "Migration backfills unresolved rows and ALTERs both columns SET NOT NULL.",
+          "file": "apps/api/prisma/migrations/20260317000000_enforce_walletid_not_null/migration.sql"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-schema-validation-amount-001",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P1",
+      "status": "fixed_verified",
+      "title": "Monetary amount fields (Wallet, Transaction, Tip, Payout) lack NOT NULL or CHECK constraints in schema",
+      "agent": "schema-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-79): Todo -> accepted"
+        },
+        {
+          "timestamp": "2026-03-17T19:52:54Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-79): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-17T22:57:41Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-79): In Progress -> in_progress"
+        },
+        {
+          "timestamp": "2026-03-17T23:01:40Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-79): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "schema-auditor",
+          "event": "verification_passed",
+          "notes": "This audit pass found source/config evidence that the prior finding has been remediated."
+        }
+      ],
+      "confidence": "inference",
+      "category": "schema-integrity",
+      "description": "Monetary amount fields (Wallet, Transaction, Tip, Payout) lack NOT NULL or CHECK constraints in schema",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "query",
+          "summary": "Wallet, Transaction, Tip, and Payout amount fields now have positive/non-negative CHECK constraints.",
+          "file": "apps/api/prisma/migrations/20260317000000_add_monetary_amount_check_constraints/migration.sql"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    }
+  ],
+  "rollups": {
+    "by_severity": {
+      "blocker": 0,
+      "major": 2,
+      "minor": 0,
+      "nit": 0
+    },
+    "by_category": {
+      "schema-integrity": 2
+    },
+    "by_type": {
+      "bug": 2,
+      "enhancement": 0,
+      "debt": 0,
+      "question": 0
+    },
+    "by_status": {
+      "fixed_verified": 2
+    }
+  },
+  "next_actions": [
+    {
+      "action": "Verify and fix Transaction and Payout tables have walletId foreign key field but sche",
+      "finding_id": "f-schema-nullable-walletid-001",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix Monetary amount fields (Wallet, Transaction, Tip, Payout) lack NOT NUL",
+      "finding_id": "f-schema-validation-amount-001",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    }
+  ]
+}

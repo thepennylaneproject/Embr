@@ -1,0 +1,470 @@
+{
+  "schema_version": "1.1.0",
+  "kind": "agent_output",
+  "run_id": "ux-20260427-223921",
+  "run_metadata": {
+    "timestamp": "2026-04-27T22:39:21Z",
+    "branch": "cursor/audit-lyra-pass-37c2",
+    "commit": "4f2847b",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "gpt-5.5",
+    "preflight_artifacts": {
+      "test_output": "audits/artifacts/_run_/tests.txt",
+      "lint_output": "audits/artifacts/_run_/lint.txt",
+      "build_output": "audits/artifacts/_run_/build.txt",
+      "typecheck_output": "audits/artifacts/_run_/typecheck.txt",
+      "bundle_stats": "audits/artifacts/_run_/bundle-stats.txt"
+    }
+  },
+  "suite": "ux",
+  "agent": {
+    "name": "ux-flow-auditor",
+    "role": "Finds broken flows, copy inconsistencies, missing UI states, accessibility gaps, and navigation dead ends.",
+    "inputs_used": [
+      "audits/expectations.md",
+      "audits/project.json",
+      "audits/open_findings.json",
+      "audits/artifacts/_run_/tests.txt",
+      "audits/artifacts/_run_/lint.txt",
+      "audits/artifacts/_run_/typecheck.txt",
+      "audits/artifacts/_run_/build.txt",
+      "audits/artifacts/_run_/bundle-stats.txt",
+      "audits/prompts/agent-ux.md",
+      "apps/web/src/pages/**/*.tsx",
+      "apps/web/src/components/**/*.tsx",
+      "apps/web/src/lib/copy.ts",
+      "audits/expectations.md"
+    ],
+    "stop_conditions_hit": []
+  },
+  "coverage": {
+    "files_examined": [
+      "apps/web/src/pages/**/*.tsx",
+      "apps/web/src/components/**/*.tsx",
+      "apps/web/src/lib/copy.ts",
+      "audits/expectations.md"
+    ],
+    "files_skipped": [
+      "dist/** - generated output",
+      "node_modules/** - dependencies",
+      "playwright-report/** - generated report artifacts"
+    ],
+    "coverage_complete": true
+  },
+  "findings": [
+    {
+      "finding_id": "f-eb108209",
+      "type": "bug",
+      "category": "expectation-violation",
+      "severity": "blocker",
+      "priority": "P0",
+      "confidence": "evidence",
+      "title": "Music phase-2 vertical is exposed in production UI without a feature flag",
+      "description": "The project expectations state that the Music phase-2 vertical must not be accessible or visible in production UI until backend models are complete. The web app includes public /music routes, an onboarding link to /music, and Music copy in product pages without an observed production feature flag gate.",
+      "impact": "Production users can enter an incomplete vertical, creating broken or misleading product flows and violating a critical launch constraint.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "/music renders MusicDiscoveryPage and exposes upload and artist-profile CTAs.",
+          "file": "apps/web/src/pages/music/index.tsx",
+          "symbol": "MusicDiscoveryPage"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Onboarding includes a Music step that links to /music.",
+          "file": "apps/web/src/components/onboarding/OnboardingWizard.tsx",
+          "symbol": "music step"
+        },
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Expectation 8.1 forbids exposing Music phase-2 in production without complete backend support.",
+          "file": "audits/expectations.md"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Gate all Music routes and navigation entries behind a production-safe feature flag until the vertical is explicitly ready, or document backend completeness and update the expectation.",
+        "affected_files": [
+          "apps/web/src/pages/music/index.tsx",
+          "apps/web/src/components/onboarding/OnboardingWizard.tsx",
+          "apps/web/src/lib/copy.ts"
+        ],
+        "estimated_effort": "medium",
+        "tests_needed": [
+          "Build web with the flag disabled and verify /music is not reachable from navigation/onboarding."
+        ]
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "ux-flow-auditor",
+          "event": "created",
+          "notes": "Created during LYRA audit pass."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-flow-003",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P2",
+      "status": "open",
+      "title": "Messaging compose modal lacks clear confirmation feedback",
+      "agent": "ux-flow-auditor",
+      "confidence": "inference",
+      "category": "ux-flow",
+      "description": "Messaging compose modal lacks clear confirmation feedback",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-state-002",
+      "type": "bug",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "accepted",
+      "title": "Inconsistent empty state messaging across list views",
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-141): Todo -> accepted"
+        }
+      ],
+      "confidence": "inference",
+      "category": "ux-flow",
+      "description": "Inconsistent empty state messaging across list views",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-a11y-002",
+      "type": "bug",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "accepted",
+      "title": "Custom button implementations lack proper ARIA labels and keyboard support",
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-146): Todo -> accepted"
+        }
+      ],
+      "confidence": "inference",
+      "category": "ux-flow",
+      "description": "Custom button implementations lack proper ARIA labels and keyboard support",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-copy-002",
+      "type": "bug",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "accepted",
+      "title": "Mixed tone in CTAs: 'Join the Feed' vs 'Go to feed' vs 'Continue to feed'",
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-148): Todo -> accepted"
+        }
+      ],
+      "confidence": "inference",
+      "category": "ux-flow",
+      "description": "Mixed tone in CTAs: 'Join the Feed' vs 'Go to feed' vs 'Continue to feed'",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-state-003",
+      "type": "bug",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "accepted",
+      "title": "Post creation doesn't clear state or show success confirmation",
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-150): Todo -> accepted"
+        }
+      ],
+      "confidence": "inference",
+      "category": "ux-flow",
+      "description": "Post creation doesn't clear state or show success confirmation",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-a11y-003",
+      "type": "bug",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "accepted",
+      "title": "Form inputs lack associated labels in some components",
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-151): Todo -> accepted"
+        }
+      ],
+      "confidence": "inference",
+      "category": "ux-flow",
+      "description": "Form inputs lack associated labels in some components",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-error-002",
+      "type": "bug",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "accepted",
+      "title": "Error messages don't provide recovery instructions",
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-152): Todo -> accepted"
+        }
+      ],
+      "confidence": "inference",
+      "category": "ux-flow",
+      "description": "Error messages don't provide recovery instructions",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-a11y-001",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P1",
+      "status": "fixed_pending_verify",
+      "title": "Missing alt text on decorative images and avatars",
+      "agent": "ux-flow-auditor",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-142): Todo -> accepted"
+        },
+        {
+          "timestamp": "2026-03-17T19:52:54Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-142): In Progress -> in_progress"
+        },
+        {
+          "timestamp": "2026-03-17T20:32:20Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-142): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-17T22:57:41Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-142): In Progress -> in_progress"
+        },
+        {
+          "timestamp": "2026-03-17T23:01:40Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-142): In Review -> fixed_pending_verify"
+        }
+      ],
+      "confidence": "inference",
+      "category": "ux-flow",
+      "description": "Missing alt text on decorative images and avatars",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    }
+  ],
+  "rollups": {
+    "by_severity": {
+      "blocker": 1,
+      "major": 2,
+      "minor": 6,
+      "nit": 0
+    },
+    "by_category": {
+      "expectation-violation": 1,
+      "ux-flow": 8
+    },
+    "by_type": {
+      "bug": 9,
+      "enhancement": 0,
+      "debt": 0,
+      "question": 0
+    },
+    "by_status": {
+      "open": 2,
+      "accepted": 6,
+      "fixed_pending_verify": 1
+    }
+  },
+  "next_actions": [
+    {
+      "action": "Verify and fix Music phase-2 vertical is exposed in production UI without a feature f",
+      "finding_id": "f-eb108209",
+      "rationale": "Production users can enter an incomplete vertical, creating broken or misleading product flows and violating a critical launch constraint."
+    },
+    {
+      "action": "Verify and fix Missing alt text on decorative images and avatars",
+      "finding_id": "f-a11y-001",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix Messaging compose modal lacks clear confirmation feedback",
+      "finding_id": "f-flow-003",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix Inconsistent empty state messaging across list views",
+      "finding_id": "f-state-002",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix Custom button implementations lack proper ARIA labels and keyboard sup",
+      "finding_id": "f-a11y-002",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    }
+  ]
+}
