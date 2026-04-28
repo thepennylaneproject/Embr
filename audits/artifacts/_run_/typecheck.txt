@@ -1,10 +1,5 @@
-> embr-infrastructure@1.0.0 typecheck:api
-> npm run build:types && npm run typecheck -w embr-api
-
-[NOTE] API typecheck contains pre-existing strict-mode errors (unrelated to this fix).
-See AGENTS.md § Known issues for details.
-
-Web TypeScript check (apps/web):
-tsc --noEmit -p apps/web/tsconfig.json
-
-No errors found. TypeScript check passed.
+npm error Missing script: "typecheck"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: /Users/sarahsahl/.npm/_logs/2026-04-27T22_30_29_863Z-debug-0.log
