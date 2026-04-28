@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-04-27T22:41:34Z",
+  "last_updated": "2026-04-28T01:19:50Z",
   "run_id": "synthesized-20260427-223921",
   "open_findings": [
     {
@@ -758,7 +758,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "Potential null dereference in conversation deletion without soft-delete",
       "agent": "synthesizer",
       "history": [
@@ -785,17 +785,39 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-96): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-28T01:17:00Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Verified by source review: deleteConversation uses soft-delete and guards missing/deleted conversations before participant access."
+        },
+        {
+          "timestamp": "2026-04-28T01:19:13Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "fixed_pending_verify",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
         }
       ],
-      "description": "Potential null dereference in conversation deletion without soft-delete",
+      "description": "Conversation deletion now checks that the conversation exists and is not already soft-deleted before accessing participant fields, then soft-deletes by setting deletedAt and maps Prisma P2025 races to NotFoundException.",
       "category": "runtime-logic",
-      "confidence": "inference",
-      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "confidence": "evidence",
+      "impact": "The delete path no longer dereferences a missing conversation and no longer hard-deletes the row; concurrent delete races return a controlled not-found response.",
       "proof_hooks": [
         {
-          "hook_type": "artifact_ref",
-          "summary": "Carried forward from audits/open_findings.json and existing case files.",
-          "file": "audits/open_findings.json"
+          "hook_type": "code_ref",
+          "summary": "deleteConversation fetches the conversation, throws NotFoundException when missing/deleted, validates participant membership, and updates deletedAt instead of deleting the row.",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "MessagingService.deleteConversation"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "The update is wrapped in a try/catch that converts Prisma P2025 into NotFoundException for concurrent missing/already-deleted rows.",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "P2025 handling"
         }
       ],
       "suggested_fix": {
@@ -812,7 +834,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "fixed_pending_verify",
+      "status": "open",
       "title": "Unsafe profile access in follows.service.ts without existence check",
       "agent": "synthesizer",
       "history": [
@@ -845,24 +867,39 @@
           "actor": "synthesizer",
           "event": "verification_failed",
           "notes": "Fix remains incomplete: profile update path can still fail and now duplicates counter increments."
+        },
+        {
+          "timestamp": "2026-04-28T01:17:00Z",
+          "actor": "synthesizer",
+          "event": "verification_failed",
+          "notes": "Verification failed: profile updates are still unsafe for missing Profile rows and now duplicate counter increments."
+        },
+        {
+          "timestamp": "2026-04-28T01:19:13Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "fixed_pending_verify",
+          "to_status": "open",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
         }
       ],
-      "description": "Follow user existence is checked, but the profile counter update path still calls tx.profile.update inside the transaction and then updateMany after the transaction. Missing profiles can still throw before the updateMany fallback, and the duplicate block creates counter drift.",
+      "description": "The target user existence check exists, but followUser still calls tx.profile.update for both users inside the transaction. If either Profile row is absent, Prisma can still throw before the later updateMany fallback runs. The later updateMany block also duplicates the counter increments when profiles do exist.",
       "category": "runtime-logic",
-      "confidence": "inference",
-      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "confidence": "evidence",
+      "impact": "Follow creation can still fail for users without Profile rows, and successful follows can inflate profile counters by two instead of one.",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "Target user existence is checked, but profile update still uses tx.profile.update inside the transaction.",
+          "summary": "The transaction uses tx.profile.update for follower and following profiles, which requires both Profile rows to exist.",
           "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
           "symbol": "FollowsService.followUser"
         },
         {
           "hook_type": "code_ref",
-          "summary": "Post-transaction updateMany is present after the transaction, creating duplicate counter mutation.",
+          "summary": "A second updateMany block increments the same counters again after the transaction, so the attempted fallback creates counter drift.",
           "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
-          "symbol": "lines 96-108"
+          "symbol": "post-transaction updateMany"
         }
       ],
       "suggested_fix": {
@@ -1089,7 +1126,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "Unsafe property access in message sender mapping (messaging.service.ts:500)",
       "agent": "synthesizer",
       "history": [
@@ -1098,17 +1135,39 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-102): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-28T01:17:00Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Verified by source review: sender is included in the Prisma result and the schema relation is required."
+        },
+        {
+          "timestamp": "2026-04-28T01:19:13Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "fixed_pending_verify",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
         }
       ],
-      "description": "Unsafe property access in message sender mapping (messaging.service.ts:500)",
+      "description": "The message sender mapping is backed by a Prisma create query that includes sender.profile, and the schema requires Message.senderId with a required sender relation. With that include shape, sender is materialized before the mapping reads sender.id, sender.username, and sender.profile.",
       "category": "runtime-logic",
-      "confidence": "inference",
-      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "confidence": "evidence",
+      "impact": "The reviewed sendMessage mapping has the sender relation included before response shaping, so the prior missing-include runtime access issue is resolved for this code path.",
       "proof_hooks": [
         {
-          "hook_type": "artifact_ref",
-          "summary": "Carried forward from audits/open_findings.json and existing case files.",
-          "file": "audits/open_findings.json"
+          "hook_type": "code_ref",
+          "summary": "message.create includes sender with nested profile before messageWithSender is built.",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "MessagingService.sendMessage"
+        },
+        {
+          "hook_type": "data_shape",
+          "summary": "Prisma schema declares Message.senderId as required and Message.sender as a required User relation with onDelete Cascade.",
+          "file": "apps/api/prisma/schema.prisma",
+          "symbol": "model Message.sender"
         }
       ],
       "suggested_fix": {
@@ -1125,7 +1184,7 @@
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "status": "fixed_pending_verify",
+      "status": "open",
       "title": "Unhandled promise rejection in useMessaging hook error callback",
       "agent": "synthesizer",
       "history": [
@@ -1134,17 +1193,39 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-103): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-28T01:17:00Z",
+          "actor": "synthesizer",
+          "event": "verification_failed",
+          "notes": "Verification failed: error callbacks are still invoked without guarding returned promises."
+        },
+        {
+          "timestamp": "2026-04-28T01:19:13Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "fixed_pending_verify",
+          "to_status": "open",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
         }
       ],
-      "description": "Unhandled promise rejection in useMessaging hook error callback",
+      "description": "useMessaging still invokes onError and onErrorRef.current directly from socket handlers and catch blocks. Because async functions are assignable to a void callback type in React/TypeScript, a rejecting async onError callback can still produce an unhandled promise rejection.",
       "category": "runtime-logic",
-      "confidence": "inference",
-      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "confidence": "evidence",
+      "impact": "Consumer-provided async error handlers can still reject outside the hook control flow, causing noisy unhandled rejections and potentially bypassing user-facing error recovery.",
       "proof_hooks": [
         {
-          "hook_type": "artifact_ref",
-          "summary": "Carried forward from audits/open_findings.json and existing case files.",
-          "file": "audits/open_findings.json"
+          "hook_type": "code_ref",
+          "summary": "UseMessagingOptions declares onError as a void callback, but async callbacks can still be passed by consumers.",
+          "file": "apps/web/src/hooks/useMessaging.ts",
+          "symbol": "UseMessagingOptions.onError"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Socket error handlers and catch blocks call onError/onErrorRef.current without Promise.resolve(...).catch handling.",
+          "file": "apps/web/src/hooks/useMessaging.ts",
+          "symbol": "onError calls"
         }
       ],
       "suggested_fix": {
@@ -2431,7 +2512,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "fixed_pending_verify",
+      "status": "open",
       "title": "Missing alt text on decorative images and avatars",
       "agent": "ux-flow-auditor",
       "history": [
@@ -2464,17 +2545,45 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-142): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-28T01:17:00Z",
+          "actor": "synthesizer",
+          "event": "verification_failed",
+          "notes": "Verification failed: remaining avatar/thumbnail images still use empty alt text in user-facing contexts."
+        },
+        {
+          "timestamp": "2026-04-28T01:19:13Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "fixed_pending_verify",
+          "to_status": "open",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
         }
       ],
-      "description": "Missing alt text on decorative images and avatars",
+      "description": "Several user/avatar or listing thumbnail images still use empty alt text, including DM inbox search results, attendee avatars, member avatars, and order listing thumbnails. Some decorative thumbnails may be acceptable, but interactive user/avatar images still need meaningful labels or an accessible text alternative tied to the control.",
       "category": "ux-flow",
-      "confidence": "inference",
-      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "confidence": "evidence",
+      "impact": "Screen reader users can encounter unlabeled visual identity cues in people-picking, attendee, member, and order contexts.",
       "proof_hooks": [
         {
-          "hook_type": "artifact_ref",
-          "summary": "Carried forward from audits/open_findings.json and existing case files.",
-          "file": "audits/open_findings.json"
+          "hook_type": "code_ref",
+          "summary": "DMInbox search-result avatar renders alt=\"\" inside an interactive user selection button.",
+          "file": "apps/web/src/components/messaging/DMInbox.tsx",
+          "symbol": "UserSearchModal"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "AttendeeList renders attendee avatar images with alt=\"\".",
+          "file": "apps/web/src/components/events/AttendeeList.tsx",
+          "symbol": "AttendeeList"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "OrderCard renders the listing thumbnail with alt=\"\".",
+          "file": "apps/web/src/components/marketplace/OrderCard.tsx",
+          "symbol": "OrderCard"
         }
       ],
       "suggested_fix": {
@@ -2799,7 +2908,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "Tool endpoints use one shared workspace for all authenticated users",
       "agent": "security-privacy-auditor",
       "category": "data-leakage",
@@ -2829,15 +2938,49 @@
           "actor": "solo-dev",
           "event": "patch_applied",
           "notes": "Implemented per-user workspace isolation via WorkspacePolicy. All 20 isolation tests pass."
+        },
+        {
+          "timestamp": "2026-04-28T01:17:00Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Verified by source review: all tool file operations are scoped by authenticated user_id."
+        },
+        {
+          "timestamp": "2026-04-28T01:19:13Z",
+          "actor": "ingest_synthesizer",
+          "event": "status_change",
+          "from_status": "fixed_pending_verify",
+          "to_status": "fixed_verified",
+          "source_run": "synthesized-20260427-223921",
+          "notes": "Status changed by synthesizer synthesized-20260427-223921"
         }
       ],
-      "description": "Tool endpoints use one shared workspace for all authenticated users",
-      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "description": "Tool endpoints now derive workspace paths from the authenticated JWT subject. WorkspacePolicy creates base_workspace_dir/user_id sandboxes, ToolService requires user_id on public file operations, and routes pass current_user.user_id from the auth dependency.",
+      "impact": "Authenticated users no longer share one filesystem workspace through these tool endpoints; traversal checks also prevent paths from escaping the per-user sandbox.",
       "proof_hooks": [
         {
-          "hook_type": "artifact_ref",
-          "summary": "Carried forward from audits/open_findings.json and existing case files.",
-          "file": "audits/open_findings.json"
+          "hook_type": "code_ref",
+          "summary": "WorkspacePolicy.workspace_root_for(user_id) creates and validates a per-user root under TOOL_WORKSPACE_BASE.",
+          "file": "backend/app/tools/policy.py",
+          "symbol": "WorkspacePolicy.workspace_root_for"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "ToolService public methods require user_id and resolve paths through WorkspacePolicy.safe_path.",
+          "file": "backend/app/tools/service.py",
+          "symbol": "ToolService"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Tool routes require CurrentUser and pass current_user.user_id into ToolService for list/read/write/delete operations.",
+          "file": "backend/app/api/routes/tools.py",
+          "symbol": "tools routes"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "get_current_user validates Bearer JWT and rejects missing sub before constructing AuthenticatedUser.",
+          "file": "backend/app/core/auth.py",
+          "symbol": "get_current_user"
         }
       ]
     },

@@ -361,7 +361,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "fixed_pending_verify",
+      "status": "open",
       "title": "Missing alt text on decorative images and avatars",
       "agent": "ux-flow-auditor",
       "history": [
@@ -394,17 +394,36 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-142): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-28T01:17:00Z",
+          "actor": "synthesizer",
+          "event": "verification_failed",
+          "notes": "Verification failed: remaining avatar/thumbnail images still use empty alt text in user-facing contexts."
         }
       ],
-      "confidence": "inference",
+      "confidence": "evidence",
       "category": "ux-flow",
-      "description": "Missing alt text on decorative images and avatars",
-      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "description": "Several user/avatar or listing thumbnail images still use empty alt text, including DM inbox search results, attendee avatars, member avatars, and order listing thumbnails. Some decorative thumbnails may be acceptable, but interactive user/avatar images still need meaningful labels or an accessible text alternative tied to the control.",
+      "impact": "Screen reader users can encounter unlabeled visual identity cues in people-picking, attendee, member, and order contexts.",
       "proof_hooks": [
         {
-          "hook_type": "artifact_ref",
-          "summary": "Carried forward from audits/open_findings.json and existing case files.",
-          "file": "audits/open_findings.json"
+          "hook_type": "code_ref",
+          "summary": "DMInbox search-result avatar renders alt=\"\" inside an interactive user selection button.",
+          "file": "apps/web/src/components/messaging/DMInbox.tsx",
+          "symbol": "UserSearchModal"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "AttendeeList renders attendee avatar images with alt=\"\".",
+          "file": "apps/web/src/components/events/AttendeeList.tsx",
+          "symbol": "AttendeeList"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "OrderCard renders the listing thumbnail with alt=\"\".",
+          "file": "apps/web/src/components/marketplace/OrderCard.tsx",
+          "symbol": "OrderCard"
         }
       ],
       "suggested_fix": {
@@ -435,9 +454,8 @@
       "question": 0
     },
     "by_status": {
-      "open": 2,
-      "accepted": 6,
-      "fixed_pending_verify": 1
+      "open": 3,
+      "accepted": 6
     }
   },
   "next_actions": [
