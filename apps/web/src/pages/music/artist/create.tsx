@@ -5,6 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedPageShell } from '@/components/layout';
 import { Button, Input, TextArea, useToast } from '@embr/ui';
 import apiClient from '@/lib/api/client';
+import { getMusicGateServerSideProps } from '@/lib/musicGate';
+
+export const getServerSideProps = getMusicGateServerSideProps;
 
 export default function CreateArtistPage() {
   const router = useRouter();

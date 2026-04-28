@@ -5,6 +5,9 @@ import { ProtectedPageShell } from '@/components/layout';
 import { TrackDiscovery } from '@/components/music/discovery/TrackDiscovery';
 import { FeatureHint } from '@/components/onboarding';
 import { Button } from '@embr/ui';
+import { getMusicGateServerSideProps } from '@/lib/musicGate';
+
+export const getServerSideProps = getMusicGateServerSideProps;
 
 export default function MusicDiscoveryPage() {
   const router = useRouter();

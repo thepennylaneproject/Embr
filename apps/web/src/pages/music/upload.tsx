@@ -5,6 +5,9 @@ import { ProtectedPageShell } from '@/components/layout';
 import { Button, Input, TextArea, useToast } from '@embr/ui';
 import { Music, Upload, X, Image } from 'lucide-react';
 import apiClient from '@/lib/api/client';
+import { getMusicGateServerSideProps } from '@/lib/musicGate';
+
+export const getServerSideProps = getMusicGateServerSideProps;
 
 const GENRES = [
   'Hip-Hop', 'R&B', 'Pop', 'Electronic', 'House', 'Techno', 'Trap',

@@ -5,6 +5,9 @@ import { ProtectedPageShell } from '@/components/layout';
 import { Button } from '@embr/ui';
 import { Music, CheckCircle, Lock, Share2 } from 'lucide-react';
 import apiClient from '@/lib/api/client';
+import { getMusicGateServerSideProps } from '@/lib/musicGate';
+
+export const getServerSideProps = getMusicGateServerSideProps;
 
 interface Track {
   id: string;

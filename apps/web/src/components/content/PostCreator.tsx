@@ -15,12 +15,15 @@ import { AnalyticsEvent } from '@/lib/analytics';
 import { clearDraft, readDraft, writeDraft } from '@/lib/draft';
 import { trackReliabilityEvent } from '@/lib/reliability';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
+import { isMusicEnabled } from '@/lib/features';
 
 // Lazy-load the music selector modal so it does not bloat the initial bundle
 const MusicSelectorModal = dynamic(
   () => import('@/components/music/MusicSelectorModal').then((m) => m.MusicSelectorModal),
   { ssr: false },
 );
+
+const musicEnabled = isMusicEnabled();
 
 interface PostCreatorProps {
   onPostCreated?: (postId: string) => void;
@@ -75,23 +78,28 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
     if (draft.content) setContent(draft.content);
     if (draft.visibility) setVisibility(draft.visibility);
     if (Array.isArray(draft.hashtags)) setHashtags(draft.hashtags);
-    if (draft.selectedMusic) setSelectedMusic(draft.selectedMusic);
+    if (musicEnabled && draft.selectedMusic) setSelectedMusic(draft.selectedMusic);
     setDraftStatus('restored');
     trackReliabilityEvent('draft_restored', { flow: 'post_creator' });
   }, []);
 
   useEffect(() => {
-    const hasDraftableContent = Boolean(content.trim() || mediaPreview || selectedMusic);
+    const hasDraftableContent = Boolean(content.trim() || mediaPreview || (musicEnabled && selectedMusic));
     if (!hasDraftableContent) {
       return;
     }
 
-    const didSave = writeDraft(draftKey, { content, visibility, hashtags, selectedMusic });
+    const didSave = writeDraft(draftKey, {
+      content,
+      visibility,
+      hashtags,
+      selectedMusic: musicEnabled ? selectedMusic : null,
+    });
     setDraftStatus(didSave ? 'saved' : 'error');
-  }, [content, visibility, hashtags, selectedMusic, mediaPreview]);
+  }, [content, visibility, hashtags, selectedMusic, mediaPreview, musicEnabled]);
 
   useUnsavedChangesGuard({
-    enabled: Boolean(content.trim() || mediaPreview || selectedMusic),
+    enabled: Boolean(content.trim() || mediaPreview || (musicEnabled && selectedMusic)),
   });
 
   const handleMediaSelect = useCallback((file: File) => {
@@ -184,7 +192,7 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
         };
       }
 
-      if (selectedMusic) {
+      if (musicEnabled && selectedMusic) {
         postData.musicTrackId = selectedMusic.id;
       }
 
@@ -210,7 +218,7 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
       console.error('Failed to create post:', err);
       trackReliabilityEvent('post_create_failed', { flow: 'post_creator' });
     }
-  }, [content, mediaFile, mediaType, visibility, hashtags, selectedMusic, uploadMedia, createPost, removeMedia, onPostCreated]);
+  }, [content, mediaFile, mediaType, visibility, hashtags, selectedMusic, musicEnabled, uploadMedia, createPost, removeMedia, onPostCreated]);
 
   const handleCancel = useCallback(() => {
     setContent('');
@@ -398,7 +406,7 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
       )}
 
       {/* MUSIC PREVIEW */}
-      {selectedMusic && (
+      {musicEnabled && selectedMusic && (
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -475,23 +483,25 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
               >
                 📹
               </button>
-              <button
-                onClick={() => setShowMusicModal(true)}
-                disabled={isCreating || isUploading}
-                title="Add music"
-                style={{
-                  padding: '8px',
-                  backgroundColor: selectedMusic ? '#fef3c7' : 'transparent',
-                  border: 'none',
-                  cursor: isCreating || isUploading ? 'not-allowed' : 'pointer',
-                  color: selectedMusic ? '#d97706' : '#666',
-                  fontSize: '18px',
-                  opacity: isCreating || isUploading ? 0.5 : 1,
-                  borderRadius: '4px',
-                }}
-              >
-                🎵
-              </button>
+              {musicEnabled && (
+                <button
+                  onClick={() => setShowMusicModal(true)}
+                  disabled={isCreating || isUploading}
+                  title="Add music"
+                  style={{
+                    padding: '8px',
+                    backgroundColor: selectedMusic ? '#fef3c7' : 'transparent',
+                    border: 'none',
+                    cursor: isCreating || isUploading ? 'not-allowed' : 'pointer',
+                    color: selectedMusic ? '#d97706' : '#666',
+                    fontSize: '18px',
+                    opacity: isCreating || isUploading ? 0.5 : 1,
+                    borderRadius: '4px',
+                  }}
+                >
+                  🎵
+                </button>
+              )}
             </>
           )}
 
@@ -561,12 +571,14 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
       </div>
 
       {/* MUSIC SELECTOR MODAL */}
-      <MusicSelectorModal
-        isOpen={showMusicModal}
-        onClose={() => setShowMusicModal(false)}
-        onSelect={setSelectedMusic}
-        selectedTrackId={selectedMusic?.id}
-      />
+      {musicEnabled && (
+        <MusicSelectorModal
+          isOpen={showMusicModal}
+          onClose={() => setShowMusicModal(false)}
+          onSelect={setSelectedMusic}
+          selectedTrackId={selectedMusic?.id}
+        />
+      )}
     </div>
   );
 };
