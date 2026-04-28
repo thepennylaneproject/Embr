@@ -1,0 +1,499 @@
+{
+  "schema_version": "1.1.0",
+  "kind": "agent_output",
+  "run_id": "deploy-20260427-223921",
+  "run_metadata": {
+    "timestamp": "2026-04-27T22:39:21Z",
+    "branch": "cursor/audit-lyra-pass-37c2",
+    "commit": "4f2847b",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "gpt-5.5",
+    "preflight_artifacts": {
+      "test_output": "audits/artifacts/_run_/tests.txt",
+      "lint_output": "audits/artifacts/_run_/lint.txt",
+      "build_output": "audits/artifacts/_run_/build.txt",
+      "typecheck_output": "audits/artifacts/_run_/typecheck.txt",
+      "bundle_stats": "audits/artifacts/_run_/bundle-stats.txt"
+    }
+  },
+  "suite": "deploy",
+  "agent": {
+    "name": "build-deploy-auditor",
+    "role": "Finds build, CI/CD, deployment safety, observability, logging, and environment-management gaps.",
+    "inputs_used": [
+      "audits/expectations.md",
+      "audits/project.json",
+      "audits/open_findings.json",
+      "audits/artifacts/_run_/tests.txt",
+      "audits/artifacts/_run_/lint.txt",
+      "audits/artifacts/_run_/typecheck.txt",
+      "audits/artifacts/_run_/build.txt",
+      "audits/artifacts/_run_/bundle-stats.txt",
+      "audits/prompts/agent-deploy.md",
+      ".github/workflows/ci.yml",
+      ".github/workflows/deploy.yml",
+      "apps/web/next.config.js",
+      "apps/api/src/config/env.validation.ts",
+      "docker/docker-compose.prod.yml",
+      "package.json",
+      "apps/api/package.json",
+      "apps/web/package.json"
+    ],
+    "stop_conditions_hit": []
+  },
+  "coverage": {
+    "files_examined": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/deploy.yml",
+      "apps/web/next.config.js",
+      "apps/api/src/config/env.validation.ts",
+      "docker/docker-compose.prod.yml",
+      "package.json",
+      "apps/api/package.json",
+      "apps/web/package.json"
+    ],
+    "files_skipped": [
+      "dist/** - generated output",
+      "node_modules/** - dependencies",
+      "playwright-report/** - generated report artifacts"
+    ],
+    "coverage_complete": true
+  },
+  "findings": [
+    {
+      "finding_id": "f-903a4164",
+      "type": "bug",
+      "category": "ci-gap",
+      "severity": "blocker",
+      "priority": "P0",
+      "confidence": "evidence",
+      "title": "CI and deploy web builds omit required NEXT_PUBLIC_WS_URL",
+      "description": "apps/web/next.config.js now throws when NEXT_PUBLIC_WS_URL is missing, but the CI Build Web step only sets NEXT_PUBLIC_API_URL and the deploy Build Web step sets neither public URL. In a clean GitHub Actions environment without apps/web/.env.local, next build will fail before deployment artifacts are produced.",
+      "impact": "Main-branch deploys can be blocked by environment validation even when application code compiles locally with a checked-in or local .env file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "next.config.js requires NEXT_PUBLIC_WS_URL during build/start.",
+          "file": "apps/web/next.config.js",
+          "symbol": "validateRequiredEnv"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "CI Build Web exports NEXT_PUBLIC_API_URL but not NEXT_PUBLIC_WS_URL.",
+          "file": ".github/workflows/ci.yml",
+          "symbol": "Build Web"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Deploy Build Web runs npm --prefix apps/web run build without NEXT_PUBLIC_* env.",
+          "file": ".github/workflows/deploy.yml",
+          "symbol": "Build Web"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Provide NEXT_PUBLIC_WS_URL and NEXT_PUBLIC_API_URL in CI/deploy build environments, preferably via repository/environment variables or explicit workflow env entries.",
+        "affected_files": [
+          ".github/workflows/ci.yml",
+          ".github/workflows/deploy.yml",
+          "apps/web/next.config.js"
+        ],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Run next build in a clean env with only the workflow-provided variables."
+        ]
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "build-deploy-auditor",
+          "event": "created",
+          "notes": "Created during LYRA audit pass."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-deploy-no-rollback-strategy-001",
+      "type": "question",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "open",
+      "title": "No automated rollback strategy if deployment health check fails",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "deploy-risk",
+      "description": "No automated rollback strategy if deployment health check fails",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-deploy-logging-structured-001",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "accepted",
+      "title": "API logging uses NestJS built-in Logger (console-based) instead of structured JSON logging",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-89): Todo -> accepted"
+        }
+      ],
+      "confidence": "inference",
+      "category": "deploy-risk",
+      "description": "API logging uses NestJS built-in Logger (console-based) instead of structured JSON logging",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-deploy-sentry-not-configured-001",
+      "type": "enhancement",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "accepted",
+      "title": "Sentry error reporting is not configured; production errors are not sent to external service",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-90): Todo -> accepted"
+        }
+      ],
+      "confidence": "inference",
+      "category": "deploy-risk",
+      "description": "Sentry error reporting is not configured; production errors are not sent to external service",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-deploy-db-migration-rollback-001",
+      "type": "question",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "accepted",
+      "title": "Database migration rollback plan is not documented; failed deployments could leave database in inconsistent state",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-92): Todo -> accepted"
+        }
+      ],
+      "confidence": "inference",
+      "category": "deploy-risk",
+      "description": "Database migration rollback plan is not documented; failed deployments could leave database in inconsistent state",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-deploy-csp-unsafe-inline-001",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "accepted",
+      "title": "Content Security Policy in web app uses unsafe-inline for scripts and styles; overly permissive for production",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-93): Todo -> accepted"
+        }
+      ],
+      "confidence": "inference",
+      "category": "deploy-risk",
+      "description": "Content Security Policy in web app uses unsafe-inline for scripts and styles; overly permissive for production",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-deploy-env-validation-startup-001",
+      "type": "enhancement",
+      "severity": "major",
+      "priority": "P1",
+      "status": "fixed_verified",
+      "title": "Environment variables are not validated at startup; missing or invalid vars could cause runtime crashes hours after boot",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-87): Todo -> accepted"
+        },
+        {
+          "timestamp": "2026-03-17T19:52:54Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-87): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-17T22:57:41Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-87): In Progress -> in_progress"
+        },
+        {
+          "timestamp": "2026-03-17T23:01:40Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-87): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "build-deploy-auditor",
+          "event": "verification_passed",
+          "notes": "This audit pass found source/config evidence that the prior finding has been remediated."
+        }
+      ],
+      "confidence": "inference",
+      "category": "deploy-risk",
+      "description": "Environment variables are not validated at startup; missing or invalid vars could cause runtime crashes hours after boot",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "AppModule loads ConfigModule with envValidationSchema and abortEarly=false.",
+          "file": "apps/api/src/app.module.ts",
+          "symbol": "ConfigModule.forRoot"
+        },
+        {
+          "hook_type": "config_key",
+          "summary": "env.validation.ts requires DATABASE_URL, JWT_SECRET, JWT_REFRESH_SECRET and validates production URLs/cookies.",
+          "file": "apps/api/src/config/env.validation.ts",
+          "symbol": "envValidationSchema"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-deploy-web-env-validation-001",
+      "type": "enhancement",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "fixed_verified",
+      "title": "Next.js web app does not validate required NEXT_PUBLIC_API_URL at build time",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-88): Todo -> accepted"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "build-deploy-auditor",
+          "event": "verification_passed",
+          "notes": "This audit pass found source/config evidence that the prior finding has been remediated."
+        }
+      ],
+      "confidence": "inference",
+      "category": "deploy-risk",
+      "description": "Next.js web app does not validate required NEXT_PUBLIC_API_URL at build time",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Web next.config.js validates NEXT_PUBLIC_API_URL at build/start and throws on missing/invalid values.",
+          "file": "apps/web/next.config.js",
+          "symbol": "validateRequiredEnv"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-deploy-docker-prod-config-missing-001",
+      "type": "question",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "fixed_verified",
+      "title": "Production Docker compose config (docker-compose.prod.yml) is referenced in deploy.yml but not found in repo",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-91): Todo -> accepted"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "build-deploy-auditor",
+          "event": "verification_passed",
+          "notes": "This audit pass found source/config evidence that the prior finding has been remediated."
+        }
+      ],
+      "confidence": "inference",
+      "category": "deploy-risk",
+      "description": "Production Docker compose config (docker-compose.prod.yml) is referenced in deploy.yml but not found in repo",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "docker/docker-compose.prod.yml exists and defines production services/health checks.",
+          "file": "docker/docker-compose.prod.yml"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    }
+  ],
+  "rollups": {
+    "by_severity": {
+      "blocker": 1,
+      "major": 1,
+      "minor": 7,
+      "nit": 0
+    },
+    "by_category": {
+      "ci-gap": 1,
+      "deploy-risk": 8
+    },
+    "by_type": {
+      "bug": 1,
+      "enhancement": 3,
+      "debt": 2,
+      "question": 3
+    },
+    "by_status": {
+      "open": 2,
+      "accepted": 4,
+      "fixed_verified": 3
+    }
+  },
+  "next_actions": [
+    {
+      "action": "Verify and fix CI and deploy web builds omit required NEXT_PUBLIC_WS_URL",
+      "finding_id": "f-903a4164",
+      "rationale": "Main-branch deploys can be blocked by environment validation even when application code compiles locally with a checked-in or local .env file."
+    },
+    {
+      "action": "Verify and fix Environment variables are not validated at startup; missing or invalid",
+      "finding_id": "f-deploy-env-validation-startup-001",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix No automated rollback strategy if deployment health check fails",
+      "finding_id": "f-deploy-no-rollback-strategy-001",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix API logging uses NestJS built-in Logger (console-based) instead of str",
+      "finding_id": "f-deploy-logging-structured-001",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix Sentry error reporting is not configured; production errors are not se",
+      "finding_id": "f-deploy-sentry-not-configured-001",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    }
+  ]
+}

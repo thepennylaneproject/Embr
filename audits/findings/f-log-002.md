@@ -1,0 +1,36 @@
+# Finding: f-log-002
+
+> **Status:** fixed_pending_verify | **Severity:** major | **Priority:** P1 | **Type:** bug | **Confidence:** inference
+
+## Title
+
+Potential null dereference in conversation deletion without soft-delete
+
+## Description
+
+Potential null dereference in conversation deletion without soft-delete
+
+## Impact
+
+Audit carry-forward item; impact is described by the finding title and source case file.
+
+## Suggested fix
+
+Review the existing case file and apply the documented remediation.
+
+**Affected files:** —
+
+## Proof hooks
+
+- **[artifact_ref]** Carried forward from audits/open_findings.json and existing case files.
+  - File: `audits/open_findings.json`
+
+## History
+
+- 2026-03-16T22:46:47Z — **linear-sync** — note_added: Status synced from Linear (PLP-96): Todo -> accepted
+- 2026-03-17T19:52:54Z — **linear-sync** — note_added: Status synced from Linear (PLP-96): In Review -> fixed_pending_verify
+- 2026-03-17T22:57:41Z — **linear-sync** — note_added: Status synced from Linear (PLP-96): In Progress -> in_progress
+- 2026-03-17T23:01:40Z — **linear-sync** — note_added: Status synced from Linear (PLP-96): In Review -> fixed_pending_verify
+
+---
+*Last canonical synthesizer run: `synthesized-20260427-223921`*

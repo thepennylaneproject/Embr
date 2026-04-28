@@ -1,0 +1,345 @@
+{
+  "schema_version": "1.1.0",
+  "kind": "agent_output",
+  "run_id": "security-20260427-223921",
+  "run_metadata": {
+    "timestamp": "2026-04-27T22:39:21Z",
+    "branch": "cursor/audit-lyra-pass-37c2",
+    "commit": "4f2847b",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "gpt-5.5",
+    "preflight_artifacts": {
+      "test_output": "audits/artifacts/_run_/tests.txt",
+      "lint_output": "audits/artifacts/_run_/lint.txt",
+      "build_output": "audits/artifacts/_run_/build.txt",
+      "typecheck_output": "audits/artifacts/_run_/typecheck.txt",
+      "bundle_stats": "audits/artifacts/_run_/bundle-stats.txt"
+    },
+    "notes": "Threat model: Embr handles authenticated social, creator marketplace, wallet, and messaging data. Practical attackers are anonymous users abusing public auth flows, authenticated users probing IDOR/data leakage, and XSS/CORS chains against browser sessions. Highest-value assets are JWT cookies, reset/verification tokens, wallet/order records, and private messages."
+  },
+  "suite": "security",
+  "agent": {
+    "name": "security-and-privacy-auditor",
+    "role": "Finds practical auth, authorization, validation, secrets, CORS, and privacy defects.",
+    "inputs_used": [
+      "audits/expectations.md",
+      "audits/project.json",
+      "audits/open_findings.json",
+      "audits/artifacts/_run_/tests.txt",
+      "audits/artifacts/_run_/lint.txt",
+      "audits/artifacts/_run_/typecheck.txt",
+      "audits/artifacts/_run_/build.txt",
+      "audits/artifacts/_run_/bundle-stats.txt",
+      "audits/prompts/agent-security.md",
+      "apps/api/src/core/auth/auth.controller.ts",
+      "apps/api/src/core/auth/auth.service.ts",
+      "apps/api/src/config/env.validation.ts",
+      "apps/api/src/app.module.ts",
+      "apps/api/src/main.ts"
+    ],
+    "stop_conditions_hit": []
+  },
+  "coverage": {
+    "files_examined": [
+      "apps/api/src/core/auth/auth.controller.ts",
+      "apps/api/src/core/auth/auth.service.ts",
+      "apps/api/src/config/env.validation.ts",
+      "apps/api/src/app.module.ts",
+      "apps/api/src/main.ts"
+    ],
+    "files_skipped": [
+      "dist/** - generated output",
+      "node_modules/** - dependencies",
+      "playwright-report/** - generated report artifacts"
+    ],
+    "coverage_complete": true
+  },
+  "findings": [
+    {
+      "finding_id": "sec-007",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P2",
+      "status": "fixed_verified",
+      "title": "Account enumeration vulnerability via forgot-password and email verification endpoints",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "auth-and-privacy",
+      "description": "Account enumeration vulnerability via forgot-password and email verification endpoints",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "forgot-password and resend-verification return generic success messages regardless of account existence.",
+          "file": "apps/api/src/core/auth/auth.controller.ts",
+          "symbol": "forgotPassword/resendVerification"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "security-and-privacy-auditor",
+          "event": "verification_passed",
+          "notes": "This audit pass found source/config evidence that the prior finding has been remediated."
+        }
+      ]
+    },
+    {
+      "finding_id": "sec-009",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P2",
+      "status": "open",
+      "title": "No rate limiting on login endpoint\u2014brute force vulnerability",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "auth-and-privacy",
+      "description": "No rate limiting on login endpoint\u2014brute force vulnerability",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ]
+    },
+    {
+      "finding_id": "sec-010",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P2",
+      "status": "open",
+      "title": "Password reset token leak in email\u2014user ID embedded in plaintext token",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "auth-and-privacy",
+      "description": "Password reset token leak in email\u2014user ID embedded in plaintext token",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ]
+    },
+    {
+      "finding_id": "sec-011",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P3",
+      "status": "open",
+      "title": "Seed account credentials documented in AGENTS.md allow unauthorized access",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "auth-and-privacy",
+      "description": "Seed account credentials documented in AGENTS.md allow unauthorized access",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ]
+    },
+    {
+      "finding_id": "sec-006",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P2",
+      "status": "fixed_verified",
+      "title": "CORS credentials exposed with loose origin validation",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-132): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "security-and-privacy-auditor",
+          "event": "verification_passed",
+          "notes": "This audit pass found source/config evidence that the prior finding has been remediated."
+        }
+      ],
+      "confidence": "inference",
+      "category": "auth-and-privacy",
+      "description": "CORS credentials exposed with loose origin validation",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "config_key",
+          "summary": "ALLOWED_ORIGINS is parsed from explicit config and credentials are not paired with wildcard origin in main CORS setup.",
+          "file": "apps/api/src/main.ts",
+          "symbol": "CORS setup"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "sec-008",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P2",
+      "status": "fixed_verified",
+      "title": "Google OAuth redirect validation incomplete\u2014OPEN_REDIRECT risk if FRONTEND_URL env not set",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-134): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "security-and-privacy-auditor",
+          "event": "verification_passed",
+          "notes": "This audit pass found source/config evidence that the prior finding has been remediated."
+        }
+      ],
+      "confidence": "inference",
+      "category": "auth-and-privacy",
+      "description": "Google OAuth redirect validation incomplete\u2014OPEN_REDIRECT risk if FRONTEND_URL env not set",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Google OAuth callback returns 503 when FRONTEND_URL is missing before constructing redirect.",
+          "file": "apps/api/src/core/auth/auth.controller.ts",
+          "symbol": "googleAuthCallback"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    }
+  ],
+  "rollups": {
+    "by_severity": {
+      "blocker": 0,
+      "major": 6,
+      "minor": 0,
+      "nit": 0
+    },
+    "by_category": {
+      "auth-and-privacy": 6
+    },
+    "by_type": {
+      "bug": 6,
+      "enhancement": 0,
+      "debt": 0,
+      "question": 0
+    },
+    "by_status": {
+      "fixed_verified": 3,
+      "open": 3
+    }
+  },
+  "next_actions": [
+    {
+      "action": "Verify and fix Account enumeration vulnerability via forgot-password and email verifi",
+      "finding_id": "sec-007",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix No rate limiting on login endpoint\u2014brute force vulnerability",
+      "finding_id": "sec-009",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix Password reset token leak in email\u2014user ID embedded in plaintext token",
+      "finding_id": "sec-010",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix CORS credentials exposed with loose origin validation",
+      "finding_id": "sec-006",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix Google OAuth redirect validation incomplete\u2014OPEN_REDIRECT risk if FRON",
+      "finding_id": "sec-008",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    }
+  ]
+}

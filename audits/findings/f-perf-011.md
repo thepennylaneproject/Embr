@@ -1,83 +1,33 @@
 # Finding: f-perf-011
 
-> **Status:** open | **Severity:** major | **Priority:** P2 | **Type:** enhancement | **Confidence:** inference
+> **Status:** accepted | **Severity:** minor | **Priority:** P2 | **Type:** debt | **Confidence:** inference
 
 ## Title
 
-Group listing sorts by memberCount without explicit schema index
+Stripe SDK imported but stripe-connect.service appears disabled
 
 ## Description
 
-Groups query orders by `memberCount desc`; schema indexes `Group.slug/type/category/createdAt/deletedAt` but not `memberCount`.
-
-## Proof Hooks
-
-### [code_ref] Order by memberCount in group discovery query
-
-- File: `apps/api/src/verticals/groups/services/groups.service.ts`
-
-- Symbol: `findAll`
-
-- Lines: 67-70
-
-### [code_ref] No Group.memberCount index in Prisma model
-
-- File: `apps/api/prisma/schema.prisma`
-
-- Symbol: `model Group`
-
-- Lines: 1479-1515
-
-
-## Reproduction Steps
-
-_(Optional for enhancements, debt, and questions.)_
-
+Stripe SDK imported but stripe-connect.service appears disabled
 
 ## Impact
 
-Potential sort cost/full scan as group table grows.
+Audit carry-forward item; impact is described by the finding title and source case file.
 
+## Suggested fix
 
-## Suggested Fix
+Review the existing case file and apply the documented remediation.
 
-**Approach:** Add index on `memberCount` (possibly composite with `deletedAt` / `type` depending on query cardinality).
+**Affected files:** —
 
-**Affected files:** `apps/api/prisma/schema.prisma`
+## Proof hooks
 
-**Effort:** small
+- **[artifact_ref]** Carried forward from audits/open_findings.json and existing case files.
+  - File: `audits/open_findings.json`
 
-**Risk:** Index write overhead; validate with EXPLAIN ANALYZE first.
+## History
 
+- 2026-03-19T22:47:21Z — **linear-sync** — note_added: Status synced from Linear (PLP-117): Todo -> accepted
 
-## Tests Needed
-
-- [ ] Query plan comparison before/after index
-
-
-## Related Findings
-
-- `f-perf-012`
-
-
-## Timeline
-
-- 2026-03-05T19:44:51.494026Z | performance-cost-auditor | created | Imported from agent output during synthesis
-
-
-## Artifacts
-
-_(none)_
-
-
-## Enhancement Notes
-
-_Future improvements related to this surface area can be noted here._
-
-
-## Decision Log (for type: question)
-
-- **Decision:** _(pending)_
-- **Decided by:** _(solo-dev)_
-- **Date:** _(YYYY-MM-DD)_
-- **Reasoning:** _(pending)_
+---
+*Last canonical synthesizer run: `synthesized-20260427-223921`*

@@ -1,85 +1,33 @@
 # Finding: f-perf-007
 
-> **Status:** open | **Severity:** major | **Priority:** P1 | **Type:** enhancement | **Confidence:** evidence
+> **Status:** fixed_verified | **Severity:** major | **Priority:** P1 | **Type:** performance | **Confidence:** ?
 
 ## Title
 
-Messaging hook reconnect risk from unstable callback references
+Wallet.service queries all transactions without pagination or filtering
 
 ## Description
 
-Caller passes inline callbacks to `useMessaging`; hook `connect` depends on those callbacks and auto-connect effect depends on `connect`, which can trigger reconnect churn on rerenders.
-
-## Proof Hooks
-
-### [code_ref] Inline callbacks in DMInbox options object
-
-- File: `apps/web/src/components/messaging/DMInbox.tsx`
-
-- Symbol: `DMInbox`
-
-- Lines: 39-51
-
-### [code_ref] connect useCallback and auto-connect effect dependency chain
-
-- File: `apps/web/src/hooks/useMessaging.ts`
-
-- Symbol: `connect/useEffect`
-
-- Lines: 72-230
-
-
-## Reproduction Steps
-
-1. Render DMInbox and trigger state changes unrelated to connection
-
-2. Observe repeated connect/disconnect logs
 
 
 ## Impact
 
-Unnecessary websocket reconnects, duplicate event setup, and avoidable API/socket load.
+—
 
+## Suggested fix
 
-## Suggested Fix
+—
 
-**Approach:** Stabilize callbacks with refs inside hook or memoize callbacks in caller with `useCallback`; isolate connection effect from volatile handlers.
+**Affected files:** —
 
-**Affected files:** `apps/web/src/hooks/useMessaging.ts` `apps/web/src/components/messaging/DMInbox.tsx`
+## Proof hooks
 
-**Effort:** small
+- _(see JSON)_
 
-**Risk:** Careful to avoid stale event handlers.
+## History
 
+- 2026-03-16T22:46:47Z — **linear-sync** — note_added: Status synced from Linear (PLP-113): Todo -> accepted
+- 2026-03-17T19:52:54Z — **linear-sync** — note_added: Status synced from Linear (PLP-113): Done -> fixed_verified
 
-## Tests Needed
-
-- [ ] Hook test asserting single connection across rerenders
-
-
-## Related Findings
-
-_(none)_
-
-
-## Timeline
-
-- 2026-03-05T19:44:51.494026Z | performance-cost-auditor | created | Imported from agent output during synthesis
-
-
-## Artifacts
-
-_(none)_
-
-
-## Enhancement Notes
-
-_Future improvements related to this surface area can be noted here._
-
-
-## Decision Log (for type: question)
-
-- **Decision:** _(pending)_
-- **Decided by:** _(solo-dev)_
-- **Date:** _(YYYY-MM-DD)_
-- **Reasoning:** _(pending)_
+---
+*Last canonical synthesizer run: `synthesized-20260427-223921`*

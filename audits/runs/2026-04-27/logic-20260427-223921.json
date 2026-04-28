@@ -1,0 +1,523 @@
+{
+  "schema_version": "1.1.0",
+  "kind": "agent_output",
+  "run_id": "logic-20260427-223921",
+  "run_metadata": {
+    "timestamp": "2026-04-27T22:39:21Z",
+    "branch": "cursor/audit-lyra-pass-37c2",
+    "commit": "4f2847b",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "gpt-5.5",
+    "preflight_artifacts": {
+      "test_output": "audits/artifacts/_run_/tests.txt",
+      "lint_output": "audits/artifacts/_run_/lint.txt",
+      "build_output": "audits/artifacts/_run_/build.txt",
+      "typecheck_output": "audits/artifacts/_run_/typecheck.txt",
+      "bundle_stats": "audits/artifacts/_run_/bundle-stats.txt"
+    }
+  },
+  "suite": "logic",
+  "agent": {
+    "name": "runtime-bug-hunter",
+    "role": "Finds runtime, logic, async, null-safety, dead-code, and error-handling defects.",
+    "inputs_used": [
+      "audits/expectations.md",
+      "audits/project.json",
+      "audits/open_findings.json",
+      "audits/artifacts/_run_/tests.txt",
+      "audits/artifacts/_run_/lint.txt",
+      "audits/artifacts/_run_/typecheck.txt",
+      "audits/artifacts/_run_/build.txt",
+      "audits/artifacts/_run_/bundle-stats.txt",
+      "audits/prompts/agent-logic.md",
+      "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+      "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+      "apps/web/src/hooks/useMessaging.ts",
+      "apps/api/src/verticals/marketplace/services/orders.service.ts"
+    ],
+    "stop_conditions_hit": []
+  },
+  "coverage": {
+    "files_examined": [
+      "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+      "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+      "apps/web/src/hooks/useMessaging.ts",
+      "apps/api/src/verticals/marketplace/services/orders.service.ts"
+    ],
+    "files_skipped": [
+      "dist/** - generated output",
+      "node_modules/** - dependencies",
+      "playwright-report/** - generated report artifacts"
+    ],
+    "coverage_complete": true
+  },
+  "findings": [
+    {
+      "finding_id": "f-6ab75ad8",
+      "type": "bug",
+      "category": "counter-integrity",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Follow creation increments profile counters twice",
+      "description": "FollowsService.followUser increments follower/following profile counters inside the transaction, then immediately performs a second updateMany increment after the transaction. A successful follow can therefore add 2 to each denormalized counter for a single Follow row.",
+      "impact": "Follower/following counts drift upward and user profiles show inflated social proof; any ranking or recommendations based on these counters become unreliable.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Transaction increments both profile counters before returning the created Follow row.",
+          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "symbol": "lines 67-94"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "A second updateMany block increments the same follower/following counters again.",
+          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "symbol": "lines 96-108"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Remove the post-transaction updateMany block or replace the transaction updates with updateMany, but keep exactly one counter increment per successful Follow create.",
+        "affected_files": [
+          "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts"
+        ],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Add or run a follow/unfollow service test that asserts counters change by exactly one."
+        ]
+      },
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "runtime-bug-hunter",
+          "event": "created",
+          "notes": "Created during LYRA audit pass."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-003",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P1",
+      "status": "fixed_pending_verify",
+      "title": "Unsafe profile access in follows.service.ts without existence check",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-97): Todo -> accepted"
+        },
+        {
+          "timestamp": "2026-03-17T19:52:54Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-97): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-17T22:57:41Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-97): In Progress -> in_progress"
+        },
+        {
+          "timestamp": "2026-03-17T23:01:40Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-97): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "runtime-bug-hunter",
+          "event": "verification_failed",
+          "notes": "Fix remains incomplete: profile update path can still fail and now duplicates counter increments."
+        }
+      ],
+      "confidence": "inference",
+      "category": "runtime-logic",
+      "description": "Follow user existence is checked, but the profile counter update path still calls tx.profile.update inside the transaction and then updateMany after the transaction. Missing profiles can still throw before the updateMany fallback, and the duplicate block creates counter drift.",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Target user existence is checked, but profile update still uses tx.profile.update inside the transaction.",
+          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "symbol": "FollowsService.followUser"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Post-transaction updateMany is present after the transaction, creating duplicate counter mutation.",
+          "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
+          "symbol": "lines 96-108"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-log-005",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P2",
+      "status": "open",
+      "title": "Silent notification failure in follows.service.ts",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "runtime-logic",
+      "description": "Silent notification failure in follows.service.ts",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-012",
+      "type": "bug",
+      "severity": "minor",
+      "priority": "P3",
+      "status": "open",
+      "title": "Unsafe access to data.conversationId in setMessages state update",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "runtime-logic",
+      "description": "Unsafe access to data.conversationId in setMessages state update",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-006",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P2",
+      "status": "fixed_verified",
+      "title": "Unsafe access to messages[0] in markAsRead without bounds check",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "runtime-logic",
+      "description": "Unsafe access to messages[0] in markAsRead without bounds check",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "markAsRead uses a ternary guard before reading conversation.messages[0] fields.",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "MessagingService.markAsRead"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "runtime-bug-hunter",
+          "event": "verification_passed",
+          "notes": "This audit pass found source/config evidence that the prior finding has been remediated."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-007",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P2",
+      "status": "fixed_verified",
+      "title": "Missing await on rate limiter check (messaging.service.ts:445)",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "runtime-logic",
+      "description": "Missing await on rate limiter check (messaging.service.ts:445)",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "sendMessage awaits rateLimiter.isAllowed before creating the message.",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "MessagingService.sendMessage"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "runtime-bug-hunter",
+          "event": "verification_passed",
+          "notes": "This audit pass found source/config evidence that the prior finding has been remediated."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-010",
+      "type": "bug",
+      "severity": "minor",
+      "priority": "P3",
+      "status": "fixed_verified",
+      "title": "Unsafe access to response.message in createConversation hook",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "runtime-logic",
+      "description": "Unsafe access to response.message in createConversation hook",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "createConversation maps response.message with a null fallback instead of unsafe access.",
+          "file": "apps/web/src/hooks/useMessaging.ts",
+          "symbol": "createConversation"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "runtime-bug-hunter",
+          "event": "verification_passed",
+          "notes": "This audit pass found source/config evidence that the prior finding has been remediated."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-011",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P3",
+      "status": "fixed_verified",
+      "title": "Unreachable code in markAsRead hook (useMessaging.ts:427-447)",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "runtime-logic",
+      "description": "Unreachable code in markAsRead hook (useMessaging.ts:427-447)",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "markAsRead has reachable HTTP fallback and WebSocket ack branches with no unreachable post-return block.",
+          "file": "apps/web/src/hooks/useMessaging.ts",
+          "symbol": "markAsRead"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "runtime-bug-hunter",
+          "event": "verification_passed",
+          "notes": "This audit pass found source/config evidence that the prior finding has been remediated."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-log-004",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P1",
+      "status": "fixed_verified",
+      "title": "Race condition in idempotency check for checkout (orders.service.ts)",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-16T22:46:47Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-98): Todo -> accepted"
+        },
+        {
+          "timestamp": "2026-03-17T19:52:54Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-98): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-03-17T22:57:41Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-98): In Progress -> in_progress"
+        },
+        {
+          "timestamp": "2026-03-17T23:01:40Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-98): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "runtime-bug-hunter",
+          "event": "verification_passed",
+          "notes": "This audit pass found source/config evidence that the prior finding has been remediated."
+        }
+      ],
+      "confidence": "inference",
+      "category": "runtime-logic",
+      "description": "Race condition in idempotency check for checkout (orders.service.ts)",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "checkout runs idempotency check and order creation in a Serializable transaction.",
+          "file": "apps/api/src/verticals/marketplace/services/orders.service.ts",
+          "symbol": "OrdersService.checkout"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    }
+  ],
+  "rollups": {
+    "by_severity": {
+      "blocker": 0,
+      "major": 6,
+      "minor": 3,
+      "nit": 0
+    },
+    "by_category": {
+      "counter-integrity": 1,
+      "runtime-logic": 8
+    },
+    "by_type": {
+      "bug": 8,
+      "enhancement": 0,
+      "debt": 1,
+      "question": 0
+    },
+    "by_status": {
+      "open": 3,
+      "fixed_pending_verify": 1,
+      "fixed_verified": 5
+    }
+  },
+  "next_actions": [
+    {
+      "action": "Verify and fix Follow creation increments profile counters twice",
+      "finding_id": "f-6ab75ad8",
+      "rationale": "Follower/following counts drift upward and user profiles show inflated social proof; any ranking or recommendations based on these counters become unreliable."
+    },
+    {
+      "action": "Verify and fix Unsafe profile access in follows.service.ts without existence check",
+      "finding_id": "f-log-003",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix Race condition in idempotency check for checkout (orders.service.ts)",
+      "finding_id": "f-log-004",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix Silent notification failure in follows.service.ts",
+      "finding_id": "f-log-005",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix Unsafe access to messages[0] in markAsRead without bounds check",
+      "finding_id": "f-log-006",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    }
+  ]
+}

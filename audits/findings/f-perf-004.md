@@ -1,85 +1,33 @@
 # Finding: f-perf-004
 
-> **Status:** open | **Severity:** major | **Priority:** P1 | **Type:** enhancement | **Confidence:** evidence
+> **Status:** accepted | **Severity:** major | **Priority:** P2 | **Type:** debt | **Confidence:** inference
 
 ## Title
 
-Stripe webhook lacks idempotency guard and can reprocess retried events
+Frontend: Feed component may re-fetch on every dependency change without debounce
 
 ## Description
 
-Stripe webhook handler processes events directly without storing/validating `event.id`, unlike the Mux webhook which has explicit dedupe persistence.
-
-## Proof Hooks
-
-### [code_ref] Stripe handler switch executes without event dedupe check
-
-- File: `apps/api/src/core/monetization/webhooks/stripe-webhook.controller.ts`
-
-- Symbol: `handleWebhook`
-
-- Lines: 66-97
-
-### [code_ref] Mux webhook uses processed-event guard
-
-- File: `apps/api/src/core/media/controllers/mux-webhook.controller.ts`
-
-- Symbol: `handleWebhook`
-
-- Lines: 66-83
-
-
-## Reproduction Steps
-
-1. Replay same Stripe event payload/event.id twice
-
-2. Observe handler side effects invoked twice
-
+Frontend: Feed component may re-fetch on every dependency change without debounce
 
 ## Impact
 
-Duplicate payout/tip processing risk and inflated metered calls/notification writes.
+Audit carry-forward item; impact is described by the finding title and source case file.
 
+## Suggested fix
 
-## Suggested Fix
+Review the existing case file and apply the documented remediation.
 
-**Approach:** Implement processed-event table check for Stripe events (same pattern as Mux), transactional insert+handle to guarantee idempotency.
+**Affected files:** —
 
-**Affected files:** `apps/api/src/core/monetization/webhooks/stripe-webhook.controller.ts` `apps/api/prisma/schema.prisma`
+## Proof hooks
 
-**Effort:** medium
+- **[artifact_ref]** Carried forward from audits/open_findings.json and existing case files.
+  - File: `audits/open_findings.json`
 
-**Risk:** Requires migration and careful transaction boundaries.
+## History
 
+- 2026-03-19T22:47:21Z — **linear-sync** — note_added: Status synced from Linear (PLP-110): Todo -> accepted
 
-## Tests Needed
-
-- [ ] Webhook replay test asserting second delivery is no-op
-
-
-## Related Findings
-
-_(none)_
-
-
-## Timeline
-
-- 2026-03-05T19:44:51.494026Z | performance-cost-auditor | created | Imported from agent output during synthesis
-
-
-## Artifacts
-
-_(none)_
-
-
-## Enhancement Notes
-
-_Future improvements related to this surface area can be noted here._
-
-
-## Decision Log (for type: question)
-
-- **Decision:** _(pending)_
-- **Decided by:** _(solo-dev)_
-- **Date:** _(YYYY-MM-DD)_
-- **Reasoning:** _(pending)_
+---
+*Last canonical synthesizer run: `synthesized-20260427-223921`*

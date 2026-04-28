@@ -1,0 +1,465 @@
+{
+  "schema_version": "1.1.0",
+  "kind": "agent_output",
+  "run_id": "perf-20260427-223921",
+  "run_metadata": {
+    "timestamp": "2026-04-27T22:39:21Z",
+    "branch": "cursor/audit-lyra-pass-37c2",
+    "commit": "4f2847b",
+    "environment": "local",
+    "tool_platform": "cursor",
+    "model": "gpt-5.5",
+    "preflight_artifacts": {
+      "test_output": "audits/artifacts/_run_/tests.txt",
+      "lint_output": "audits/artifacts/_run_/lint.txt",
+      "build_output": "audits/artifacts/_run_/build.txt",
+      "typecheck_output": "audits/artifacts/_run_/typecheck.txt",
+      "bundle_stats": "audits/artifacts/_run_/bundle-stats.txt"
+    }
+  },
+  "suite": "performance",
+  "agent": {
+    "name": "performance-cost-auditor",
+    "role": "Finds inefficient queries, oversized bundles, cache issues, avoidable requests, and cost risks.",
+    "inputs_used": [
+      "audits/expectations.md",
+      "audits/project.json",
+      "audits/open_findings.json",
+      "audits/artifacts/_run_/tests.txt",
+      "audits/artifacts/_run_/lint.txt",
+      "audits/artifacts/_run_/typecheck.txt",
+      "audits/artifacts/_run_/build.txt",
+      "audits/artifacts/_run_/bundle-stats.txt",
+      "audits/prompts/agent-performance.md",
+      "apps/api/src/core/cache/cache.service.ts",
+      "apps/web/src/hooks/useMessaging.ts",
+      "apps/web/next.config.js",
+      "audits/artifacts/_run_/bundle-stats.txt"
+    ],
+    "stop_conditions_hit": []
+  },
+  "coverage": {
+    "files_examined": [
+      "apps/api/src/core/cache/cache.service.ts",
+      "apps/web/src/hooks/useMessaging.ts",
+      "apps/web/next.config.js",
+      "audits/artifacts/_run_/bundle-stats.txt"
+    ],
+    "files_skipped": [
+      "dist/** - generated output",
+      "node_modules/** - dependencies",
+      "playwright-report/** - generated report artifacts"
+    ],
+    "coverage_complete": true
+  },
+  "findings": [
+    {
+      "finding_id": "f-perf-005",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "accepted",
+      "title": "Cache service falls back to in-memory with no size limit, potential memory leak",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-111): Todo -> accepted"
+        }
+      ],
+      "confidence": "inference",
+      "category": "cache-and-performance",
+      "description": "Cache service falls back to in-memory with no size limit, potential memory leak",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-perf-006",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P3",
+      "status": "open",
+      "title": "Cache service does not handle Redis connection failures gracefully in get/set",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "cache-and-performance",
+      "description": "Cache service does not handle Redis connection failures gracefully in get/set",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-010",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "accepted",
+      "title": "Frontend: Images in pages lack optimization, no Next.js Image component used consistently",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-116): Todo -> accepted"
+        }
+      ],
+      "confidence": "inference",
+      "category": "cache-and-performance",
+      "description": "Frontend: Images in pages lack optimization, no Next.js Image component used consistently",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-perf-012",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P3",
+      "status": "open",
+      "title": "Messaging hook creates Socket.io connections without connection pooling",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "cache-and-performance",
+      "description": "Messaging hook creates Socket.io connections without connection pooling",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-014",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P3",
+      "status": "open",
+      "title": "Rating limiter service may not scale to distributed deployments",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "cache-and-performance",
+      "description": "Rating limiter service may not scale to distributed deployments",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-017",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P3",
+      "status": "open",
+      "title": "AWS SES email service may incur high costs if sending to unvalidated addresses",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "cache-and-performance",
+      "description": "AWS SES email service may incur high costs if sending to unvalidated addresses",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-020",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P3",
+      "status": "open",
+      "title": "Query: Mux video API usage metering and cost tracking not visible",
+      "agent": "synthesizer",
+      "confidence": "inference",
+      "category": "cache-and-performance",
+      "description": "Query: Mux video API usage metering and cost tracking not visible",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-27T22:39:21Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Carried forward from prior audit state."
+        }
+      ]
+    },
+    {
+      "finding_id": "f-perf-008",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "accepted",
+      "title": "API client always sends withCredentials=true, adds latency to preflight requests",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-114): Todo -> accepted"
+        }
+      ],
+      "confidence": "inference",
+      "category": "cache-and-performance",
+      "description": "API client always sends withCredentials=true, adds latency to preflight requests",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-perf-016",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "accepted",
+      "title": "Prisma client instantiated without connection pooling configuration",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-122): Todo -> accepted"
+        }
+      ],
+      "confidence": "inference",
+      "category": "cache-and-performance",
+      "description": "Prisma client instantiated without connection pooling configuration",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    },
+    {
+      "finding_id": "f-perf-018",
+      "type": "debt",
+      "severity": "minor",
+      "priority": "P2",
+      "status": "accepted",
+      "title": "Next.js image remotePatterns allows wildcard subdomains, may bypass CDN optimization",
+      "agent": "synthesizer",
+      "history": [
+        {
+          "timestamp": "2026-03-19T22:47:21Z",
+          "actor": "linear-sync",
+          "event": "note_added",
+          "notes": "Status synced from Linear (PLP-124): Todo -> accepted"
+        }
+      ],
+      "confidence": "inference",
+      "category": "cache-and-performance",
+      "description": "Next.js image remotePatterns allows wildcard subdomains, may bypass CDN optimization",
+      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Carried forward from audits/open_findings.json and existing case files.",
+          "file": "audits/open_findings.json"
+        }
+      ],
+      "suggested_fix": {
+        "approach": "Review the existing case file and apply the documented remediation.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": [
+          "Re-run the relevant LYRA audit agent."
+        ]
+      }
+    }
+  ],
+  "rollups": {
+    "by_severity": {
+      "blocker": 0,
+      "major": 0,
+      "minor": 10,
+      "nit": 0
+    },
+    "by_category": {
+      "cache-and-performance": 10
+    },
+    "by_type": {
+      "bug": 0,
+      "enhancement": 0,
+      "debt": 10,
+      "question": 0
+    },
+    "by_status": {
+      "accepted": 5,
+      "open": 5
+    }
+  },
+  "next_actions": [
+    {
+      "action": "Verify and fix Cache service falls back to in-memory with no size limit, potential me",
+      "finding_id": "f-perf-005",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix Frontend: Images in pages lack optimization, no Next.js Image componen",
+      "finding_id": "f-perf-010",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix API client always sends withCredentials=true, adds latency to prefligh",
+      "finding_id": "f-perf-008",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix Prisma client instantiated without connection pooling configuration",
+      "finding_id": "f-perf-016",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    },
+    {
+      "action": "Verify and fix Next.js image remotePatterns allows wildcard subdomains, may bypass CD",
+      "finding_id": "f-perf-018",
+      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
+    }
+  ]
+}
