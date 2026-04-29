@@ -1,8 +1,33 @@
-npm error Missing script: "lint"
-npm error
-npm error Did you mean this?
-npm error   npm link # Symlink a package folder
-npm error
-npm error To see a list of scripts, run:
-npm error   npm run
-npm error A complete log of this run can be found in: /Users/sarahsahl/.npm/_logs/2026-03-14T21_47_09_946Z-debug-0.log
+
+> embr@0.1.0 lint
+> npm run lint:web && npm run lint:api
+
+
+> embr@0.1.0 lint:web
+> npm --prefix apps/web run lint
+
+
+> embr-web@0.1.0 lint
+> next lint
+
+/Users/sarahsahl/Library/Mobile Documents/com~apple~CloudDocs/projects/Embr/embr/apps/web/next.config.js:40
+    throw new Error(
+          ^
+
+Error: [Embr] Missing or invalid required environment variables:
+  NEXT_PUBLIC_API_URL — Base URL for the Embr API (e.g. http://localhost:3003/api)
+  NEXT_PUBLIC_WS_URL — WebSocket server URL for real-time messaging (e.g. http://localhost:3003)
+
+Copy apps/web/.env.example to apps/web/.env.local and fill in the values.
+    at validateRequiredEnv (/Users/sarahsahl/Library/Mobile Documents/com~apple~CloudDocs/projects/Embr/embr/apps/web/next.config.js:40:11)
+    at Object.<anonymous> (/Users/sarahsahl/Library/Mobile Documents/com~apple~CloudDocs/projects/Embr/embr/apps/web/next.config.js:64:3)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at cjsLoader (node:internal/modules/esm/translators:309:5)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:202:7)
+
+Node.js v22.20.0

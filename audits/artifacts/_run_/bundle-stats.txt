@@ -1,70 +1,38 @@
-Next.js 14.2.5 — Production Bundle Stats
-Generated: 2026-04-07
 
-Route (pages)                              Size     First Load JS
-┌ ○ /                                      765 B           116 kB
-├   /_app                                  0 B             106 kB
-├ ○ /[username]                            1.82 kB         144 kB
-├ ƒ /404                                   1.04 kB         107 kB
-├ ○ /about                                 3.88 kB         119 kB
-├ ƒ /api/analytics/events                  0 B             106 kB
-├ ○ /auth/forgot-password                  1.86 kB         117 kB
-├ ○ /auth/login                            1.98 kB         117 kB
-├ ○ /auth/reset-password                   2.13 kB         117 kB
-├ ○ /auth/signup                           2.13 kB         117 kB
-├ ○ /create                                632 B           140 kB
-├ ○ /discover                              242 B           114 kB
-├ ○ /DiscoveryPage                         195 B           114 kB
-├ ○ /earnings                              8.17 kB         125 kB
-├ ○ /events                                1.76 kB         127 kB
-├ ○ /events/[id]                           8.19 kB         125 kB
-├ ○ /events/create                         3.88 kB         121 kB
-├ ○ /feed                                  425 B           143 kB
-├ ○ /gigs                                  6.65 kB         126 kB
-├ ○ /gigs/[id]                             4.14 kB         127 kB
-├ ○ /gigs/booking/[gigId]                  4.26 kB         127 kB
-├ ○ /gigs/bookings                         2.95 kB         120 kB
-├ ○ /gigs/manage                           6.37 kB         123 kB
-├ ○ /gigs/post                             6.37 kB         123 kB
-├ ○ /groups                                3.82 kB         124 kB
-├ ○ /groups/[id]                           9.19 kB         132 kB
-├ ○ /groups/[id]/alerts/create             5.84 kB         123 kB
-├ ○ /groups/[id]/members                   3.47 kB         120 kB
-├ ○ /groups/[id]/settings                  3.33 kB         120 kB
-├ ○ /groups/create                         4.41 kB         121 kB
-├ ○ /marketplace                           7.21 kB         127 kB
-├ ○ /marketplace/[id]                      8.69 kB         126 kB
-├ ○ /marketplace/cart                      3.04 kB         120 kB
-├ ○ /marketplace/checkout                  5.15 kB         122 kB
-├ ○ /marketplace/orders                    4.97 kB         122 kB
-├ ○ /marketplace/sell                      8.01 kB         125 kB
-├ ○ /messages                              413 B           148 kB
-├ ○ /messages/[id]                         516 B           148 kB
-├ ○ /music                                 6.46 kB         126 kB
-├ ○ /music/artist/[id]                     4.64 kB         122 kB
-├ ○ /music/artist/create                   2.02 kB         119 kB
-├ ○ /music/dashboard                       4.14 kB         121 kB
-├ ○ /music/licensing/[trackId]             3.43 kB         120 kB
-├ ○ /music/upload                          4.69 kB         122 kB
-├ ○ /mutual-aid                            3.84 kB         128 kB
-├ ○ /mutual-aid/[id]                       3.85 kB         125 kB
-├ ○ /mutual-aid/post                       2.57 kB         124 kB
-├ ○ /notifications                         2 kB            119 kB
-├ ○ /onboarding                            648 B           120 kB
-├ ○ /post/[id]                             534 B           140 kB
-├ ○ /profile                               2.35 kB         142 kB
-├ ○ /profile/edit                          1.44 kB         118 kB
-├ ○ /safety                                6.33 kB         123 kB
-└ ○ /settings                              3.44 kB         120 kB
-+ First Load JS shared by all              116 kB
-  ├ chunks/framework-cce962d7bbc37f91.js   45.2 kB
-  ├ chunks/main-084330e942718675.js        32 kB
-  ├ chunks/pages/_app-09d064fe8428485e.js  27.4 kB
-  └ other shared chunks (total)            11 kB
+> embr@0.1.0 build
+> npm run build:api && npm run build:web
 
-○  (Static)   prerendered as static content
-ƒ  (Dynamic)  server-rendered on demand
 
-Total pages: 51
-Static pages: 49
-Dynamic pages: 2
+> embr@0.1.0 build:api
+> npm --prefix apps/api run build
+
+
+> embr-api@0.1.0 build
+> nest build
+
+
+> embr@0.1.0 build:web
+> npm --prefix apps/web run build
+
+
+> embr-web@0.1.0 build
+> next build
+
+ ⨯ Failed to load next.config.js, see more info here https://nextjs.org/docs/messages/next-config-error
+
+> Build error occurred
+Error: [Embr] Missing or invalid required environment variables:
+  NEXT_PUBLIC_API_URL — Base URL for the Embr API (e.g. http://localhost:3003/api)
+  NEXT_PUBLIC_WS_URL — WebSocket server URL for real-time messaging (e.g. http://localhost:3003)
+
+Copy apps/web/.env.example to apps/web/.env.local and fill in the values.
+    at validateRequiredEnv (/Users/sarahsahl/Library/Mobile Documents/com~apple~CloudDocs/projects/Embr/embr/apps/web/next.config.js:40:11)
+    at Object.<anonymous> (/Users/sarahsahl/Library/Mobile Documents/com~apple~CloudDocs/projects/Embr/embr/apps/web/next.config.js:64:3)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at cjsLoader (node:internal/modules/esm/translators:309:5)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:202:7)
