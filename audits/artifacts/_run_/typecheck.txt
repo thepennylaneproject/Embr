@@ -2,4 +2,4 @@ npm error Missing script: "typecheck"
 npm error
 npm error To see a list of scripts, run:
 npm error   npm run
-npm error A complete log of this run can be found in: /Users/sarahsahl/.npm/_logs/2026-04-27T22_30_29_863Z-debug-0.log
+npm error A complete log of this run can be found in: /Users/sarahsahl/.npm/_logs/2026-04-29T19_43_54_155Z-debug-0.log

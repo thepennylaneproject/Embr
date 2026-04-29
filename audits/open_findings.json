@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
-  "last_updated": "2026-04-29T17:09:32Z",
-  "run_id": "synthesized-20260427-223921",
+  "last_updated": "2026-04-29T20:21:05Z",
+  "run_id": "synthesized-20260429-214530",
   "open_findings": [
     {
       "finding_id": "f-deploy-db-migration-rollback-001",
@@ -17,17 +17,23 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-92): Todo -> accepted"
+        },
+        {
+          "timestamp": "2026-04-29T21:45:30Z",
+          "actor": "synthesizer",
+          "event": "note_added",
+          "notes": "Compared merged outputs against prior open_findings.json; no upstream suite rescinded acceptance."
         }
       ],
-      "description": "Database migration rollback plan is not documented; failed deployments could leave database in inconsistent state",
+      "description": "Prior canonical accepted finding carried forward from audits/open_findings.json; not re-opened by upstream suites this run.",
       "category": "deploy-risk",
       "confidence": "inference",
-      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "impact": "Operational risk persists until remediation documented.",
       "proof_hooks": [
         {
           "hook_type": "artifact_ref",
-          "summary": "Carried forward from audits/open_findings.json and existing case files.",
-          "file": "audits/open_findings.json"
+          "summary": "Previously synced canonical finding audits/open_findings.json.",
+          "artifact_path": "audits/open_findings.json"
         }
       ],
       "suggested_fix": {
@@ -37,6 +43,804 @@
         "tests_needed": [
           "Re-run the relevant LYRA audit agent."
         ]
+      }
+    },
+    {
+      "finding_id": "f-schema-lyra-visual-001",
+      "type": "debt",
+      "category": "audit-schema",
+      "severity": "minor",
+      "priority": "P3",
+      "confidence": "evidence",
+      "title": "Visual audit suite outputs invalid under LYRA 1.1.0 finding contract",
+      "description": "visual_tokens, visual_typography, visual_layout, visual_components, visual_color, and visual_polish outputs lacked required finding.history arrays (minimum one event). Five suites lacked agent.role alongside agent.name. Per ingest rules those findings were excluded from merge; rerun emitters with compliant payloads.",
+      "impact": "Automated merge omitted substantive UX/UI findings for run c275a419 until regenerated outputs validate.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "Embedded prompt payloads for visual_* suite outputs lacked finding.history blocks.",
+          "artifact_path": "runtime/agent_bundle/run-c275a419/visual_* JSON transcripts"
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T21:45:30Z",
+          "actor": "synthesizer",
+          "event": "created",
+          "notes": "Debt emitted because validated ingest discarded malformed findings rather than invent history server-side."
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-c14e784c",
+      "type": "bug",
+      "category": "oauth-routing",
+      "severity": "major",
+      "priority": "P0",
+      "confidence": "evidence",
+      "title": "Web Google login redirects to OAuth callback URL instead of initiating /auth/google",
+      "description": "authApi.googleLogin assigns window.location to `${API_PUBLIC_URL}/auth/google/callback`, but the Nest AuthController exposes the Passport guard on GET `/auth/google` and uses `/auth/google/callback` only as the OAuth redirect target.",
+      "impact": "Google sign-in from web breaks.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Frontend navigates to /auth/google/callback for googleLogin.",
+          "file": "apps/web/src/lib/api/auth.ts",
+          "symbol": "googleLogin",
+          "start_line": 27,
+          "end_line": 31
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "API mounts Google OAuth on GET auth/google and callback on GET auth/google/callback.",
+          "file": "apps/api/src/core/auth/auth.controller.ts",
+          "symbol": "googleAuth",
+          "start_line": 86,
+          "end_line": 96
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T20:15:00Z",
+          "actor": "runtime-bug-hunter",
+          "event": "created",
+          "notes": "Compared web client navigation with Nest auth route map."
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-5a82dae5",
+      "type": "bug",
+      "category": "localstorage-parse",
+      "severity": "minor",
+      "priority": "P2",
+      "confidence": "evidence",
+      "title": "Marketplace addToCart throws if marketplace_cart localStorage JSON is invalid",
+      "description": "addToCart reads marketplace_cart and calls JSON.parse without a try/catch.",
+      "impact": "Uncaught SyntaxError blocks cart flows.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "JSON.parse on localStorage value with no surrounding try/catch in addToCart.",
+          "file": "apps/web/src/pages/marketplace/[id].tsx",
+          "symbol": "addToCart",
+          "start_line": 22,
+          "end_line": 37
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T20:15:00Z",
+          "actor": "runtime-bug-hunter",
+          "event": "created",
+          "notes": "Contrasted with try/catch usage in cart.tsx and checkout."
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-161c2bb7",
+      "type": "debt",
+      "category": "tooling-json",
+      "severity": "minor",
+      "priority": "P3",
+      "confidence": "evidence",
+      "title": "Root package.json declares typecheck:api twice so the first script is ignored",
+      "description": "Duplicate scripts.typecheck:api keys in JSON.",
+      "impact": "Silent override invites misunderstanding.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Duplicate typecheck:api keys at lines 30 and 32.",
+          "file": "package.json",
+          "symbol": "scripts.typecheck:api",
+          "start_line": 30,
+          "end_line": 32
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T20:15:00Z",
+          "actor": "runtime-bug-hunter",
+          "event": "created",
+          "notes": "Observed duplicate key while reading root package scripts."
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-a8d54b4e",
+      "type": "debt",
+      "category": "tooling-scripts",
+      "severity": "minor",
+      "priority": "P2",
+      "confidence": "evidence",
+      "title": "Root package.json has no test or typecheck script but audit artifacts invoke them",
+      "description": "Root npm lacks orchestrating test/typecheck scripts preflight expects.",
+      "impact": "Automated gates misconfigured.",
+      "proof_hooks": [
+        {
+          "hook_type": "artifact_ref",
+          "summary": "tests.txt reports missing root test script.",
+          "artifact_path": "audits/artifacts/_run_/tests.txt"
+        },
+        {
+          "hook_type": "artifact_ref",
+          "summary": "typecheck.txt reports missing root typecheck script.",
+          "artifact_path": "audits/artifacts/_run_/typecheck.txt"
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T20:15:00Z",
+          "actor": "runtime-bug-hunter",
+          "event": "created",
+          "notes": "Compared artifact logs with root package.json scripts."
+        },
+        {
+          "timestamp": "2026-04-29T21:45:30Z",
+          "actor": "synthesizer",
+          "event": "note_added",
+          "notes": "Marked canonical duplicate parent after reconciling performance agent overlap."
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-53cd6fc1",
+      "type": "debt",
+      "category": "ci-env",
+      "severity": "minor",
+      "priority": "P2",
+      "confidence": "evidence",
+      "title": "next lint fails without NEXT_PUBLIC_API_URL and NEXT_PUBLIC_WS_URL because next.config validates env at load",
+      "description": "validateRequiredEnv in apps/web/next.config.js throws if required public env vars are absent.",
+      "impact": "Lint/build blocked without exported vars.",
+      "proof_hooks": [
+        {
+          "hook_type": "error_text",
+          "summary": "Lint artifact shows validateRequiredEnv throwing.",
+          "error_text": "[Embr] Missing or invalid required environment variables:"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "next.config throws when validation fails.",
+          "file": "apps/web/next.config.js",
+          "symbol": "validateRequiredEnv",
+          "start_line": 39,
+          "end_line": 45
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T20:15:00Z",
+          "actor": "runtime-bug-hunter",
+          "event": "created",
+          "notes": "Cross-checked lint artifact with next.config validation block."
+        },
+        {
+          "timestamp": "2026-04-29T21:45:30Z",
+          "actor": "synthesizer",
+          "event": "note_added",
+          "notes": "Canonical env-validation debt superseding overlapping perf bundle blocker duplicate."
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-9272ff4a",
+      "type": "question",
+      "category": "auth-effects",
+      "severity": "minor",
+      "priority": "P3",
+      "confidence": "inference",
+      "title": "AuthProvider useEffect depends on refreshTimer so timer updates may rerun checkAuth",
+      "description": "Effect coupling latent.",
+      "impact": "Future proactive JWT scheduling could double-invoke auth probes.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "useEffect depends on checkAuth and refreshTimer.",
+          "file": "apps/web/src/contexts/AuthContext.tsx",
+          "symbol": "AuthProvider",
+          "start_line": 119,
+          "end_line": 128
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T20:15:00Z",
+          "actor": "runtime-bug-hunter",
+          "event": "created",
+          "notes": "Flagged dependency coupling while reviewing auth bootstrap logic."
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-85729ed5",
+      "type": "debt",
+      "category": "migration-security",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "RLS migration creates embr_app role with a hard-coded SQL password",
+      "description": "Literal PASSWORD in migration DDL.",
+      "impact": "Secrets reside in git history.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Migration creates embr_app with literal PASSWORD.",
+          "file": "apps/api/prisma/migrations/20260316000000_add_rls_policies/migration.sql",
+          "symbol": "embr_app",
+          "start_line": 17,
+          "end_line": 21
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T20:15:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": ""
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-8d353ffb",
+      "type": "debt",
+      "category": "migration-history",
+      "severity": "minor",
+      "priority": "P2",
+      "confidence": "evidence",
+      "title": "Two sequential baseline init migrations increase ordering and drift risk",
+      "description": "Duplicate baseline migrations increase ambiguity.",
+      "impact": "Operational rollback friction paired with deploy rollback acceptance.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "First baseline migration bootstraps enums.",
+          "file": "apps/api/prisma/migrations/20260205071952_init/migration.sql",
+          "symbol": "CREATE TYPE UserRole",
+          "start_line": 1,
+          "end_line": 10
+        }
+      ],
+      "related_ids": [
+        "f-deploy-db-migration-rollback-001"
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T20:15:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": ""
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-67296753",
+      "type": "debt",
+      "category": "type-drift",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Shared @embr/types models are hand-written instead of generated from Prisma",
+      "description": "Manual typings drift from persistence shapes.",
+      "impact": "Runtime mismatches across tiers.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Manual Follow interface differs from Prisma Follow fields.",
+          "file": "packages/types/src/social.types.ts",
+          "symbol": "FollowUser",
+          "start_line": 17,
+          "end_line": 36
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T20:15:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": ""
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-ec046275",
+      "type": "enhancement",
+      "category": "validation-coverage",
+      "severity": "minor",
+      "priority": "P2",
+      "confidence": "inference",
+      "title": "Fewer than half of Prisma models have dedicated request DTO validation",
+      "description": "Aggregate dto counts lag models.",
+      "impact": "Weak ingress validation.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Example SignUpDto demonstrates validators.",
+          "file": "apps/api/src/core/auth/dto/signup.dto.ts",
+          "symbol": "SignUpDto",
+          "start_line": 4,
+          "end_line": 24
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T20:15:00Z",
+          "actor": "schema-auditor",
+          "event": "created",
+          "notes": ""
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-eee630c1",
+      "type": "debt",
+      "category": "n-plus-one",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Tip leaderboard enrichment issues one Prisma user query per aggregated bucket",
+      "description": "Promise.all maps tips group rows to user.findUnique calls.",
+      "impact": "DB chatter scales linearly with leaderboard depth.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Promise.all maps grouped buckets to user lookups.",
+          "file": "apps/api/src/core/monetization/services/wallet.service.ts",
+          "symbol": "getTopEarners",
+          "start_line": 274,
+          "end_line": 317
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T20:18:42Z",
+          "actor": "performance-cost-auditor",
+          "event": "created",
+          "notes": ""
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-3c18e55a",
+      "type": "debt",
+      "category": "api-fan-out",
+      "severity": "minor",
+      "priority": "P2",
+      "confidence": "evidence",
+      "title": "Moderator notifications fan out one create call per staff user on high-priority reports",
+      "description": "notifyModerators issues writes per moderator.",
+      "impact": "Write amplification.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Promise.all around moderator notifications.",
+          "file": "apps/api/src/core/safety/services/reports.service.ts",
+          "symbol": "notifyModerators",
+          "start_line": 464,
+          "end_line": 486
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T20:18:42Z",
+          "actor": "performance-cost-auditor",
+          "event": "created",
+          "notes": "code_ref corrected vs stray reporter-only filename reference."
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-a873f040",
+      "type": "debt",
+      "category": "db-write-amplification",
+      "severity": "minor",
+      "priority": "P2",
+      "confidence": "evidence",
+      "title": "Post detail reads always issue an extra viewCount update query",
+      "description": "Increment viewCount every fetch.",
+      "impact": "Hot reads amplify WAL churn.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Unconditional viewCount increment after authorization.",
+          "file": "apps/api/src/verticals/feeds/content/services/posts.service.ts",
+          "symbol": "getPost",
+          "start_line": 174,
+          "end_line": 178
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T20:18:42Z",
+          "actor": "performance-cost-auditor",
+          "event": "created",
+          "notes": ""
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-daf89204",
+      "type": "question",
+      "category": "query-plans",
+      "severity": "minor",
+      "priority": "P3",
+      "confidence": "speculation",
+      "title": "Need measured plans for feed queries combining visibility, soft-delete, and nested block filters",
+      "description": "EXPLAIN ANALYZE pending.",
+      "impact": "Potential regressions invisible absent benchmarks.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Nested blocked-user filtering.",
+          "file": "apps/api/src/verticals/feeds/content/services/posts.service.ts",
+          "symbol": "getFeed",
+          "start_line": 199,
+          "end_line": 220
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T20:18:42Z",
+          "actor": "performance-cost-auditor",
+          "event": "created",
+          "notes": ""
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-5249e671",
+      "type": "debt",
+      "category": "third-party-cost",
+      "severity": "nit",
+      "priority": "P3",
+      "confidence": "inference",
+      "title": "Optional Google Analytics env flag implies third-party script cost and privacy review when enabled",
+      "description": "Optional NEXT_PUBLIC_GA_ID warns when absent.",
+      "impact": "When toggled without governance increases bundle/compliance exposure.",
+      "proof_hooks": [
+        {
+          "hook_type": "config_key",
+          "summary": "Optional GA env flagged.",
+          "file": "apps/web/next.config.js",
+          "config_key": "NEXT_PUBLIC_GA_ID",
+          "config_value": "(optional unset)"
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T20:18:42Z",
+          "actor": "performance-cost-auditor",
+          "event": "created",
+          "notes": ""
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-5009e58c",
+      "type": "bug",
+      "category": "information-disclosure",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Unhandled exceptions return raw Error.message to API clients",
+      "description": "Global exception filter leaks non HttpException messages.",
+      "impact": "Passive reconnaissance against internals.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Assigning exception.message to payload.",
+          "file": "apps/api/src/shared/filters/http-exception.filter.ts",
+          "symbol": "GlobalExceptionFilter.catch",
+          "start_line": 49,
+          "end_line": 64
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T17:45:00Z",
+          "actor": "security-and-privacy-auditor",
+          "event": "created",
+          "notes": ""
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-8688c1bf",
+      "type": "bug",
+      "category": "authz-config",
+      "severity": "major",
+      "priority": "P1",
+      "confidence": "evidence",
+      "title": "Mux webhook controller is not marked @Public under global JWT guard",
+      "description": "Mux callbacks blocked unless decorator opted-out globally guarded routes.",
+      "impact": "Video ingest outages.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "JwtAuthGuard applied broadly.",
+          "file": "apps/api/src/app.module.ts",
+          "symbol": "AppModule providers",
+          "start_line": 94,
+          "end_line": 98
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "MuxWebhookController lacks @Public annotations.",
+          "file": "apps/api/src/core/media/controllers/mux-webhook.controller.ts",
+          "symbol": "MuxWebhookController",
+          "start_line": 24,
+          "end_line": 47
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T17:45:00Z",
+          "actor": "security-and-privacy-auditor",
+          "event": "created",
+          "notes": ""
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-632cc934",
+      "type": "bug",
+      "category": "webhook-integrity",
+      "severity": "minor",
+      "priority": "P2",
+      "confidence": "inference",
+      "title": "Stripe webhook handler types body as Buffer without enabling Nest raw body",
+      "description": "constructEvent expects canonical raw payload.",
+      "impact": "Signature verification brittle.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "StripeWebhookController expects Buffer.",
+          "file": "apps/api/src/core/monetization/webhooks/stripe-webhook.controller.ts",
+          "symbol": "StripeWebhookController.handleWebhook",
+          "start_line": 40,
+          "end_line": 65
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Nest bootstrap without rawBody.",
+          "file": "apps/api/src/main.ts",
+          "symbol": "bootstrap",
+          "start_line": 118,
+          "end_line": 121
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T17:45:00Z",
+          "actor": "security-and-privacy-auditor",
+          "event": "created",
+          "notes": ""
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-6632f15a",
+      "type": "bug",
+      "category": "cors-config",
+      "severity": "minor",
+      "priority": "P2",
+      "confidence": "inference",
+      "title": "Messaging Socket.IO gateway defaults CORS to localhost when ALLOWED_ORIGINS is unset",
+      "description": "Gateway cors differs from HTTP CORS posture.",
+      "impact": "Deployment drift causing outages or permissive fixes.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Messaging gateway ALLOWED_ORIGINS fallback localhost.",
+          "file": "apps/api/src/verticals/messaging/messaging/gateways/messaging.gateway.ts",
+          "symbol": "MessagingGateway",
+          "start_line": 42,
+          "end_line": 47
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T17:45:00Z",
+          "actor": "security-and-privacy-auditor",
+          "event": "created",
+          "notes": ""
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
+      }
+    },
+    {
+      "finding_id": "f-2f799c6b",
+      "type": "debt",
+      "category": "supply-chain",
+      "severity": "nit",
+      "priority": "P3",
+      "confidence": "inference",
+      "title": "Root package scripts omit npm audit or lockfile-backed CI security checks",
+      "description": "No packaged npm audit/OSV workflow gates.",
+      "impact": "Vulnerable transitive packages unnoticed.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "Scripts omit npm audit.",
+          "file": "package.json",
+          "symbol": "scripts",
+          "start_line": 12,
+          "end_line": 48
+        }
+      ],
+      "status": "open",
+      "history": [
+        {
+          "timestamp": "2026-04-29T17:45:00Z",
+          "actor": "security-and-privacy-auditor",
+          "event": "created",
+          "notes": ""
+        }
+      ],
+      "suggested_fix": {
+        "approach": "See synthesizer / agent notes.",
+        "affected_files": [],
+        "estimated_effort": "small",
+        "tests_needed": []
       }
     }
   ],

@@ -2,6 +2,13 @@
   "schema_version": "1.1.0",
   "runs": [
     {
+      "run_id": "synthesized-20260429-214530",
+      "kind": "synthesizer_output",
+      "timestamp": "2026-04-29T20:20:31Z",
+      "artifact": "audits/runs/2026-04-29/synthesized-c275a419.json",
+      "source_suites": []
+    },
+    {
       "run_id": "synthesized-20260427-223921",
       "kind": "synthesizer_output",
       "timestamp": "2026-04-27T22:41:34Z",

@@ -8,11 +8,11 @@ Database migration rollback plan is not documented; failed deployments could lea
 
 ## Description
 
-Database migration rollback plan is not documented; failed deployments could leave database in inconsistent state
+Prior canonical accepted finding carried forward from audits/open_findings.json; not re-opened by upstream suites this run.
 
 ## Impact
 
-Audit carry-forward item; impact is described by the finding title and source case file.
+Operational risk persists until remediation documented.
 
 ## Suggested fix
 
@@ -22,12 +22,12 @@ Review the existing case file and apply the documented remediation.
 
 ## Proof hooks
 
-- **[artifact_ref]** Carried forward from audits/open_findings.json and existing case files.
-  - File: `audits/open_findings.json`
+- **[artifact_ref]** Previously synced canonical finding audits/open_findings.json.
 
 ## History
 
 - 2026-03-19T22:47:21Z — **linear-sync** — note_added: Status synced from Linear (PLP-92): Todo -> accepted
+- 2026-04-29T21:45:30Z — **synthesizer** — note_added: Compared merged outputs against prior open_findings.json; no upstream suite rescinded acceptance.
 
 ---
-*Last canonical synthesizer run: `synthesized-20260427-223921`*
+*Last canonical synthesizer run: `synthesized-20260429-214530`*
