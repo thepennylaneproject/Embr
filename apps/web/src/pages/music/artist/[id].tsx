@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { ProtectedPageShell } from '@/components/layout';
 import { ArtistDashboard } from '@/components/music/artist/ArtistDashboard';
+import { getMusicGateServerSideProps } from '@/lib/musicGate';
+
+export const getServerSideProps = getMusicGateServerSideProps;
 
 export default function ArtistProfilePage() {
   const router = useRouter();

@@ -6,6 +6,7 @@ import { SuggestedUsers } from '@/components/social/SuggestedUsers';
 import { useUserSearch } from '@/hooks/useUserSearch';
 import { FollowButtonCompact } from '@/components/social/FollowButton';
 import type { SearchUser, TrendingCreator, RecommendedUser } from '@shared/types/social.types';
+import { isMusicEnabled } from '@/lib/features';
 
 type Tab = 'trending' | 'suggested' | 'search';
 
@@ -206,7 +207,7 @@ const DiscoveryPage: React.FC = () => {
                 {[
                   { name: 'Design', emoji: '🎨', count: '12.5K' },
                   { name: 'Photography', emoji: '📸', count: '8.2K' },
-                  { name: 'Music', emoji: '🎵', count: '15.1K' },
+                  ...(isMusicEnabled() ? [{ name: 'Music', emoji: '🎵', count: '15.1K' }] : []),
                   { name: 'Writing', emoji: '✍️', count: '6.8K' },
                   { name: 'Video', emoji: '🎥', count: '9.3K' },
                   { name: 'Development', emoji: '💻', count: '11.4K' },

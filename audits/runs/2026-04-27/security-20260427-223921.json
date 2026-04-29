@@ -292,30 +292,108 @@
           "Re-run the relevant LYRA audit agent."
         ]
       }
+    },
+    {
+      "finding_id": "f-a50b7176",
+      "type": "bug",
+      "severity": "major",
+      "priority": "P1",
+      "status": "fixed_verified",
+      "title": "Tool endpoints use one shared workspace for all authenticated users",
+      "agent": "security-privacy-auditor",
+      "category": "data-leakage",
+      "confidence": "evidence",
+      "suggested_fix": {
+        "approach": "Derive workspace_root from user_id under a base path via WorkspacePolicy.workspace_root_for(user_id)",
+        "affected_files": [
+          "backend/app/tools/policy.py",
+          "backend/app/tools/service.py",
+          "backend/app/api/routes/tools.py",
+          "backend/app/core/auth.py"
+        ],
+        "estimated_effort": "medium",
+        "tests_needed": [
+          "Two users with different JWTs cannot read each other's workspace files"
+        ]
+      },
+      "history": [
+        {
+          "timestamp": "2026-04-07T00:00:00Z",
+          "actor": "security-privacy-auditor",
+          "event": "created",
+          "notes": "Imported from LYRA audit suite finding f-a50b7176 (PLP-562)."
+        },
+        {
+          "timestamp": "2026-04-07T00:00:00Z",
+          "actor": "solo-dev",
+          "event": "patch_applied",
+          "notes": "Implemented per-user workspace isolation via WorkspacePolicy. All 20 isolation tests pass."
+        },
+        {
+          "timestamp": "2026-04-28T01:17:00Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Verified by source review: all tool file operations are scoped by authenticated user_id."
+        }
+      ],
+      "description": "Tool endpoints now derive workspace paths from the authenticated JWT subject. WorkspacePolicy creates base_workspace_dir/user_id sandboxes, ToolService requires user_id on public file operations, and routes pass current_user.user_id from the auth dependency.",
+      "impact": "Authenticated users no longer share one filesystem workspace through these tool endpoints; traversal checks also prevent paths from escaping the per-user sandbox.",
+      "proof_hooks": [
+        {
+          "hook_type": "code_ref",
+          "summary": "WorkspacePolicy.workspace_root_for(user_id) creates and validates a per-user root under TOOL_WORKSPACE_BASE.",
+          "file": "backend/app/tools/policy.py",
+          "symbol": "WorkspacePolicy.workspace_root_for"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "ToolService public methods require user_id and resolve paths through WorkspacePolicy.safe_path.",
+          "file": "backend/app/tools/service.py",
+          "symbol": "ToolService"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Tool routes require CurrentUser and pass current_user.user_id into ToolService for list/read/write/delete operations.",
+          "file": "backend/app/api/routes/tools.py",
+          "symbol": "tools routes"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "get_current_user validates Bearer JWT and rejects missing sub before constructing AuthenticatedUser.",
+          "file": "backend/app/core/auth.py",
+          "symbol": "get_current_user"
+        }
+      ]
     }
   ],
   "rollups": {
     "by_severity": {
       "blocker": 0,
-      "major": 6,
+      "major": 7,
       "minor": 0,
       "nit": 0
     },
     "by_category": {
-      "auth-and-privacy": 6
+      "auth-and-privacy": 6,
+      "data-leakage": 1
     },
     "by_type": {
-      "bug": 6,
+      "bug": 7,
       "enhancement": 0,
       "debt": 0,
       "question": 0
     },
     "by_status": {
-      "fixed_verified": 3,
+      "fixed_verified": 4,
       "open": 3
     }
   },
   "next_actions": [
+    {
+      "action": "Verify and fix Tool endpoints use one shared workspace for all authenticated users",
+      "finding_id": "f-a50b7176",
+      "rationale": "Authenticated users no longer share one filesystem workspace through these tool endpoints; traversal checks also prevent paths from escaping the per-user sandbox."
+    },
     {
       "action": "Verify and fix Account enumeration vulnerability via forgot-password and email verifi",
       "finding_id": "sec-007",
@@ -334,11 +412,6 @@
     {
       "action": "Verify and fix CORS credentials exposed with loose origin validation",
       "finding_id": "sec-006",
-      "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
-    },
-    {
-      "action": "Verify and fix Google OAuth redirect validation incomplete\u2014OPEN_REDIRECT risk if FRON",
-      "finding_id": "sec-008",
       "rationale": "Audit carry-forward item; impact is described by the finding title and source case file."
     }
   ]

@@ -61,25 +61,36 @@
       "priority": "P0",
       "confidence": "evidence",
       "title": "Music phase-2 vertical is exposed in production UI without a feature flag",
-      "description": "The project expectations state that the Music phase-2 vertical must not be accessible or visible in production UI until backend models are complete. The web app includes public /music routes, an onboarding link to /music, and Music copy in product pages without an observed production feature flag gate.",
-      "impact": "Production users can enter an incomplete vertical, creating broken or misleading product flows and violating a critical launch constraint.",
+      "description": "The Music vertical is now controlled by NEXT_PUBLIC_ENABLE_MUSIC. When disabled, the app shell, onboarding discovery, composer music button/modal, post music cards, about/discovery/earnings copy, and every /music page are gated; direct /music navigation returns a 404 through getServerSideProps.",
+      "impact": "Production builds keep the incomplete Music phase-2 vertical out of visible UI and direct routes unless the explicit feature flag is enabled.",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "/music renders MusicDiscoveryPage and exposes upload and artist-profile CTAs.",
-          "file": "apps/web/src/pages/music/index.tsx",
-          "symbol": "MusicDiscoveryPage"
+          "summary": "Feature flag helper enables Music only for NEXT_PUBLIC_ENABLE_MUSIC=true or 1.",
+          "file": "apps/web/src/lib/features.ts",
+          "symbol": "isMusicEnabled"
         },
         {
           "hook_type": "code_ref",
-          "summary": "Onboarding includes a Music step that links to /music.",
-          "file": "apps/web/src/components/onboarding/OnboardingWizard.tsx",
-          "symbol": "music step"
+          "summary": "App shell navigation and onboarding omit Music when the flag is disabled.",
+          "file": "apps/web/src/components/layout/AppShell.tsx",
+          "symbol": "navItems"
         },
         {
-          "hook_type": "artifact_ref",
-          "summary": "Expectation 8.1 forbids exposing Music phase-2 in production without complete backend support.",
-          "file": "audits/expectations.md"
+          "hook_type": "code_ref",
+          "summary": "Music pages export a server-side gate that returns notFound when Music is disabled.",
+          "file": "apps/web/src/lib/musicGate.ts",
+          "symbol": "getMusicGateServerSideProps"
+        },
+        {
+          "hook_type": "ui_path",
+          "summary": "Manual browser test showed no Music nav link on /about and direct /music navigation displayed the 404 page.",
+          "file": "/opt/cursor/artifacts/music_gate_disabled_demo.mp4"
+        },
+        {
+          "hook_type": "command",
+          "summary": "Web build passed with Music disabled and again with NEXT_PUBLIC_ENABLE_MUSIC=true.",
+          "command": "NEXT_PUBLIC_API_URL=http://localhost:3003/api NEXT_PUBLIC_WS_URL=http://localhost:3003 npm --prefix apps/web run build; NEXT_PUBLIC_ENABLE_MUSIC=true NEXT_PUBLIC_API_URL=http://localhost:3003/api NEXT_PUBLIC_WS_URL=http://localhost:3003 npm --prefix apps/web run build"
         }
       ],
       "suggested_fix": {
@@ -94,13 +105,19 @@
           "Build web with the flag disabled and verify /music is not reachable from navigation/onboarding."
         ]
       },
-      "status": "open",
+      "status": "fixed_verified",
       "history": [
         {
           "timestamp": "2026-04-27T22:39:21Z",
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Created during LYRA audit pass."
+        },
+        {
+          "timestamp": "2026-04-28T01:22:00Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Verified fixed with source gates, disabled-route browser demo, and disabled/enabled web builds."
         }
       ]
     },
@@ -361,7 +378,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "fixed_pending_verify",
+      "status": "open",
       "title": "Missing alt text on decorative images and avatars",
       "agent": "ux-flow-auditor",
       "history": [
@@ -394,17 +411,36 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-142): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-28T01:17:00Z",
+          "actor": "synthesizer",
+          "event": "verification_failed",
+          "notes": "Verification failed: remaining avatar/thumbnail images still use empty alt text in user-facing contexts."
         }
       ],
-      "confidence": "inference",
+      "confidence": "evidence",
       "category": "ux-flow",
-      "description": "Missing alt text on decorative images and avatars",
-      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "description": "Several user/avatar or listing thumbnail images still use empty alt text, including DM inbox search results, attendee avatars, member avatars, and order listing thumbnails. Some decorative thumbnails may be acceptable, but interactive user/avatar images still need meaningful labels or an accessible text alternative tied to the control.",
+      "impact": "Screen reader users can encounter unlabeled visual identity cues in people-picking, attendee, member, and order contexts.",
       "proof_hooks": [
         {
-          "hook_type": "artifact_ref",
-          "summary": "Carried forward from audits/open_findings.json and existing case files.",
-          "file": "audits/open_findings.json"
+          "hook_type": "code_ref",
+          "summary": "DMInbox search-result avatar renders alt=\"\" inside an interactive user selection button.",
+          "file": "apps/web/src/components/messaging/DMInbox.tsx",
+          "symbol": "UserSearchModal"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "AttendeeList renders attendee avatar images with alt=\"\".",
+          "file": "apps/web/src/components/events/AttendeeList.tsx",
+          "symbol": "AttendeeList"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "OrderCard renders the listing thumbnail with alt=\"\".",
+          "file": "apps/web/src/components/marketplace/OrderCard.tsx",
+          "symbol": "OrderCard"
         }
       ],
       "suggested_fix": {
@@ -435,9 +471,9 @@
       "question": 0
     },
     "by_status": {
+      "fixed_verified": 1,
       "open": 2,
-      "accepted": 6,
-      "fixed_pending_verify": 1
+      "accepted": 6
     }
   },
   "next_actions": [

@@ -10,6 +10,7 @@ import { useWallet } from '@/hooks/useWallet';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { CreatorOnboarding } from '@/components/onboarding/CreatorOnboarding';
 import { AnalyticsEvent } from '@/lib/analytics';
+import { isMusicEnabled } from '@/lib/features';
 
 interface EarningsOverviewProps {
   onRequestPayout?: () => void;
@@ -130,16 +131,17 @@ export const EarningsOverview: React.FC<EarningsOverviewProps> = ({
             </p>
           </div>
 
-          {/* Music */}
-          <div>
-            <p style={{ fontSize: '14px', color: '#999', marginBottom: '8px' }}>Music Licensing</p>
-            <p style={{ fontSize: '28px', fontWeight: 600, color: '#000' }}>
-              ${(stats?.musicEarnings || 0).toFixed(2)}
-            </p>
-            <p style={{ fontSize: '12px', color: '#ccc', marginTop: '8px' }}>
-              {stats?.musicDownloads || 0} downloads
-            </p>
-          </div>
+          {isMusicEnabled() && (
+            <div>
+              <p style={{ fontSize: '14px', color: '#999', marginBottom: '8px' }}>Music Licensing</p>
+              <p style={{ fontSize: '28px', fontWeight: 600, color: '#000' }}>
+                ${(stats?.musicEarnings || 0).toFixed(2)}
+              </p>
+              <p style={{ fontSize: '12px', color: '#ccc', marginTop: '8px' }}>
+                {stats?.musicDownloads || 0} downloads
+              </p>
+            </div>
+          )}
 
           {/* Subscriptions (future) */}
           <div>

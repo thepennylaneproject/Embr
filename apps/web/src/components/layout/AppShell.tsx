@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar } from '@embr/ui';
 import type { CSSProperties } from 'react';
 import { copy } from '@/lib/copy';
+import { isMusicEnabled } from '@/lib/features';
 
 const navItems = [
   { href: '/feed', label: copy.nav.feed },
@@ -16,7 +17,7 @@ const navItems = [
   { href: '/events', label: copy.nav.events },
   { href: '/mutual-aid', label: copy.nav.mutualAid },
   { href: '/marketplace', label: copy.nav.marketplace },
-  { href: '/music', label: copy.nav.music },
+  ...(isMusicEnabled() ? [{ href: '/music', label: copy.nav.music }] : []),
   { href: '/gigs', label: copy.nav.gigs },
   { href: '/earnings', label: copy.nav.earnings },
   { href: '/messages', label: copy.nav.messages },

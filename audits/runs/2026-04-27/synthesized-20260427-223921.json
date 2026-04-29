@@ -544,7 +544,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "Potential null dereference in conversation deletion without soft-delete",
       "agent": "synthesizer",
       "history": [
@@ -571,17 +571,30 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-96): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-28T01:17:00Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Verified by source review: deleteConversation uses soft-delete and guards missing/deleted conversations before participant access."
         }
       ],
-      "confidence": "inference",
+      "confidence": "evidence",
       "category": "runtime-logic",
-      "description": "Potential null dereference in conversation deletion without soft-delete",
-      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "description": "Conversation deletion now checks that the conversation exists and is not already soft-deleted before accessing participant fields, then soft-deletes by setting deletedAt and maps Prisma P2025 races to NotFoundException.",
+      "impact": "The delete path no longer dereferences a missing conversation and no longer hard-deletes the row; concurrent delete races return a controlled not-found response.",
       "proof_hooks": [
         {
-          "hook_type": "artifact_ref",
-          "summary": "Carried forward from audits/open_findings.json and existing case files.",
-          "file": "audits/open_findings.json"
+          "hook_type": "code_ref",
+          "summary": "deleteConversation fetches the conversation, throws NotFoundException when missing/deleted, validates participant membership, and updates deletedAt instead of deleting the row.",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "MessagingService.deleteConversation"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "The update is wrapped in a try/catch that converts Prisma P2025 into NotFoundException for concurrent missing/already-deleted rows.",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "P2025 handling"
         }
       ],
       "suggested_fix": {
@@ -598,7 +611,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "fixed_pending_verify",
+      "status": "open",
       "title": "Unsafe profile access in follows.service.ts without existence check",
       "agent": "synthesizer",
       "history": [
@@ -631,24 +644,30 @@
           "actor": "synthesizer",
           "event": "verification_failed",
           "notes": "Fix remains incomplete: profile update path can still fail and now duplicates counter increments."
+        },
+        {
+          "timestamp": "2026-04-28T01:17:00Z",
+          "actor": "synthesizer",
+          "event": "verification_failed",
+          "notes": "Verification failed: profile updates are still unsafe for missing Profile rows and now duplicate counter increments."
         }
       ],
-      "confidence": "inference",
+      "confidence": "evidence",
       "category": "runtime-logic",
-      "description": "Follow user existence is checked, but the profile counter update path still calls tx.profile.update inside the transaction and then updateMany after the transaction. Missing profiles can still throw before the updateMany fallback, and the duplicate block creates counter drift.",
-      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "description": "The target user existence check exists, but followUser still calls tx.profile.update for both users inside the transaction. If either Profile row is absent, Prisma can still throw before the later updateMany fallback runs. The later updateMany block also duplicates the counter increments when profiles do exist.",
+      "impact": "Follow creation can still fail for users without Profile rows, and successful follows can inflate profile counters by two instead of one.",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "Target user existence is checked, but profile update still uses tx.profile.update inside the transaction.",
+          "summary": "The transaction uses tx.profile.update for follower and following profiles, which requires both Profile rows to exist.",
           "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
           "symbol": "FollowsService.followUser"
         },
         {
           "hook_type": "code_ref",
-          "summary": "Post-transaction updateMany is present after the transaction, creating duplicate counter mutation.",
+          "summary": "A second updateMany block increments the same counters again after the transaction, so the attempted fallback creates counter drift.",
           "file": "apps/api/src/verticals/feeds/social-graph/services/follows.service.ts",
-          "symbol": "lines 96-108"
+          "symbol": "post-transaction updateMany"
         }
       ],
       "suggested_fix": {
@@ -848,7 +867,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P2",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "Unsafe property access in message sender mapping (messaging.service.ts:500)",
       "agent": "synthesizer",
       "history": [
@@ -857,17 +876,30 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-102): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-28T01:17:00Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Verified by source review: sender is included in the Prisma result and the schema relation is required."
         }
       ],
-      "confidence": "inference",
+      "confidence": "evidence",
       "category": "runtime-logic",
-      "description": "Unsafe property access in message sender mapping (messaging.service.ts:500)",
-      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "description": "The message sender mapping is backed by a Prisma create query that includes sender.profile, and the schema requires Message.senderId with a required sender relation. With that include shape, sender is materialized before the mapping reads sender.id, sender.username, and sender.profile.",
+      "impact": "The reviewed sendMessage mapping has the sender relation included before response shaping, so the prior missing-include runtime access issue is resolved for this code path.",
       "proof_hooks": [
         {
-          "hook_type": "artifact_ref",
-          "summary": "Carried forward from audits/open_findings.json and existing case files.",
-          "file": "audits/open_findings.json"
+          "hook_type": "code_ref",
+          "summary": "message.create includes sender with nested profile before messageWithSender is built.",
+          "file": "apps/api/src/verticals/messaging/messaging/services/messaging.service.ts",
+          "symbol": "MessagingService.sendMessage"
+        },
+        {
+          "hook_type": "data_shape",
+          "summary": "Prisma schema declares Message.senderId as required and Message.sender as a required User relation with onDelete Cascade.",
+          "file": "apps/api/prisma/schema.prisma",
+          "symbol": "model Message.sender"
         }
       ],
       "suggested_fix": {
@@ -884,7 +916,7 @@
       "type": "bug",
       "severity": "minor",
       "priority": "P2",
-      "status": "fixed_pending_verify",
+      "status": "open",
       "title": "Unhandled promise rejection in useMessaging hook error callback",
       "agent": "synthesizer",
       "history": [
@@ -893,17 +925,30 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-103): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-28T01:17:00Z",
+          "actor": "synthesizer",
+          "event": "verification_failed",
+          "notes": "Verification failed: error callbacks are still invoked without guarding returned promises."
         }
       ],
-      "confidence": "inference",
+      "confidence": "evidence",
       "category": "runtime-logic",
-      "description": "Unhandled promise rejection in useMessaging hook error callback",
-      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "description": "useMessaging still invokes onError and onErrorRef.current directly from socket handlers and catch blocks. Because async functions are assignable to a void callback type in React/TypeScript, a rejecting async onError callback can still produce an unhandled promise rejection.",
+      "impact": "Consumer-provided async error handlers can still reject outside the hook control flow, causing noisy unhandled rejections and potentially bypassing user-facing error recovery.",
       "proof_hooks": [
         {
-          "hook_type": "artifact_ref",
-          "summary": "Carried forward from audits/open_findings.json and existing case files.",
-          "file": "audits/open_findings.json"
+          "hook_type": "code_ref",
+          "summary": "UseMessagingOptions declares onError as a void callback, but async callbacks can still be passed by consumers.",
+          "file": "apps/web/src/hooks/useMessaging.ts",
+          "symbol": "UseMessagingOptions.onError"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Socket error handlers and catch blocks call onError/onErrorRef.current without Promise.resolve(...).catch handling.",
+          "file": "apps/web/src/hooks/useMessaging.ts",
+          "symbol": "onError calls"
         }
       ],
       "suggested_fix": {
@@ -1747,7 +1792,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "fixed_pending_verify",
+      "status": "open",
       "title": "Missing alt text on decorative images and avatars",
       "agent": "ux-flow-auditor",
       "history": [
@@ -1780,17 +1825,36 @@
           "actor": "linear-sync",
           "event": "note_added",
           "notes": "Status synced from Linear (PLP-142): In Review -> fixed_pending_verify"
+        },
+        {
+          "timestamp": "2026-04-28T01:17:00Z",
+          "actor": "synthesizer",
+          "event": "verification_failed",
+          "notes": "Verification failed: remaining avatar/thumbnail images still use empty alt text in user-facing contexts."
         }
       ],
-      "confidence": "inference",
+      "confidence": "evidence",
       "category": "ux-flow",
-      "description": "Missing alt text on decorative images and avatars",
-      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "description": "Several user/avatar or listing thumbnail images still use empty alt text, including DM inbox search results, attendee avatars, member avatars, and order listing thumbnails. Some decorative thumbnails may be acceptable, but interactive user/avatar images still need meaningful labels or an accessible text alternative tied to the control.",
+      "impact": "Screen reader users can encounter unlabeled visual identity cues in people-picking, attendee, member, and order contexts.",
       "proof_hooks": [
         {
-          "hook_type": "artifact_ref",
-          "summary": "Carried forward from audits/open_findings.json and existing case files.",
-          "file": "audits/open_findings.json"
+          "hook_type": "code_ref",
+          "summary": "DMInbox search-result avatar renders alt=\"\" inside an interactive user selection button.",
+          "file": "apps/web/src/components/messaging/DMInbox.tsx",
+          "symbol": "UserSearchModal"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "AttendeeList renders attendee avatar images with alt=\"\".",
+          "file": "apps/web/src/components/events/AttendeeList.tsx",
+          "symbol": "AttendeeList"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "OrderCard renders the listing thumbnail with alt=\"\".",
+          "file": "apps/web/src/components/marketplace/OrderCard.tsx",
+          "symbol": "OrderCard"
         }
       ],
       "suggested_fix": {
@@ -2023,7 +2087,7 @@
       "type": "bug",
       "severity": "major",
       "priority": "P1",
-      "status": "fixed_pending_verify",
+      "status": "fixed_verified",
       "title": "Tool endpoints use one shared workspace for all authenticated users",
       "agent": "security-privacy-auditor",
       "category": "data-leakage",
@@ -2053,15 +2117,40 @@
           "actor": "solo-dev",
           "event": "patch_applied",
           "notes": "Implemented per-user workspace isolation via WorkspacePolicy. All 20 isolation tests pass."
+        },
+        {
+          "timestamp": "2026-04-28T01:17:00Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Verified by source review: all tool file operations are scoped by authenticated user_id."
         }
       ],
-      "description": "Tool endpoints use one shared workspace for all authenticated users",
-      "impact": "Audit carry-forward item; impact is described by the finding title and source case file.",
+      "description": "Tool endpoints now derive workspace paths from the authenticated JWT subject. WorkspacePolicy creates base_workspace_dir/user_id sandboxes, ToolService requires user_id on public file operations, and routes pass current_user.user_id from the auth dependency.",
+      "impact": "Authenticated users no longer share one filesystem workspace through these tool endpoints; traversal checks also prevent paths from escaping the per-user sandbox.",
       "proof_hooks": [
         {
-          "hook_type": "artifact_ref",
-          "summary": "Carried forward from audits/open_findings.json and existing case files.",
-          "file": "audits/open_findings.json"
+          "hook_type": "code_ref",
+          "summary": "WorkspacePolicy.workspace_root_for(user_id) creates and validates a per-user root under TOOL_WORKSPACE_BASE.",
+          "file": "backend/app/tools/policy.py",
+          "symbol": "WorkspacePolicy.workspace_root_for"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "ToolService public methods require user_id and resolve paths through WorkspacePolicy.safe_path.",
+          "file": "backend/app/tools/service.py",
+          "symbol": "ToolService"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "Tool routes require CurrentUser and pass current_user.user_id into ToolService for list/read/write/delete operations.",
+          "file": "backend/app/api/routes/tools.py",
+          "symbol": "tools routes"
+        },
+        {
+          "hook_type": "code_ref",
+          "summary": "get_current_user validates Bearer JWT and rejects missing sub before constructing AuthenticatedUser.",
+          "file": "backend/app/core/auth.py",
+          "symbol": "get_current_user"
         }
       ]
     },
@@ -2117,25 +2206,36 @@
       "priority": "P0",
       "confidence": "evidence",
       "title": "Music phase-2 vertical is exposed in production UI without a feature flag",
-      "description": "The project expectations state that the Music phase-2 vertical must not be accessible or visible in production UI until backend models are complete. The web app includes public /music routes, an onboarding link to /music, and Music copy in product pages without an observed production feature flag gate.",
-      "impact": "Production users can enter an incomplete vertical, creating broken or misleading product flows and violating a critical launch constraint.",
+      "description": "The Music vertical is now controlled by NEXT_PUBLIC_ENABLE_MUSIC. When disabled, the app shell, onboarding discovery, composer music button/modal, post music cards, about/discovery/earnings copy, and every /music page are gated; direct /music navigation returns a 404 through getServerSideProps.",
+      "impact": "Production builds keep the incomplete Music phase-2 vertical out of visible UI and direct routes unless the explicit feature flag is enabled.",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "/music renders MusicDiscoveryPage and exposes upload and artist-profile CTAs.",
-          "file": "apps/web/src/pages/music/index.tsx",
-          "symbol": "MusicDiscoveryPage"
+          "summary": "Feature flag helper enables Music only for NEXT_PUBLIC_ENABLE_MUSIC=true or 1.",
+          "file": "apps/web/src/lib/features.ts",
+          "symbol": "isMusicEnabled"
         },
         {
           "hook_type": "code_ref",
-          "summary": "Onboarding includes a Music step that links to /music.",
-          "file": "apps/web/src/components/onboarding/OnboardingWizard.tsx",
-          "symbol": "music step"
+          "summary": "App shell navigation and onboarding omit Music when the flag is disabled.",
+          "file": "apps/web/src/components/layout/AppShell.tsx",
+          "symbol": "navItems"
         },
         {
-          "hook_type": "artifact_ref",
-          "summary": "Expectation 8.1 forbids exposing Music phase-2 in production without complete backend support.",
-          "file": "audits/expectations.md"
+          "hook_type": "code_ref",
+          "summary": "Music pages export a server-side gate that returns notFound when Music is disabled.",
+          "file": "apps/web/src/lib/musicGate.ts",
+          "symbol": "getMusicGateServerSideProps"
+        },
+        {
+          "hook_type": "ui_path",
+          "summary": "Manual browser test showed no Music nav link on /about and direct /music navigation displayed the 404 page.",
+          "file": "/opt/cursor/artifacts/music_gate_disabled_demo.mp4"
+        },
+        {
+          "hook_type": "command",
+          "summary": "Web build passed with Music disabled and again with NEXT_PUBLIC_ENABLE_MUSIC=true.",
+          "command": "NEXT_PUBLIC_API_URL=http://localhost:3003/api NEXT_PUBLIC_WS_URL=http://localhost:3003 npm --prefix apps/web run build; NEXT_PUBLIC_ENABLE_MUSIC=true NEXT_PUBLIC_API_URL=http://localhost:3003/api NEXT_PUBLIC_WS_URL=http://localhost:3003 npm --prefix apps/web run build"
         }
       ],
       "suggested_fix": {
@@ -2150,13 +2250,19 @@
           "Build web with the flag disabled and verify /music is not reachable from navigation/onboarding."
         ]
       },
-      "status": "open",
+      "status": "fixed_verified",
       "history": [
         {
           "timestamp": "2026-04-27T22:39:21Z",
           "actor": "ux-flow-auditor",
           "event": "created",
           "notes": "Created during LYRA audit pass."
+        },
+        {
+          "timestamp": "2026-04-28T01:22:00Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Verified fixed with source gates, disabled-route browser demo, and disabled/enabled web builds."
         }
       ]
     },
@@ -2168,26 +2274,25 @@
       "priority": "P0",
       "confidence": "evidence",
       "title": "CI and deploy web builds omit required NEXT_PUBLIC_WS_URL",
-      "description": "apps/web/next.config.js now throws when NEXT_PUBLIC_WS_URL is missing, but the CI Build Web step only sets NEXT_PUBLIC_API_URL and the deploy Build Web step sets neither public URL. In a clean GitHub Actions environment without apps/web/.env.local, next build will fail before deployment artifacts are produced.",
-      "impact": "Main-branch deploys can be blocked by environment validation even when application code compiles locally with a checked-in or local .env file.",
+      "description": "CI and deploy web build jobs now provide both required public web environment variables. CI uses local placeholders for NEXT_PUBLIC_API_URL and NEXT_PUBLIC_WS_URL; deploy reads NEXT_PUBLIC_API_URL and NEXT_PUBLIC_WS_URL from GitHub environment variables, matching the web build-time validation contract.",
+      "impact": "Clean CI/deploy web builds no longer fail because NEXT_PUBLIC_WS_URL is absent from the build environment.",
       "proof_hooks": [
         {
           "hook_type": "code_ref",
-          "summary": "next.config.js requires NEXT_PUBLIC_WS_URL during build/start.",
-          "file": "apps/web/next.config.js",
-          "symbol": "validateRequiredEnv"
-        },
-        {
-          "hook_type": "code_ref",
-          "summary": "CI Build Web exports NEXT_PUBLIC_API_URL but not NEXT_PUBLIC_WS_URL.",
+          "summary": "CI Build Web step sets NEXT_PUBLIC_API_URL and NEXT_PUBLIC_WS_URL before npm --prefix apps/web run build.",
           "file": ".github/workflows/ci.yml",
           "symbol": "Build Web"
         },
         {
           "hook_type": "code_ref",
-          "summary": "Deploy Build Web runs npm --prefix apps/web run build without NEXT_PUBLIC_* env.",
+          "summary": "Deploy Build Web step passes NEXT_PUBLIC_API_URL and NEXT_PUBLIC_WS_URL from GitHub environment variables.",
           "file": ".github/workflows/deploy.yml",
           "symbol": "Build Web"
+        },
+        {
+          "hook_type": "command",
+          "summary": "Web typecheck and build passed with NEXT_PUBLIC_API_URL and NEXT_PUBLIC_WS_URL set while music was disabled.",
+          "command": "NEXT_PUBLIC_API_URL=http://localhost:3003/api NEXT_PUBLIC_WS_URL=http://localhost:3003 npx tsc --noEmit --project apps/web/tsconfig.json && NEXT_PUBLIC_API_URL=http://localhost:3003/api NEXT_PUBLIC_WS_URL=http://localhost:3003 npm --prefix apps/web run build"
         }
       ],
       "suggested_fix": {
@@ -2202,13 +2307,19 @@
           "Run next build in a clean env with only the workflow-provided variables."
         ]
       },
-      "status": "open",
+      "status": "fixed_verified",
       "history": [
         {
           "timestamp": "2026-04-27T22:39:21Z",
           "actor": "build-deploy-auditor",
           "event": "created",
           "notes": "Created during LYRA audit pass."
+        },
+        {
+          "timestamp": "2026-04-28T01:22:00Z",
+          "actor": "synthesizer",
+          "event": "verification_passed",
+          "notes": "Verified fixed after workflow env updates and successful web typecheck/build."
         }
       ]
     }
@@ -2239,10 +2350,9 @@
       "question": 3
     },
     "by_status": {
-      "fixed_verified": 13,
+      "fixed_verified": 18,
       "accepted": 17,
-      "open": 15,
-      "fixed_pending_verify": 6
+      "open": 16
     }
   },
   "next_actions": [
@@ -2280,16 +2390,21 @@
       "f-903a4164"
     ],
     "resolved_findings": [
-      "f-schema-nullable-walletid-001",
-      "f-schema-validation-amount-001",
+      "f-903a4164",
+      "f-a50b7176",
+      "f-deploy-docker-prod-config-missing-001",
       "f-deploy-env-validation-startup-001",
       "f-deploy-web-env-validation-001",
-      "f-deploy-docker-prod-config-missing-001",
+      "f-eb108209",
+      "f-log-002",
       "f-log-004",
       "f-log-006",
       "f-log-007",
+      "f-log-008",
       "f-log-010",
       "f-log-011",
+      "f-schema-nullable-walletid-001",
+      "f-schema-validation-amount-001",
       "sec-006",
       "sec-007",
       "sec-008"
@@ -2360,6 +2475,46 @@
         "finding_id": "sec-008",
         "old_status": "fixed_pending_verify",
         "new_status": "fixed_verified"
+      },
+      {
+        "finding_id": "f-log-002",
+        "old_status": "fixed_pending_verify",
+        "new_status": "fixed_verified"
+      },
+      {
+        "finding_id": "f-log-003",
+        "old_status": "fixed_pending_verify",
+        "new_status": "open"
+      },
+      {
+        "finding_id": "f-log-008",
+        "old_status": "fixed_pending_verify",
+        "new_status": "fixed_verified"
+      },
+      {
+        "finding_id": "f-log-009",
+        "old_status": "fixed_pending_verify",
+        "new_status": "open"
+      },
+      {
+        "finding_id": "f-a11y-001",
+        "old_status": "fixed_pending_verify",
+        "new_status": "open"
+      },
+      {
+        "finding_id": "f-a50b7176",
+        "old_status": "fixed_pending_verify",
+        "new_status": "fixed_verified"
+      },
+      {
+        "finding_id": "f-903a4164",
+        "old_status": "open",
+        "new_status": "fixed_verified"
+      },
+      {
+        "finding_id": "f-eb108209",
+        "old_status": "open",
+        "new_status": "fixed_verified"
       }
     ],
     "converted_type": [],
@@ -2368,22 +2523,6 @@
   },
   "ranked_plan": {
     "top_fixes": [
-      {
-        "finding_id": "f-eb108209",
-        "title": "Music phase-2 vertical is exposed in production UI without a feature flag",
-        "severity": "blocker",
-        "priority": "P0",
-        "confidence": "evidence",
-        "rationale": "Production users can enter an incomplete vertical, creating broken or misleading product flows and violating a critical launch constraint."
-      },
-      {
-        "finding_id": "f-903a4164",
-        "title": "CI and deploy web builds omit required NEXT_PUBLIC_WS_URL",
-        "severity": "blocker",
-        "priority": "P0",
-        "confidence": "evidence",
-        "rationale": "Main-branch deploys can be blocked by environment validation even when application code compiles locally with a checked-in or local .env file."
-      },
       {
         "finding_id": "f-a50b7176",
         "title": "Tool endpoints use one shared workspace for all authenticated users",
@@ -2450,40 +2589,6 @@
       }
     ],
     "commit_plan": [
-      {
-        "title": "Music phase-2 vertical is exposed in production UI without a feature flag",
-        "finding_ids": [
-          "f-eb108209"
-        ],
-        "steps": [
-          "Gate all Music routes and navigation entries behind a production-safe feature flag until the vertical is explicitly ready, or document backend completeness and update the expectation."
-        ],
-        "affected_files": [
-          "apps/web/src/pages/music/index.tsx",
-          "apps/web/src/components/onboarding/OnboardingWizard.tsx",
-          "apps/web/src/lib/copy.ts"
-        ],
-        "tests_or_checks": [
-          "Build web with the flag disabled and verify /music is not reachable from navigation/onboarding."
-        ]
-      },
-      {
-        "title": "CI and deploy web builds omit required NEXT_PUBLIC_WS_URL",
-        "finding_ids": [
-          "f-903a4164"
-        ],
-        "steps": [
-          "Provide NEXT_PUBLIC_WS_URL and NEXT_PUBLIC_API_URL in CI/deploy build environments, preferably via repository/environment variables or explicit workflow env entries."
-        ],
-        "affected_files": [
-          ".github/workflows/ci.yml",
-          ".github/workflows/deploy.yml",
-          "apps/web/next.config.js"
-        ],
-        "tests_or_checks": [
-          "Run next build in a clean env with only the workflow-provided variables."
-        ]
-      },
       {
         "title": "Tool endpoints use one shared workspace for all authenticated users",
         "finding_ids": [

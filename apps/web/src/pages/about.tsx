@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { isMusicEnabled } from '@/lib/features';
 import { AppShell } from '@/components/layout/AppShell';
 
 export default function AboutPage() {
@@ -101,7 +102,7 @@ export default function AboutPage() {
               <br />
               ✓ Digital Sales (sell your work)
               <br />
-              ✓ Music Licensing (direct from creators)
+              {isMusicEnabled() ? '✓ Music Licensing (direct from creators)' : '✓ Creator marketplace (direct from creators)'}
               <br />
               <br />
               You choose which models work for you. You're not locked into one way of earning.
@@ -152,7 +153,7 @@ export default function AboutPage() {
 
           <div style={{ fontSize: '18px', lineHeight: '1.8', color: '#666' }}>
             <p style={{ marginBottom: '24px' }}>
-              <strong style={{ color: '#000' }}>Musicians:</strong> Keep 95% of earnings from streaming, gigs, and sales. No Spotify middleman.
+              <strong style={{ color: '#000' }}>Creators:</strong> Keep more of what you earn from gigs, sales, and community support.
             </p>
             <p style={{ marginBottom: '24px' }}>
               <strong style={{ color: '#000' }}>Journalists:</strong> Direct subscription from readers. No publication gatekeeping your work or your income.
