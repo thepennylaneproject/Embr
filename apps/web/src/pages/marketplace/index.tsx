@@ -9,6 +9,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import type { PaginatedListings, ListingType } from '@embr/types';
 import { LISTING_CATEGORIES } from '@embr/types';
 import { copy } from '@/lib/copy';
+import { EmptyListState } from '@/components/ui/EmptyListState';
 
 export default function MarketplacePage() {
   const router = useRouter();
@@ -61,12 +62,12 @@ export default function MarketplacePage() {
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <Link href="/marketplace/orders">
-            <button style={{ padding: '0.5rem 1rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'transparent', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '600' }}>
+            <button type="button" style={{ padding: '0.5rem 1rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'transparent', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '600' }}>
               My Orders
             </button>
           </Link>
           <Link href={`/marketplace/sell${groupId ? `?groupId=${groupId}` : ''}`}>
-            <button style={{ padding: '0.5rem 1.25rem', borderRadius: 'var(--embr-radius-md)', border: 'none', background: 'var(--embr-accent)', color: '#fff', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '700' }}>
+            <button type="button" style={{ padding: '0.5rem 1.25rem', borderRadius: 'var(--embr-radius-md)', border: 'none', background: 'var(--embr-accent)', color: '#fff', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '700' }}>
               + Sell Something
             </button>
           </Link>
@@ -100,14 +101,20 @@ export default function MarketplacePage() {
       {loading && result.items.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--embr-muted-text)' }}>Loading...</div>
       ) : result.items.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--embr-muted-text)' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🛍️</div>
-          <p style={{ margin: 0, fontWeight: '600' }}>Nothing to see here yet</p>
-          <p style={{ margin: '0.5rem 0 1rem', fontSize: '0.875rem' }}>Be the first to list something!</p>
+        <EmptyListState
+          icon="🛍️"
+          title={copy.emptyStates.noListings}
+          description={copy.emptyStates.noListingsDesc}
+        >
           <Link href="/marketplace/sell">
-            <button style={{ padding: '0.5rem 1.25rem', borderRadius: 'var(--embr-radius-md)', border: 'none', background: 'var(--embr-accent)', color: '#fff', cursor: 'pointer', fontWeight: '600' }}>List an Item</button>
+            <button
+              type="button"
+              style={{ padding: '0.5rem 1.25rem', borderRadius: 'var(--embr-radius-md)', border: 'none', background: 'var(--embr-accent)', color: '#fff', cursor: 'pointer', fontWeight: '600' }}
+            >
+              List an item
+            </button>
           </Link>
-        </div>
+        </EmptyListState>
       ) : (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
@@ -117,7 +124,7 @@ export default function MarketplacePage() {
           </div>
           {result.hasMore && (
             <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-              <button onClick={() => load(false, result.nextCursor)} disabled={loading} style={{ padding: '0.625rem 2rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'transparent', cursor: 'pointer', fontWeight: '600' }}>
+              <button type="button" onClick={() => load(false, result.nextCursor)} disabled={loading} style={{ padding: '0.625rem 2rem', borderRadius: 'var(--embr-radius-md)', border: '1px solid var(--embr-border)', background: 'transparent', cursor: 'pointer', fontWeight: '600' }}>
                 {loading ? 'Loading...' : 'Load More'}
               </button>
             </div>

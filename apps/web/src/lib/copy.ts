@@ -7,7 +7,7 @@
  *   brand, nav, onboarding, onboardingWizard, onboardingChecklist, onboardingBanner,
  *   dashboard, jobs, applications, resumes,
  *   voice, personas, profile, settings, learn, transparency, upgrade,
- *   errors, success, confirmations, actions, emptyStates, pricing, ethics,
+ *   errors, success, confirmations, actions, forms, emptyStates, pricing, ethics,
  *   eduPromo, marketing, trust
  */
 
@@ -69,8 +69,7 @@ export const copy = {
     signInToContinue: 'Sign in to continue',
     signInToContinueDesc: 'Create an account or sign in to access Embr.',
     welcomeBack: 'Welcome back',
-    welcomeBackDesc: 'Continue to your feed.',
-    goToFeed: 'Go to feed',
+    welcomeBackDesc: "You're signed in. Open your feed when you're ready.",
     loading: 'Loading',
     loadingDesc: 'Checking your authentication state.',
     loadingSession: 'Loading session',
@@ -164,9 +163,8 @@ export const copy = {
     firstSteps: [
       { label: 'Complete your profile', href: '/profile/edit' },
       { label: 'Make your first post', href: '/create' },
-      { label: 'Explore the feed', href: '/feed' },
+      { label: 'Go to feed', href: '/feed' },
     ] as Array<{ label: string; href: string }>,
-    goToFeed: 'Go to feed',
     completeProfile: 'Complete profile →',
   },
 
@@ -182,7 +180,7 @@ export const copy = {
     readyTitle: '🚀 Ready to earn',
     readySubtitle: 'Start applying to gigs and grow your audience',
     browseGigs: 'Browse Gigs',
-    viewFeed: 'View Feed',
+    viewFeed: 'Go to feed',
     steps: {
       profile: {
         title: 'Complete Your Profile',
@@ -426,13 +424,18 @@ export const copy = {
   },
 
   errors: {
+    /** Appended by getApiErrorMessage when the primary message has no next-step wording */
+    defaultRecoveryHint:
+      'If it still fails, refresh the page or try again in a moment.',
     generic: 'Something went wrong. Please try again.',
     networkError:
       'Unable to connect. Please check your connection and try again.',
     badRequest: 'Please check your input and try again.',
-    invalidCredentials: 'Invalid credentials.',
-    signupFailed: 'Account creation failed.',
-    failedToLoad: 'Failed to load.',
+    invalidCredentials:
+      'Invalid credentials. Double-check your email and password, or use Forgot password on the sign-in page.',
+    signupFailed:
+      'Account creation failed. Check the form for errors, or try a different email if this one is already in use.',
+    failedToLoad: 'We could not load this. Refresh the page or try again.',
     failedToSave: 'Could not save',
     failedToSaveDesc: 'Please try again.',
     uploadFailed: 'Upload failed',
@@ -446,8 +449,10 @@ export const copy = {
     passwordTooShort: 'Password must be at least 8 characters.',
     passwordMismatch: 'Passwords do not match.',
     usernameTooShort: 'Username must be at least 3 characters.',
-    unauthorized: "You don't have permission to do this.",
-    notFound: "We couldn't find what you were looking for.",
+    unauthorized:
+      "You don't have permission to do this. Go back, or sign in with a different account if you need access.",
+    notFound:
+      "We couldn't find what you were looking for. Check the link, use search, or go back to your feed.",
     sessionExpired: 'Your session has expired. Please sign in again.',
     tooManyAttempts: 'Too many attempts. Please wait a moment and try again.',
     serverError: 'A server error occurred. Please try again in a moment.',
@@ -497,10 +502,14 @@ export const copy = {
     failedToContribute: 'Could not process the contribution. Please try again.',
     // Error page copy
     pageNotFoundTitle: 'Page not found',
-    pageNotFoundDesc: "The page you're looking for doesn't exist.",
+    pageNotFoundDesc:
+      "The page you're looking for doesn't exist. Check the URL, use the menu to navigate, or go home.",
     serverErrorTitle: 'Internal server error',
-    serverErrorDesc: "Something went wrong on our end. We've been notified and are looking into it.",
+    serverErrorDesc:
+      "Something went wrong on our end. Wait a moment, then use Try again or go home. We've been notified.",
     genericErrorTitle: 'An error occurred',
+    genericErrorDesc:
+      'Something unexpected happened. Use Try again below, go home, or refresh the page.',
     tryAgain: 'Try again',
     goHome: 'Go home',
     goBack: 'Go back',
@@ -525,6 +534,8 @@ export const copy = {
 
   success: {
     saved: 'Saved',
+    postPublished: 'Post published',
+    postPublishedDesc: 'Your post is live.',
     profilePhotoUpdated: 'Profile photo updated',
     sent: 'Sent',
     submitted: 'Submitted',
@@ -582,6 +593,14 @@ export const copy = {
     download: 'Download',
     preview: 'Preview',
     post: 'Post',
+    goToFeed: 'Go to feed',
+    backToFeed: 'Back to feed',
+  },
+
+  forms: {
+    postContent: 'Post content',
+    postVisibility: 'Who can see this post',
+    postMediaUpload: 'Upload image or video',
   },
 
   emptyStates: {
@@ -589,13 +608,16 @@ export const copy = {
     noJobsDesc: 'Check back soon or post your own gig.',
     noPosts: 'No posts yet.',
     noPostsDesc: 'Be the first to post something.',
+    noPostsFollowing: 'Nothing new from people you follow yet.',
+    noPostsFollowingDesc: 'Follow more creators, or switch to For you for a wider feed.',
     noNotifications: 'You are all caught up.',
     noMessages: 'No messages yet.',
     noMessagesDesc: 'Start a conversation with a creator.',
+    noConversationsSearch: 'No conversations match this search.',
     noEvents: 'No events found.',
     noEventsDesc: 'Try adjusting your filters or check back later.',
-    noListings: 'No listings available.',
-    noListingsDesc: 'Try adjusting your search or filters.',
+    noListings: 'No listings yet.',
+    noListingsDesc: 'Try different filters, or be the first to list something.',
     noResults: 'No results found.',
     noResultsDesc: 'Try adjusting your search or filters.',
     noFollowers: 'No followers yet.',

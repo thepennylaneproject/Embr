@@ -47,6 +47,8 @@ Do NOT use `npm run dev` (the root script) as it tries `nest start --watch` whic
 
 ### Test accounts (from seed)
 
+These logins exist **only** in a **local** database after running the seed script (`scripts/seed.ts` against your Docker Postgres). They must **never** be deployed to production or reused on any internet-facing environment; rotate credentials and disable seed accounts before going live.
+
 | Email | Password | Role |
 |---|---|---|
 | admin@embr.app | test1234 | ADMIN |

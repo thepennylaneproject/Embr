@@ -119,6 +119,19 @@ export class RedisService implements OnModuleInit {
   }
 
   /**
+   * Increment a key and set TTL on first increment (fixed-window rate limiting).
+   * Returns the value after INCR.
+   */
+  async incrementWithTtl(key: string, ttlSeconds: number): Promise<number> {
+    const client = this.getClient();
+    const n = await client.incr(key);
+    if (n === 1) {
+      await client.expire(key, ttlSeconds);
+    }
+    return n;
+  }
+
+  /**
    * Get a value from Redis
    */
   async get(key: string): Promise<string | null> {

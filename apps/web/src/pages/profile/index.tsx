@@ -7,6 +7,7 @@ import { Post } from '@shared/types/content.types';
 import { PostCard } from '@/components/content';
 import { ProtectedPageShell } from '@/components/layout';
 import { Button, PageState } from '@embr/ui';
+import { Avatar } from '@/components/ui/Avatar';
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
@@ -66,17 +67,7 @@ export default function ProfilePage() {
     >
       <div className="ui-card" data-padding="lg" style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-          <img
-            src={avatarUrl}
-            alt={displayName}
-            style={{
-              width: '80px',
-              height: '80px',
-              borderRadius: '999px',
-              objectFit: 'cover',
-              flexShrink: 0,
-            }}
-          />
+          <Avatar src={avatarUrl} alt={displayName} name={displayName} size={80} className="flex-shrink-0" />
           <div style={{ flex: 1 }}>
             {user.profile?.bio && (
               <p style={{ marginTop: '0.5rem', color: 'var(--embr-muted-text)' }}>

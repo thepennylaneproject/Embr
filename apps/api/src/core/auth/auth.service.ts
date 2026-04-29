@@ -9,7 +9,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
-import { randomBytes, createHash } from 'crypto';
+import { randomBytes, createHash, randomUUID } from 'crypto';
 
 import { EmailService } from '../email/email.service';
 import { SignUpDto, LoginDto } from './dto';
@@ -450,19 +450,20 @@ export class AuthService {
       data: { isUsed: true, isVerified: true },
     });
 
-    // Generate actual password reset token (longer TTL - 1 hour)
-    // Prefix the token with the userId so it can be used to scope the DB lookup (F-014)
-    const rawToken = randomBytes(32).toString('hex');
-    const resetToken = `${user.id}.${rawToken}`;
+    // Opaque reset token: `v2.<PasswordResetToken.id>.<secret>` — never embed User.id
+    // in the plaintext (sec-010). Legacy `userId.secret` tokens are still accepted in resetPassword.
+    const tokenRowId = randomUUID();
+    const secret = randomBytes(32).toString('hex');
+    const resetToken = `v2.${tokenRowId}.${secret}`;
     const hashedResetToken = await bcrypt.hash(resetToken, 10);
 
-    // Create actual reset token
     await this.prisma.passwordResetToken.create({
       data: {
+        id: tokenRowId,
         userId: user.id,
         token: hashedResetToken,
         expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
-        isVerified: true, // This is the actual reset token
+        isVerified: true,
       },
     });
 
@@ -470,20 +471,39 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    // Extract userId from the token prefix (format: userId.randomHex) (F-014)
-    const dotIndex = token.indexOf('.');
-    const userId = dotIndex !== -1 ? token.substring(0, dotIndex) : null;
+    let storedTokens: Awaited<ReturnType<typeof this.prisma.passwordResetToken.findMany>>;
 
-    // Scope the DB lookup to the specific user's tokens for efficiency and security
-    const storedTokens = await this.prisma.passwordResetToken.findMany({
-      where: {
-        ...(userId ? { userId } : {}),
-        isUsed: false,
-        expiresAt: { gt: new Date() },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 10, // Limit to recent tokens per user
-    });
+    if (token.startsWith('v2.')) {
+      const rest = token.slice(3);
+      const dotIdx = rest.indexOf('.');
+      const tokenRowId = dotIdx !== -1 ? rest.slice(0, dotIdx) : null;
+      if (!tokenRowId) {
+        throw new BadRequestException('Invalid or expired reset token');
+      }
+      const row = await this.prisma.passwordResetToken.findFirst({
+        where: {
+          id: tokenRowId,
+          isUsed: false,
+          isVerified: true,
+          expiresAt: { gt: new Date() },
+        },
+      });
+      storedTokens = row ? [row] : [];
+    } else {
+      // Legacy: userId was embedded in the plaintext token (deprecated; still honored until expiry)
+      const dotIndex = token.indexOf('.');
+      const userId = dotIndex !== -1 ? token.substring(0, dotIndex) : null;
+      storedTokens = await this.prisma.passwordResetToken.findMany({
+        where: {
+          ...(userId ? { userId } : {}),
+          isUsed: false,
+          isVerified: true,
+          expiresAt: { gt: new Date() },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      });
+    }
 
     // Find matching token using constant-time comparison
     let matchedToken: (typeof storedTokens)[number] | null = null;

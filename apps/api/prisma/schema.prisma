@@ -5,6 +5,9 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// DATABASE_URL: for pooled deploys (PgBouncer, Neon pooler, etc.) point `url` at the pooler
+// and add Prisma-supported query params, e.g. `?connection_limit=10&pool_timeout=20`.
+// Keep DIRECT_URL at a direct Postgres role for `prisma migrate` when the pooler blocks DDL.
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")

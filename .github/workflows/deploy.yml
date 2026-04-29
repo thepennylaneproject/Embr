@@ -1,5 +1,12 @@
 name: Deploy
 
+# Manual rollback (not automated in CI):
+# - API: SSH to deploy host → cd /opt/embr → git checkout <last_good_sha> →
+#   docker compose -f docker/docker-compose.prod.yml pull api &&
+#   docker compose -f docker/docker-compose.prod.yml up -d --no-deps api
+# - Web (Vercel): Dashboard → Deployments → previous production → Promote, or `vercel rollback`.
+# - DB: only if a bad migration shipped — use backups / prisma migrate resolve; do not guess.
+
 on:
   push:
     branches: [main]
@@ -35,6 +42,9 @@ jobs:
 
       - name: Build Web
         run: npm --prefix apps/web run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3003/api # pragma: allowlist secret
+          NEXT_PUBLIC_WS_URL: http://localhost:3003 # pragma: allowlist secret
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

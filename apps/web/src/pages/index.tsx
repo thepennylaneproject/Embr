@@ -35,7 +35,7 @@ export default function HomePage() {
           <div style={{ display: 'flex', justifyContent: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
             {!loading && isAuthenticated ? (
               <Link href="/feed">
-                <Button type="button">{copy.onboarding.goToFeed}</Button>
+                <Button type="button">{copy.actions.goToFeed}</Button>
               </Link>
             ) : null}
             {!loading && !isAuthenticated ? (

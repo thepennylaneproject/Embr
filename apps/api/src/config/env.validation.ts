@@ -147,9 +147,17 @@ export const envValidationSchema = Joi.object({
   MESSAGING_RATE_LIMIT_MAX: Joi.number().integer().min(1).default(60),
   MESSAGING_RATE_LIMIT_WINDOW: Joi.number().integer().min(100).default(60000),
   MESSAGING_RATE_LIMIT_BURST: Joi.number().integer().min(1).default(5),
+  MESSAGING_RATE_LIMIT_REDIS: Joi.string().valid('true', 'false').optional(),
+
+  // ─── In-memory cache fallback (when Redis errors or is absent) ─────────────
+  CACHE_IN_MEMORY_MAX_KEYS: Joi.number().integer().min(1).max(1000000).optional(),
 
   // ─── Observability ──────────────────────────────────────────────────────────
   SENTRY_DSN: Joi.string().uri().optional().allow(''),
+  // Sample rate for Sentry performance traces (0–1) when SENTRY_DSN is set.
+  SENTRY_TRACES_SAMPLE_RATE: Joi.number().min(0).max(1).optional(),
+  // `json` = one JSON object per line on stdout; anything else = Nest default logger.
+  LOG_FORMAT: Joi.string().valid('json', 'pretty').optional(),
   LOG_LEVEL: Joi.string()
     .valid('error', 'warn', 'log', 'debug', 'verbose')
     .default('debug'),

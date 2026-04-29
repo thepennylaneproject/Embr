@@ -9,6 +9,7 @@ import { useRouter } from 'next/router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { copy } from '@/lib/copy';
+import { isMusicPhase2Enabled } from '@/lib/featureFlags';
 
 type WizardRole = 'creator' | 'supporter' | 'explorer';
 
@@ -70,7 +71,9 @@ export function OnboardingWizard() {
   const featureKeys = [
     { key: 'feed' as const, icon: '📰', href: '/feed' },
     { key: 'gigs' as const, icon: '💼', href: '/gigs' },
-    { key: 'music' as const, icon: '🎵', href: '/music' },
+    ...(isMusicPhase2Enabled()
+      ? ([{ key: 'music' as const, icon: '🎵', href: '/music' }] as const)
+      : []),
     { key: 'groups' as const, icon: '🏘', href: '/groups' },
     { key: 'events' as const, icon: '🗓', href: '/events' },
     { key: 'mutualAid' as const, icon: '🤝', href: '/mutual-aid' },
@@ -471,7 +474,7 @@ export function OnboardingWizard() {
                 data-variant="secondary"
                 onClick={handleGoToFeed}
               >
-                {copy.onboardingWizard.goToFeed}
+                {copy.actions.goToFeed}
               </button>
               <button
                 className="ui-button"

@@ -18,13 +18,24 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Always send cookies with requests
+  // Per-request: true only when API is cross-origin (credentialed CORS + preflight).
+  // Same-origin (e.g. /api rewrite) sends cookies without withCredentials.
+  withCredentials: false,
 });
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Tokens are now sent via httpOnly cookies automatically
-    // withCredentials: true ensures cookies are included in every request
+    if (typeof window !== 'undefined') {
+      try {
+        const resolved = new URL(config.baseURL || API_URL, window.location.href);
+        config.withCredentials = resolved.origin !== window.location.origin;
+      } catch {
+        config.withCredentials = true;
+      }
+    } else {
+      // SSR / prerender: no browser cookies; leave false unless a caller overrides.
+      config.withCredentials = false;
+    }
     return config;
   },
   (error) => Promise.reject(error),

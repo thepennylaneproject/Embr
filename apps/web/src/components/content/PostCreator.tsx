@@ -6,7 +6,8 @@
 
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useId } from 'react';
+import { useToast } from '@embr/ui';
 import dynamic from 'next/dynamic';
 import { usePost } from '@/hooks/usePost';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -15,6 +16,20 @@ import { AnalyticsEvent } from '@/lib/analytics';
 import { clearDraft, readDraft, writeDraft } from '@/lib/draft';
 import { trackReliabilityEvent } from '@/lib/reliability';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
+import { isMusicPhase2Enabled } from '@/lib/featureFlags';
+import { copy } from '@/lib/copy';
+
+const VISUALLY_HIDDEN: React.CSSProperties = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  borderWidth: 0,
+};
 
 // Lazy-load the music selector modal so it does not bloat the initial bundle
 const MusicSelectorModal = dynamic(
@@ -37,6 +52,10 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
 }) => {
   const draftKey = 'draft_post_creator_v1';
   const analytics = useAnalytics();
+  const { showToast } = useToast();
+  const contentFieldId = useId();
+  const visibilityFieldId = useId();
+  const mediaFieldId = useId();
   const {
     isCreating,
     isUploading,
@@ -59,6 +78,7 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
   const [draftStatus, setDraftStatus] = useState<'idle' | 'saved' | 'error' | 'restored'>('idle');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const musicPhase2 = isMusicPhase2Enabled();
 
   useEffect(() => {
     const draft = readDraft<{
@@ -75,7 +95,7 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
     if (draft.content) setContent(draft.content);
     if (draft.visibility) setVisibility(draft.visibility);
     if (Array.isArray(draft.hashtags)) setHashtags(draft.hashtags);
-    if (draft.selectedMusic) setSelectedMusic(draft.selectedMusic);
+    if (musicPhase2 && draft.selectedMusic) setSelectedMusic(draft.selectedMusic);
     setDraftStatus('restored');
     trackReliabilityEvent('draft_restored', { flow: 'post_creator' });
   }, []);
@@ -184,7 +204,7 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
         };
       }
 
-      if (selectedMusic) {
+      if (musicPhase2 && selectedMusic) {
         postData.musicTrackId = selectedMusic.id;
       }
 
@@ -202,15 +222,38 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
       removeMedia();
       setHashtags([]);
       setSelectedMusic(null);
+      setVisibility(defaultVisibility);
       clearDraft(draftKey);
       setDraftStatus('idle');
+      reset();
+
+      showToast({
+        title: copy.success.postPublished,
+        description: copy.success.postPublishedDesc,
+        kind: 'success',
+      });
 
       onPostCreated?.(post.id);
     } catch (err) {
       console.error('Failed to create post:', err);
       trackReliabilityEvent('post_create_failed', { flow: 'post_creator' });
     }
-  }, [content, mediaFile, mediaType, visibility, hashtags, selectedMusic, uploadMedia, createPost, removeMedia, onPostCreated]);
+  }, [
+    content,
+    mediaFile,
+    mediaType,
+    visibility,
+    hashtags,
+    selectedMusic,
+    musicPhase2,
+    uploadMedia,
+    createPost,
+    removeMedia,
+    onPostCreated,
+    defaultVisibility,
+    reset,
+    showToast,
+  ]);
 
   const handleCancel = useCallback(() => {
     setContent('');
@@ -233,7 +276,11 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
       padding: '24px',
     }}>
       {/* CONTENT INPUT */}
+      <label htmlFor={contentFieldId} style={VISUALLY_HIDDEN}>
+        {copy.forms.postContent}
+      </label>
       <textarea
+        id={contentFieldId}
         value={content}
         onChange={handleContentChange}
         placeholder="What's on your mind?"
@@ -295,8 +342,10 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
             />
           )}
           <button
+            type="button"
             onClick={removeMedia}
             disabled={isUploading}
+            aria-label="Remove attached media"
             style={{
               position: 'absolute',
               top: '12px',
@@ -359,6 +408,7 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
           <p style={{ fontSize: '16px', color: '#666', margin: '0 0 8px 0' }}>
             Drag and drop an image or video, or{' '}
             <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
               style={{
                 color: '#E8998D',
@@ -372,8 +422,12 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
               browse
             </button>
           </p>
+          <label htmlFor={mediaFieldId} style={VISUALLY_HIDDEN}>
+            {copy.forms.postMediaUpload}
+          </label>
           <input
             ref={fileInputRef}
+            id={mediaFieldId}
             type="file"
             accept="image/*,video/*"
             onChange={handleFileInput}
@@ -398,7 +452,7 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
       )}
 
       {/* MUSIC PREVIEW */}
-      {selectedMusic && (
+      {musicPhase2 && selectedMusic && (
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -419,7 +473,9 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
             </div>
           </div>
           <button
+            type="button"
             onClick={() => setSelectedMusic(null)}
+            aria-label="Remove selected music"
             style={{
               backgroundColor: 'transparent',
               border: 'none',
@@ -444,9 +500,11 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
           {!mediaPreview && (
             <>
               <button
+                type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isCreating || isUploading}
                 title="Add image"
+                aria-label="Add image"
                 style={{
                   padding: '8px',
                   backgroundColor: 'transparent',
@@ -460,9 +518,11 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
                 🖼️
               </button>
               <button
+                type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isCreating || isUploading}
                 title="Add video"
+                aria-label="Add video"
                 style={{
                   padding: '8px',
                   backgroundColor: 'transparent',
@@ -475,28 +535,36 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
               >
                 📹
               </button>
-              <button
-                onClick={() => setShowMusicModal(true)}
-                disabled={isCreating || isUploading}
-                title="Add music"
-                style={{
-                  padding: '8px',
-                  backgroundColor: selectedMusic ? '#fef3c7' : 'transparent',
-                  border: 'none',
-                  cursor: isCreating || isUploading ? 'not-allowed' : 'pointer',
-                  color: selectedMusic ? '#d97706' : '#666',
-                  fontSize: '18px',
-                  opacity: isCreating || isUploading ? 0.5 : 1,
-                  borderRadius: '4px',
-                }}
-              >
-                🎵
-              </button>
+              {musicPhase2 && (
+                <button
+                  type="button"
+                  onClick={() => setShowMusicModal(true)}
+                  disabled={isCreating || isUploading}
+                  title="Add music"
+                  aria-label="Add music"
+                  style={{
+                    padding: '8px',
+                    backgroundColor: selectedMusic ? '#fef3c7' : 'transparent',
+                    border: 'none',
+                    cursor: isCreating || isUploading ? 'not-allowed' : 'pointer',
+                    color: selectedMusic ? '#d97706' : '#666',
+                    fontSize: '18px',
+                    opacity: isCreating || isUploading ? 0.5 : 1,
+                    borderRadius: '4px',
+                  }}
+                >
+                  🎵
+                </button>
+              )}
             </>
           )}
 
           {/* VISIBILITY SELECTOR */}
+          <label htmlFor={visibilityFieldId} style={VISUALLY_HIDDEN}>
+            {copy.forms.postVisibility}
+          </label>
           <select
+            id={visibilityFieldId}
             value={visibility}
             onChange={(e) => setVisibility(e.target.value as PostVisibility)}
             disabled={isCreating || isUploading}
@@ -521,6 +589,7 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
         <div style={{ display: 'flex', gap: '8px' }}>
           {onCancel && (
             <button
+              type="button"
               onClick={handleCancel}
               disabled={isCreating || isUploading}
               style={{
@@ -539,6 +608,7 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
             </button>
           )}
           <button
+            type="button"
             onClick={handleSubmit}
             disabled={isSubmitDisabled}
             style={{
@@ -561,12 +631,14 @@ export const PostCreator: React.FC<PostCreatorProps> = ({
       </div>
 
       {/* MUSIC SELECTOR MODAL */}
-      <MusicSelectorModal
-        isOpen={showMusicModal}
-        onClose={() => setShowMusicModal(false)}
-        onSelect={setSelectedMusic}
-        selectedTrackId={selectedMusic?.id}
-      />
+      {musicPhase2 && (
+        <MusicSelectorModal
+          isOpen={showMusicModal}
+          onClose={() => setShowMusicModal(false)}
+          onSelect={setSelectedMusic}
+          selectedTrackId={selectedMusic?.id}
+        />
+      )}
     </div>
   );
 };

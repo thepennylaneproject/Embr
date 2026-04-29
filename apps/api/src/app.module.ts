@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { SentryModule } from '@sentry/nestjs/setup';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { RlsInterceptor } from './common/interceptors/rls.interceptor';
 
@@ -30,6 +31,7 @@ import { HealthController } from './health.controller';
 @Module({
   controllers: [HealthController],
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env', '../../.env'],  // root .env works from both apps/api and monorepo root

@@ -267,16 +267,47 @@ export const useFeed = (params?: UseFeedParams): UseFeedReturn => {
     [] // No dep on `posts`
   );
 
-  // Auto-load on mount and when feed type/limit changes
+  // Auto-load on mount (immediate) and when feed type/limit changes (debounced)
+  // so rapid tab switches do not hammer the API.
+  const autoLoadDebounceMs = 280;
+  const isFirstAutoLoad = useRef(true);
+  const autoLoadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     isMountedRef.current = true;
 
-    if (autoLoad) {
-      loadFeed();
+    if (!autoLoad) {
+      return () => {
+        isMountedRef.current = false;
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+      };
+    }
+
+    if (autoLoadTimerRef.current) {
+      clearTimeout(autoLoadTimerRef.current);
+      autoLoadTimerRef.current = null;
+    }
+
+    const run = () => {
+      autoLoadTimerRef.current = null;
+      void loadFeed();
+    };
+
+    if (isFirstAutoLoad.current) {
+      isFirstAutoLoad.current = false;
+      run();
+    } else {
+      autoLoadTimerRef.current = setTimeout(run, autoLoadDebounceMs);
     }
 
     return () => {
       isMountedRef.current = false;
+      if (autoLoadTimerRef.current) {
+        clearTimeout(autoLoadTimerRef.current);
+        autoLoadTimerRef.current = null;
+      }
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }

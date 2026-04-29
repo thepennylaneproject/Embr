@@ -141,8 +141,17 @@ export const GigManagementDashboard: React.FC = () => {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex gap-4 mb-8 border-b border-gray-200">
+        <div
+          role="tablist"
+          aria-label="Gig dashboard sections"
+          className="flex gap-4 mb-8 border-b border-gray-200"
+        >
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeView === 'my-gigs'}
+            id="tab-my-gigs"
+            aria-controls="panel-gig-dashboard"
             onClick={() => setActiveView('my-gigs')}
             className={`pb-4 px-4 font-medium transition-colors ${
               activeView === 'my-gigs'
@@ -153,6 +162,11 @@ export const GigManagementDashboard: React.FC = () => {
             My Gigs Posted
           </button>
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeView === 'my-applications'}
+            id="tab-my-applications"
+            aria-controls="panel-gig-dashboard"
             onClick={() => setActiveView('my-applications')}
             className={`pb-4 px-4 font-medium transition-colors ${
               activeView === 'my-applications'
@@ -163,6 +177,11 @@ export const GigManagementDashboard: React.FC = () => {
             My Applications
           </button>
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeView === 'active-work'}
+            id="tab-active-work"
+            aria-controls="panel-gig-dashboard"
             onClick={() => setActiveView('active-work')}
             className={`pb-4 px-4 font-medium transition-colors ${
               activeView === 'active-work'
@@ -188,7 +207,17 @@ export const GigManagementDashboard: React.FC = () => {
             <p className="mt-4 text-gray-600">Loading...</p>
           </div>
         ) : (
-          <>
+          <div
+            role="tabpanel"
+            id="panel-gig-dashboard"
+            aria-labelledby={
+              activeView === 'my-gigs'
+                ? 'tab-my-gigs'
+                : activeView === 'my-applications'
+                  ? 'tab-my-applications'
+                  : 'tab-active-work'
+            }
+          >
             {/* My Gigs View */}
             {activeView === 'my-gigs' && (
               <div className="space-y-4">
@@ -196,6 +225,7 @@ export const GigManagementDashboard: React.FC = () => {
                   <div className="text-center py-12">
                     <p className="text-gray-600 mb-4">You haven't posted any gigs yet</p>
                     <button
+                      type="button"
                       onClick={() => router.push('/gigs/post')}
                       className="px-6 py-2 bg-[#E8998D] text-white rounded-lg hover:bg-[#d88a7e] transition-colors"
                     >
@@ -230,12 +260,14 @@ export const GigManagementDashboard: React.FC = () => {
 
                       <div className="flex gap-3">
                         <button
+                          type="button"
                           onClick={() => router.push(`/gigs/${gig.id}`)}
                           className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                         >
                           View Details
                         </button>
                         <button
+                          type="button"
                           onClick={() => router.push(`/gigs/${gig.id}/applications`)}
                           className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                         >
@@ -243,6 +275,7 @@ export const GigManagementDashboard: React.FC = () => {
                         </button>
                         {gig.status === GigStatus.IN_PROGRESS && (
                           <button
+                            type="button"
                             onClick={() => handleCompleteGig(gig.id)}
                             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
                           >
@@ -251,6 +284,7 @@ export const GigManagementDashboard: React.FC = () => {
                         )}
                         {([GigStatus.OPEN, GigStatus.DRAFT] as GigStatus[]).includes(gig.status) && (
                           <button
+                            type="button"
                             onClick={() => handleCancelGig(gig.id)}
                             className="px-4 py-2 text-red-600 hover:text-red-700 transition-colors text-sm"
                           >
@@ -271,6 +305,7 @@ export const GigManagementDashboard: React.FC = () => {
                   <div className="text-center py-12">
                     <p className="text-gray-600 mb-4">You haven't applied to any gigs yet</p>
                     <button
+                      type="button"
                       onClick={() => router.push('/gigs')}
                       className="px-6 py-2 bg-[#E8998D] text-white rounded-lg hover:bg-[#d88a7e] transition-colors"
                     >
@@ -306,12 +341,14 @@ export const GigManagementDashboard: React.FC = () => {
 
                       <div className="flex gap-3">
                         <button
+                          type="button"
                           onClick={() => router.push(`/gigs/${app.gigId}`)}
                           className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                         >
                           View Gig
                         </button>
                         <button
+                          type="button"
                           onClick={() => router.push(`/applications/${app.id}`)}
                           className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                         >
@@ -319,6 +356,7 @@ export const GigManagementDashboard: React.FC = () => {
                         </button>
                         {app.status === ApplicationStatus.PENDING && (
                           <button
+                            type="button"
                             onClick={() => handleWithdrawApplication(app.id)}
                             className="px-4 py-2 text-red-600 hover:text-red-700 transition-colors text-sm"
                           >
@@ -372,6 +410,7 @@ export const GigManagementDashboard: React.FC = () => {
                       <div className="flex gap-3">
                         {milestone.status === MilestoneStatus.PENDING && (
                           <button
+                            type="button"
                             onClick={() => handleSubmitMilestone(milestone.id)}
                             className="px-4 py-2 bg-[#E8998D] text-white rounded-lg hover:bg-[#d88a7e] transition-colors text-sm"
                           >
@@ -384,7 +423,7 @@ export const GigManagementDashboard: React.FC = () => {
                 )}
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>

@@ -1,9 +1,10 @@
 /**
  * Cache Service
- * Provides caching layer with Redis support or fallback to in-memory cache
+ * Provides caching layer with Redis support or fallback to an LRU-bounded in-memory cache
+ * (see CACHE_IN_MEMORY_MAX_KEYS).
  */
 
-import { Injectable, Optional } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 
 export interface CacheOptions {
   ttl?: number; // Time to live in seconds
@@ -14,14 +15,21 @@ interface CacheEntry {
   expiresAt: number;
 }
 
-/**
- * In-memory cache implementation (fallback)
- */
 class InMemoryCache {
   private cache = new Map<string, CacheEntry>();
 
+  constructor(private readonly maxEntries: number) {}
+
   set(key: string, value: any, ttl?: number): void {
     const expiresAt = ttl ? Date.now() + ttl * 1000 : Date.now() + 60 * 1000; // Default 60s
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    }
+    while (this.cache.size >= this.maxEntries) {
+      const oldest = this.cache.keys().next().value as string | undefined;
+      if (oldest === undefined) break;
+      this.cache.delete(oldest);
+    }
     this.cache.set(key, { data: value, expiresAt });
   }
 
@@ -34,6 +42,10 @@ class InMemoryCache {
       this.cache.delete(key);
       return null;
     }
+
+    // LRU touch: move to end of insertion order
+    this.cache.delete(key);
+    this.cache.set(key, entry);
 
     return entry.data;
   }
@@ -57,13 +69,24 @@ class InMemoryCache {
   }
 }
 
+/**
+ * Redis-backed cache with in-memory fallback.
+ * On Redis connection or command errors, reads fall back to the in-memory layer
+ * where possible; writes populate in-memory so callers still get cache semantics.
+ */
 @Injectable()
 export class CacheService {
-  private inMemoryCache = new InMemoryCache();
+  private readonly logger = new Logger(CacheService.name);
+  private inMemoryCache: InMemoryCache;
   private useRedis = false;
   private redisClient: any; // Redis client, typed as any for flexibility
 
   constructor(@Optional() redisClient?: any) {
+    const raw = process.env.CACHE_IN_MEMORY_MAX_KEYS;
+    const parsed = raw ? Number.parseInt(raw, 10) : 5000;
+    const maxEntries =
+      Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 1_000_000) : 5000;
+    this.inMemoryCache = new InMemoryCache(maxEntries);
     if (redisClient) {
       this.redisClient = redisClient;
       this.useRedis = true;
@@ -79,7 +102,9 @@ export class CacheService {
         const value = await this.redisClient.get(key);
         return value ? JSON.parse(value) : null;
       } catch (error) {
-        console.error('Redis get error:', error);
+        this.logger.warn(
+          `Redis get failed for key "${key}"; using in-memory fallback: ${error instanceof Error ? error.message : String(error)}`,
+        );
         return this.inMemoryCache.get(key);
       }
     }
@@ -98,7 +123,9 @@ export class CacheService {
         await this.redisClient.setex(key, ttl, JSON.stringify(value));
         return;
       } catch (error) {
-        console.error('Redis set error:', error);
+        this.logger.warn(
+          `Redis set failed for key "${key}"; using in-memory fallback: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
 
@@ -114,7 +141,9 @@ export class CacheService {
         const deleted = await this.redisClient.del(key);
         return deleted > 0;
       } catch (error) {
-        console.error('Redis del error:', error);
+        this.logger.warn(
+          `Redis del failed for key "${key}"; using in-memory fallback: ${error instanceof Error ? error.message : String(error)}`,
+        );
         return this.inMemoryCache.del(key);
       }
     }
@@ -130,7 +159,9 @@ export class CacheService {
       try {
         return await this.redisClient.del(...keys);
       } catch (error) {
-        console.error('Redis delMany error:', error);
+        this.logger.warn(
+          `Redis delMany failed; using in-memory fallback: ${error instanceof Error ? error.message : String(error)}`,
+        );
         let deleted = 0;
         for (const key of keys) {
           if (this.inMemoryCache.del(key)) deleted++;
@@ -155,7 +186,9 @@ export class CacheService {
         await this.redisClient.flushdb();
         return;
       } catch (error) {
-        console.error('Redis clear error:', error);
+        this.logger.warn(
+          `Redis flushdb failed; clearing in-memory cache only: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
 

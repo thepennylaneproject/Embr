@@ -28,7 +28,9 @@ function ErrorPage({ statusCode }: ErrorPageProps) {
 
   const message = is404
     ? copy.errors.pageNotFoundDesc
-    : copy.errors.serverErrorDesc;
+    : statusCode != null && statusCode >= 500
+      ? copy.errors.serverErrorDesc
+      : copy.errors.genericErrorDesc;
 
   return (
     <>

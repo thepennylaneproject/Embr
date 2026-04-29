@@ -10,6 +10,8 @@ import { useFeed } from '@/hooks/useFeed';
 import { PostCard } from './PostCard';
 import { FeedType } from '@shared/types/content.types';
 import { Loader2, RefreshCw, AlertCircle } from 'lucide-react';
+import { EmptyListState } from '@/components/ui/EmptyListState';
+import { copy } from '@/lib/copy';
 
 interface FeedProps {
   feedType?: FeedType;
@@ -122,6 +124,7 @@ export const Feed: React.FC<FeedProps> = ({
           </h3>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
+            type="button"
             onClick={handleRefresh}
             className="px-6 py-2.5 bg-[#E8998D] hover:bg-[#d88a7e] text-white rounded-lg font-medium transition-colors"
           >
@@ -134,21 +137,15 @@ export const Feed: React.FC<FeedProps> = ({
 
   // Empty state
   if (posts.length === 0 && !isLoading) {
+    const following = feedType === FeedType.FOLLOWING;
     return (
-      <div className={`flex items-center justify-center py-20 ${className}`}>
-        <div className="text-center max-w-md">
-          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <RefreshCw size={40} className="text-gray-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            No posts yet
-          </h3>
-          <p className="text-gray-600">
-            {feedType === FeedType.FOLLOWING
-              ? "Follow creators to see their posts here"
-              : "Be the first to post!"}
-          </p>
-        </div>
+      <div className={`flex items-center justify-center py-12 ${className}`}>
+        <EmptyListState
+          className="max-w-md w-full"
+          icon={<RefreshCw size={40} className="mx-auto text-gray-400" aria-hidden />}
+          title={following ? copy.emptyStates.noPostsFollowing : copy.emptyStates.noPosts}
+          description={following ? copy.emptyStates.noPostsFollowingDesc : copy.emptyStates.noPostsDesc}
+        />
       </div>
     );
   }
@@ -158,6 +155,7 @@ export const Feed: React.FC<FeedProps> = ({
       {/* Refresh Button */}
       <div className="mb-4 flex justify-end">
         <button
+          type="button"
           onClick={handleRefresh}
           disabled={isRefreshing}
           className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
@@ -218,6 +216,7 @@ export const Feed: React.FC<FeedProps> = ({
             <p className="text-red-800 text-sm">{error}</p>
           </div>
           <button
+            type="button"
             onClick={handleRefresh}
             className="text-red-600 hover:text-red-700 text-sm font-medium"
           >

@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { useState } from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/cn';
 
 interface AvatarProps {
@@ -19,11 +20,24 @@ function initialsFromName(name?: string | null) {
 export function Avatar({ src, alt, name, size = 36, className }: AvatarProps) {
   const [imageError, setImageError] = useState(false);
   const style: CSSProperties = { width: size, height: size, fontSize: Math.max(12, size * 0.35) };
+  const isData = typeof src === 'string' && src.startsWith('data:');
 
   return (
-    <span className={cn('ui-avatar', className)} style={style} aria-label={alt || name || 'User avatar'}>
+    <span
+      className={cn('ui-avatar relative inline-flex shrink-0', className)}
+      style={style}
+      aria-label={alt || name || 'User avatar'}
+    >
       {src && !imageError ? (
-        <img src={src} alt={alt || name || 'Avatar'} onError={() => setImageError(true)} />
+        <Image
+          src={src}
+          alt={alt || name || 'Avatar'}
+          fill
+          className="object-cover"
+          sizes={`${size}px`}
+          unoptimized={isData}
+          onError={() => setImageError(true)}
+        />
       ) : (
         initialsFromName(name)
       )}

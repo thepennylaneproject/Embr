@@ -5,12 +5,19 @@ import * as dotenv from 'dotenv';
 dotenv.config();                          // apps/api/.env (if present)
 dotenv.config({ path: '../../.env', override: false }); // monorepo root .env
 
+// Sentry must load after env; keep require (CJS) so it runs after the dotenv calls above.
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- ordering vs. static imports
+require('./instrument');
+
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe, Logger, LoggerService } from '@nestjs/common';
 import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './shared/filters/http-exception.filter';
+import { JsonLinesLogger } from './common/logging/json-lines.logger';
+
+const useJsonLogs = process.env.LOG_FORMAT === 'json';
 
 // ---------------------------------------------------------------------------
 // Process-level fatal error handlers
@@ -18,7 +25,9 @@ import { GlobalExceptionFilter } from './shared/filters/http-exception.filter';
 // module initialisation and subsequent request processing.
 // ---------------------------------------------------------------------------
 
-const startupLogger = new Logger('Bootstrap');
+const startupLogger: LoggerService = useJsonLogs
+  ? new JsonLinesLogger('Bootstrap')
+  : new Logger('Bootstrap');
 
 process.on('unhandledRejection', (reason: unknown) => {
   startupLogger.error(
@@ -41,7 +50,7 @@ process.on('uncaughtException', (error: Error) => {
  * can confirm the deployment environment at a glance rather than discovering
  * misconfigurations hours later when a feature is first exercised.
  */
-function logStartupSummary(logger: Logger): void {
+function logStartupSummary(logger: LoggerService): void {
   const env = process.env;
   const isProd = env.NODE_ENV === 'production';
 
@@ -106,7 +115,10 @@ async function bootstrap() {
     (code) => process.exit(code),
   );
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: useJsonLogs,
+    logger: useJsonLogs ? new JsonLinesLogger() : undefined,
+  });
 
   // Security middleware - relaxed for local development
   if (process.env.NODE_ENV === 'production') {

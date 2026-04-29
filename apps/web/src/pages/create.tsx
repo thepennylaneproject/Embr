@@ -3,6 +3,7 @@ import { PostCreator } from '@/components/content';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { copy } from '@/lib/copy';
 
 export default function CreatePostPage() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function CreatePostPage() {
         <div style={{ marginBottom: '1.5rem' }}>
           <Link href="/feed">
             <button
+              type="button"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -41,8 +43,8 @@ export default function CreatePostPage() {
                 fontWeight: '500',
               }}
             >
-              <ArrowLeft size={18} />
-              Back to Feed
+              <ArrowLeft size={18} aria-hidden />
+              {copy.actions.backToFeed}
             </button>
           </Link>
         </div>

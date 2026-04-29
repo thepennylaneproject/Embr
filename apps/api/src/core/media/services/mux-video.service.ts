@@ -90,6 +90,7 @@ export class MuxVideoService {
     },
   ): Promise<MuxUploadResult> {
     try {
+      const t0 = Date.now();
       const upload = await this.mux.video.uploads.create({
         cors_origin: corsOrigin,
         new_asset_settings: {
@@ -104,6 +105,10 @@ export class MuxVideoService {
                 : '1440p',
         },
       });
+      const durationMs = Date.now() - t0;
+      this.logger.log(
+        `mux_metering op=direct_upload_create upload_id=${upload.id} duration_ms=${durationMs} asset_id=${upload.asset_id ?? 'pending'}`,
+      );
 
       this.logger.log(`Created Mux direct upload: ${upload.id}`);
 
@@ -126,12 +131,17 @@ export class MuxVideoService {
     playbackPolicy: ('public' | 'signed')[] = ['public'],
   ): Promise<string> {
     try {
+      const t0 = Date.now();
       const asset = await this.mux.video.assets.create({
         input: [{ url }],
         playback_policy: playbackPolicy,
         mp4_support: 'standard',
         normalize_audio: true,
       });
+      const durationMs = Date.now() - t0;
+      this.logger.log(
+        `mux_metering op=asset_create_from_url asset_id=${asset.id} duration_ms=${durationMs}`,
+      );
 
       this.logger.log(`Created Mux asset from URL: ${asset.id}`);
 
@@ -147,7 +157,12 @@ export class MuxVideoService {
    */
   async getAsset(assetId: string): Promise<MuxAssetDetails> {
     try {
+      const t0 = Date.now();
       const asset = await this.mux.video.assets.retrieve(assetId);
+      const durationMs = Date.now() - t0;
+      this.logger.log(
+        `mux_metering op=asset_retrieve asset_id=${assetId} duration_ms=${durationMs} status=${asset.status}`,
+      );
 
       return {
         assetId: asset.id,
@@ -255,7 +270,12 @@ export class MuxVideoService {
    */
   async deleteAsset(assetId: string): Promise<void> {
     try {
+      const t0 = Date.now();
       await this.mux.video.assets.delete(assetId);
+      const durationMs = Date.now() - t0;
+      this.logger.log(
+        `mux_metering op=asset_delete asset_id=${assetId} duration_ms=${durationMs}`,
+      );
       this.logger.log(`Deleted Mux asset: ${assetId}`);
     } catch (error) {
       this.logger.error(`Failed to delete Mux asset ${assetId}`, error.stack);
@@ -311,6 +331,9 @@ export class MuxVideoService {
     const data = event.data;
 
     this.logger.log(`Processing Mux webhook: ${eventType}`);
+    this.logger.log(
+      `mux_metering op=webhook_event event_type=${eventType} event_id=${event.id ?? 'unknown'}`,
+    );
 
     switch (eventType) {
       case MuxWebhookEvent.VIDEO_ASSET_READY:

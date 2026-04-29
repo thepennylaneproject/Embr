@@ -15,8 +15,19 @@ Usage:
   open_findings.json is missing from the synthesizer findings array AND is
   not listed in diff_summary.not_rereported with a reason.
 
+  Before validation, ingest auto-fills (unless --no-auto-fill):
+  - diff_summary.not_rereported for each prior non-terminal ID missing from
+    findings[] (typical for visual-only synthesizer runs).
+  - replaces_finding_id on status=duplicate rows from diff_summary.merged_findings
+    or, if exactly one related_ids entry points at a non-duplicate row in findings[].
+
+  When auto-fill runs, a one-line summary is printed to stdout (counts only); per-row
+  detail is printed to stderr.
+
   --allow-partial  Warn instead of failing on missing carry-forward findings.
                    Use only when you understand why IDs are missing.
+
+  --no-auto-fill   Skip auto-fill; require hand-authored not_rereported / replaces.
 """
 
 from __future__ import annotations
@@ -161,6 +172,91 @@ def _not_rereported_ids(synth: dict) -> set[str]:
     return out
 
 
+def _merged_duplicate_to_canonical(synth: dict) -> dict[str, str]:
+    """Map merged_ids -> canonical_id from diff_summary.merged_findings."""
+    out: dict[str, str] = {}
+    for m in (synth.get("diff_summary") or {}).get("merged_findings") or []:
+        if not isinstance(m, dict):
+            continue
+        cid = m.get("canonical_id")
+        if not cid:
+            continue
+        for mid in m.get("merged_ids") or []:
+            if isinstance(mid, str):
+                out[mid] = cid
+    return out
+
+
+def _auto_normalize_synthesizer_input(
+    synth: dict, prior_findings: list
+) -> tuple[list[str], dict[str, int]]:
+    """
+    Mutate synth so strict ingest can succeed without hand-editing JSON.
+
+    1) For each findings[] row with status duplicate and no replaces_finding_id,
+       set replaces_finding_id from merged_findings or a single related_ids target.
+    2) Append diff_summary.not_rereported rows for prior non-terminal findings
+       absent from findings[] and not already listed in not_rereported.
+
+    Returns (detail_log_lines, stats) where stats has replaces_filled and
+    not_rereported_added counts for stdout summary.
+    """
+    msgs: list[str] = []
+    stats = {"replaces_filled": 0, "not_rereported_added": 0}
+    merged_map = _merged_duplicate_to_canonical(synth)
+    synth_findings: list = synth.get("findings") or []
+    non_dup_ids = {
+        o.get("finding_id")
+        for o in synth_findings
+        if o.get("finding_id") and o.get("status") != "duplicate"
+    }
+
+    for sf in synth_findings:
+        if sf.get("status") != "duplicate" or sf.get("replaces_finding_id"):
+            continue
+        fid = sf.get("finding_id")
+        if not fid:
+            continue
+        canon = merged_map.get(fid)
+        if not canon:
+            rel = sf.get("related_ids") or []
+            if len(rel) == 1 and isinstance(rel[0], str) and rel[0] in non_dup_ids:
+                canon = rel[0]
+        if canon:
+            sf["replaces_finding_id"] = canon
+            stats["replaces_filled"] += 1
+            msgs.append(
+                f"ingest_synthesizer: auto-filled replaces_finding_id for duplicate "
+                f"{fid} → {canon}"
+            )
+
+    prior_nt = _non_terminal_ids(prior_findings)
+    synth_ids = _synth_finding_ids(synth)
+    diff_summary = synth.setdefault("diff_summary", {})
+    nr_list: list = diff_summary.setdefault("not_rereported", [])
+    seen_nr = _not_rereported_ids(synth)
+    for fid in prior_nt:
+        if fid in synth_ids or fid in seen_nr:
+            continue
+        nr_list.append(
+            {
+                "finding_id": fid,
+                "reason": (
+                    "Auto-filled by ingest_synthesizer: prior non-terminal row not in "
+                    "this synthesizer findings[]; ledger carry-forward (strict contract)."
+                ),
+            }
+        )
+        seen_nr.add(fid)
+        stats["not_rereported_added"] += 1
+    if stats["not_rereported_added"]:
+        msgs.append(
+            f"ingest_synthesizer: auto-filled diff_summary.not_rereported for "
+            f"{stats['not_rereported_added']} prior non-terminal finding(s)"
+        )
+    return msgs, stats
+
+
 def _check_carry_forward(
     prior_findings: list, synth: dict, *, strict: bool
 ) -> None:
@@ -231,6 +327,43 @@ def _check_duplicate_canonicalization(synth: dict, *, strict: bool) -> None:
 # --- Index management ---
 
 
+def _synth_stem_for_agent_files(run_id: str) -> str:
+    """Strip synthesizer prefix so agent JSON names share the same time stem."""
+    for prefix in ("visual-synthesized-", "synthesized-"):
+        if run_id.startswith(prefix):
+            return run_id[len(prefix) :]
+    return run_id
+
+
+def _append_cohesion_history(synth: dict) -> None:
+    """Append cohesion_scores from a visual synthesizer run to audits/cohesion.json."""
+    scores = synth.get("cohesion_scores")
+    if not scores:
+        return
+    root = repo_root()
+    path = os.path.join(root, "audits", "cohesion.json")
+    hist: list = []
+    if os.path.isfile(path):
+        with open(path, encoding="utf-8") as fp:
+            try:
+                blob = json.load(fp)
+                hist = blob.get("history") or []
+            except json.JSONDecodeError:
+                hist = []
+    hist.append(
+        {
+            "timestamp": NOW,
+            "run_id": synth.get("run_id", "unknown"),
+            "scores": scores,
+        }
+    )
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as fp:
+        json.dump({"history": hist}, fp, indent=2)
+        fp.write("\n")
+    print(f"Appended cohesion snapshot to audits/cohesion.json")
+
+
 def _index_prepend_synthesizer(index_path: str, synth: dict, synth_rel_path: str) -> None:
     """If audits/index.json lacks this synthesizer run_id, prepend one row (idempotent)."""
     run_id = synth.get("run_id")
@@ -249,7 +382,7 @@ def _index_prepend_synthesizer(index_path: str, synth: dict, synth_rel_path: str
         i = parts.index("runs")
         if i + 1 < len(parts):
             day_folder = parts[i + 1]
-    stem = run_id.removeprefix("synthesized-")
+    stem = _synth_stem_for_agent_files(run_id)
     present_suites = []
     for suite, prefix in (
         ("logic", "logic"),
@@ -258,6 +391,12 @@ def _index_prepend_synthesizer(index_path: str, synth: dict, synth_rel_path: str
         ("performance", "perf"),
         ("security", "security"),
         ("deploy", "deploy"),
+        ("visual_tokens", "visual-tokens"),
+        ("visual_typography", "visual-typography"),
+        ("visual_layout", "visual-layout"),
+        ("visual_components", "visual-components"),
+        ("visual_color", "visual-color"),
+        ("visual_polish", "visual-polish"),
     ):
         agent_id = f"{prefix}-{stem}"
         art = f"audits/runs/{day_folder}/{agent_id}.json"
@@ -281,7 +420,7 @@ def _index_prepend_synthesizer(index_path: str, synth: dict, synth_rel_path: str
 # --- Core ingest ---
 
 
-def ingest(synth_path: str, *, strict: bool = True) -> None:
+def ingest(synth_path: str, *, strict: bool = True, auto_fill: bool = True) -> None:
     root = repo_root()
     synth_path = os.path.normpath(os.path.join(root, synth_path))
     if not os.path.isfile(synth_path):
@@ -312,6 +451,20 @@ def ingest(synth_path: str, *, strict: bool = True) -> None:
 
     by_id = {f["finding_id"]: f for f in findings if f.get("finding_id")}
 
+    # --- Auto-fill synthesizer omissions (before strict validation) ---
+
+    if auto_fill:
+        detail_msgs, auto_stats = _auto_normalize_synthesizer_input(synth, findings)
+        rf = auto_stats["replaces_filled"]
+        nra = auto_stats["not_rereported_added"]
+        if rf or nra:
+            print(
+                f"ingest_synthesizer: auto-normalize applied "
+                f"(replaces_finding_id={rf}, not_rereported={nra})"
+            )
+        for line in detail_msgs:
+            print(line, file=sys.stderr)
+
     # --- Validation gates (run before any mutation) ---
 
     _check_carry_forward(findings, synth, strict=strict)
@@ -320,6 +473,7 @@ def ingest(synth_path: str, *, strict: bool = True) -> None:
     # --- Merge ---
 
     synth_run_id = synth.get("run_id", "unknown")
+    is_visual_synth = synth.get("suite") == "visual"
     new_ids: list[str] = []
     updated_ids: list[str] = []
     status_changes: list[str] = []
@@ -331,6 +485,9 @@ def ingest(synth_path: str, *, strict: bool = True) -> None:
         fid = sf.get("finding_id")
         if not fid:
             continue
+
+        if is_visual_synth:
+            sf.setdefault("suite", "visual")
 
         # Handle duplicate canonicalization: remove the duplicate, keep the canonical
         replaces = sf.get("replaces_finding_id")
@@ -376,6 +533,8 @@ def ingest(synth_path: str, *, strict: bool = True) -> None:
             ):
                 if field in sf and sf[field] is not None and sf[field] != "":
                     cur[field] = sf[field]
+            if is_visual_synth:
+                cur["suite"] = "visual"
             if sf.get("proof_hooks"):
                 cur["proof_hooks"] = sf["proof_hooks"]
             if sf.get("suggested_fix") is not None:
@@ -383,6 +542,8 @@ def ingest(synth_path: str, *, strict: bool = True) -> None:
             updated_ids.append(fid)
         else:
             nf = _ensure_finding_defaults(sf)
+            if is_visual_synth:
+                nf.setdefault("suite", "visual")
             findings.append(nf)
             by_id[fid] = nf
             new_ids.append(fid)
@@ -407,6 +568,9 @@ def ingest(synth_path: str, *, strict: bool = True) -> None:
     with open(open_path, "w", encoding="utf-8") as fp:
         json.dump(data, fp, indent=2)
         fp.write("\n")
+
+    if is_visual_synth:
+        _append_cohesion_history(synth)
 
     # --- Regenerate ALL case files from canonical JSON ---
     os.makedirs(findings_dir, exist_ok=True)
@@ -447,17 +611,22 @@ def main() -> None:
 
     # Default is strict. --allow-partial opts out.
     strict = True
-    if argv and argv[-1] == "--allow-partial":
-        strict = False
-        argv = argv[:-1]
-    # Legacy compat: --strict is accepted but now the default (no-op)
-    if argv and argv[-1] == "--strict":
-        argv = argv[:-1]
+    auto_fill = True
+    filtered: list[str] = []
+    for a in argv:
+        if a == "--allow-partial":
+            strict = False
+        elif a == "--no-auto-fill":
+            auto_fill = False
+        elif a == "--strict":
+            pass  # legacy no-op
+        else:
+            filtered.append(a)
 
-    if len(argv) != 1:
+    if len(filtered) != 1:
         print(__doc__.strip(), file=sys.stderr)
         sys.exit(1)
-    ingest(argv[0], strict=strict)
+    ingest(filtered[0], strict=strict, auto_fill=auto_fill)
 
 
 if __name__ == "__main__":

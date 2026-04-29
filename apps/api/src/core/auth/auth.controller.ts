@@ -62,12 +62,14 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 signups per minute per IP
   @Post('signup')
   async signUp(@Body() signUpDto: SignUpDto) {
     return this.authService.signUp(signUpDto);
   }
 
   @Public()
+  @Throttle({ default: { limit: 20, ttl: 60000 } }) // 20 login attempts per minute per IP (brute-force mitigation)
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto, @Res() res: Response, @Req() _req: Request) {

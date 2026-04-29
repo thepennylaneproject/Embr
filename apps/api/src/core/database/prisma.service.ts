@@ -57,6 +57,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   // Model proxy accessors are dynamically assigned in the constructor via Object.defineProperty.
 
   constructor(private readonly rlsContext: RlsContextService) {
+    // Connection pool sizing lives on DATABASE_URL (pooler URL or ?connection_limit=…); see prisma/schema.prisma.
     this.base = new PrismaClient();
 
     // Keep local references so the closure inside $extends uses `base` (not

@@ -3,7 +3,7 @@
  * Handles sending transactional emails via SendGrid or AWS SES
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 
@@ -55,6 +55,22 @@ export class EmailService {
   }
 
   /**
+   * Reject obviously invalid recipients to reduce SES bounce/spam cost (f-perf-017).
+   */
+  private assertValidRecipient(to: string): void {
+    const trimmed = (to || '').trim();
+    if (!trimmed || trimmed.length > 254) {
+      throw new BadRequestException('Invalid email recipient');
+    }
+    // Practical RFC 5322 subset — blocks empty local-part, spaces, and missing domain
+    const basic =
+      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+    if (!basic.test(trimmed)) {
+      throw new BadRequestException('Invalid email recipient format');
+    }
+  }
+
+  /**
    * Determine if error is transient and should be retried
    */
   private isTransientError(statusCode?: number): boolean {
@@ -69,6 +85,8 @@ export class EmailService {
   async sendEmail(options: EmailOptions): Promise<void> {
     const { to, subject, html, text } = options;
     const from = options.from || `${this.fromName} <${this.fromEmail}>`;
+
+    this.assertValidRecipient(to);
 
     if (this.provider === 'mock') {
       this.logger.log(`[MOCK EMAIL] To: ${to} | Subject: ${subject}`);

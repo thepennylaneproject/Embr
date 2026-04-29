@@ -4,7 +4,11 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { io, Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client";
+import {
+  acquireMessagingSocket,
+  releaseMessagingSocket,
+} from "@/lib/messagingSocketSingleton";
 import {
   WebSocketEvent,
   MessageWithSender,
@@ -65,6 +69,7 @@ export function useMessaging(options: UseMessagingOptions = {}) {
 
   // Refs to prevent stale closures
   const socketRef = useRef<Socket | null>(null);
+  const socketListenerCleanupRef = useRef<(() => void) | null>(null);
   const typingTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   // Stable refs for caller-provided callbacks so that reconnect doesn't happen
@@ -84,146 +89,161 @@ export function useMessaging(options: UseMessagingOptions = {}) {
   // ============================================================
 
   const connect = useCallback(() => {
-    // WebSocket connection uses httpOnly cookies for authentication
-    // Cookies are automatically sent by the browser with the request
-    const newSocket = io(
-      `${process.env.NEXT_PUBLIC_WS_URL || "http://localhost:3003"}/messaging`,
-      {
-        transports: ["websocket", "polling"],
-        withCredentials: true, // Enable sending cookies with WebSocket requests
-      },
-    );
+    socketListenerCleanupRef.current?.();
+    socketListenerCleanupRef.current = null;
 
-    // Connection events
-    newSocket.on("connect", () => {
+    const newSocket = acquireMessagingSocket();
+
+    const onConnect = () => {
       setIsConnected(true);
       setError(null);
-    });
+    };
 
-    newSocket.on("disconnect", () => {
+    const onDisconnect = () => {
       setIsConnected(false);
-    });
+    };
 
-    newSocket.on("connect_error", (err) => {
+    const onConnectError = (err: unknown) => {
       console.error("WebSocket connection error:", err);
-      setError(err);
+      setError(err as Error);
       onErrorRef.current?.(err);
-    });
+    };
 
-    // Message events
-    newSocket.on(
-      WebSocketEvent.MESSAGE_RECEIVE,
-      ({ message, conversation }) => {
+    const onMessageReceive = (payload: {
+      message: MessageWithSender;
+      conversation: ConversationWithDetails;
+    }) => {
+      const { message, conversation } = payload;
+      const cid = conversation?.id;
+      if (!cid || !message) {
+        return;
+      }
 
-        // Add message to local state
-        setMessages((prev) => ({
-          ...prev,
-          [conversation.id]: [...(prev[conversation.id] || []), message],
-        }));
+      setMessages((prev) => ({
+        ...prev,
+        [cid]: [...(prev[cid] || []), message],
+      }));
 
-        // Update conversation list
-        setConversations((prev) => {
-          const filtered = prev.filter((c) => c.id !== conversation.id);
-          return [
-            {
-              id: conversation.id,
-              otherUser:
-                conversation.participant1Id === message.senderId
-                  ? conversation.participant1
-                  : conversation.participant2,
-              lastMessage: message,
-              unreadCount:
-                (prev.find((c) => c.id === conversation.id)?.unreadCount || 0) +
-                1,
-              lastMessageAt: message.createdAt,
-            },
-            ...filtered,
-          ];
-        });
+      setConversations((prev) => {
+        const filtered = prev.filter((c) => c.id !== cid);
+        return [
+          {
+            id: cid,
+            otherUser:
+              conversation.participant1Id === message.senderId
+                ? conversation.participant1
+                : conversation.participant2,
+            lastMessage: message,
+            unreadCount:
+              (prev.find((c) => c.id === cid)?.unreadCount || 0) + 1,
+            lastMessageAt: message.createdAt,
+          },
+          ...filtered,
+        ];
+      });
 
-        // Update unread count
-        setUnreadCount((prev) => prev + 1);
+      setUnreadCount((prev) => prev + 1);
 
-        onMessageRef.current?.(message, conversation);
-      },
-    );
+      onMessageRef.current?.(message, conversation);
+    };
 
-    newSocket.on(WebSocketEvent.MESSAGE_READ, (data) => {
+    const onMessageRead = (data: {
+      conversationId?: string;
+      messageIds?: string[];
+      readBy?: string;
+      readAt?: string;
+    }) => {
+      const conversationId =
+        data && typeof data.conversationId === "string" ? data.conversationId : null;
+      const messageIds = Array.isArray(data?.messageIds) ? data.messageIds : null;
 
-      // Update message statuses
-      if (data.messageIds) {
+      if (messageIds && conversationId) {
         setMessages((prev) => {
-          const conversationMessages = prev[data.conversationId] || [];
+          const conversationMessages = prev[conversationId] || [];
           const updated = conversationMessages.map((msg) =>
-            data.messageIds.includes(msg.id)
+            messageIds.includes(msg.id)
               ? { ...msg, status: MessageStatus.READ, readAt: data.readAt }
               : msg,
           );
-          return { ...prev, [data.conversationId]: updated };
+          return { ...prev, [conversationId]: updated };
         });
       }
 
-      onMessageReadRef.current?.(data);
-    });
+      onMessageReadRef.current?.(data as any);
+    };
 
-    // Typing indicator events
-    newSocket.on(
-      WebSocketEvent.TYPING_INDICATOR,
-      (indicator: TypingIndicator) => {
-        const key = `${indicator.conversationId}-${indicator.userId}`;
+    const onTypingIndicator = (indicator: TypingIndicator) => {
+      const key = `${indicator.conversationId}-${indicator.userId}`;
 
-        if (indicator.isTyping) {
-          setTypingUsers((prev) => ({ ...prev, [key]: indicator }));
+      if (indicator.isTyping) {
+        setTypingUsers((prev) => ({ ...prev, [key]: indicator }));
 
-          // Clear existing timeout
-          if (typingTimeoutsRef.current[key]) {
-            clearTimeout(typingTimeoutsRef.current[key]);
-          }
+        if (typingTimeoutsRef.current[key]) {
+          clearTimeout(typingTimeoutsRef.current[key]);
+        }
 
-          // Auto-clear after 3 seconds
-          typingTimeoutsRef.current[key] = setTimeout(() => {
-            setTypingUsers((prev) => {
-              const { [key]: removed, ...rest } = prev;
-              return rest;
-            });
-            delete typingTimeoutsRef.current[key];
-          }, 3004);
-        } else {
+        typingTimeoutsRef.current[key] = setTimeout(() => {
           setTypingUsers((prev) => {
             const { [key]: removed, ...rest } = prev;
             return rest;
           });
+          delete typingTimeoutsRef.current[key];
+        }, 3004);
+      } else {
+        setTypingUsers((prev) => {
+          const { [key]: removed, ...rest } = prev;
+          return rest;
+        });
 
-          if (typingTimeoutsRef.current[key]) {
-            clearTimeout(typingTimeoutsRef.current[key]);
-            delete typingTimeoutsRef.current[key];
-          }
+        if (typingTimeoutsRef.current[key]) {
+          clearTimeout(typingTimeoutsRef.current[key]);
+          delete typingTimeoutsRef.current[key];
         }
+      }
 
-        onTypingIndicatorRef.current?.(indicator);
-      },
-    );
+      onTypingIndicatorRef.current?.(indicator);
+    };
 
-    // Error events
-    newSocket.on(WebSocketEvent.ERROR, (err) => {
+    const onWsError = (err: unknown) => {
       console.error("WebSocket error:", err);
-      setError(err);
+      setError(err as Error);
       onErrorRef.current?.(err);
-    });
+    };
+
+    newSocket.on("connect", onConnect);
+    newSocket.on("disconnect", onDisconnect);
+    newSocket.on("connect_error", onConnectError);
+    newSocket.on(WebSocketEvent.MESSAGE_RECEIVE, onMessageReceive);
+    newSocket.on(WebSocketEvent.MESSAGE_READ, onMessageRead);
+    newSocket.on(WebSocketEvent.TYPING_INDICATOR, onTypingIndicator);
+    newSocket.on(WebSocketEvent.ERROR, onWsError);
+
+    socketListenerCleanupRef.current = () => {
+      newSocket.off("connect", onConnect);
+      newSocket.off("disconnect", onDisconnect);
+      newSocket.off("connect_error", onConnectError);
+      newSocket.off(WebSocketEvent.MESSAGE_RECEIVE, onMessageReceive);
+      newSocket.off(WebSocketEvent.MESSAGE_READ, onMessageRead);
+      newSocket.off(WebSocketEvent.TYPING_INDICATOR, onTypingIndicator);
+      newSocket.off(WebSocketEvent.ERROR, onWsError);
+    };
 
     socketRef.current = newSocket;
     setSocket(newSocket);
+    if (newSocket.connected) {
+      setIsConnected(true);
+    }
   // Callback refs are stable so `connect` identity doesn't change on re-renders
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const disconnect = useCallback(() => {
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-      socketRef.current = null;
-      setSocket(null);
-      setIsConnected(false);
-    }
+    socketListenerCleanupRef.current?.();
+    socketListenerCleanupRef.current = null;
+    socketRef.current = null;
+    setSocket(null);
+    setIsConnected(false);
+    releaseMessagingSocket();
   }, []);
 
   const emitWithAck = useCallback(
@@ -374,7 +394,7 @@ export function useMessaging(options: UseMessagingOptions = {}) {
 
   const sendMessage = useCallback(
     async (payload: SendMessageRequest) => {
-      if (!socket || !isConnected) {
+      if (!socketRef.current?.connected) {
         throw new Error("WebSocket not connected");
       }
 
@@ -390,7 +410,7 @@ export function useMessaging(options: UseMessagingOptions = {}) {
         }));
       }
     },
-    [socket, isConnected, emitWithAck],
+    [emitWithAck],
   );
 
   const fetchMessages = useCallback(
@@ -418,7 +438,7 @@ export function useMessaging(options: UseMessagingOptions = {}) {
 
   const markAsRead = useCallback(
     async (payload: MarkAsReadRequest) => {
-      if (!socket || !isConnected) {
+      if (!socketRef.current?.connected) {
         // Fallback to HTTP if WebSocket not available
         try {
           const response = await messagingAPI.markAsRead(payload);
@@ -454,7 +474,7 @@ export function useMessaging(options: UseMessagingOptions = {}) {
 
       return response;
     },
-    [socket, isConnected, onError, emitWithAck],
+    [onError, emitWithAck],
   );
 
   const searchMessages = useCallback(
@@ -508,15 +528,15 @@ export function useMessaging(options: UseMessagingOptions = {}) {
 
   const sendTypingIndicator = useCallback(
     (conversationId: string, isTyping: boolean) => {
-      if (!socket || !isConnected) return;
+      if (!socketRef.current?.connected) return;
 
       const event = isTyping
         ? WebSocketEvent.TYPING_START
         : WebSocketEvent.TYPING_STOP;
 
-      socket.emit(event, { conversationId, isTyping });
+      socketRef.current.emit(event, { conversationId, isTyping });
     },
-    [socket, isConnected],
+    [],
   );
 
   const getTypingUsers = useCallback(

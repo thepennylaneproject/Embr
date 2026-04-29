@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
+import { copy } from '@/lib/copy';
 
 export default function AboutPage() {
   return (
@@ -224,7 +225,7 @@ export default function AboutPage() {
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#d88a7f')}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#E8998D')}
               >
-                Join the Feed
+                {copy.actions.goToFeed}
               </button>
             </Link>
             <Link href="/create">

@@ -5,9 +5,25 @@ import { ProtectedPageShell } from '@/components/layout';
 import { TrackDiscovery } from '@/components/music/discovery/TrackDiscovery';
 import { FeatureHint } from '@/components/onboarding';
 import { Button } from '@embr/ui';
+import { isMusicPhase2Enabled } from '@/lib/featureFlags';
 
 export default function MusicDiscoveryPage() {
   const router = useRouter();
+
+  if (!isMusicPhase2Enabled()) {
+    return (
+      <ProtectedPageShell title="Music" subtitle="Coming soon" breadcrumbs={[{ label: 'Music' }]}>
+        <div className="ui-card" data-padding="lg" style={{ maxWidth: '36rem' }}>
+          <p style={{ margin: '0 0 1rem', color: 'var(--embr-muted-text)' }}>
+            The Music experience is not available in this environment yet.
+          </p>
+          <Link href="/feed" className="embr-nav-link">
+            Back to feed
+          </Link>
+        </div>
+      </ProtectedPageShell>
+    );
+  }
 
   const handleTrackSelect = useCallback((trackId: string) => {
     router.push(`/music/licensing/${trackId}`);

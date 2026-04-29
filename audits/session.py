@@ -18,15 +18,26 @@ Usage:
   python3 audits/session.py preflight        # Run lint/typecheck/test/build → audits/artifacts/_run_/
   python3 audits/session.py audit-batch      # Preflight + re-audit plan + one batched checklist file
   python3 audits/session.py audit-batch --full   # Same, but all 6 agents + monorepo scope (no WIP required)
+  python3 audits/session.py audit-batch --all    # Core + full visual lane in one checklist (shared run_id stem)
+  python3 audits/session.py audit-batch --visual # Visual lane only (same as visual-batch)
+  python3 audits/session.py audit-batch --lane cohesion --all  # Combined batch; --lane limits visual agents
+  python3 audits/session.py visual-batch [--lane NAME]  # Visual-only batched checklist
   python3 audits/session.py audit-batch --skip-preflight  # Plan + checklist only (reuse last artifacts)
-  python3 audits/session.py ingest-synth audits/runs/<date>/synthesized-<id>.json  # Merge synth JSON → canonical state (strict by default; fails if carry-forward violated)
+  python3 audits/session.py cohesion           # Latest visual cohesion score + delta vs prior run
+  python3 audits/session.py canship --include-visual  # Count visual-suite blockers/questions toward ship gate
+  python3 audits/session.py ingest-synth audits/runs/<date>/synthesized-<id>.json  # Merge synth JSON → canonical state (strict; auto-fills not_rereported / duplicate replaces unless --no-auto-fill)
   python3 audits/session.py ingest-synth audits/runs/<date>/synthesized-<id>.json --allow-partial  # Warn instead of fail on missing carry-forward
+  python3 audits/session.py ingest-synth audits/runs/<date>/synthesized-<id>.json --no-auto-fill  # Require hand-authored carry-forward and duplicate canonical IDs
   python3 audits/session.py verify <finding_id>  # Mark re-audit passed (fixed_pending_verify -> fixed_verified)
-  python3 audits/session.py prune-closed [--dry-run]  # Drop terminal findings from open_findings.json (case .md kept)
+  python3 audits/session.py prune-closed --dry-run  # Drop terminal findings from open_findings.json (case .md kept)
   python3 audits/session.py status           # Full dashboard
   python3 audits/session.py canship          # Am I ready to deploy?
   python3 audits/session.py decide <finding_id> <decision>  # Answer a question finding
   python3 audits/session.py init                            # Generate audits/project.toml with auto-detected paths
+  python3 audits/session.py visual-batch [--lane NAME] [--skip-preflight] [--full]  # Visual-only batched checklist
+  python3 audits/session.py audit-batch --all [--lane NAME]  # Core + visual in one checklist
+  python3 audits/session.py cohesion           # Latest visual cohesion score + delta
+  python3 audits/session.py canship --include-visual  # Include visual-suite rows in ship gate
 """
 
 import json
@@ -119,6 +130,88 @@ DEFAULT_TRIGGER_MAP = {
     "docker": ["deploy"],
     "Dockerfile": ["deploy"],
 }
+
+# --- Visual audit suite (LYRA visual lane; suite JSON field "visual") ---
+
+VISUAL_AGENT_PROMPTS = {
+    "tokens": "audits/prompts/visual-tokens.md",
+    "typography": "audits/prompts/visual-typography.md",
+    "layout": "audits/prompts/visual-layout.md",
+    "components": "audits/prompts/visual-components.md",
+    "color": "audits/prompts/visual-color.md",
+    "polish": "audits/prompts/visual-polish.md",
+}
+VISUAL_SYNTH_PROMPT = "audits/prompts/visual-synthesizer.md"
+
+VISUAL_AGENT_ORDER = ["tokens", "typography", "layout", "components", "color", "polish"]
+
+VISUAL_LANES = {
+    "cohesion": ["components", "color"],
+    "spacing": ["tokens", "layout"],
+    "headings": ["typography", "tokens"],
+    "polish": ["polish", "components"],
+    "all": VISUAL_AGENT_ORDER,
+}
+
+# Visual prompt categories / prefixes → primary visual agent (for verification routing).
+VISUAL_CATEGORY_TO_AGENT = {
+    "color-system": "tokens",
+    "spacing-system": "tokens",
+    "type-scale": "tokens",
+    "elevation-system": "tokens",
+    "token-governance": "tokens",
+    "heading-hierarchy": "typography",
+    "font-size-drift": "typography",
+    "weight-inconsistency": "typography",
+    "line-height": "typography",
+    "text-color-hierarchy": "typography",
+    "special-typography": "typography",
+    "page-structure": "layout",
+    "section-spacing": "layout",
+    "component-spacing": "layout",
+    "grid-alignment": "layout",
+    "whitespace": "layout",
+    "responsive": "layout",
+    "container-width": "layout",
+    "button-consistency": "components",
+    "card-consistency": "components",
+    "form-consistency": "components",
+    "modal-consistency": "components",
+    "nav-consistency": "components",
+    "feedback-consistency": "components",
+    "data-display": "components",
+    "icon-consistency": "components",
+    "palette-drift": "color",
+    "semantic-color": "color",
+    "surface-hierarchy": "color",
+    "contrast-ratio": "color",
+    "border-color": "color",
+    "state-color": "color",
+    "dark-mode": "color",
+    "hover-state": "polish",
+    "focus-indicator": "polish",
+    "active-state": "polish",
+    "transition-timing": "polish",
+    "shadow-consistency": "polish",
+    "border-radius": "polish",
+    "loading-pattern": "polish",
+    "micro-interaction": "polish",
+    "visual-noise": "polish",
+}
+
+# Path substring → visual agents to re-run when expanding triggers (verification + --all only).
+VISUAL_TRIGGER_MAP = {
+    "src/components/": ["components", "color", "polish"],
+    "src/pages/": ["layout", "typography", "components", "color"],
+    "src/styles/": ["tokens", "color", "polish"],
+    "src/index.css": ["tokens", "color"],
+    "tailwind.config": ["tokens", "color"],
+    "postcss.config": ["tokens"],
+    "stylelint.config": ["tokens", "color"],
+    "eslint.config": ["tokens"],
+}
+
+COHESION_JSON = "audits/cohesion.json"
 
 # --- Project config ---
 
@@ -310,6 +403,101 @@ def agent_for_finding(f):
     return "logic"  # default
 
 
+def is_visual_finding(f):
+    """True if this row belongs to the visual audit suite (ledger or category)."""
+    if f.get("suite") == "visual":
+        return True
+    cat = (f.get("category") or "").lower()
+    for key in VISUAL_CATEGORY_TO_AGENT:
+        k = key.lower()
+        if k in cat or cat in k:
+            return True
+    return False
+
+
+def visual_primary_agent_for_finding(f):
+    """Return one visual agent key for routing re-audits, or None if not a visual row."""
+    if not is_visual_finding(f):
+        return None
+    cat = (f.get("category") or "").lower()
+    for key, agent in VISUAL_CATEGORY_TO_AGENT.items():
+        k = key.lower()
+        if k in cat or cat in k:
+            return agent
+    return "components"
+
+
+def ordered_visual_agents(agent_set):
+    return [a for a in VISUAL_AGENT_ORDER if a in agent_set]
+
+
+def expand_visual_agents_from_paths(paths):
+    out = set()
+    for tf in paths or []:
+        for pattern, agents in VISUAL_TRIGGER_MAP.items():
+            if pattern in tf:
+                out.update(agents)
+    return out
+
+
+def resolve_visual_lane(lane):
+    lane_key = (lane or "all").lower()
+    if lane_key not in VISUAL_LANES:
+        print(
+            f"Unknown --lane {lane!r}; valid: {', '.join(sorted(VISUAL_LANES))}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    return ordered_visual_agents(set(VISUAL_LANES[lane_key]))
+
+
+def default_visual_focus_paths():
+    """Glob hints for visual audits: project.toml [paths.visual] plus common UI roots."""
+    root = repo_root()
+    paths = []
+    config = load_project_config()
+    if config:
+        paths.extend(get_agent_paths(config, "visual"))
+    seen = set(paths)
+    extras = [
+        "src/**",
+        "tailwind.config.ts",
+        "tailwind.config.js",
+        "tailwind.config.mjs",
+        "vite.config.ts",
+        "stylelint.config.cjs",
+        "eslint.config.js",
+    ]
+    for e in extras:
+        if e in seen:
+            continue
+        if "**" in e:
+            base = e.split("**")[0].rstrip("/") or "src"
+            if base == "src" and os.path.isdir(os.path.join(root, "src")):
+                paths.append(e)
+                seen.add(e)
+            elif base != "src" and os.path.isdir(os.path.join(root, base)):
+                paths.append(e)
+                seen.add(e)
+        elif os.path.isfile(os.path.join(root, e)):
+            paths.append(e)
+            seen.add(e)
+    if not paths:
+        paths = ["src/**"]
+    return paths
+
+
+def full_scope_visual_focus_paths():
+    """Monorepo-friendly visual focus paths (probes common trees)."""
+    root = repo_root()
+    out = list(dict.fromkeys(default_visual_focus_paths()))
+    for name in ("frontend", "apps"):
+        d = os.path.join(root, name)
+        if os.path.isdir(d):
+            out.append(f"{name}/**")
+    return out
+
+
 def add_history(f, event, notes, commit=None):
     history = f.setdefault("history", [])
     entry = {"timestamp": NOW, "actor": "solo-dev", "event": event, "notes": notes}
@@ -375,57 +563,146 @@ def full_scope_focus_paths():
     return touched
 
 
-def collect_reaudit_plan(full_scope=False):
+def collect_reaudit_plan(
+    full_scope=False,
+    *,
+    suite_filter="core",
+    expand_visual_path_triggers=False,
+    lane="all",
+):
     """
-    full_scope: all six agents + monorepo path hints (deep audit), no WIP required.
-    Otherwise: paths from in_progress / fixed_pending_verify findings, plus git diff
-    vs HEAD when any such finding exists, merged with TRIGGER_MAP.
+    full_scope: all six core agents + monorepo path hints (deep exploratory audit).
+
+    Otherwise (verification / default reaudit): only findings in status
+    ``fixed_pending_verify``. Paths come from those findings' ``affected_files`` only
+    (no ``in_progress``, no git diff vs HEAD). Trigger map still expands which agents
+    should review touched paths.
+
+    suite_filter: ``core`` | ``visual`` | ``all``. Visual agents are intersected with
+    ``--lane`` (see ``VISUAL_LANES``). When ``expand_visual_path_triggers`` is True
+    (``audit-batch --all`` in verification mode), ``VISUAL_TRIGGER_MAP`` also adds
+    visual agents for UI-ish paths among affected files.
     """
+    lane_agents = resolve_visual_lane(lane)
+
     if full_scope:
+        if suite_filter == "visual":
+            return {
+                "touched_files": full_scope_visual_focus_paths(),
+                "agents_needed": [],
+                "pending_verify": [],
+                "has_pending_verify": False,
+                "full_scope": True,
+                "visual_agents_needed": list(lane_agents),
+                "pending_verify_core": [],
+                "pending_verify_visual": [],
+                "visual_focus_paths": full_scope_visual_focus_paths(),
+            }
         touched = full_scope_focus_paths()
-        return {
+        out = {
             "touched_files": touched,
             "agents_needed": [a for a in AGENT_ORDER if a in AGENT_PROMPTS],
-            "has_wip": False,
+            "pending_verify": [],
+            "has_pending_verify": False,
             "full_scope": True,
+            "visual_agents_needed": list(lane_agents) if suite_filter == "all" else [],
+            "pending_verify_core": [],
+            "pending_verify_visual": [],
+            "visual_focus_paths": full_scope_visual_focus_paths() if suite_filter == "all" else [],
         }
+        return out
 
     findings, _ = load_findings()
+    pending = [f for f in findings if f.get("status") == "fixed_pending_verify"]
+
+    vf_default = default_visual_focus_paths()
+
+    if not pending:
+        empty = {
+            "touched_files": [],
+            "agents_needed": [],
+            "pending_verify": [],
+            "has_pending_verify": False,
+            "full_scope": False,
+            "visual_agents_needed": [],
+            "pending_verify_core": [],
+            "pending_verify_visual": [],
+            "visual_focus_paths": vf_default,
+        }
+        if suite_filter == "visual":
+            empty["visual_agents_needed"] = list(lane_agents)
+            empty["touched_files"] = vf_default
+        elif suite_filter == "all":
+            empty["visual_agents_needed"] = list(lane_agents)
+            empty["agents_needed"] = [a for a in AGENT_ORDER if a in AGENT_PROMPTS]
+            empty["touched_files"] = list(
+                dict.fromkeys(full_scope_focus_paths() + vf_default)
+            )
+        return empty
+
     touched_files = set()
     agents_needed = set()
-    has_wip = False
-
-    for f in findings:
-        if f.get("status") in ("in_progress", "fixed_pending_verify"):
-            has_wip = True
-            for path in affected_files(f):
-                if path:
-                    touched_files.add(path)
+    for f in pending:
+        for path in affected_files(f):
+            if path:
+                touched_files.add(path)
+        if suite_filter != "visual":
             agents_needed.add(agent_for_finding(f))
-
-    if has_wip:
-        for p in git_changed_paths():
-            touched_files.add(p)
 
     config = load_project_config()
     trigger_map = build_trigger_map(config)
 
-    for tf in list(touched_files):
-        for pattern, agents in trigger_map.items():
-            if pattern in tf:
-                for a in agents:
-                    agents_needed.add(a)
+    if suite_filter != "visual":
+        for tf in list(touched_files):
+            for pattern, agents in trigger_map.items():
+                if pattern in tf:
+                    for a in agents:
+                        agents_needed.add(a)
 
     agents_sorted = [a for a in AGENT_ORDER if a in agents_needed]
     for a in sorted(agents_needed):
         if a not in agents_sorted:
             agents_sorted.append(a)
 
+    pending_verify = [
+        {"finding_id": f["finding_id"], "title": f.get("title", "")}
+        for f in sorted(pending, key=lambda x: x.get("finding_id", ""))
+    ]
+    pending_verify_core = [
+        {"finding_id": f["finding_id"], "title": f.get("title", "")}
+        for f in sorted(pending, key=lambda x: x.get("finding_id", ""))
+        if not is_visual_finding(f)
+    ]
+    pending_verify_visual = [
+        {"finding_id": f["finding_id"], "title": f.get("title", "")}
+        for f in sorted(pending, key=lambda x: x.get("finding_id", ""))
+        if is_visual_finding(f)
+    ]
+
+    visual_needed = set()
+    if suite_filter in ("all", "visual"):
+        for f in pending:
+            va = visual_primary_agent_for_finding(f)
+            if va:
+                visual_needed.add(va)
+        if expand_visual_path_triggers or suite_filter == "visual":
+            visual_needed.update(expand_visual_agents_from_paths(sorted(touched_files)))
+        visual_sorted = [a for a in lane_agents if a in visual_needed]
+        if not visual_sorted and suite_filter == "visual":
+            visual_sorted = list(lane_agents)
+    else:
+        visual_sorted = []
+
     return {
         "touched_files": sorted(touched_files),
         "agents_needed": agents_sorted,
-        "has_wip": has_wip,
+        "pending_verify": pending_verify,
+        "has_pending_verify": True,
         "full_scope": False,
+        "visual_agents_needed": visual_sorted,
+        "pending_verify_core": pending_verify_core,
+        "pending_verify_visual": pending_verify_visual,
+        "visual_focus_paths": vf_default,
     }
 
 
@@ -458,6 +735,7 @@ def cmd_preflight():
             print(f"  {name}: skipped (not configured)")
             continue
         try:
+            print(f"  {name}: running (output → {log}) …", flush=True)
             with open(log, "w", encoding="utf-8") as fp:
                 p = subprocess.run(
                     cmd_str,
@@ -473,39 +751,79 @@ def cmd_preflight():
             print(f"  {name}: FAILED ({e})  → {log}")
 
 
-def cmd_audit_batch(skip_preflight=False, full_scope=False):
+def cmd_audit_batch(skip_preflight=False, full_scope=False, suite_filter="core", lane="all"):
     """
-    One-shot: optional preflight, re-audit plan, and a single markdown file you can
-    paste into an AI session (ordered agent prompts + run_id convention + paths).
+    One-shot: optional preflight, plan, and one markdown checklist for an LLM session.
+
+    suite_filter: ``core`` (default), ``visual`` (visual-only), ``all`` (core + visual).
+    ``lane`` limits which visual agents run (``cohesion``, ``spacing``, ``headings``, ``polish``, ``all``).
+
+    Without ``--full``: **verification** for core; visual lane uses pending rows + path triggers
+    when ``suite_filter`` is ``all``, or full lane when ``visual``.
+
+    With ``--full``: exploratory pass; use ``--all`` for core + visual monorepo scope.
     """
     root = repo_root()
+    include_core = suite_filter in ("core", "all")
+    include_visual = suite_filter in ("visual", "all")
+
     if not skip_preflight:
         cmd_preflight()
         print()
 
-    plan = collect_reaudit_plan(full_scope=full_scope)
+    expand_visual = suite_filter == "all" and not full_scope
+    plan = collect_reaudit_plan(
+        full_scope=full_scope,
+        suite_filter=suite_filter,
+        expand_visual_path_triggers=expand_visual,
+        lane=lane,
+    )
     touched = plan["touched_files"]
     agents = plan["agents_needed"]
+    visual_agents = plan.get("visual_agents_needed") or []
+    pending_rows = plan.get("pending_verify") or []
+    pending_core = plan.get("pending_verify_core") or []
+    pending_visual = plan.get("pending_verify_visual") or []
+    vf_paths = plan.get("visual_focus_paths") or default_visual_focus_paths()
 
-    if not agents and not full_scope:
-        print("audit-batch: No in-progress / fixed_pending_verify findings and no --full.")
-        print("  Run: python3 audits/session.py audit-batch --full")
-        print("  Or mark fixes in progress: python3 audits/session.py fix <id>")
-        return
+    if include_core and not agents and not full_scope:
+        if not (include_visual and visual_agents):
+            print("audit-batch: No fixed_pending_verify findings (verification batch is empty).")
+            print("  Run: python3 audits/session.py audit-batch --full")
+            print("  Or: python3 audits/session.py visual-batch   # visual lane without core queue")
+            print("  Or after fixing: python3 audits/session.py done <finding_id> [commit]")
+            return
 
     batch_dir = os.path.join(root, "audits", "artifacts", "_batch")
     os.makedirs(batch_dir, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%SZ")
     day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    path_out = os.path.join(batch_dir, f"audit-batch-{stamp}.md")
+    batch_prefix = "visual-batch" if suite_filter == "visual" else "audit-batch"
+    path_out = os.path.join(batch_dir, f"{batch_prefix}-{stamp}.md")
     latest = os.path.join(batch_dir, "LATEST.md")
 
     run_ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    lane_note = f" — visual lane `{lane}`" if include_visual else ""
+    if suite_filter == "core":
+        scope_label = ("full monorepo" if full_scope else "verification (fixed_pending_verify only)")
+
+    elif suite_filter == "visual":
+        scope_label = (
+            "full visual exploratory" + lane_note if full_scope else "visual lane" + lane_note
+        )
+    else:
+        if full_scope:
+            scope_label = "full monorepo + visual" + lane_note
+        elif plan.get("has_pending_verify"):
+            scope_label = "core verification + visual" + lane_note
+        else:
+            scope_label = "exploratory core + visual (no fixed_pending_verify queue)" + lane_note
+
     lines = [
         "# LYRA audit batch",
         "",
         f"- Generated: `{stamp}` (UTC)",
-        f"- Scope: **{'full monorepo' if full_scope else 'WIP / git + triggers'}**",
+        f"- Scope: **{scope_label}**",
         "",
         "## Preflight artifacts",
         "",
@@ -519,75 +837,226 @@ def cmd_audit_batch(skip_preflight=False, full_scope=False):
         "",
         "(If you used `--skip-preflight`, re-run `python3 audits/session.py preflight` first.)",
         "",
-        "## Focus paths",
-        "",
     ]
-    if touched:
-        for p in touched:
+
+    lines.append("## Focus paths")
+    lines.append("")
+    if include_core:
+        lines.append("### Core / monorepo")
+        lines.append("")
+        if touched:
+            for p in touched:
+                lines.append(f"- `{p}`")
+        else:
+            lines.append("- _(none — use repo-wide prompts)_")
+    if include_visual:
+        lines.append("")
+        lines.append("### Visual lane (UI, tokens, styles)")
+        lines.append("")
+        for p in vf_paths:
             lines.append(f"- `{p}`")
-    else:
-        lines.append("- _(none — use repo-wide prompts)_")
+
+    if pending_rows and not full_scope:
+        verify_intro = [
+            "",
+            "Synthesizer output must include **every** `finding_id` below with an explicit "
+            "verification outcome: `fixed_verified` if evidence confirms the fix, or `open` "
+            "(or `accepted`) if not, each with non-empty `proof_hooks`. Carry forward all other "
+            "non-terminal rows from `audits/open_findings.json` unchanged unless this pass "
+            "updates them.",
+            "",
+        ]
+        if suite_filter == "all" and (pending_core or pending_visual):
+            if pending_core:
+                lines.extend(
+                    ["", "## Findings to verify — core suite (mandatory)", ""] + verify_intro
+                )
+                for row in pending_core:
+                    lines.append(f"- `{row.get('finding_id', '')}` — {row.get('title', '')}")
+            if pending_visual:
+                lines.extend(
+                    ["", "## Findings to verify — visual suite (mandatory)", ""] + verify_intro
+                )
+                for row in pending_visual:
+                    lines.append(f"- `{row.get('finding_id', '')}` — {row.get('title', '')}")
+        else:
+            lines.extend(["", "## Findings to verify (mandatory)", ""] + verify_intro)
+            for row in pending_rows:
+                lines.append(f"- `{row.get('finding_id', '')}` — {row.get('title', '')}")
+
+    run_id_parts = []
+    if include_core and (agents or full_scope):
+        run_id_parts.append(f"`logic-{run_ts}` … `deploy-{run_ts}`")
+    if include_visual and visual_agents:
+        slug_a = f"visual-{visual_agents[0]}"
+        slug_b = f"visual-{visual_agents[-1]}"
+        run_id_parts.append(f"`{slug_a}-{run_ts}` … `{slug_b}-{run_ts}`")
+    run_id_line = ", ".join(run_id_parts) if run_id_parts else f"`(suite-specific)-{run_ts}`"
+    synth_bits = []
+    if include_core and agents:
+        synth_bits.append(f"`synthesized-{run_ts}.json`")
+    if include_visual and visual_agents:
+        synth_bits.append(f"`visual-synthesized-{run_ts}.json`")
+    synth_names = " and ".join(synth_bits) if synth_bits else "_(none)_"
+
     lines.extend(
         [
             "",
             "## Run IDs (UTC)",
             "",
             f"- Date folder: `audits/runs/{day}/`",
-            f"- Example stem: `{run_ts}` → `logic-{run_ts}`, `data-{run_ts}`, …",
-            "",
-            "## Agent checklist (run in order; JSON only per prompt)",
+            f"- Example stem: `{run_ts}` → {run_id_line}",
+            f"- Synthesizer outputs: {synth_names}",
             "",
         ]
     )
+
     step = 1
     config = load_project_config()
-    # Only include agents whose prompt files are known. Never emit '?' placeholders.
-    resolved_agents = []
-    for a in agents:
-        prompt = AGENT_PROMPTS.get(a)
+
+    if include_core and agents:
+        lines.append("## Core agent checklist (run in order; JSON only per prompt)")
+        lines.append("")
+        resolved_agents = []
+        for a in agents:
+            prompt = AGENT_PROMPTS.get(a)
+            if not prompt:
+                print(f"  WARNING: Skipping agent '{a}' — no prompt file mapped in AGENT_PROMPTS")
+                continue
+            if not os.path.isfile(os.path.join(root, prompt)):
+                print(f"  WARNING: Skipping agent '{a}' — prompt file not found: {prompt}")
+                continue
+            resolved_agents.append(a)
+        agents = resolved_agents
+
+        for a in agents:
+            prompt = AGENT_PROMPTS[a]
+            suite = a if a != "performance" else "perf"
+            agent_paths = get_agent_paths(config, a)
+            path_hint = ""
+            if agent_paths:
+                path_hint = "  Paths: " + ", ".join(f"`{p}`" for p in agent_paths[:6])
+            lines.append(
+                f"{step}. **{a}** — read `{prompt}`, write `{suite}-{run_ts}.json`{path_hint}"
+            )
+            step += 1
+
+        ingest_cmd = (
+            f"python3 audits/session.py ingest-synth audits/runs/{day}/synthesized-{run_ts}.json"
+        )
+        lines.extend(
+            [
+                "",
+                f"{step}. **synthesizer (core)** — read `audits/prompts/synthesizer.md`, merge all "
+                f"core agent JSON above, write `synthesized-{run_ts}.json`",
+                "",
+                f"{step + 1}. **canonical merge (core)** — run:",
+                "",
+                "```",
+                ingest_cmd,
+                "```",
+                "",
+                "_(strict by default: fails if carry-forward contract violated; regenerates all case files)_",
+                "",
+            ]
+        )
+        step += 2
+    elif include_core and not agents:
+        lines.append("## Core agent checklist")
+        lines.append("")
+        lines.append("_No core agents this run (empty verification queue or visual-only scope)._")
+        lines.append("")
+
+    resolved_visual = []
+    for va in visual_agents:
+        prompt = VISUAL_AGENT_PROMPTS.get(va)
         if not prompt:
-            print(f"  WARNING: Skipping agent '{a}' — no prompt file mapped in AGENT_PROMPTS")
+            print(f"  WARNING: Skipping visual agent '{va}' — not in VISUAL_AGENT_PROMPTS")
             continue
         if not os.path.isfile(os.path.join(root, prompt)):
-            print(f"  WARNING: Skipping agent '{a}' — prompt file not found: {prompt}")
+            print(f"  WARNING: Skipping visual agent '{va}' — prompt file not found: {prompt}")
             continue
-        resolved_agents.append(a)
-    agents = resolved_agents
+        resolved_visual.append(va)
+    visual_agents = resolved_visual
 
-    for a in agents:
-        prompt = AGENT_PROMPTS[a]
-        suite = a if a != "performance" else "perf"
-        agent_paths = get_agent_paths(config, a)
-        path_hint = ""
-        if agent_paths:
-            path_hint = "  Paths: " + ", ".join(f"`{p}`" for p in agent_paths[:6])
-        lines.append(f"{step}. **{a}** — read `{prompt}`, write `{suite}-{run_ts}.json`{path_hint}")
-        step += 1
+    if include_visual and visual_agents:
+        lines.append("## Visual agent checklist (run in order; JSON only per prompt)")
+        lines.append("")
+        for va in visual_agents:
+            prompt = VISUAL_AGENT_PROMPTS[va]
+            slug = f"visual-{va}"
+            vpaths = get_agent_paths(config, "visual")
+            path_hint = ""
+            if vpaths:
+                path_hint = "  Paths: " + ", ".join(f"`{p}`" for p in vpaths[:6])
+            lines.append(
+                f"{step}. **visual:{va}** — read `{prompt}`, write `{slug}-{run_ts}.json`{path_hint}"
+            )
+            step += 1
+        visual_ingest = (
+            f"python3 audits/session.py ingest-synth "
+            f"audits/runs/{day}/visual-synthesized-{run_ts}.json"
+        )
+        lines.extend(
+            [
+                "",
+                f"{step}. **synthesizer (visual)** — read `{VISUAL_SYNTH_PROMPT}`, merge all visual "
+                f"agent JSON above, write `visual-synthesized-{run_ts}.json`",
+                "",
+                f"{step + 1}. **canonical merge (visual)** — run:",
+                "",
+                "```",
+                visual_ingest,
+                "```",
+                "",
+                "_(same strict carry-forward rules as core ingest)_",
+                "",
+            ]
+        )
+        step += 2
 
-    ingest_cmd = f"python3 audits/session.py ingest-synth audits/runs/{day}/synthesized-{run_ts}.json"
-    lines.extend(
-        [
-            "",
-            f"{step}. **synthesizer** — read `audits/prompts/synthesizer.md`, merge all agent JSON above, write `synthesized-{run_ts}.json`",
-            "",
-            f"{step + 1}. **canonical merge** — run this exact command:",
-            "",
-            f"```",
-            ingest_cmd,
-            f"```",
-            "",
-            "_(strict by default: fails if carry-forward contract violated; regenerates all case files)_",
-            "",
-            "## One-block prompt (paste into Cursor / ChatGPT)",
-            "",
-            "Audit pass: do not edit application source code. For each agent prompt below, read the prompt file and emit exactly one JSON object per LYRA output contract. Use preflight artifacts under `audits/artifacts/_run_/`, read `audits/open_findings.json`, and focus on the paths listed under Focus paths. Save agent and synthesizer JSON under `audits/runs/<YYYY-MM-DD>/` with the run_id format shown in each prompt. After the synthesizer JSON is saved, run the **ingest-synth** command from the checklist so canonical audit files update.",
-            "",
-        ]
-    )
+    lines.extend(["## One-block prompt (paste into Cursor / ChatGPT)", ""])
+    if full_scope and include_core:
+        lines.append(
+            "Full monorepo audit (`--full`): do not edit application source code. For each agent "
+            "prompt below, read the prompt file and emit exactly one JSON object per LYRA output "
+            "contract. Use preflight artifacts under `audits/artifacts/_run_/`, read "
+            "`audits/open_findings.json`, and focus on the paths listed under Focus paths. Save "
+            "agent and synthesizer JSON under `audits/runs/<YYYY-MM-DD>/` with the run_id format "
+            "shown in each prompt. After each synthesizer JSON is saved, run the matching "
+            "**ingest-synth** command so canonical audit files update."
+        )
+    elif include_core and not full_scope and plan.get("has_pending_verify"):
+        lines.append(
+            "Verification batch: do not edit application source code. Each core agent reads its "
+            "prompt and emits one JSON (`kind: agent_output`) scoped to **Focus paths** and to "
+            "proving or disproving fixes for **every** `finding_id` under **Findings to verify**. "
+            "The core synthesizer must adjudicate each listed row, then merge with strict "
+            "carry-forward. Visual agents use `suite: \"visual\"` in JSON; the visual synthesizer "
+            "merges the same way. Run **ingest-synth** once per synthesizer file."
+        )
+    elif include_core and agents:
+        lines.append(
+            "Exploratory core batch (no `fixed_pending_verify` queue): do not edit application "
+            "source code. Emit one JSON per core agent prompt, then the core synthesizer, then "
+            "run **ingest-synth** on `synthesized-*.json`. If visual agents are listed, same rules "
+            "with `suite: \"visual\"` and **ingest-synth** on `visual-synthesized-*.json`."
+        )
+    else:
+        lines.append(
+            "Visual lane: do not edit application source code. Emit one JSON per visual prompt "
+            "(`suite: \"visual\"`, `kind: \"agent_output\"`) focused on **Visual focus paths**, then "
+            "run the visual synthesizer and **ingest-synth** on `visual-synthesized-*.json`."
+        )
+    lines.append("")
     for a in agents:
-        prompt = AGENT_PROMPTS[a]
-        lines.append(f"- `{prompt}`")
-    lines.append("- `audits/prompts/synthesizer.md`")
+        lines.append(f"- `{AGENT_PROMPTS[a]}`")
+    if include_core and agents:
+        lines.append("- `audits/prompts/synthesizer.md`")
+    for va in visual_agents:
+        lines.append(f"- `{VISUAL_AGENT_PROMPTS[va]}`")
+    if include_visual and visual_agents:
+        lines.append(f"- `{VISUAL_SYNTH_PROMPT}`")
     lines.append("")
     lines.append("---")
     lines.append("")
@@ -601,8 +1070,16 @@ def cmd_audit_batch(skip_preflight=False, full_scope=False):
     print(f"  {path_out}")
     print(f"  → {latest}  (symlink-style duplicate for easy open)")
     print()
-    print("Agents:", ", ".join(agents))
-    print("Files:", len(touched), "path(s)")
+    if agents:
+        print("Core agents:", ", ".join(agents))
+    if visual_agents:
+        print("Visual agents:", ", ".join(visual_agents))
+    if include_core:
+        print("Core focus paths:", len(touched), "path(s)")
+    if include_visual:
+        print("Visual focus paths:", len(vf_paths), "path(s)")
+    if pending_rows and not full_scope:
+        print("Verification queue:", len(pending_rows), "finding(s) (fixed_pending_verify)")
 
 
 # --- Commands ---
@@ -830,23 +1307,35 @@ def cmd_decide(finding_id, decision):
 
 
 def cmd_reaudit():
+    """Print verification-only plan: ``fixed_pending_verify`` findings, paths, agents."""
     plan = collect_reaudit_plan(full_scope=False)
     touched_files = plan["touched_files"]
     agents_needed = plan["agents_needed"]
+    pending_rows = plan.get("pending_verify") or []
 
-    if not touched_files and not agents_needed:
-        print("No fixes in progress or pending verification. Nothing to re-audit.")
-        print("Tip: full deep checklist →  python3 audits/session.py audit-batch --full")
+    if not pending_rows and not agents_needed:
+        findings, _ = load_findings()
+        in_prog = [f for f in findings if in_progress(f)]
+        if in_prog:
+            print("Verification re-audit: no fixed_pending_verify rows.")
+            print(f"(You have {len(in_prog)} finding(s) in_progress — finish with `done`, then verify.)")
+        else:
+            print("No fixed_pending_verify findings. Nothing to verify.")
+        print("Tip: full exploratory audit →  python3 audits/session.py audit-batch --full")
         return
 
-    print("Re-audit Plan")
+    print("Verification re-audit plan (fixed_pending_verify only)")
     print("=" * 50)
     print()
-    print("Files touched by fixes (and git vs HEAD when WIP):")
+    print("Findings pending verification:")
+    for row in pending_rows:
+        print(f"  {row['finding_id']}: {row.get('title', '')}")
+    print()
+    print("Paths from those findings' affected_files (+ agent trigger map):")
     for tf in touched_files:
         print(f"  {tf}")
     print()
-    print("Agents to re-run:")
+    print("Agents to run (evidence each pending row pass/fail):")
     for agent in agents_needed:
         prompt = AGENT_PROMPTS.get(agent, "?")
         print(f"  {agent}: {prompt}")
@@ -857,9 +1346,10 @@ def cmd_reaudit():
     print("Batched checklist (preflight + paste-ready prompts):")
     print("  python3 audits/session.py audit-batch")
     print()
-    print("Scope hint for agents: focus on these files only, not full codebase.")
+    print("Scope: verify only the listed finding_ids; synthesizer must set each to")
+    print("fixed_verified or back to open with proof_hooks (carry-forward all other ledger rows).")
     print()
-    print("To clear 'pending verification' without a full synthesizer merge:")
+    print("To clear one row without a full synthesizer merge:")
     print("  python3 audits/session.py verify <finding_id>")
     print("  (after you have confirmed the fix in code/tests — same bar as synthesizer would use.)")
 
@@ -896,8 +1386,13 @@ def cmd_verify(finding_id):
     print(f"Finding not found: {finding_id}")
 
 
-def cmd_canship():
-    findings, _ = load_findings()
+def cmd_canship(include_visual=False):
+    all_findings, _ = load_findings()
+    findings = (
+        all_findings
+        if include_visual
+        else [f for f in all_findings if f.get("suite") != "visual"]
+    )
 
     blockers = [f for f in findings if is_blocker(f)]
     open_questions = [f for f in findings if is_open_question(f)]
@@ -931,7 +1426,7 @@ def cmd_canship():
         if blockers:
             print("Action: fix blockers first.")
         elif pending:
-            print("Action: run re-audit to verify pending fixes.")
+            print("Action: run verification re-audit (`reaudit` / `audit-batch`), then ingest-synth.")
         elif open_questions:
             print("Action: decide or defer open questions.")
         elif in_prog:
@@ -946,6 +1441,52 @@ def cmd_canship():
         print(f"  0 undecided questions")
         print()
         print("Remaining open items are P1+ non-blockers. Safe to deploy.")
+    if not include_visual:
+        vf = [f for f in all_findings if f.get("suite") == "visual"]
+        vb = sum(1 for f in vf if is_blocker(f))
+        vq = sum(1 for f in vf if is_open_question(f))
+        if vb or vq:
+            print()
+            print(
+                f"(Visual suite: {vb} blocker(s), {vq} open question(s) excluded from gate. "
+                "Use: python3 audits/session.py canship --include-visual)"
+            )
+
+
+def cmd_cohesion():
+    """Print latest visual cohesion score from audits/cohesion.json (if any)."""
+    path = os.path.join(repo_root(), COHESION_JSON)
+    if not os.path.isfile(path):
+        print("No cohesion history yet. Ingest a visual synthesizer JSON with cohesion_scores first.")
+        return
+    with open(path, encoding="utf-8") as fp:
+        data = json.load(fp)
+    hist = data.get("history") or []
+    if not hist:
+        print("No entries in cohesion history.")
+        return
+    latest = hist[-1]
+    prev = hist[-2] if len(hist) > 1 else None
+    scores = latest.get("scores") or {}
+    overall = scores.get("overall")
+    print("LYRA visual cohesion")
+    print("=" * 50)
+    print(f"  Latest run: {latest.get('run_id', '?')} @ {latest.get('timestamp', '?')}")
+    if overall is not None:
+        print(f"  Overall: {overall}")
+        if prev:
+            pscores = prev.get("scores") or {}
+            po = pscores.get("overall")
+            if po is not None:
+                delta = float(overall) - float(po)
+                sign = "+" if delta >= 0 else ""
+                print(f"  Delta vs prior: {sign}{delta:.1f} (prior overall: {po})")
+    for dim in ("systematic", "hierarchical", "consistent", "communicative", "polished"):
+        if dim in scores:
+            print(f"  {dim}: {scores[dim]}")
+    interp = scores.get("interpretation")
+    if interp:
+        print(f"  Interpretation: {interp}")
 
 
 def cmd_prune_closed(dry_run: bool = False):
@@ -1033,7 +1574,7 @@ def cmd_default():
         for f in pending:
             print(f"  {f['finding_id']}: {f.get('title', '?')}")
         print()
-        print("Re-audit + synthesizer, then apply canonical merge:")
+        print("Verification re-audit + synthesizer, then apply canonical merge:")
         print("  python3 audits/session.py reaudit")
         print("  # agents → synthesizer JSON → ingest:")
         print("  python3 audits/session.py ingest-synth audits/runs/<YYYY-MM-DD>/synthesized-<id>.json")
@@ -1148,6 +1689,8 @@ def cmd_init():
         f'test = "{pkg} run test"',
         f'build = "{pkg} run build"',
         f'cwd = "{cwd}"',
+        '# Visual-only audits do not require green preflight; use:',
+        '#   python3 audits/session.py visual-batch --skip-preflight',
         '',
         '# --- Agent paths ---',
         '# Fill in the paths each agent should examine in YOUR repo.',
@@ -1249,16 +1792,48 @@ def main():
     elif cmd == "preflight":
         cmd_preflight()
     elif cmd == "audit-batch":
-        rest = [a.lower() for a in sys.argv[2:]]
-        skip = "--skip-preflight" in rest or "--no-preflight" in rest
-        full = "--full" in rest
-        cmd_audit_batch(skip_preflight=skip, full_scope=full)
+        raw = sys.argv[2:]
+        rlow = [a.lower() for a in raw]
+        skip = "--skip-preflight" in rlow or "--no-preflight" in rlow
+        full = "--full" in rlow
+        suite_filter = "core"
+        if "--all" in rlow:
+            suite_filter = "all"
+        elif "--visual" in rlow:
+            suite_filter = "visual"
+        lane = "all"
+        for i, a in enumerate(raw):
+            if a.lower() == "--lane" and i + 1 < len(raw):
+                lane = raw[i + 1].lower()
+                break
+        cmd_audit_batch(
+            skip_preflight=skip,
+            full_scope=full,
+            suite_filter=suite_filter,
+            lane=lane,
+        )
+    elif cmd == "visual-batch":
+        raw = sys.argv[2:]
+        rlow = [a.lower() for a in raw]
+        skip = "--skip-preflight" in rlow or "--no-preflight" in rlow
+        full = "--full" in rlow
+        lane = "all"
+        for i, a in enumerate(raw):
+            if a.lower() == "--lane" and i + 1 < len(raw):
+                lane = raw[i + 1].lower()
+                break
+        cmd_audit_batch(
+            skip_preflight=skip,
+            full_scope=full,
+            suite_filter="visual",
+            lane=lane,
+        )
     elif cmd in ("ingest-synth", "ingest-synthesizer"):
         args = sys.argv[2:]
         if not args:
             print(
                 "Usage: python3 audits/session.py ingest-synth "
-                "<path/to/synthesized-*.json> [--allow-partial]"
+                "<path/to/synthesized-*.json> [--allow-partial] [--no-auto-fill]"
             )
             sys.exit(1)
         # Default is strict. --allow-partial opts out.
@@ -1267,6 +1842,8 @@ def main():
         for a in args:
             if a == "--allow-partial":
                 extra_flags.append("--allow-partial")
+            elif a == "--no-auto-fill":
+                extra_flags.append("--no-auto-fill")
             elif a == "--strict":
                 pass  # legacy no-op, strict is now default
             else:
@@ -1274,7 +1851,7 @@ def main():
         if len(filtered) != 1:
             print(
                 "Usage: python3 audits/session.py ingest-synth "
-                "<path/to/synthesized-*.json> [--allow-partial]"
+                "<path/to/synthesized-*.json> [--allow-partial] [--no-auto-fill]"
             )
             sys.exit(1)
         ingest_mod = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ingest_synthesizer.py")
@@ -1290,7 +1867,10 @@ def main():
         dry = "--dry-run" in sys.argv or "-n" in sys.argv
         cmd_prune_closed(dry_run=dry)
     elif cmd == "canship":
-        cmd_canship()
+        include_vis = "--include-visual" in [a.lower() for a in sys.argv[2:]]
+        cmd_canship(include_visual=include_vis)
+    elif cmd == "cohesion":
+        cmd_cohesion()
     elif cmd == "init":
         cmd_init()
     elif cmd == "help":

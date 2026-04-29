@@ -11,6 +11,7 @@ import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Music } from 'l
 import { Post } from '@shared/types/content.types';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
+import { isMusicPhase2Enabled } from '@/lib/featureFlags';
 
 interface PostCardProps {
   post: Post;
@@ -170,8 +171,8 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({
         </Link>
       )}
 
-      {/* Music */}
-      {post.musicTrackId && (
+      {/* Music (phase-2 gate — avoid exposing licensing URLs when vertical is off) */}
+      {post.musicTrackId && isMusicPhase2Enabled() && (
         <div className="px-4 py-3 bg-amber-50 border-t border-amber-200 flex items-center gap-3">
           <Music size={18} className="text-amber-600 flex-shrink-0" />
           <div className="flex-1 min-w-0">

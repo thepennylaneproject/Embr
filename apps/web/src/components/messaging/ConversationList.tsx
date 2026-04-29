@@ -6,6 +6,8 @@
 import React from 'react';
 import { ConversationPreview, MessageType } from '@shared/types/messaging.types';
 import { formatDistanceToNow } from 'date-fns';
+import { EmptyListState } from '@/components/ui/EmptyListState';
+import { copy } from '@/lib/copy';
 
 interface ConversationListProps {
   conversations: ConversationPreview[];
@@ -109,18 +111,29 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             }} />
           </div>
         ) : filteredConversations.length === 0 ? (
-          <div style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            justifyContent: 'center', height: '8rem', textAlign: 'center', padding: '1rem',
-          }}>
-            <svg style={{ width: '40px', height: '40px', color: 'var(--embr-neutral-300)', marginBottom: '0.5rem' }}
-              fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            <p style={{ fontSize: '0.875rem', color: 'var(--embr-muted-text)' }}>
-              {searchQuery ? 'No conversations found' : 'No messages yet. Start a conversation!'}
-            </p>
+          <div style={{ padding: '0.5rem' }}>
+            <EmptyListState
+              compact
+              plain
+              icon={
+                <svg
+                  style={{ width: '36px', height: '36px', color: 'var(--embr-neutral-300)', margin: '0 auto', display: 'block' }}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+              }
+              title={searchQuery ? copy.emptyStates.noConversationsSearch : copy.emptyStates.noMessages}
+              description={searchQuery ? copy.emptyStates.noResultsDesc : copy.emptyStates.noMessagesDesc}
+            />
           </div>
         ) : (
           filteredConversations.map((conversation) => {

@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar } from '@embr/ui';
 import type { CSSProperties } from 'react';
 import { copy } from '@/lib/copy';
+import { isMusicPhase2Enabled } from '@/lib/featureFlags';
 
 const navItems = [
   { href: '/feed', label: copy.nav.feed },
@@ -16,7 +17,7 @@ const navItems = [
   { href: '/events', label: copy.nav.events },
   { href: '/mutual-aid', label: copy.nav.mutualAid },
   { href: '/marketplace', label: copy.nav.marketplace },
-  { href: '/music', label: copy.nav.music },
+  ...(isMusicPhase2Enabled() ? ([{ href: '/music', label: copy.nav.music }] as const) : []),
   { href: '/gigs', label: copy.nav.gigs },
   { href: '/earnings', label: copy.nav.earnings },
   { href: '/messages', label: copy.nav.messages },
@@ -62,6 +63,18 @@ export function AppShell({
     setUserMenuOpen(false);
   }, [router.pathname]);
 
+  useEffect(() => {
+    if (!mobileMenuOpen && !userMenuOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMobileMenuOpen(false);
+        setUserMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [mobileMenuOpen, userMenuOpen]);
+
   const isNavActive = (href: string) => {
     return router.pathname === href || router.pathname.startsWith(href + '/');
   };
@@ -77,6 +90,7 @@ export function AppShell({
 
           {/* Mobile menu button */}
           <button
+            type="button"
             className="embr-menu-toggle"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label={copy.nav.toggleMenu}
@@ -131,6 +145,7 @@ export function AppShell({
               ))}
             </div>
             <button
+              type="button"
               className="embr-user-button"
               onClick={() => setUserMenuOpen(!userMenuOpen)}
               aria-label={copy.nav.userMenu}
@@ -165,6 +180,7 @@ export function AppShell({
                 </Link>
                 <hr className="embr-dropdown-divider" />
                 <button
+                  type="button"
                   onClick={logout}
                   className="embr-dropdown-item embr-dropdown-button embr-dropdown-danger"
                 >

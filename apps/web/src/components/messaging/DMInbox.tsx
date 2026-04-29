@@ -63,6 +63,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeSearch, setComposeSearch] = useState('');
   const [composeLoading, setComposeLoading] = useState(false);
+  const [composeError, setComposeError] = useState('');
   const { users: userResults, searchUsers, reset: resetUserSearch } = useUserSearch();
 
   // Fetch conversations on mount
@@ -102,10 +103,12 @@ export const DMInbox: React.FC<DMInboxProps> = ({
   const handleComposeOpen = () => {
     resetUserSearch();
     setComposeSearch('');
+    setComposeError('');
     setComposeOpen(true);
   };
 
   const handleComposeSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setComposeError('');
     const q = e.target.value;
     setComposeSearch(q);
     if (q.trim()) {
@@ -135,6 +138,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({
       handleConversationSelect(fresh);
     } catch (err) {
       console.error('Failed to create conversation:', err);
+      setComposeError('Could not start a conversation. Check your connection and try again.');
     } finally {
       setComposeLoading(false);
     }
@@ -185,6 +189,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({
       });
     } catch (err) {
       console.error('Failed to send message:', err);
+      throw err;
     }
   };
 
@@ -240,6 +245,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({
           search={composeSearch}
           users={userResults}
           loading={composeLoading}
+          error={composeError}
           onSearchChange={handleComposeSearch}
           onSelect={handleStartConversation}
           onClose={() => setComposeOpen(false)}
@@ -340,6 +346,7 @@ export const DMInbox: React.FC<DMInboxProps> = ({
         search={composeSearch}
         users={userResults}
         loading={composeLoading}
+        error={composeError}
         onSearchChange={handleComposeSearch}
         onSelect={handleStartConversation}
         onClose={() => setComposeOpen(false)}
@@ -355,12 +362,13 @@ interface ComposeModalProps {
   search: string;
   users: any[];
   loading: boolean;
+  error?: string;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSelect: (userId: string) => void;
   onClose: () => void;
 }
 
-const ComposeModal: React.FC<ComposeModalProps> = ({ search, users, loading, onSearchChange, onSelect, onClose }) => (
+const ComposeModal: React.FC<ComposeModalProps> = ({ search, users, loading, error, onSearchChange, onSelect, onClose }) => (
   <div
     style={{
       position: 'fixed', inset: 0, zIndex: 1000,
@@ -392,6 +400,22 @@ const ComposeModal: React.FC<ComposeModalProps> = ({ search, users, loading, onS
           boxSizing: 'border-box',
         }}
       />
+      {error ? (
+        <p
+          role="alert"
+          style={{
+            margin: '0.6rem 0 0',
+            padding: '0.5rem 0.65rem',
+            borderRadius: 'var(--embr-radius-md)',
+            fontSize: '0.82rem',
+            background: 'color-mix(in srgb, var(--embr-error) 10%, white)',
+            border: '1px solid var(--embr-error)',
+            color: 'var(--embr-error)',
+          }}
+        >
+          {error}
+        </p>
+      ) : null}
       <div style={{ marginTop: '0.75rem', maxHeight: '280px', overflowY: 'auto' }}>
         {loading && <p style={{ padding: '0.75rem', color: 'var(--embr-muted-text)', textAlign: 'center' }}>Searching...</p>}
         {!loading && search && users.length === 0 && (

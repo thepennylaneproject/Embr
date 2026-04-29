@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import type { Event } from '@embr/types';
 import { EVENT_TYPE_ICONS, PRICING_TYPE_LABELS } from '@embr/types';
@@ -38,11 +39,15 @@ export function EventCard({ event }: EventCardProps) {
         onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
       >
         {event.coverUrl && (
-          <img
-            src={event.coverUrl}
-            alt={event.title}
-            style={{ width: '100%', height: '140px', objectFit: 'cover' }}
-          />
+          <div style={{ position: 'relative', width: '100%', height: 140 }}>
+            <Image
+              src={event.coverUrl}
+              alt={event.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 480px"
+            />
+          </div>
         )}
         <div style={{ padding: '1rem' }}>
           {/* Date strip */}

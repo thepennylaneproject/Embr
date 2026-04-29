@@ -3,6 +3,7 @@ import {
   Logger,
   NotFoundException,
   BadRequestException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import Stripe from 'stripe';
@@ -14,16 +15,25 @@ import {
 @Injectable()
 export class StripeConnectService {
   private readonly logger = new Logger(StripeConnectService.name);
-  private stripe: Stripe;
+  /** Lazily constructed so the API can boot without Stripe in local/dev. */
+  private stripeClient: Stripe | null = null;
 
   /** Short-lived in-memory cache for Stripe account data (keyed by account ID) */
   private readonly accountCache = new Map<string, { data: Stripe.Account; expiresAt: number }>();
   private readonly ACCOUNT_CACHE_TTL_MS = 60_000; // 60 seconds
 
-  constructor(private prisma: PrismaService) {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2023-10-16',
-    });
+  constructor(private prisma: PrismaService) {}
+
+  private getStripe(): Stripe {
+    if (this.stripeClient) return this.stripeClient;
+    const key = process.env.STRIPE_SECRET_KEY?.trim();
+    if (!key) {
+      throw new ServiceUnavailableException(
+        'Stripe is not configured (set STRIPE_SECRET_KEY to enable Connect).',
+      );
+    }
+    this.stripeClient = new Stripe(key, { apiVersion: '2023-10-16' });
+    return this.stripeClient;
   }
 
   /** Return cached Stripe account data, or null if absent / expired */
@@ -64,7 +74,7 @@ export class StripeConnectService {
 
     // Check if already has Stripe Connect account
     if (user.wallet?.stripeConnectAccountId) {
-      const account = await this.stripe.accounts.retrieve(
+      const account = await this.getStripe().accounts.retrieve(
         user.wallet.stripeConnectAccountId,
       );
 
@@ -90,7 +100,7 @@ export class StripeConnectService {
 
     try {
       // Create Stripe Connect account
-      const account = await this.stripe.accounts.create({
+      const account = await this.getStripe().accounts.create({
         type: 'express',
         country,
         email: email || user.email,
@@ -149,7 +159,7 @@ export class StripeConnectService {
     returnUrl: string,
     refreshUrl: string,
   ): Promise<Stripe.AccountLink> {
-    return this.stripe.accountLinks.create({
+    return this.getStripe().accountLinks.create({
       account: accountId,
       refresh_url: refreshUrl,
       return_url: returnUrl,
@@ -196,7 +206,7 @@ export class StripeConnectService {
     }
 
     // Retrieve account from Stripe
-    const account = await this.stripe.accounts.retrieve(
+    const account = await this.getStripe().accounts.retrieve(
       wallet.stripeConnectAccountId,
     );
 
@@ -256,7 +266,7 @@ export class StripeConnectService {
       // Use cached account data if still fresh (avoids a metered Stripe API call)
       let account = this.getCachedAccount(wallet.stripeConnectAccountId);
       if (!account) {
-        account = await this.stripe.accounts.retrieve(wallet.stripeConnectAccountId);
+        account = await this.getStripe().accounts.retrieve(wallet.stripeConnectAccountId);
         this.setCachedAccount(wallet.stripeConnectAccountId, account);
       }
 
@@ -309,7 +319,7 @@ export class StripeConnectService {
     // Use cached account data if still fresh
     let account = this.getCachedAccount(wallet.stripeConnectAccountId);
     if (!account) {
-      account = await this.stripe.accounts.retrieve(wallet.stripeConnectAccountId);
+      account = await this.getStripe().accounts.retrieve(wallet.stripeConnectAccountId);
       this.setCachedAccount(wallet.stripeConnectAccountId, account);
     }
 
@@ -350,7 +360,7 @@ export class StripeConnectService {
     }
 
     try {
-      await this.stripe.accounts.del(wallet.stripeConnectAccountId);
+      await this.getStripe().accounts.del(wallet.stripeConnectAccountId);
 
       await this.prisma.wallet.update({
         where: { userId },
@@ -386,7 +396,7 @@ export class StripeConnectService {
       return;
     }
 
-    const account = await this.stripe.accounts.retrieve(accountId);
+    const account = await this.getStripe().accounts.retrieve(accountId);
 
     await this.prisma.wallet.update({
       where: { id: wallet.id },

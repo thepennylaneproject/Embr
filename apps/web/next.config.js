@@ -63,6 +63,45 @@
   }
 })();
 
+/**
+ * Next/Image remote patterns.
+ * In production, set NEXT_PUBLIC_IMAGE_ALLOWED_HOSTS to a comma-separated list of
+ * exact media hostnames (e.g. your S3 website endpoint or CDN) to drop broad S3/CloudFront wildcards.
+ */
+function buildImageRemotePatterns() {
+  const pathname = '/**';
+  const staticCdn = [
+    { protocol: 'https', hostname: 'res.cloudinary.com', pathname },
+    { protocol: 'https', hostname: 'gravatar.com', pathname },
+    { protocol: 'https', hostname: 'api.dicebear.com', pathname },
+    { protocol: 'https', hostname: 'placehold.co', pathname },
+    { protocol: 'https', hostname: 'via.placeholder.com', pathname },
+    { protocol: 'https', hostname: 'picsum.photos', pathname },
+  ];
+  const allowHosts = (process.env.NEXT_PUBLIC_IMAGE_ALLOWED_HOSTS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((hostname) => ({ protocol: 'https', hostname, pathname }));
+
+  const strictProd =
+    process.env.NODE_ENV === 'production' && allowHosts.length > 0;
+
+  if (strictProd) {
+    return [...staticCdn, ...allowHosts];
+  }
+
+  return [
+    ...staticCdn,
+    { protocol: 'https', hostname: '*.s3.amazonaws.com', pathname },
+    { protocol: 'https', hostname: '*.s3.*.amazonaws.com', pathname },
+    { protocol: 'https', hostname: '*.cloudfront.net', pathname },
+    { protocol: 'https', hostname: '*.imgix.net', pathname },
+    { protocol: 'https', hostname: '*.githubusercontent.com', pathname },
+    ...allowHosts,
+  ];
+}
+
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
@@ -72,33 +111,44 @@ const nextConfig = {
   ],
 
   images: {
-    remotePatterns: [
-      // AWS S3 buckets (any region/bucket name)
-      { protocol: 'https', hostname: '*.s3.amazonaws.com' },
-      { protocol: 'https', hostname: '*.s3.*.amazonaws.com' },
-      // AWS CloudFront CDN
-      { protocol: 'https', hostname: '*.cloudfront.net' },
-      // Common image CDNs / hosting services used for user avatars
-      { protocol: 'https', hostname: 'res.cloudinary.com' },
-      { protocol: 'https', hostname: '*.imgix.net' },
-      { protocol: 'https', hostname: 'gravatar.com' },
-      { protocol: 'https', hostname: '*.githubusercontent.com' },
-      // DiceBear avatars (used by seed data)
-      { protocol: 'https', hostname: 'api.dicebear.com' },
-      // Placeholder images used in demo/seed content
-      { protocol: 'https', hostname: 'placehold.co' },
-      { protocol: 'https', hostname: 'via.placeholder.com' },
-      { protocol: 'https', hostname: 'picsum.photos' },
-    ],
+    remotePatterns: buildImageRemotePatterns(),
   },
 
   async headers() {
     const isDev = process.env.NODE_ENV !== 'production';
-    // In development, allow cross-port localhost connections (API runs on different port)
-    // In production, 'self' plus the stripe API are sufficient
-    const connectSrc = isDev
-      ? "'self' https://api.stripe.com ws://localhost:* http://localhost:3003 http://localhost:*"  // pragma: allowlist secret
-      : "'self' https://api.stripe.com";
+    // In development, allow cross-port localhost connections (API runs on different port).
+    // In production, include API + WS origins from env so fetch/socket.io work; dedupe hosts.
+    /** @type {Set<string>} */
+    const connectParts = new Set();
+    if (isDev) {
+      connectParts.add("'self'");
+      connectParts.add('https://api.stripe.com');
+      connectParts.add('ws://localhost:*');
+      connectParts.add('http://localhost:3003');
+      connectParts.add('http://localhost:*'); // pragma: allowlist secret
+    } else {
+      connectParts.add("'self'");
+      connectParts.add('https://api.stripe.com');
+      for (const envName of ['NEXT_PUBLIC_API_URL', 'NEXT_PUBLIC_WS_URL']) {
+        const raw = process.env[envName];
+        if (!raw || !raw.trim()) continue;
+        try {
+          const u = new URL(raw);
+          connectParts.add(`${u.protocol}//${u.host}`);
+        } catch {
+          console.warn(`[Embr CSP] Skipping invalid ${envName} for connect-src`);
+        }
+      }
+    }
+    const connectSrc = [...connectParts].join(' ');
+
+    // Production: drop 'unsafe-eval' (Next production bundles do not rely on eval).
+    // script/style 'unsafe-inline' remains for Pages Router + hydration; tightening further
+    // needs nonce-based CSP (typically App Router + middleware).
+    const scriptSrc = isDev
+      ? "'self' 'unsafe-inline' 'unsafe-eval'"
+      : "'self' 'unsafe-inline'";
+    const styleSrc = "'self' 'unsafe-inline'";
 
     return [
       {
@@ -108,8 +158,8 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-              "style-src 'self' 'unsafe-inline'",
+              `script-src ${scriptSrc}`,
+              `style-src ${styleSrc}`,
               "img-src 'self' data: https: blob:",
               "font-src 'self'",
               `connect-src ${connectSrc}`,

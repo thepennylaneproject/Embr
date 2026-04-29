@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { ProtectedPageShell } from '@/components/layout';
@@ -114,9 +115,16 @@ export default function ListingDetailPage() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', alignItems: 'start' }}>
           {/* Images */}
           <div>
-            <div style={{ height: '320px', borderRadius: 'var(--embr-radius-lg)', overflow: 'hidden', background: 'var(--embr-bg)', marginBottom: '0.75rem' }}>
+            <div style={{ position: 'relative', height: '320px', borderRadius: 'var(--embr-radius-lg)', overflow: 'hidden', background: 'var(--embr-bg)', marginBottom: '0.75rem' }}>
               {listing.images.length > 0 ? (
-                <img src={listing.images[activeImageIdx]} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <Image
+                  src={listing.images[activeImageIdx]}
+                  alt={listing.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 900px) 100vw, 450px"
+                  priority
+                />
               ) : (
                 <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', opacity: 0.3 }}>📦</div>
               )}
@@ -124,9 +132,27 @@ export default function ListingDetailPage() {
             {listing.images.length > 1 && (
               <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto' }}>
                 {listing.images.map((img, i) => (
-                  <div key={i} onClick={() => setActiveImageIdx(i)} style={{ width: '64px', height: '64px', borderRadius: 'var(--embr-radius-md)', cursor: 'pointer', overflow: 'hidden', border: `2px solid ${i === activeImageIdx ? 'var(--embr-accent)' : 'var(--embr-border)'}`, flexShrink: 0 }}>
-                    <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
+                  <button
+                    key={i}
+                    type="button"
+                    aria-label={i === activeImageIdx ? `Listing image ${i + 1} (selected)` : `Show listing image ${i + 1}`}
+                    aria-pressed={i === activeImageIdx}
+                    onClick={() => setActiveImageIdx(i)}
+                    style={{
+                      position: 'relative',
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: 'var(--embr-radius-md)',
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                      border: `2px solid ${i === activeImageIdx ? 'var(--embr-accent)' : 'var(--embr-border)'}`,
+                      flexShrink: 0,
+                      padding: 0,
+                      background: 'transparent',
+                    }}
+                  >
+                    <Image src={img} alt="" fill className="object-cover" sizes="64px" />
+                  </button>
                 ))}
               </div>
             )}

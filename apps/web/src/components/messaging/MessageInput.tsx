@@ -25,10 +25,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const [isTyping, setIsTyping] = useState(false);
   const [fileError, setFileError] = useState<string>('');
   const [sendError, setSendError] = useState<string>('');
+  const [sentAck, setSentAck] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const sentAckTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -42,6 +44,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       if (filePreview) URL.revokeObjectURL(filePreview);
     };
   }, [filePreview]);
+
+  useEffect(() => {
+    return () => {
+      if (sentAckTimeoutRef.current) clearTimeout(sentAckTimeoutRef.current);
+    };
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -114,6 +122,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       setSendError('');
       handleRemoveFile();
       if (textareaRef.current) textareaRef.current.style.height = 'auto';
+      setSentAck(true);
+      if (sentAckTimeoutRef.current) clearTimeout(sentAckTimeoutRef.current);
+      sentAckTimeoutRef.current = setTimeout(() => {
+        setSentAck(false);
+        sentAckTimeoutRef.current = null;
+      }, 2500);
     } catch (error) {
       console.error('Failed to send message:', error);
       setSendError('Failed to send message. Please check your connection and try again.');
@@ -150,6 +164,23 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       {sendError && (
         <div style={{ marginBottom: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: 'var(--embr-radius-md)', background: 'color-mix(in srgb, var(--embr-error) 10%, white)', border: '1px solid var(--embr-error)', fontSize: '0.82rem', color: 'var(--embr-error)' }}>
           {sendError}
+        </div>
+      )}
+      {sentAck && !sendError && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            marginBottom: '0.5rem',
+            padding: '0.45rem 0.75rem',
+            borderRadius: 'var(--embr-radius-md)',
+            background: 'color-mix(in srgb, var(--embr-accent) 12%, white)',
+            border: '1px solid color-mix(in srgb, var(--embr-accent) 35%, transparent)',
+            fontSize: '0.82rem',
+            color: 'var(--embr-text)',
+          }}
+        >
+          Message sent
         </div>
       )}
       {/* File preview */}

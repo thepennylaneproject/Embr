@@ -8,6 +8,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { gigsApi } from '@shared/api/gigs.api';
 import { Gig, GigCategory, GigBudgetType, GigSearchParams } from '@embr/types';
+import { EmptyListState } from '@/components/ui/EmptyListState';
+import { copy } from '@/lib/copy';
 
 const CATEGORIES = [
   { value: '', label: 'All Categories' },
@@ -211,10 +213,10 @@ export const GigDiscovery: React.FC = () => {
 
       {/* EMPTY STATE */}
       {!loading && gigs.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '64px 32px' }}>
-          <p style={{ fontSize: '16px', color: '#999', marginBottom: '16px' }}>No opportunities found.</p>
-          <p style={{ fontSize: '14px', color: '#ccc' }}>Try adjusting your search or filters.</p>
-        </div>
+        <EmptyListState
+          title={copy.emptyStates.noJobs}
+          description={copy.emptyStates.noJobsDesc}
+        />
       )}
 
       {/* GIGS LIST - Job board style, scannable */}
