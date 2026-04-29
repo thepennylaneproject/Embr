@@ -97,3 +97,6 @@ next-env.d.ts
 
 # pnpm lock file (this repo uses npm)
 pnpm-lock.yaml
+audits/runs/
+audits/artifacts/
+# LYRA local-only (not symlinks)
